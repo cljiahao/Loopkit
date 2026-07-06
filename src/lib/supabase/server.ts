@@ -1,0 +1,61 @@
+import {
+  createServerClient as createSSRClient,
+  type CookieMethodsServer,
+} from "@supabase/ssr";
+import { cookies } from "next/headers";
+import type { Database } from "@/lib/types";
+
+type CookieStore = Awaited<ReturnType<typeof cookies>>;
+
+// Shared @supabase/ssr cookie adapter. The setAll catch covers the read-only
+// Server Component context (session refresh is handled by middleware instead).
+function cookieMethods(cookieStore: CookieStore): CookieMethodsServer {
+  return {
+    getAll() {
+      return cookieStore.getAll();
+    },
+    setAll(cookiesToSet) {
+      try {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          cookieStore.set(name, value, options);
+        });
+      } catch {
+        // Read-only context (Server Component) — session refresh handled by middleware
+      }
+    },
+  };
+}
+
+export async function createServerClient() {
+  const cookieStore = await cookies();
+
+  return createSSRClient<Database, "loopkit">(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: cookieMethods(cookieStore),
+      db: { schema: "loopkit" },
+    },
+  );
+}
+
+// Uses the secret key — bypasses RLS. Only use in Server Actions/Route Handlers.
+// CRITICAL: do NOT attach the request cookies here. If the user's auth cookies
+// are passed, @supabase/ssr hydrates their session and authenticates every query
+// as that user (RLS applies) instead of as service-role — silently breaking
+// admin writes. An empty cookie adapter means the secret key drives auth →
+// true RLS bypass.
+export async function createServiceClient() {
+  return createSSRClient<Database, "loopkit">(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!,
+    {
+      cookies: { getAll: () => [], setAll: () => {} },
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+      db: { schema: "loopkit" },
+    },
+  );
+}

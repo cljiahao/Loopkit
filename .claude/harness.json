@@ -1,0 +1,33 @@
+{
+  "templatecentral_version": "5.8.0",
+  "stack": "nextjs",
+  "adapted": "Next 16 + Supabase (auth/db/realtime) — Supabase variant, based on qkit harness",
+  "seeded_at": "2026-07-07",
+  "review_note": "Fresh skeleton seeded from sibling project qkit's harness (same templateCentral Supabase variant, shared Supabase project, schema per kit — loopkit owns `loopkit`). No domain code carried over.",
+  "seeded_files": {
+    "AGENTS.md": {
+      "origin_hash": "9ff8e13b5f8d3c131db709626a32aa09cc6810342a1201c359f19cb1992737b6",
+      "path": "AGENTS.md"
+    },
+    "CLAUDE.md": {
+      "origin_hash": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
+      "path": "CLAUDE.md"
+    },
+    ".claude/settings.json": {
+      "origin_hash": "b547fe15e4533dde2a0da7530ce5f9b38bc66370a3d547927ad17db6de1bd1ff",
+      "path": ".claude/settings.json"
+    },
+    ".claude/hooks/verify.sh": {
+      "origin_hash": "ccf4bb6c4cec18d0210387a608c1bfff84348719d09fe2efc959561d10f86ac6",
+      "path": ".claude/hooks/verify.sh"
+    },
+    ".claude/skills/next-verify/SKILL.md": {
+      "origin_hash": "c05a03648c172cb6aa8ee200a8cede2f50fe2311db5a9f39ad15f63c2b651cf8",
+      "path": ".claude/skills/next-verify/SKILL.md"
+    },
+    ".claude/skills/supabase-migrate/SKILL.md": {
+      "origin_hash": "c32eb13ef9528a2ba24939ea6dcc3d14bd0be0ee08a0c42fbef01a24634c5297",
+      "path": ".claude/skills/supabase-migrate/SKILL.md"
+    }
+  }
+}
