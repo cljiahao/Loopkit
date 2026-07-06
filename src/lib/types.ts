@@ -6,16 +6,118 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-// Placeholder DB types — loopkit owns the `loopkit` schema in the shared
-// Supabase project (schema-per-kit). Populate Tables/Views/Functions/Enums
-// as the schema lands (see the `/supabase-migrate` skill); keep the schema
+// Hand-written mirror of supabase/migrations/0001_loopkit_core.sql — no live
+// DB/codegen available yet. Keep in sync with the migration; keep the schema
 // key in sync with `db.schema` in src/lib/supabase/{client,server}.ts and
 // src/lib/supabase/middleware.ts, or supabase-js queries degrade to `never`.
 export interface Database {
   loopkit: {
-    Tables: Record<string, never>;
+    Tables: {
+      programs: {
+        Row: {
+          id: string;
+          vendor_id: string;
+          name: string;
+          stamps_required: number;
+          reward_text: string;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_id: string;
+          name: string;
+          stamps_required: number;
+          reward_text: string;
+          active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          vendor_id?: string;
+          name?: string;
+          stamps_required?: number;
+          reward_text?: string;
+          active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      cards: {
+        Row: {
+          id: string;
+          program_id: string;
+          phone: string;
+          stamp_count: number;
+          reward_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          program_id: string;
+          phone: string;
+          stamp_count?: number;
+          reward_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          program_id?: string;
+          phone?: string;
+          stamp_count?: number;
+          reward_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      stamp_events: {
+        Row: {
+          id: string;
+          card_id: string;
+          kind: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          card_id: string;
+          kind: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          card_id?: string;
+          kind?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+    };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      owns_program: {
+        Args: { p_program: string };
+        Returns: boolean;
+      };
+      add_stamp: {
+        Args: { p_program: string; p_phone: string };
+        Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
+      };
+      redeem: {
+        Args: { p_card: string };
+        Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
+      };
+      card_status: {
+        Args: { p_program: string; p_phone: string };
+        Returns: {
+          stamp_count: number;
+          stamps_required: number;
+          reward_text: string;
+        }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };
