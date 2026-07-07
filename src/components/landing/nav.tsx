@@ -5,12 +5,12 @@ import { Wordmark } from "./wordmark";
 export function Nav({ authed = false }: { authed?: boolean }) {
   return (
     <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-      <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link
           href="/"
           className="rounded-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
-          <Wordmark />
+          <Wordmark className="text-2xl" />
           <span className="sr-only">loopkit home</span>
         </Link>
         <div className="flex items-center gap-3">
