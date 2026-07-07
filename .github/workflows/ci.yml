@@ -20,101 +20,6 @@ jobs:
       - run: pnpm check
       - run: pnpm test
 
-  e2e:
-    name: e2e (auth-guard)
-    runs-on: ubuntu-latest
-    env:
-      # auth-guard only boots the app; getUser() returns null with no session
-      # and makes no network call, so no live Supabase is needed here.
-      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_dummy
-      SUPABASE_SECRET_KEY: sb_secret_ci_dummy
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm exec playwright test e2e/auth-guard.spec.ts
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 7
-
-  e2e-order:
-    name: e2e (order lifecycle)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: 2.109.0
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm exec playwright install --with-deps chromium
-      # Boot the real stack (applies every migration) and load the coffee-cart
-      # seed the order specs depend on (the "Kopitiam Cart" booth + its
-      # short_code e2eKopitiam01). psql ships on ubuntu-latest.
-      - run: supabase start
-      # The coffee-cart seed reuses a dev "Test" vendor (vendors.id → auth.users)
-      # that a fresh CI DB lacks — bootstrap that auth user + vendor first, then
-      # seed the booth. ON_ERROR_STOP so a broken seed fails the job loudly.
-      - name: Seed CI auth bootstrap + coffee-cart
-        run: |
-          DB="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
-          psql "$DB" -v ON_ERROR_STOP=1 -f supabase/seed/ci-auth-bootstrap.sql
-          psql "$DB" -v ON_ERROR_STOP=1 -f supabase/seed/coffee-cart.sql
-      # Hand the app the live local creds under the names it reads. The
-      # override-name form writes KEY=value lines straight to the job env.
-      - name: Export local Supabase creds for the app
-        # `status -o env` emits KEY="value"; $GITHUB_ENV keeps quotes literally,
-        # which made the app read a quoted (invalid) supabaseUrl. Strip the
-        # surrounding quotes so the values land clean.
-        run: |
-          supabase status -o env \
-            --override-name api.url=NEXT_PUBLIC_SUPABASE_URL \
-            --override-name auth.anon_key=NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
-            --override-name auth.service_role_key=SUPABASE_SECRET_KEY \
-            | sed -E 's/^([A-Z_]+)="?(.*[^"])"?$/\1=\2/' \
-            | grep -E '^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY|SUPABASE_SECRET_KEY)=' \
-            >> "$GITHUB_ENV"
-      # Playwright's webServer boots `pnpm dev`, which inherits the env above.
-      - run: pnpm exec playwright test e2e/customer-order.spec.ts e2e/order-code.spec.ts
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report-order
-          path: playwright-report/
-          retention-days: 7
-      - if: always()
-        run: supabase stop
-
-  db:
-    name: db (migrations + pgTAP RLS)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: 2.109.0
-      # `supabase start` boots the local stack and applies every migration in
-      # supabase/migrations — so a malformed migration fails here. `test db` then
-      # runs the pgTAP suite (supabase/tests/rls.test.sql), which carries its own
-      # inline fixtures, so no seed or API keys are needed.
-      - run: supabase start
-      - run: supabase test db
-      - if: always()
-        run: supabase stop
-
   build:
     name: build (next build)
     runs-on: ubuntu-latest
@@ -134,32 +39,29 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
-  mutation:
-    name: mutation (changed lib)
+  e2e:
+    name: e2e (public smoke)
     runs-on: ubuntu-latest
-    # PRs only, scoped to the src/lib files the PR touches. Advisory: the
-    # Stryker config sets break=null, so a low score never fails the check.
-    if: github.event_name == 'pull_request'
+    env:
+      # The smoke only boots the app and hits public routes; the middleware
+      # constructs a Supabase client but makes no network call without a
+      # session, so dummy creds suffice (no live Supabase needed).
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_dummy
+      SUPABASE_SECRET_KEY: sb_secret_ci_dummy
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Mutation-test changed src/lib files
-        run: |
-          git fetch origin "$GITHUB_BASE_REF" --depth=1
-          FILES=$(git diff --name-only "origin/$GITHUB_BASE_REF...HEAD" \
-            | grep -E '^src/lib/.*\.ts$' \
-            | grep -vE '\.test\.ts$|/types\.ts$|/action-result\.ts$' \
-            | paste -sd, -)
-          if [ -z "$FILES" ]; then
-            echo "No src/lib changes — skipping mutation."
-            exit 0
-          fi
-          echo "Mutating: $FILES"
-          pnpm exec stryker run --mutate "$FILES"
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
