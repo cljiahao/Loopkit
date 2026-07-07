@@ -57,6 +57,7 @@ export interface Database {
           stamp_count: number;
           reward_count: number;
           state: Json;
+          card_token: string;
           last_event_at: string | null;
           created_at: string;
           updated_at: string;
@@ -68,6 +69,7 @@ export interface Database {
           stamp_count?: number;
           reward_count?: number;
           state?: Json;
+          card_token?: string;
           last_event_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -79,6 +81,7 @@ export interface Database {
           stamp_count?: number;
           reward_count?: number;
           state?: Json;
+          card_token?: string;
           last_event_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -183,6 +186,30 @@ export interface Database {
           stamp_count: number;
           stamps_required: number;
           reward_text: string;
+        }[];
+      };
+      enroll_card: {
+        Args: { p_program: string; p_phone: string };
+        Returns: string;
+      };
+      card_view: {
+        Args: { p_program: string; p_phone: string };
+        Returns: {
+          name: string;
+          type: string;
+          config: Json;
+          state: Json;
+          card_token: string;
+          reward_text: string;
+          stamps_required: number;
+        }[];
+      };
+      card_by_token: {
+        Args: { p_token: string };
+        Returns: {
+          program_id: string;
+          card_id: string;
+          phone: string;
         }[];
       };
       is_admin: {

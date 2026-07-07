@@ -38,6 +38,7 @@
 **Files:** Create `supabase/migrations/0006_loopkit_card_token.sql`; Modify `src/lib/types.ts`, `docs/DEPLOY.md`; Test `test/db/card-token-schema.test.ts`.
 
 **Interfaces:**
+
 - `cards.card_token text not null unique` (per-row random; existing rows backfilled).
 - `enroll_card(p_program uuid, p_phone text) returns text` — public SECURITY DEFINER; creates the card if absent; returns its `card_token`.
 - `card_view(p_program uuid, p_phone text) returns table(name text, type text, config jsonb, state jsonb, card_token text, reward_text text, stamps_required int)` — public SECURITY DEFINER; the anon-safe read behind `/c`.

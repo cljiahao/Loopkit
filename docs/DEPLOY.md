@@ -28,6 +28,11 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      RPC — SECURITY DEFINER, `owns_program`-gated; persists the state the
      TypeScript strategy computed and logs one event). Backs non-stamp types
      (Lucky Tap); the stamp card keeps its `add_stamp` path. Safe to re-run.
+   - apply `0006_loopkit_card_token.sql` (adds the opaque `cards.card_token`
+     column — the QR payload — plus the public SECURITY DEFINER `enroll_card`
+     and `card_view` functions behind the customer `/c` page, and the owner-
+     gated `card_by_token` for the Phase 3b vendor scan). No direct anon table
+     access; existing rows are backfilled with distinct tokens on add.
    - **Bootstrap the first admin.** The `/admin` console 404s until your auth
      user is in `loopkit.admins` — there is no self-serve UI. Sign in once so the
      account exists, find its id under Authentication → Users, then in the SQL

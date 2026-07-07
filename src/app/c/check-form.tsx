@@ -15,9 +15,8 @@ export function CheckForm({ programId }: { programId: string }) {
     STATUS_IDLE,
   );
 
-  const stampsRequired = state.stamps_required ?? 0;
-  const stampCount = state.stamp_count ?? 0;
-  const rewardReady = state.status === "found" && stampCount >= stampsRequired;
+  const total = state.total ?? 0;
+  const filled = state.filled ?? 0;
 
   return (
     <div className="space-y-6">
@@ -44,7 +43,7 @@ export function CheckForm({ programId }: { programId: string }) {
           disabled={pending}
           className="h-11 w-full rounded-xl text-base font-semibold"
         >
-          {pending ? "Checking…" : "Check my stamps"}
+          {pending ? "Checking…" : "Check my card"}
         </Button>
       </form>
 
@@ -55,11 +54,11 @@ export function CheckForm({ programId }: { programId: string }) {
       )}
 
       {state.status === "found" && (
-        <div className="space-y-3 rounded-xl border bg-muted/40 p-4">
+        <div className="space-y-4 rounded-xl border bg-muted/40 p-4">
           <div className="flex flex-wrap gap-2">
-            {Array.from({ length: stampsRequired }, (_, i) => {
-              const isReward = i === stampsRequired - 1;
-              const stamped = i < stampCount;
+            {Array.from({ length: total }, (_, i) => {
+              const isReward = i === total - 1;
+              const stamped = i < filled;
               return (
                 <span
                   key={i}
@@ -82,16 +81,25 @@ export function CheckForm({ programId }: { programId: string }) {
               );
             })}
           </div>
-          <p className="font-mono text-sm font-medium">
-            {stampCount} / {stampsRequired} stamps
-          </p>
+          <p className="font-mono text-sm font-medium">{state.label}</p>
           <p className="text-sm text-muted-foreground">
             Reward: {state.reward_text}
           </p>
-          {rewardReady && (
+          {state.rewardReady && (
             <p className="text-sm font-semibold text-gold-foreground">
               🎉 Reward ready!
             </p>
+          )}
+          {state.qr && (
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <div
+                className="w-full max-w-[180px] rounded-xl border bg-white p-3 [&_svg]:h-auto [&_svg]:w-full"
+                dangerouslySetInnerHTML={{ __html: state.qr }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Show this to the shop
+              </p>
+            </div>
           )}
         </div>
       )}
