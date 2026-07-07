@@ -1,68 +1,63 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
-/* ── "Kraft & Ember" — warm night-market food-stall theme ──────────────────── */
+/* ── loopkit — "Mulberry & Gold" ──────────────────────────────────────────────
+   Digital stamp-card loyalty for SG small vendors. The mood is the small reward
+   of a finished card: warm mulberry ink, a gold stamp for the prize, on soft
+   blush paper. Deliberately NOT qkit's ember-kraft nor merqo's control-room grey. */
 
 :root {
-  /* warm oat paper canvas, espresso ink, ember/chili accent */
-  --background: oklch(0.965 0.013 78);
-  --foreground: oklch(0.24 0.024 48);
-  --card: oklch(0.992 0.007 86);
-  --card-foreground: oklch(0.24 0.024 48);
-  --popover: oklch(0.992 0.007 86);
-  --popover-foreground: oklch(0.24 0.024 48);
-  --primary: oklch(0.595 0.18 36);
-  --primary-foreground: oklch(0.98 0.015 86);
-  --secondary: oklch(0.91 0.022 72);
-  --secondary-foreground: oklch(0.3 0.03 50);
-  --muted: oklch(0.93 0.014 76);
-  --muted-foreground: oklch(0.5 0.022 55);
-  --accent: oklch(0.9 0.038 70);
-  --accent-foreground: oklch(0.3 0.03 50);
+  /* blush paper canvas, deep grape ink, mulberry brand, gold reward stamp */
+  --background: oklch(0.985 0.008 350);
+  --foreground: oklch(0.24 0.048 342);
+  --card: oklch(0.995 0.004 350);
+  --card-foreground: oklch(0.24 0.048 342);
+  --popover: oklch(0.995 0.004 350);
+  --popover-foreground: oklch(0.24 0.048 342);
+  --primary: oklch(0.46 0.135 345);
+  --primary-foreground: oklch(0.98 0.01 345);
+  --secondary: oklch(0.94 0.024 342);
+  --secondary-foreground: oklch(0.36 0.09 345);
+  --muted: oklch(0.955 0.014 345);
+  --muted-foreground: oklch(0.46 0.035 345);
+  --accent: oklch(0.92 0.032 340);
+  --accent-foreground: oklch(0.36 0.09 345);
   --destructive: oklch(0.55 0.2 27);
-  --border: oklch(0.87 0.02 70);
-  --input: oklch(0.89 0.018 72);
-  --ring: oklch(0.595 0.18 36);
-  --radius: 0.5rem;
+  --border: oklch(0.9 0.02 342);
+  --input: oklch(0.9 0.02 342);
+  --ring: oklch(0.46 0.135 345);
+  --radius: 0.75rem;
 
-  /* kitchen-ticket status stamps */
-  --status-pending: oklch(0.72 0.15 75);
-  --status-confirmed: oklch(0.6 0.13 245);
-  --status-preparing: oklch(0.62 0.18 40);
-  --status-ready: oklch(0.6 0.16 150);
-  --status-completed: oklch(0.55 0.01 60);
-  --status-cancelled: oklch(0.58 0.2 27);
+  /* signature reward stamp — gold ink pressed into the card */
+  --gold: oklch(0.79 0.125 82);
+  --gold-foreground: oklch(0.28 0.05 62);
 }
 
-.dark {
-  /* dusk night-market: espresso canvas, warm cream ink, ember stays hot */
-  --background: oklch(0.2 0.018 50);
-  --foreground: oklch(0.94 0.012 80);
-  --card: oklch(0.25 0.02 50);
-  --card-foreground: oklch(0.94 0.012 80);
-  --popover: oklch(0.25 0.02 50);
-  --popover-foreground: oklch(0.94 0.012 80);
-  --primary: oklch(0.68 0.18 40);
-  --primary-foreground: oklch(0.2 0.02 45);
-  --secondary: oklch(0.32 0.022 55);
-  --secondary-foreground: oklch(0.94 0.012 80);
-  --muted: oklch(0.3 0.018 52);
-  --muted-foreground: oklch(0.72 0.02 70);
-  --accent: oklch(0.36 0.03 58);
-  --accent-foreground: oklch(0.94 0.012 80);
-  --destructive: oklch(0.62 0.2 27);
-  --border: oklch(0.36 0.02 55);
-  --input: oklch(0.38 0.02 55);
-  --ring: oklch(0.68 0.18 40);
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* dusk grape: deep plum canvas, warm off-white ink, orchid brand, gold stays hot */
+    --background: oklch(0.19 0.028 342);
+    --foreground: oklch(0.95 0.012 350);
+    --card: oklch(0.23 0.032 342);
+    --card-foreground: oklch(0.95 0.012 350);
+    --popover: oklch(0.23 0.032 342);
+    --popover-foreground: oklch(0.95 0.012 350);
+    --primary: oklch(0.62 0.15 346);
+    --primary-foreground: oklch(0.17 0.03 345);
+    --secondary: oklch(0.3 0.03 342);
+    --secondary-foreground: oklch(0.95 0.012 350);
+    --muted: oklch(0.28 0.026 342);
+    --muted-foreground: oklch(0.73 0.022 345);
+    --accent: oklch(0.33 0.035 342);
+    --accent-foreground: oklch(0.95 0.012 350);
+    --destructive: oklch(0.62 0.2 27);
+    --border: oklch(0.33 0.03 342);
+    --input: oklch(0.35 0.03 342);
+    --ring: oklch(0.62 0.15 346);
 
-  --status-pending: oklch(0.78 0.15 80);
-  --status-confirmed: oklch(0.7 0.13 245);
-  --status-preparing: oklch(0.72 0.18 45);
-  --status-ready: oklch(0.72 0.16 150);
-  --status-completed: oklch(0.7 0.01 60);
-  --status-cancelled: oklch(0.68 0.2 27);
+    --gold: oklch(0.81 0.13 84);
+    --gold-foreground: oklch(0.2 0.04 60);
+  }
 }
 
 @theme inline {
@@ -85,21 +80,17 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --color-status-pending: var(--status-pending);
-  --color-status-confirmed: var(--status-confirmed);
-  --color-status-preparing: var(--status-preparing);
-  --color-status-ready: var(--status-ready);
-  --color-status-completed: var(--status-completed);
-  --color-status-cancelled: var(--status-cancelled);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
-  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 * {
@@ -111,90 +102,33 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
-  /* warm paper grain: layered radial glow + faint fibre noise */
+  /* two soft reward-glows: a gold wash top-right, a mulberry wash top-left —
+     keeps the blush paper feeling bright and celebratory, never papery. */
   background-image:
     radial-gradient(
-      ellipse 80% 50% at 50% -10%,
-      oklch(0.6 0.16 45 / 0.06),
+      ellipse 70% 55% at 88% -8%,
+      oklch(0.79 0.125 82 / 0.14),
       transparent 60%
     ),
     radial-gradient(
-      ellipse 60% 40% at 100% 0%,
-      oklch(0.72 0.12 80 / 0.05),
-      transparent 55%
-    ),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+      ellipse 65% 50% at 6% -6%,
+      oklch(0.46 0.135 345 / 0.08),
+      transparent 58%
+    );
   background-attachment: fixed;
 }
 
-/* Display headings tuned for Fraunces optical sizing */
+/* Bricolage Grotesque display headings — tighten tracking at large sizes */
 .font-display {
   font-family: var(--font-display);
-  font-optical-sizing: auto;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
 }
 
-/* Kitchen-ticket card: paper with a perforated, scalloped top edge */
-.ticket {
-  position: relative;
-  background: var(--color-card);
-}
-.ticket::before {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  top: -1px;
-  height: 6px;
-  background-image: radial-gradient(
-    circle at 6px 0,
-    var(--color-background) 0 4px,
-    transparent 4px
-  );
-  background-size: 12px 6px;
-  background-repeat: repeat-x;
-}
-
-/* Attention washes for the live board. Plain classes (not Tailwind utilities)
-   so they beat .ticket's own unlayered background — and a full-card background
-   (rather than a border) so the colour reaches up into the scalloped receipt
-   top edge instead of being broken by it. One wash at a time, by priority:
-   overdue (red) > says-paid (blue) > aging (amber). */
-.ticket-alert {
-  background: oklch(0.93 0.045 245);
-  border-color: oklch(0.62 0.13 245);
-}
-.ticket-aging {
-  background: oklch(0.95 0.04 80);
-  border-color: oklch(0.72 0.13 80);
-}
-.ticket-overdue {
-  background: oklch(0.94 0.055 27);
-  border-color: oklch(0.6 0.2 27);
-}
-.dark .ticket-alert {
-  background: oklch(0.33 0.06 245);
-  border-color: oklch(0.6 0.13 245);
-}
-.dark .ticket-aging {
-  background: oklch(0.32 0.05 80);
-  border-color: oklch(0.6 0.12 80);
-}
-.dark .ticket-overdue {
-  background: oklch(0.32 0.07 27);
-  border-color: oklch(0.58 0.2 27);
-}
-
-/* dashed perforation divider */
-.perforation {
-  border: 0;
-  border-top: 1.5px dashed var(--color-border);
-}
-
-/* staggered load reveal for dashboard panels (stats) */
+/* Load reveal for landing sections; disabled under reduced-motion below. */
 @keyframes fade-rise {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -202,27 +136,23 @@ body {
   }
 }
 .fade-rise {
-  animation: fade-rise 0.4s ease-out both;
+  animation: fade-rise 0.5s ease-out both;
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fade-rise {
     animation: none;
   }
-  /* Tailwind's always-on animation utilities don't self-respect the
-     preference: the live board's pulsing "N active" dot, skeleton shimmers,
-     and spinners would loop for a whole shift in a motion-sensitive vendor's
-     face. Stop the looping (icons/dots stay visible, just static). */
+  /* Tailwind's always-on animation utilities don't self-respect the preference. */
   .animate-ping,
   .animate-pulse,
   .animate-spin {
     animation: none;
-  }
-}
-
-/* Smooth in-page anchor scrolling (e.g. the hero "See how" jump to #how),
-   disabled under reduced-motion. */
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
   }
 }

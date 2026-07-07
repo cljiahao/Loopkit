@@ -1,22 +1,37 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import {
+  Bricolage_Grotesque,
+  Plus_Jakarta_Sans,
+  IBM_Plex_Mono,
+} from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
+// Display: characterful grotesque for headlines, used with restraint.
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  variable: "--font-geist-sans",
+  variable: "--font-bricolage",
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
+// Body: friendly, rounded, highly readable for non-technical vendors.
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-geist-mono",
+  variable: "--font-jakarta",
+  display: "swap",
+});
+
+// Mono: for stamp counters and receipt-ticket numerals.
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-plex-mono",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "loopkit",
-  description: "Digital stamp-card loyalty for SG small vendors.",
+  title: "loopkit — turn one-time buyers into regulars",
+  description:
+    "A digital stamp card for Singapore's small food vendors. Stamp customers by phone number, reward the regulars — no app for them to download.",
 };
 
 export default function RootLayout({
@@ -28,7 +43,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable}`}
+      className={`${bricolage.variable} ${jakarta.variable} ${plexMono.variable}`}
     >
       <body>{children}</body>
     </html>
