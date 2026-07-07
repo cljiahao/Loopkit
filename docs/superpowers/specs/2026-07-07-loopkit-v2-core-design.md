@@ -5,6 +5,7 @@
 **Goal:** turn loopkit from a single-type (stamp card) tool into a **multi-template loyalty engine** with a **customer-facing** surface, delivering the flagship **🌱 Sprout** (grow-a-plant) template. Research basis: `docs/superpowers/research` (color/psychology/identity streams, 2026-07-07 session) — endowed-progress, variable-ratio, loss-aversion, pet-companion; SG check-in analysis; WCAG.
 
 **In scope (this spec):**
+
 1. A generalized, **event-sourced program engine** (strategy-per-type; progress derived on read).
 2. Migrate the existing **stamp card** onto the engine (no behavior change for current vendors).
 3. Two new templates: **Lucky Tap** (variable-ratio; engine proof) and **Sprout** (flagship gamified).
@@ -43,13 +44,22 @@ RLS/grants mirror 0001 (vendor-scoped writes via SECURITY DEFINER fns / service 
 One module per type implementing:
 
 ```ts
-type Progress = { stage: string; label: string; display: ProgressView; rewardReady: boolean };
+type Progress = {
+  stage: string;
+  label: string;
+  display: ProgressView;
+  rewardReady: boolean;
+};
 interface Strategy<Config, State> {
-  defaults(config: Config): State;                       // new card
-  progress(state: State, config: Config, now: Date): Progress;   // derived (applies time-decay)
-  apply(event: EngineEvent, state: State, config: Config, now: Date):
-        { state: State; rewardUnlocked: boolean; payload: Json };  // fold one event
-  redeem(state: State, config: Config): State;           // consume the reward, reset
+  defaults(config: Config): State; // new card
+  progress(state: State, config: Config, now: Date): Progress; // derived (applies time-decay)
+  apply(
+    event: EngineEvent,
+    state: State,
+    config: Config,
+    now: Date,
+  ): { state: State; rewardUnlocked: boolean; payload: Json }; // fold one event
+  redeem(state: State, config: Config): State; // consume the reward, reset
 }
 ```
 
@@ -61,7 +71,7 @@ interface Strategy<Config, State> {
 
 ## 2. Customer-facing surface
 
-**Decision:** go customer-facing; keep the stamp/redeem *action* vendor-gated. Web only (no app install).
+**Decision:** go customer-facing; keep the stamp/redeem _action_ vendor-gated. Web only (no app install).
 
 - **`/c?p=<programId>` (exists)** becomes the customer's card view for that shop: shop name, their progress rendered per type (dot row for stamp, plant for Sprout, "you won!" history for Lucky), and — once identified — **their QR** (encodes an opaque membership token, not the phone). Phone entry still available to look up.
 - **Identity / check-in:**
@@ -77,6 +87,7 @@ interface Strategy<Config, State> {
 ## 3. The three initial templates
 
 ### 3.1 `stamp` (existing — migrated onto the engine)
+
 - **config:** `{ stamps_required: int(2..20), reward_text: string }`.
 - **state:** `{ stamp_count: int }`.
 - **progress:** dot row; `rewardReady = stamp_count >= stamps_required` (capped, per 0002).
@@ -85,6 +96,7 @@ interface Strategy<Config, State> {
 - No behavior change vs today; this validates the engine against a known-good type.
 
 ### 3.2 `lucky` — Lucky Tap (build first after engine)
+
 - **config:** `{ win_probability: float, pity_ceiling: int, cooldown_visits: int, prize_pool: [{id,label,weight}], reward_text }`.
 - **state:** `{ visits_since_win: int, total_wins: int }`.
 - **apply(visit):** server-side RNG (never client). Win if `cooldown` satisfied AND (`random() < win_probability` OR `visits_since_win+1 >= pity_ceiling`). On win: pick weighted prize, `visits_since_win = 0`, `total_wins += 1`, `rewardUnlocked = true`, payload `{won:true, prize_id}`. Else `visits_since_win += 1`.
@@ -93,6 +105,7 @@ interface Strategy<Config, State> {
 - **Behavioral lever:** variable-ratio + pity ceiling (loss aversion). Lowest build cost — proves the engine end-to-end.
 
 ### 3.3 `plant` — 🌱 Sprout (flagship)
+
 - **config:** `{ stages:[{name,threshold}], growth_per_visit:int, grace_days:int, decay_rate:float(per day), bloom_reward_text, species?:[] }`.
 - **state:** `{ growth_at_last_visit:number, current_cycle:int, species:string, blooms:int }` (+ `cards.last_event_at`).
 - **progress (derived, the crux):**
@@ -131,17 +144,20 @@ interface Strategy<Config, State> {
 4. Redeem: vendor-gated action → `engine.redeem` → persist.
 
 ## 6. Error handling
+
 - All actions return `ActionResult`; **log the real Postgres error server-side** (already added), generic message to user.
 - Degraded reads never fake success (show a clear "couldn't load" state).
 - Engine strategies are total functions (no throw on normal input); invalid config caught by Zod at program creation.
 
 ## 7. Testing
+
 - **Engine strategies:** exhaustive unit tests — stamp cap, lucky RNG (seeded/deterministic via injected rng + pity/cooldown), **plant decay math** (grace, floor, wilt, bloom, cycle reset) across time. This is the highest-value test surface.
 - **Migration 0004:** schema drift guard (mirrors existing convention) + a backfill correctness check.
 - **Actions:** contract tests for record_visit/redeem via mocked supabase.
 - **e2e smoke:** create each program type → identify → visit → reward, gated behind live Supabase.
 
 ## 8. Rollout / phases (for the plan)
+
 - **Phase 1 — Engine + stamp migration:** `0004` + `src/lib/engine/{index,stamp}.ts` + rewire existing stamp actions/pages through the engine. Ship: no user-visible change, everything green. (De-risks the abstraction against a known type.)
 - **Phase 2 — Lucky Tap:** `lucky` strategy + type picker (Stamp/Lucky) + counter result UI. Ship: vendors can run a second type.
 - **Phase 3 — Customer surface + QR:** `/c` card view per type, `card_token`, QR display + vendor Scan (camera). Ship: customer-facing, QR check-in default, phone fallback.
@@ -149,6 +165,7 @@ interface Strategy<Config, State> {
 - Each phase is independently shippable and reviewed.
 
 ## 9. Open questions (resolve during plan)
+
 - QR-decode library choice + bundle impact (evaluate `@zxing/browser` vs `jsqr`; lazy-load).
 - Whether to keep `add_stamp`/`card_status` RPCs long-term or fully route through `record_visit` (Phase 1 keeps them; can converge later).
 - Plant art: hand-drawn SVG set vs a minimal geometric plant (lean geometric for load/offline + reduced-motion).

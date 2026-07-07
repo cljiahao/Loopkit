@@ -6,6 +6,8 @@ export type Program = {
   name: string;
   stamps_required: number;
   reward_text: string;
+  type: string;
+  config: unknown;
   active: boolean;
 };
 
@@ -22,7 +24,7 @@ export async function getProgram(): Promise<Program | null> {
   const supabase = await createServerClient();
   const { data, error } = await supabase
     .from("programs")
-    .select("id,name,stamps_required,reward_text,active")
+    .select("id,name,stamps_required,reward_text,type,config,active")
     .maybeSingle();
   if (error) throw new Error(`getProgram: ${error.message}`);
   return data;

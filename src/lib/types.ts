@@ -20,6 +20,8 @@ export interface Database {
           name: string;
           stamps_required: number;
           reward_text: string;
+          type: string;
+          config: Json;
           active: boolean;
           created_at: string;
         };
@@ -29,6 +31,8 @@ export interface Database {
           name: string;
           stamps_required: number;
           reward_text: string;
+          type?: string;
+          config?: Json;
           active?: boolean;
           created_at?: string;
         };
@@ -38,6 +42,8 @@ export interface Database {
           name?: string;
           stamps_required?: number;
           reward_text?: string;
+          type?: string;
+          config?: Json;
           active?: boolean;
           created_at?: string;
         };
@@ -50,6 +56,8 @@ export interface Database {
           phone: string;
           stamp_count: number;
           reward_count: number;
+          state: Json;
+          last_event_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -59,6 +67,8 @@ export interface Database {
           phone: string;
           stamp_count?: number;
           reward_count?: number;
+          state?: Json;
+          last_event_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -68,6 +78,8 @@ export interface Database {
           phone?: string;
           stamp_count?: number;
           reward_count?: number;
+          state?: Json;
+          last_event_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -78,18 +90,21 @@ export interface Database {
           id: string;
           card_id: string;
           kind: string;
+          payload: Json | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           card_id: string;
           kind: string;
+          payload?: Json | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           card_id?: string;
           kind?: string;
+          payload?: Json | null;
           created_at?: string;
         };
         Relationships: [];

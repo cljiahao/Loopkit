@@ -4,7 +4,7 @@
 
 **Goal:** Introduce an event-sourced, strategy-per-type program engine and migrate the existing stamp card onto it — with zero user-visible change — to de-risk the abstraction against a known-good type before new templates land.
 
-**Architecture:** Strategies live in TypeScript (`src/lib/engine/`), pure and unit-tested; the DB gains generic `type`/`config`/`state` columns (additive migration + backfill) but write RPCs (`add_stamp`/`redeem`) stay unchanged this phase — only the **read/progress computation** routes through the engine. The stamp strategy reads its config from the new `config` JSON *or* falls back to the legacy `stamps_required`/`reward_text` columns, so the code deploy does not depend on the migration being applied first.
+**Architecture:** Strategies live in TypeScript (`src/lib/engine/`), pure and unit-tested; the DB gains generic `type`/`config`/`state` columns (additive migration + backfill) but write RPCs (`add_stamp`/`redeem`) stay unchanged this phase — only the **read/progress computation** routes through the engine. The stamp strategy reads its config from the new `config` JSON _or_ falls back to the legacy `stamps_required`/`reward_text` columns, so the code deploy does not depend on the migration being applied first.
 
 **Tech Stack:** Next 16, TypeScript strict, Supabase `@supabase/ssr` (schema `loopkit`), Vitest, pnpm 11.
 
@@ -36,11 +36,13 @@
 ### Task 1: Migration 0004 — generalize schema + backfill
 
 **Files:**
+
 - Create: `supabase/migrations/0004_loopkit_engine.sql`
 - Modify: `src/lib/types.ts`, `docs/DEPLOY.md`
 - Test: `test/db/engine-schema.test.ts`
 
 **Interfaces:**
+
 - Produces: `programs.type` (`'stamp'|'lucky'|'plant'`, default `'stamp'`), `programs.config jsonb`, `cards.state jsonb`, `cards.last_event_at timestamptz`, `stamp_events.payload jsonb`, generalized `stamp_events.kind` check (`'stamp'|'redeem'|'visit'|'win'`).
 
 - [ ] **Step 1: Write the failing drift test**
@@ -50,10 +52,7 @@
 import { readFileSync } from "node:fs";
 import { describe, it, expect } from "vitest";
 
-const sql = readFileSync(
-  "supabase/migrations/0004_loopkit_engine.sql",
-  "utf8",
-);
+const sql = readFileSync("supabase/migrations/0004_loopkit_engine.sql", "utf8");
 
 describe("0004 engine migration", () => {
   it("adds type + config to programs", () => {
@@ -151,10 +150,12 @@ git commit -m "feat: 0004 engine schema — type/config/state columns + backfill
 ### Task 2: Engine types + stamp strategy
 
 **Files:**
+
 - Create: `src/lib/engine/types.ts`, `src/lib/engine/stamp.ts`
 - Test: `test/lib/engine/stamp.test.ts`
 
 **Interfaces:**
+
 - Produces:
   - `type EngineEvent = { kind: "visit" | "redeem"; payload?: Record<string, unknown> }`
   - `type ProgressView = { kind: "dots"; filled: number; total: number }`
@@ -215,7 +216,8 @@ describe("stampStrategy", () => {
   });
   it("progress renders a dot view", () => {
     expect(
-      stampStrategy.progress({ stamp_count: 3, reward_count: 0 }, cfg, now).view,
+      stampStrategy.progress({ stamp_count: 3, reward_count: 0 }, cfg, now)
+        .view,
     ).toEqual({ kind: "dots", filled: 3, total: 5 });
   });
 });
@@ -313,11 +315,13 @@ git commit -m "feat: engine strategy interface + stamp strategy"
 ### Task 3: Engine registry + route the read path through it
 
 **Files:**
+
 - Create: `src/lib/engine/index.ts`
 - Modify: `src/lib/program.ts` (select `type,config`), the dashboard/customer read that computes reward-ready to call `getProgress` instead of the inline `rewardReady`
 - Test: `test/lib/engine/index.test.ts`
 
 **Interfaces:**
+
 - Consumes: `stampStrategy`, `Strategy`, `Progress` from Task 2; `Program` from `src/lib/program.ts`.
 - Produces:
   - `type ProgramLike = { type: string; config: unknown; stamps_required: number; reward_text: string }`

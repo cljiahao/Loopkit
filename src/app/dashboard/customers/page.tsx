@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireVendor } from "@/lib/auth";
 import { getProgram } from "@/lib/program";
+import { getProgress } from "@/lib/engine";
 import { listCards } from "@/lib/cards";
 import { formatSgtDate } from "@/lib/format";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ export default async function CustomersPage({
 
   const { q } = await searchParams;
   const cards = await listCards(program.id, q);
+  const now = new Date();
 
   return (
     <main className="mx-auto max-w-2xl space-y-8 p-5 py-10">
@@ -60,7 +62,17 @@ export default async function CustomersPage({
                 <div>
                   <p className="font-medium">{card.phone}</p>
                   <p className="mt-0.5 text-muted-foreground">
-                    {card.stamp_count}/{program.stamps_required} stamps
+                    {
+                      getProgress(
+                        program,
+                        {
+                          state: undefined,
+                          stamp_count: card.stamp_count,
+                          reward_count: card.reward_count,
+                        },
+                        now,
+                      ).label
+                    }
                     {card.reward_count > 0 &&
                       ` · ${card.reward_count} reward${card.reward_count === 1 ? "" : "s"}`}
                   </p>

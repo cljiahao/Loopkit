@@ -20,6 +20,10 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
    - `supabase/migrations/0003_loopkit_admin.sql` → Run. (Adds the platform-
      operator admin: `admins` allow-list, `admin_audit` trail, the `is_admin`
      membership function, RLS, and grants. Backs the `/admin` console.)
+   - apply `0004_loopkit_engine.sql` (additive columns + backfill; safe,
+     idempotent). Adds the v2 engine columns — `programs.type`/`config`,
+     `cards.state`/`last_event_at`, `stamp_events.payload` and a generalized
+     `kind` check — then backfills existing rows. No function/RLS changes.
    - **Bootstrap the first admin.** The `/admin` console 404s until your auth
      user is in `loopkit.admins` — there is no self-serve UI. Sign in once so the
      account exists, find its id under Authentication → Users, then in the SQL
