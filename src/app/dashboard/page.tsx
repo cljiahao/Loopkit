@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { requireVendor } from "@/lib/auth";
 import { getProgram } from "@/lib/program";
 import { createServerClient } from "@/lib/supabase/server";
@@ -20,11 +21,19 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto max-w-2xl space-y-8 p-5 py-10">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{program.name}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Buy {program.stamps_required}, get 1 {program.reward_text}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{program.name}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Buy {program.stamps_required}, get 1 {program.reward_text}
+          </p>
+        </div>
+        <Link
+          href="/dashboard/customers"
+          className="shrink-0 text-sm font-medium text-primary hover:underline"
+        >
+          Customers
+        </Link>
       </div>
 
       <div className="rounded-2xl border bg-card p-6 shadow-sm">
