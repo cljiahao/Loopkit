@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function Cta() {
+export function Cta({ authed = false }: { authed?: boolean }) {
   return (
     <section className="bg-primary text-primary-foreground">
       <div className="mx-auto flex max-w-6xl flex-col items-start gap-6 px-6 py-16 sm:flex-row sm:items-center sm:justify-between">
@@ -20,8 +20,8 @@ export function Cta() {
           size="lg"
           className="bg-gold text-gold-foreground hover:bg-gold/90"
         >
-          <Link href="/login">
-            Get started
+          <Link href={authed ? "/dashboard" : "/login"}>
+            {authed ? "Go to dashboard" : "Get started"}
             <ArrowRight className="size-4" />
           </Link>
         </Button>

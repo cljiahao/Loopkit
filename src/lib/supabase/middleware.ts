@@ -34,22 +34,27 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // The public customer stamp-card view is anonymous and hot — don't spend an
-  // auth round-trip (or risk an auth-outage 500) on it. Only protected routes
-  // resolve the user.
-  if (!isProtectedPath(request.nextUrl.pathname)) return supabaseResponse;
+  const path = request.nextUrl.pathname;
 
+  // The public customer stamp-card view is anonymous and hot — don't spend an
+  // auth round-trip (or risk an auth-outage 500) on it.
+  if (path === "/c" || path.startsWith("/c/")) return supabaseResponse;
+
+  // Refresh the session on every other request. @supabase/ssr rotates the auth
+  // cookies as a side effect of getUser(); skipping it on public routes (the
+  // landing, /login) lets the token age out with no refresh, which silently
+  // logs the vendor out when they return. Resolve the user first, then apply
+  // the login gate only for protected paths.
   let user: User | null = null;
   try {
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    // Auth unreachable — degrade to "unauthenticated" and redirect to /login
-    // rather than 500-ing a protected route.
+    // Auth unreachable — degrade to "unauthenticated".
     user = null;
   }
 
-  if (!user) {
+  if (!user && isProtectedPath(path)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
