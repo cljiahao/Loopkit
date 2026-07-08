@@ -14,7 +14,7 @@ export function StreakFlame({
 }) {
   const colorClass =
     status === "active"
-      ? "text-gold-foreground"
+      ? "text-gold-accent"
       : status === "grace"
         ? "text-amber-500"
         : "text-muted-foreground opacity-50";

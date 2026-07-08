@@ -108,7 +108,7 @@ export function CheckForm({ programId }: { programId: string }) {
                       className={cn(
                         "flex size-7 items-center justify-center rounded-full border-2 text-sm",
                         isReward
-                          ? "border-gold text-gold-foreground"
+                          ? "border-gold text-gold-accent"
                           : stamped
                             ? "border-transparent bg-gold text-gold-foreground"
                             : "border-dashed border-muted-foreground/30",
@@ -130,7 +130,7 @@ export function CheckForm({ programId }: { programId: string }) {
             Reward: {state.reward_text}
           </p>
           {state.rewardReady && (
-            <p className="text-sm font-semibold text-gold-foreground">
+            <p className="text-sm font-semibold text-gold-accent">
               🎉 Reward ready!
             </p>
           )}

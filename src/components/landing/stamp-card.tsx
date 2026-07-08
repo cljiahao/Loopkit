@@ -28,7 +28,7 @@ export function StampCard() {
               className={cn(
                 "flex aspect-square items-center justify-center rounded-full border-2 text-sm",
                 isReward
-                  ? "border-gold text-gold-foreground"
+                  ? "border-gold text-gold-accent"
                   : stamped
                     ? "border-transparent bg-gold text-gold-foreground"
                     : "border-dashed border-border text-muted-foreground/40",

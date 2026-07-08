@@ -27,7 +27,7 @@ export function ScratchCard({
         <p
           className={cn(
             "text-sm font-semibold",
-            reward ? "text-gold-foreground" : "text-muted-foreground",
+            reward ? "text-gold-accent" : "text-muted-foreground",
           )}
         >
           {label}

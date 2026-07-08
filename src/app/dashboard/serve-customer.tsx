@@ -407,7 +407,7 @@ export function ServeCustomer({
           </p>
           {result.rewardReady && (
             <div className="mt-3 space-y-2">
-              <p className="text-sm font-semibold text-gold-foreground">
+              <p className="text-sm font-semibold text-gold-accent">
                 Reward ready!
               </p>
               <RedeemButton
@@ -436,7 +436,7 @@ export function ServeCustomer({
         >
           <p className="text-sm font-medium">{result.phone}</p>
           {result.won ? (
-            <p className="mt-1 text-sm font-semibold text-gold-foreground">
+            <p className="mt-1 text-sm font-semibold text-gold-accent">
               🎉 Won {rewardText}!
             </p>
           ) : result.played ? (
@@ -468,7 +468,7 @@ export function ServeCustomer({
               <p className="text-sm font-medium">{result.phone}</p>
               <p className="text-sm text-muted-foreground">{result.label}</p>
               {result.rewardUnlocked && (
-                <p className="text-sm font-semibold text-gold-foreground">
+                <p className="text-sm font-semibold text-gold-accent">
                   🌻 Bloomed! {rewardText} unlocked.
                 </p>
               )}
@@ -546,7 +546,7 @@ export function ServeCustomer({
               <p className="text-sm font-medium">{result.phone}</p>
               <p className="text-sm text-muted-foreground">{result.label}</p>
               {result.wonThisTime && (
-                <p className="text-sm font-semibold text-gold-foreground">
+                <p className="text-sm font-semibold text-gold-accent">
                   🎉 Won {result.rewardText}!
                 </p>
               )}
@@ -574,7 +574,7 @@ export function ServeCustomer({
               <p className="text-sm font-medium">{result.phone}</p>
               <p className="text-sm text-muted-foreground">{result.label}</p>
               {result.rewardUnlocked && (
-                <p className="text-sm font-semibold text-gold-foreground">
+                <p className="text-sm font-semibold text-gold-accent">
                   🔥 Streak hit! {rewardText} unlocked.
                 </p>
               )}

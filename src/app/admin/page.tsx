@@ -49,7 +49,7 @@ export default async function AdminOverviewPage() {
                       <span
                         className={
                           isRedeem
-                            ? "grid size-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold-foreground"
+                            ? "grid size-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold-accent"
                             : "grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"
                         }
                       >

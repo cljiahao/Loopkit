@@ -258,7 +258,7 @@ export function SetupForm({
                     className={cn(
                       "h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold transition-colors",
                       segment.is_reward
-                        ? "border-gold bg-gold/10 text-gold-foreground"
+                        ? "border-gold bg-gold/10 text-gold-accent"
                         : "bg-card text-muted-foreground hover:bg-muted/50",
                     )}
                   >

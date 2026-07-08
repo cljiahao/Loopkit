@@ -33,6 +33,12 @@
   /* signature reward stamp — gold ink pressed into the card */
   --gold: oklch(0.79 0.125 82);
   --gold-foreground: oklch(0.28 0.05 62);
+  /* accent text drawn directly on the page (not on a solid --gold fill) —
+     needs its own contrast pass per mode: dark ink on light paper here,
+     flipped to light gold ink on dark paper below. Never reuse
+     --gold-foreground for this — it stays dark in both modes and goes
+     unreadable on a dark card. */
+  --gold-accent: var(--gold-foreground);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -59,6 +65,7 @@
 
     --gold: oklch(0.81 0.13 84);
     --gold-foreground: oklch(0.2 0.04 60);
+    --gold-accent: var(--gold);
   }
 }
 
@@ -84,6 +91,7 @@
 
   --color-gold: var(--gold);
   --color-gold-foreground: var(--gold-foreground);
+  --color-gold-accent: var(--gold-accent);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
