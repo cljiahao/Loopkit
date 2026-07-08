@@ -237,7 +237,7 @@ export async function getProgramDetail(
 
   const { data: cardsData } = await supabase
     .from("cards")
-    .select("id, phone, stamp_count, reward_count, updated_at")
+    .select("id, phone, stamp_count, reward_count, state, updated_at")
     .eq("program_id", programId)
     .order("updated_at", { ascending: false });
   const cards = cardsData ?? [];

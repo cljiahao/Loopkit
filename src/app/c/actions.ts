@@ -59,7 +59,11 @@ export async function checkStatusAction(
     stamps_required: row.stamps_required,
     reward_text: row.reward_text,
   };
-  const cardLike = { state: row.state, stamp_count: 0, reward_count: 0 };
+  const cardLike = {
+    state: row.state,
+    stamp_count: row.stamp_count ?? 0,
+    reward_count: 0,
+  };
   const progress = getProgress(programLike, cardLike, new Date());
   const qr = await qrSvg(row.card_token);
 

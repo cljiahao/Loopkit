@@ -81,10 +81,16 @@ describe("dashboard actions thread program_id", () => {
     expect(getProgramByIdMock).not.toHaveBeenCalled();
   });
 
-  it("lookupAction scopes the card read to the resolved program", async () => {
+  it("lookupAction scopes the card read to the resolved program and returns type-aware progress", async () => {
     getProgramByIdMock.mockResolvedValue(program);
     maybeSingleMock.mockResolvedValue({
-      data: { id: "c1", phone: "+6591234567", stamp_count: 10 },
+      data: {
+        id: "c1",
+        phone: "+6591234567",
+        stamp_count: 10,
+        reward_count: 0,
+        state: {},
+      },
       error: null,
     });
 
@@ -94,5 +100,14 @@ describe("dashboard actions thread program_id", () => {
 
     expect(getProgramByIdMock).toHaveBeenCalledWith("p1");
     expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.card.stamp_count).toBe(10);
+      expect(res.progress.rewardReady).toBe(true);
+      expect(res.progress.view).toEqual({
+        kind: "dots",
+        filled: 10,
+        total: 10,
+      });
+    }
   });
 });

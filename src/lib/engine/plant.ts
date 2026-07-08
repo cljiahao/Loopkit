@@ -13,6 +13,7 @@ export type PlantState = {
   growth: number;
   last_visit_at: string | null;
   blooms: number;
+  bloomed?: boolean;
 };
 
 const MS_PER_DAY = 86_400_000;
@@ -46,7 +47,7 @@ function bloomThreshold(config: PlantConfig): number {
 
 export const plantStrategy: Strategy<PlantConfig, PlantState> = {
   defaults() {
-    return { growth: 0, last_visit_at: null, blooms: 0 };
+    return { growth: 0, last_visit_at: null, blooms: 0, bloomed: false };
   },
   progress(state, config, now) {
     const g = decayedGrowth(state, config, now);
@@ -62,7 +63,7 @@ export const plantStrategy: Strategy<PlantConfig, PlantState> = {
         totalStages: config.stages.length,
         wilting,
       },
-      rewardReady: g >= bloomThreshold(config),
+      rewardReady: state.bloomed ?? g >= bloomThreshold(config),
     };
   },
   apply(event, state, config, now) {
@@ -70,8 +71,14 @@ export const plantStrategy: Strategy<PlantConfig, PlantState> = {
     const settled = decayedGrowth(state, config, now);
     const bloom = bloomThreshold(config);
     const growth = Math.min(settled + config.growth_per_visit, bloom);
+    const bloomed = state.bloomed === true || growth >= bloom;
     return {
-      state: { growth, last_visit_at: now.toISOString(), blooms: state.blooms },
+      state: {
+        growth,
+        last_visit_at: now.toISOString(),
+        blooms: state.blooms,
+        bloomed,
+      },
       rewardUnlocked: settled < bloom && growth >= bloom,
     };
   },
@@ -80,6 +87,7 @@ export const plantStrategy: Strategy<PlantConfig, PlantState> = {
       growth: 0,
       last_visit_at: state.last_visit_at,
       blooms: state.blooms + 1,
+      bloomed: false,
     };
   },
 };

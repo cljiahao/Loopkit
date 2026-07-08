@@ -39,12 +39,19 @@ type PlantView = {
 
 type ServeResult =
   | { mode: "stamp"; phone: string; card: StampCard; rewardReady: boolean }
-  | { mode: "lucky"; phone: string; won: boolean }
+  | {
+      mode: "lucky";
+      phone: string;
+      played: boolean;
+      won: boolean;
+      label: string;
+    }
   | {
       mode: "plant";
       phone: string;
       view: PlantView;
       label: string;
+      rewardReady: boolean;
       rewardUnlocked: boolean;
     };
 
@@ -71,6 +78,7 @@ export function ServeCustomer({
   const formRef = useRef<HTMLFormElement>(null);
   const [result, setResult] = useState<ServeResult | null>(null);
   const [redeemOpen, setRedeemOpen] = useState(false);
+  const [lookingUp, setLookingUp] = useState(false);
 
   const copy = ACTION_COPY[type] ?? ACTION_COPY.stamp;
 
@@ -90,7 +98,13 @@ export function ServeCustomer({
         } else {
           toast(`No win this time for ${res.phone}.`);
         }
-        setResult({ mode: "lucky", phone: res.phone, won: res.rewardUnlocked });
+        setResult({
+          mode: "lucky",
+          phone: res.phone,
+          played: true,
+          won: res.rewardUnlocked,
+          label: res.progress.label,
+        });
       } else if (type === "plant") {
         const res = await recordVisitAction(formData);
         if (!res.success) {
@@ -110,6 +124,7 @@ export function ServeCustomer({
           phone: res.phone,
           view: res.progress.view,
           label: res.progress.label,
+          rewardReady: res.progress.rewardReady,
           rewardUnlocked: res.rewardUnlocked,
         });
       } else {
@@ -139,17 +154,42 @@ export function ServeCustomer({
     if (!formEl) return;
     const formData = new FormData(formEl);
     run(async () => {
-      const res = await lookupAction(formData);
-      if (!res.success) {
-        toast.error(res.error);
-        return;
+      setLookingUp(true);
+      try {
+        const res = await lookupAction(formData);
+        if (!res.success) {
+          toast.error(res.error);
+          return;
+        }
+        if (type === "plant") {
+          if (res.progress.view.kind !== "plant") return;
+          setResult({
+            mode: "plant",
+            phone: res.card.phone,
+            view: res.progress.view,
+            label: res.progress.label,
+            rewardReady: res.progress.rewardReady,
+            rewardUnlocked: false,
+          });
+        } else if (type === "lucky") {
+          setResult({
+            mode: "lucky",
+            phone: res.card.phone,
+            played: false,
+            won: false,
+            label: res.progress.label,
+          });
+        } else {
+          setResult({
+            mode: "stamp",
+            phone: res.card.phone,
+            card: res.card,
+            rewardReady: res.progress.rewardReady,
+          });
+        }
+      } finally {
+        setLookingUp(false);
       }
-      setResult({
-        mode: "stamp",
-        phone: res.card.phone,
-        card: res.card,
-        rewardReady: res.rewardReady,
-      });
     });
   }
 
@@ -202,7 +242,7 @@ export function ServeCustomer({
           disabled={pending}
           className="h-11 rounded-xl px-6 font-semibold"
         >
-          {pending ? copy.pending : copy.idle}
+          {pending && !lookingUp ? copy.pending : copy.idle}
         </Button>
         <Button
           type="button"
@@ -211,7 +251,7 @@ export function ServeCustomer({
           onClick={onLookup}
           className="h-11 rounded-xl px-5 font-semibold"
         >
-          Look up
+          {lookingUp ? "Looking up…" : "Look up"}
         </Button>
         <ScanButton
           onScanned={(phone) => {
@@ -269,10 +309,12 @@ export function ServeCustomer({
             <p className="mt-1 text-sm font-semibold text-gold-foreground">
               🎉 Won {rewardText}!
             </p>
-          ) : (
+          ) : result.played ? (
             <p className="mt-1 text-sm text-muted-foreground">
               No win this time.
             </p>
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">{result.label}</p>
           )}
         </div>
       )}
@@ -280,7 +322,7 @@ export function ServeCustomer({
       {result?.mode === "plant" && (
         <div
           className={
-            result.rewardUnlocked
+            result.rewardReady
               ? "rounded-xl border border-gold bg-gold/10 p-4"
               : "rounded-xl border bg-muted/40 p-4"
           }
@@ -302,7 +344,7 @@ export function ServeCustomer({
               )}
             </div>
           </div>
-          {result.rewardUnlocked && (
+          {result.rewardReady && (
             <div className="mt-4">
               <AlertDialog open={redeemOpen} onOpenChange={setRedeemOpen}>
                 <AlertDialogTrigger asChild>

@@ -63,7 +63,7 @@ function resolvePlantConfig(program: ProgramLike): PlantConfig {
   return program.config as PlantConfig;
 }
 
-function resolvePlantState(card: CardLike): PlantState {
+export function resolvePlantState(card: CardLike): PlantState {
   if (hasKeys(card.state)) return card.state as PlantState;
   return plantStrategy.defaults({} as PlantConfig);
 }

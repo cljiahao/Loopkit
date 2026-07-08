@@ -65,6 +65,35 @@ describe("computeLoopkitMetrics", () => {
     expect(m.orders_prev_7d).toBe(0);
   });
 
+  it("counts visits as activity and won visits + redeems as rewards", () => {
+    const m = computeLoopkitMetrics({
+      nowMs: now,
+      programs: [{ id: "p1", active: true, created_at: iso(1) }],
+      cards: [{ id: "c1", program_id: "p1" }],
+      stampEvents: [
+        {
+          card_id: "c1",
+          kind: "visit",
+          created_at: iso(1),
+          payload: { won: true },
+        },
+        {
+          card_id: "c1",
+          kind: "visit",
+          created_at: iso(2),
+          payload: { won: false },
+        },
+        { card_id: "c1", kind: "visit", created_at: iso(10) },
+        { card_id: "c1", kind: "redeem", created_at: iso(1) },
+      ],
+    });
+
+    expect(m.orders_7d).toBe(2); // two visits within 7d
+    expect(m.orders_prev_7d).toBe(1); // one visit in the prev-7d window
+    expect(m.rewards_redeemed).toBe(2); // one won visit + one redeem
+    expect(m.funnel.with_order).toBe(1); // p1 has activity
+  });
+
   it("treats a stamp event exactly 7 days ago as inside the 7d window (inclusive cutoff)", () => {
     const m = computeLoopkitMetrics({
       nowMs: now,

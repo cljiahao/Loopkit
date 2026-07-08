@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import { Gift, Stamp } from "lucide-react";
 import { requireVendor } from "@/lib/auth";
@@ -31,8 +32,13 @@ export default async function DashboardPage({
       : { label: "Stamp", variant: "default" as const };
   const config = (program.config ?? {}) as { win_probability?: number };
 
-  const base = process.env.NEXT_PUBLIC_BASE_URL ?? "";
-  const cardLink = `${base}/c?p=${program.id}`;
+  // The QR must encode an absolute URL — a host-less path is unscannable. Fall
+  // back to the request host when NEXT_PUBLIC_BASE_URL is unset.
+  const h = await headers();
+  const origin =
+    process.env.NEXT_PUBLIC_BASE_URL ??
+    `https://${h.get("x-forwarded-host") ?? h.get("host")}`;
+  const cardLink = `${origin}/c?p=${program.id}`;
   const cardQr = await qrSvg(cardLink);
 
   const supabase = await createServerClient();
@@ -71,6 +77,7 @@ export default async function DashboardPage({
             <select
               name="p"
               defaultValue={program.id}
+              aria-label="Switch program"
               className="h-9 flex-1 rounded-lg border bg-card px-3 text-sm"
             >
               {programs.map((option) => (

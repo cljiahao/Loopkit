@@ -43,7 +43,7 @@ export const saveProgramSchema = z.discriminatedUnion("type", [
     type: z.literal("plant"),
     name: z.string().trim().min(1).max(60),
     reward_text: z.string().trim().min(1).max(80),
-    visits_to_bloom: z.coerce.number().int().min(2).max(20),
+    visits_to_bloom: z.coerce.number().int().min(4).max(20),
   }),
 ]);
 

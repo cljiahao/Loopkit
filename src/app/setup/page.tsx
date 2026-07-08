@@ -12,7 +12,7 @@ import { Wordmark } from "@/components/landing/wordmark";
 const typeLabel: Record<string, string> = {
   stamp: "Stamp card",
   lucky: "Lucky Tap",
-  plant: "🌱 Sprout",
+  plant: "Sprout",
 };
 
 export default async function SetupPage({
@@ -34,6 +34,13 @@ export default async function SetupPage({
       <div className="w-full">
         <div className="mb-8 text-center">
           <Wordmark className="text-3xl" />
+          <h1 className="mt-3 font-display text-2xl font-bold tracking-tight">
+            {isEdit
+              ? "Edit your card"
+              : firstRun
+                ? "Set up your loyalty card"
+                : "Your loyalty programs"}
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {isEdit
               ? "Update your loyalty card details."
@@ -85,9 +92,9 @@ export default async function SetupPage({
         {isEdit || canCreate ? (
           <div className="rounded-2xl border bg-card shadow-sm">
             <div className="px-7 pt-9 pb-8">
-              <h1 className="text-3xl font-bold tracking-tight">
+              <h2 className="text-3xl font-bold tracking-tight">
                 {isEdit ? "Edit your card" : "Create a program"}
-              </h1>
+              </h2>
               <p className="mt-1.5 text-sm text-muted-foreground">
                 {isEdit
                   ? "Change how customers earn their reward."
@@ -100,9 +107,9 @@ export default async function SetupPage({
         ) : (
           <div className="rounded-2xl border bg-card shadow-sm">
             <div className="px-7 py-8">
-              <h1 className="text-xl font-bold tracking-tight">
+              <h2 className="text-xl font-bold tracking-tight">
                 Free plan: 1 program
-              </h1>
+              </h2>
               <p className="mt-1.5 text-sm text-muted-foreground">
                 You&apos;re on the free plan, which includes one loyalty
                 program. Ask an admin for Pro to add more.

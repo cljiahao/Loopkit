@@ -36,7 +36,7 @@ export async function GET(request: Request) {
   const [programsRes, cardsRes, stampEventsRes] = await Promise.all([
     supabase.from("programs").select("id, active, created_at"),
     supabase.from("cards").select("id, program_id"),
-    supabase.from("stamp_events").select("card_id, kind, created_at"),
+    supabase.from("stamp_events").select("card_id, kind, created_at, payload"),
   ]);
 
   for (const r of [programsRes, cardsRes, stampEventsRes]) {

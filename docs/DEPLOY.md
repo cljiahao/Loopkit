@@ -47,6 +47,16 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      insert into loopkit.vendor_pro (vendor_id) values ('<VENDOR_AUTH_USER_ID>');
      ```
 
+   - apply `0008_loopkit_hardening.sql` (v2 hardening). Recreates `card_view` to
+     also return the `stamp_count` column (so a stamp card's `/c` progress is
+     correct); adds the `create_program` SECURITY DEFINER gate and **revokes
+     direct `insert` on `loopkit.programs` from `authenticated`** so the free/Pro
+     program limit is enforced in the database, not just the app; guards
+     `enroll_card` to only seed cards for active programs; and **drops the
+     redundant `card_status`** function (the `/c` page now reads `card_view`).
+     Safe to re-run. After this migration, programs can only be created via the
+     `create_program` RPC — vendors can still `select`/`update` their own rows.
+
    - **Bootstrap the first admin.** The `/admin` console 404s until your auth
      user is in `loopkit.admins` — there is no self-serve UI. Sign in once so the
      account exists, find its id under Authentication → Users, then in the SQL

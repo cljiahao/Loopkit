@@ -24,6 +24,7 @@ describe("plantStrategy", () => {
       growth: 0,
       last_visit_at: null,
       blooms: 0,
+      bloomed: false,
     });
   });
   it("grows one step per visit and stamps last_visit_at", () => {
@@ -64,12 +65,43 @@ describe("plantStrategy", () => {
     expect(r.rewardUnlocked).toBe(true);
     expect(plantStrategy.progress(r.state, cfg, day0).rewardReady).toBe(true);
   });
-  it("redeem resets to a seed and counts the bloom", () => {
+  it("banks the bloom so it survives idle decay", () => {
+    const { state } = plantStrategy.apply(
+      { kind: "visit" },
+      { growth: 7, last_visit_at: day0.toISOString(), blooms: 0 },
+      cfg,
+      day0,
+    );
+    expect(state.bloomed).toBe(true);
+    const later = plantStrategy.progress(
+      state,
+      cfg,
+      at("2026-07-30T00:00:00Z"),
+    );
+    expect(later.view).toMatchObject({ kind: "plant", wilting: true });
+    expect(later.rewardReady).toBe(true);
+  });
+  it("keeps rewardReady false for a pre-bloomed card via the growth fallback", () => {
+    const p = plantStrategy.progress(
+      { growth: 3, last_visit_at: day0.toISOString(), blooms: 0 },
+      cfg,
+      day0,
+    );
+    expect(p.rewardReady).toBe(false);
+  });
+  it("redeem resets to a seed, counts the bloom, and clears the bank", () => {
     const s = plantStrategy.redeem(
-      { growth: 8, last_visit_at: day0.toISOString(), blooms: 1 },
+      {
+        growth: 8,
+        last_visit_at: day0.toISOString(),
+        blooms: 1,
+        bloomed: true,
+      },
       cfg,
     );
     expect(s.growth).toBe(0);
     expect(s.blooms).toBe(2);
+    expect(s.bloomed).toBe(false);
+    expect(plantStrategy.progress(s, cfg, day0).rewardReady).toBe(false);
   });
 });

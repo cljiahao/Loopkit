@@ -1,10 +1,12 @@
 import { createServerClient } from "@/lib/supabase/server";
+import type { Json } from "@/lib/types";
 
 export type CardRow = {
   id: string;
   phone: string;
   stamp_count: number;
   reward_count: number;
+  state: Json;
   updated_at: string;
 };
 
@@ -18,7 +20,7 @@ export async function listCards(
   const supabase = await createServerClient();
   let query = supabase
     .from("cards")
-    .select("id,phone,stamp_count,reward_count,updated_at")
+    .select("id,phone,stamp_count,reward_count,state,updated_at")
     .eq("program_id", programId);
 
   const term = q?.trim();

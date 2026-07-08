@@ -6,12 +6,8 @@ import { requireVendor } from "@/lib/auth";
 import { getProgramById } from "@/lib/program";
 import { normalizePhone } from "@/lib/phone";
 import { rewardReady } from "@/lib/loyalty";
-import { applyVisit, getProgress } from "@/lib/engine";
-import {
-  plantStrategy,
-  type PlantConfig,
-  type PlantState,
-} from "@/lib/engine/plant";
+import { applyVisit, getProgress, resolvePlantState } from "@/lib/engine";
+import { plantStrategy, type PlantConfig } from "@/lib/engine/plant";
 import { createServerClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/action-result";
 import type { Progress } from "@/lib/engine/types";
@@ -152,7 +148,11 @@ export async function redeemPlantAction(
   }
 
   const config = program.config as PlantConfig;
-  const state = existing.state as PlantState;
+  const state = resolvePlantState({
+    state: existing.state,
+    stamp_count: 0,
+    reward_count: 0,
+  });
   const reset = plantStrategy.redeem(state, config);
 
   const { error } = await supabase.rpc("record_visit", {
@@ -193,10 +193,13 @@ export async function resolveTokenAction(
   return { success: true, phone: row.phone };
 }
 
-// Read a card's status by phone WITHOUT stamping it — so a full card can be
-// redeemed without being pushed past the ceiling. Vendor-scoped by RLS
-// (cards_own), and returns the card id the redeem RPC needs.
-export async function lookupAction(formData: FormData): Promise<CardResult> {
+type LookupResult = ActionResult<{ card: StampCard; progress: Progress }>;
+
+// Read a card's status by phone WITHOUT mutating it — so any type's reward can
+// be redeemed without a spurious visit. Type-aware: the engine computes the
+// per-type progress (stamp dots / lucky / plant) the client renders. Vendor-
+// scoped by RLS (cards_own), and returns the card id the stamp redeem RPC needs.
+export async function lookupAction(formData: FormData): Promise<LookupResult> {
   await requireVendor();
 
   const program = await programFromForm(formData);
@@ -212,7 +215,7 @@ export async function lookupAction(formData: FormData): Promise<CardResult> {
   const supabase = await createServerClient();
   const { data: card, error } = await supabase
     .from("cards")
-    .select("id,phone,stamp_count")
+    .select("id,phone,stamp_count,reward_count,state")
     .eq("program_id", program.id)
     .eq("phone", normalized.phone)
     .maybeSingle();
@@ -224,10 +227,20 @@ export async function lookupAction(formData: FormData): Promise<CardResult> {
     return { success: false, error: "No card yet for that number." };
   }
 
+  const progress = getProgress(
+    program,
+    {
+      state: card.state,
+      stamp_count: card.stamp_count,
+      reward_count: card.reward_count,
+    },
+    new Date(),
+  );
+
   return {
     success: true,
     card: { id: card.id, phone: card.phone, stamp_count: card.stamp_count },
-    rewardReady: rewardReady(card.stamp_count, program.stamps_required),
+    progress,
   };
 }
 

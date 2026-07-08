@@ -124,7 +124,11 @@ describe("ServeCustomer", () => {
     lookupMock.mockResolvedValue({
       success: true,
       card: { id: "card-1", phone: "+6591234567", stamp_count: 10 },
-      rewardReady: true,
+      progress: {
+        view: { kind: "dots", filled: 10, total: 10 },
+        label: "10/10 stamps",
+        rewardReady: true,
+      },
     });
     const user = userEvent.setup();
     render(

@@ -13,6 +13,12 @@ type ProgramType = "stamp" | "lucky" | "plant";
 const labelClass =
   "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
+const typeLabels: Record<ProgramType, string> = {
+  stamp: "Stamp card",
+  lucky: "Lucky Tap",
+  plant: "Sprout",
+};
+
 export function SetupForm({
   program,
   isEdit,
@@ -40,29 +46,35 @@ export function SetupForm({
       {program ? <input type="hidden" name="id" value={program.id} /> : null}
       <div className="space-y-2">
         <Label className={labelClass}>Card type</Label>
-        <div className="grid grid-cols-3 gap-2">
-          {(
-            [
-              { value: "stamp", label: "Stamp card" },
-              { value: "lucky", label: "Lucky Tap" },
-              { value: "plant", label: "🌱 Sprout" },
-            ] as const
-          ).map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setType(option.value)}
-              className={cn(
-                "h-11 rounded-xl border text-sm font-semibold transition-colors",
-                type === option.value
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "bg-card text-muted-foreground hover:bg-muted/50",
-              )}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+        {isEdit ? (
+          <p className="flex h-11 items-center rounded-xl border bg-muted/40 px-3 text-sm font-semibold text-muted-foreground">
+            {typeLabels[type]}
+          </p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                { value: "stamp", label: "Stamp card" },
+                { value: "lucky", label: "Lucky Tap" },
+                { value: "plant", label: "Sprout" },
+              ] as const
+            ).map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setType(option.value)}
+                className={cn(
+                  "h-11 rounded-xl border text-sm font-semibold transition-colors",
+                  type === option.value
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "bg-card text-muted-foreground hover:bg-muted/50",
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        )}
         <input type="hidden" name="type" value={type} />
       </div>
 
@@ -115,7 +127,7 @@ export function SetupForm({
             name="visits_to_bloom"
             type="number"
             required
-            min={2}
+            min={4}
             max={20}
             placeholder="6"
             defaultValue={visitsToBloom}

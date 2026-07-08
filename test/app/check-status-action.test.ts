@@ -62,7 +62,8 @@ describe("checkStatusAction", () => {
         name: "Kaya Toast Co.",
         type: "stamp",
         config: {},
-        state: { stamp_count: 3, reward_count: 0 },
+        state: {},
+        stamp_count: 3,
         card_token: "tok_abc",
         reward_text: "Free kopi",
         stamps_required: 10,
@@ -84,13 +85,14 @@ describe("checkStatusAction", () => {
     });
   });
 
-  it("reports found with engine progress, reward, and QR", async () => {
+  it("reports found reading the stamp_count column, not the (empty) state blob", async () => {
     mockRpcs([
       {
         name: "Kaya Toast Co.",
         type: "stamp",
         config: {},
-        state: { stamp_count: 3, reward_count: 0 },
+        state: {},
+        stamp_count: 3,
         card_token: "tok_abc",
         reward_text: "Free kopi",
         stamps_required: 10,

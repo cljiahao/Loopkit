@@ -44,14 +44,24 @@ describe("saveProgramSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects a plant program with an out-of-range visits-to-bloom", () => {
+  it("rejects a plant program below the four-visit minimum (stages must stay distinct)", () => {
     const result = saveProgramSchema.safeParse({
       type: "plant",
       name: "Grow-a-kopi",
       reward_text: "Free kopi",
-      visits_to_bloom: "1",
+      visits_to_bloom: "3",
     });
     expect(result.success).toBe(false);
+  });
+
+  it("accepts a plant program at the four-visit minimum", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "plant",
+      name: "Grow-a-kopi",
+      reward_text: "Free kopi",
+      visits_to_bloom: "4",
+    });
+    expect(result.success).toBe(true);
   });
 
   it("rejects an unknown program type", () => {

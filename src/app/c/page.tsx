@@ -10,12 +10,12 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
   const { p } = await searchParams;
 
   // Resolve the shop name up front so the customer sees which stall this card
-  // belongs to before they type anything. card_status is SECURITY DEFINER and
+  // belongs to before they type anything. card_view is SECURITY DEFINER and
   // public — an empty phone matches no card but still returns the program row.
   let shopName: string | null = null;
   if (p) {
     const supabase = await createServerClient();
-    const { data } = await supabase.rpc("card_status", {
+    const { data } = await supabase.rpc("card_view", {
       p_program: p,
       p_phone: "",
     });

@@ -194,14 +194,15 @@ export interface Database {
         };
         Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
       };
-      card_status: {
-        Args: { p_program: string; p_phone: string };
-        Returns: {
-          name: string;
-          stamp_count: number;
-          stamps_required: number;
-          reward_text: string;
-        }[];
+      create_program: {
+        Args: {
+          p_type: string;
+          p_name: string;
+          p_stamps_required: number;
+          p_reward_text: string;
+          p_config: Json;
+        };
+        Returns: string;
       };
       enroll_card: {
         Args: { p_program: string; p_phone: string };
@@ -214,6 +215,7 @@ export interface Database {
           type: string;
           config: Json;
           state: Json;
+          stamp_count: number;
           card_token: string;
           reward_text: string;
           stamps_required: number;

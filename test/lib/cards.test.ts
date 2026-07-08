@@ -30,6 +30,7 @@ const rows: CardRow[] = [
     phone: "+6591234567",
     stamp_count: 3,
     reward_count: 0,
+    state: {},
     updated_at: "2026-07-01T00:00:00Z",
   },
 ];

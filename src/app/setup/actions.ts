@@ -6,14 +6,18 @@ import { requireVendor } from "@/lib/auth";
 import {
   saveProgramSchema,
   buildPlantConfig,
+  getProgramById,
   listPrograms,
   isPro,
   canCreateProgram,
 } from "@/lib/program";
 import { createServerClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/types";
+import type { Database, Json } from "@/lib/types";
 
-type ProgramInsert = Database["loopkit"]["Tables"]["programs"]["Insert"];
+type ProgramUpdate = Database["loopkit"]["Tables"]["programs"]["Update"];
+
+const UPSELL_ERROR =
+  "You're on the free plan — 1 program. Ask an admin for Pro.";
 
 export type SaveProgramState = { error?: string };
 
@@ -21,13 +25,23 @@ export async function saveProgramAction(
   _prev: SaveProgramState,
   formData: FormData,
 ): Promise<SaveProgramState> {
-  const { user } = await requireVendor();
+  await requireVendor();
 
   const id = String(formData.get("id") ?? "").trim();
   const isEdit = id.length > 0;
 
+  // A card's type is fixed once created — switching it would reinterpret every
+  // existing card's state blob and corrupt progress. In edit mode, load the
+  // program's current type and ignore any submitted type.
+  let lockedType: string | null = null;
+  if (isEdit) {
+    const existing = await getProgramById(id);
+    if (!existing) return { error: "Couldn't save your card. Try again." };
+    lockedType = existing.type;
+  }
+
   const parsed = saveProgramSchema.safeParse({
-    type: formData.get("type"),
+    type: isEdit ? lockedType : formData.get("type"),
     name: formData.get("name"),
     stamps_required: formData.get("stamps_required"),
     reward_text: formData.get("reward_text"),
@@ -43,72 +57,74 @@ export async function saveProgramAction(
   // A card's stamps_required column is NOT NULL and 2..20; lucky programs reuse
   // the pity ceiling and plant programs reuse visits-to-bloom to satisfy it. The
   // type-specific knobs live in the config blob the TypeScript strategy reads.
-  let row: ProgramInsert;
+  let type: string;
+  let stampsRequired: number;
+  let config: Json;
   if (data.type === "stamp") {
-    row = {
-      vendor_id: user.id,
-      type: "stamp",
-      name: data.name,
+    type = "stamp";
+    stampsRequired = data.stamps_required;
+    config = {
       stamps_required: data.stamps_required,
       reward_text: data.reward_text,
-      config: {
-        stamps_required: data.stamps_required,
-        reward_text: data.reward_text,
-      },
     };
   } else if (data.type === "lucky") {
-    row = {
-      vendor_id: user.id,
-      type: "lucky",
-      name: data.name,
-      stamps_required: data.pity_ceiling,
+    type = "lucky";
+    stampsRequired = data.pity_ceiling;
+    config = {
+      win_probability: data.win_percent / 100,
+      pity_ceiling: data.pity_ceiling,
+      cooldown_visits: 0,
       reward_text: data.reward_text,
-      config: {
-        win_probability: data.win_percent / 100,
-        pity_ceiling: data.pity_ceiling,
-        cooldown_visits: 1,
-        reward_text: data.reward_text,
-      },
     };
   } else {
-    row = {
-      vendor_id: user.id,
-      type: "plant",
-      name: data.name,
-      stamps_required: data.visits_to_bloom,
-      reward_text: data.reward_text,
-      config: buildPlantConfig(data.visits_to_bloom, data.reward_text),
-    };
+    type = "plant";
+    stampsRequired = data.visits_to_bloom;
+    config = buildPlantConfig(data.visits_to_bloom, data.reward_text) as Json;
   }
 
   const supabase = await createServerClient();
 
   if (isEdit) {
-    const { error } = await supabase.from("programs").update(row).eq("id", id);
+    const update: ProgramUpdate = {
+      type,
+      name: data.name,
+      stamps_required: stampsRequired,
+      reward_text: data.reward_text,
+      config,
+    };
+    const { error } = await supabase
+      .from("programs")
+      .update(update)
+      .eq("id", id);
     if (error) return { error: "Couldn't save your card. Try again." };
     revalidatePath("/dashboard");
     redirect(`/dashboard?p=${id}`);
   }
 
-  // Re-check the free/Pro gate server-side — never trust the client to have
-  // hidden the create form.
+  // Pre-check the free/Pro gate for a friendly message — never trust the client
+  // to have hidden the create form. The create_program RPC re-enforces this in
+  // the database (SECURITY DEFINER), so a direct PostgREST insert can't bypass it.
   const programs = await listPrograms();
   const pro = await isPro();
   if (!canCreateProgram(programs.length, pro)) {
-    return {
-      error: "You're on the free plan — 1 program. Ask an admin for Pro.",
-    };
+    return { error: UPSELL_ERROR };
   }
 
-  const { data: created, error } = await supabase
-    .from("programs")
-    .insert(row)
-    .select("id")
-    .single();
-  if (error || !created) {
+  const { data: created, error } = await supabase.rpc("create_program", {
+    p_type: type,
+    p_name: data.name,
+    p_stamps_required: stampsRequired,
+    p_reward_text: data.reward_text,
+    p_config: config,
+  });
+  if (error) {
+    if (error.code === "42501") return { error: UPSELL_ERROR };
+    return { error: "Couldn't create your card. Try again." };
+  }
+  if (!created) {
     return { error: "Couldn't create your card. Try again." };
   }
 
   revalidatePath("/dashboard");
-  redirect(`/dashboard?p=${created.id}`);
+  redirect(`/dashboard?p=${created}`);
 }

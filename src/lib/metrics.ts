@@ -41,8 +41,25 @@ export type LoopkitMetricsInput = {
   nowMs: number;
   programs: { id: string; active: boolean; created_at: string }[];
   cards: { id: string; program_id: string }[];
-  stampEvents: { card_id: string; kind: string; created_at: string }[];
+  stampEvents: {
+    card_id: string;
+    kind: string;
+    created_at: string;
+    payload?: unknown;
+  }[];
 };
+
+// A visit event whose server-recorded roll won counts as a reward, same as an
+// explicit redeem. The roll/outcome is written by record_visit, never trusted
+// from the client.
+function isWonVisit(event: { kind: string; payload?: unknown }): boolean {
+  return (
+    event.kind === "visit" &&
+    typeof event.payload === "object" &&
+    event.payload !== null &&
+    (event.payload as { won?: boolean }).won === true
+  );
+}
 
 // loopkit has no revenue/orders/booths — this maps its stamp-card domain onto
 // merqo's qkit-shaped payload so /team renders unchanged:
@@ -64,11 +81,15 @@ export function computeLoopkitMetrics(
     (p) => Date.parse(p.created_at) >= cutoff7d,
   ).length;
 
-  const stamps = stampEvents.filter((e) => e.kind === "stamp");
-  const orders_7d = stamps.filter(
+  // Activity = a counter interaction of any type: stamps and generic visits
+  // (Lucky Tap plays, Sprout waterings) all count toward orders.
+  const activity = stampEvents.filter(
+    (e) => e.kind === "stamp" || e.kind === "visit",
+  );
+  const orders_7d = activity.filter(
     (e) => Date.parse(e.created_at) >= cutoff7d,
   ).length;
-  const orders_prev_7d = stamps.filter((e) => {
+  const orders_prev_7d = activity.filter((e) => {
     const t = Date.parse(e.created_at);
     return t >= cutoff14d && t < cutoff7d;
   }).length;
@@ -98,6 +119,8 @@ export function computeLoopkitMetrics(
       pro: 0,
     },
     cards_total: cards.length,
-    rewards_redeemed: stampEvents.filter((e) => e.kind === "redeem").length,
+    rewards_redeemed: stampEvents.filter(
+      (e) => e.kind === "redeem" || isWonVisit(e),
+    ).length,
   };
 }
