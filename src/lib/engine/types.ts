@@ -11,6 +11,12 @@ export type ProgressView =
       stageName: string;
       totalStages: number;
       wilting: boolean;
+    }
+  | {
+      kind: "chance";
+      variant: "wheel" | "scratch";
+      segments: { id: string; label: string; reward: boolean }[];
+      landedId: string | null;
     };
 
 export type Progress = {

@@ -61,6 +61,12 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      strings inside `enroll_card` so a direct anonymous RPC call can't seed junk
      cards. Safe to re-run.
 
+   - apply `0010_loopkit_chance_types.sql` — widens the `programs.type` check
+     constraint to admit `wheel` and `scratch`, the two chance-based templates
+     (Spin-the-Wheel, Scratch Card). They share one weighted-outcome strategy
+     in TypeScript (`src/lib/engine/chance.ts`) and reuse `record_visit` — no
+     new tables/RPCs. Safe to re-run.
+
    - **Optional — rate limiting on the public `/c` surface.** The card-check
      action is throttled per-IP only if an Upstash Redis is configured. Create a
      free Upstash Redis and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`

@@ -6,6 +6,7 @@ import { requireVendor } from "@/lib/auth";
 import {
   saveProgramSchema,
   buildPlantConfig,
+  buildChanceConfig,
   getProgramById,
   listPrograms,
   isPro,
@@ -48,15 +49,17 @@ export async function saveProgramAction(
     win_percent: formData.get("win_percent"),
     pity_ceiling: formData.get("pity_ceiling"),
     visits_to_bloom: formData.get("visits_to_bloom"),
+    segments: formData.get("segments"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
   }
 
   const data = parsed.data;
-  // A card's stamps_required column is NOT NULL and 2..20; lucky programs reuse
-  // the pity ceiling and plant programs reuse visits-to-bloom to satisfy it. The
-  // type-specific knobs live in the config blob the TypeScript strategy reads.
+  // A card's stamps_required column is NOT NULL and 2..20; lucky/wheel/scratch
+  // programs reuse the pity ceiling (defaulting to 10 when left unset) and
+  // plant programs reuse visits-to-bloom to satisfy it. The type-specific
+  // knobs live in the config blob the TypeScript strategy reads.
   let type: string;
   let stampsRequired: number;
   let config: Json;
@@ -76,10 +79,19 @@ export async function saveProgramAction(
       cooldown_visits: 0,
       reward_text: data.reward_text,
     };
-  } else {
+  } else if (data.type === "plant") {
     type = "plant";
     stampsRequired = data.visits_to_bloom;
     config = buildPlantConfig(data.visits_to_bloom, data.reward_text) as Json;
+  } else {
+    type = data.type;
+    stampsRequired = data.pity_ceiling ?? 10;
+    config = buildChanceConfig(
+      data.type,
+      data.segments,
+      data.pity_ceiling,
+      data.reward_text,
+    ) as Json;
   }
 
   const supabase = await createServerClient();

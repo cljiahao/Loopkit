@@ -14,6 +14,11 @@ import {
   type PlantConfig,
   type PlantState,
 } from "@/lib/engine/plant";
+import {
+  makeChanceStrategy,
+  type ChanceConfig,
+  type ChanceState,
+} from "@/lib/engine/chance";
 
 export type ProgramLike = {
   type: string;
@@ -68,6 +73,18 @@ export function resolvePlantState(card: CardLike): PlantState {
   return plantStrategy.defaults({} as PlantConfig);
 }
 
+function resolveChanceConfig(program: ProgramLike): ChanceConfig {
+  return program.config as ChanceConfig;
+}
+
+function resolveChanceState(
+  card: CardLike,
+  variant: "wheel" | "scratch",
+): ChanceState {
+  if (hasKeys(card.state)) return card.state as ChanceState;
+  return makeChanceStrategy(variant).defaults({} as ChanceConfig);
+}
+
 export function applyVisit(
   program: ProgramLike,
   card: CardLike,
@@ -89,6 +106,16 @@ export function applyVisit(
         resolvePlantConfig(program),
         now,
       );
+    case "wheel":
+    case "scratch": {
+      const variant = program.type as "wheel" | "scratch";
+      return makeChanceStrategy(variant).apply(
+        event,
+        resolveChanceState(card, variant),
+        resolveChanceConfig(program),
+        now,
+      );
+    }
     case "stamp":
     default:
       return stampStrategy.apply(
@@ -118,6 +145,15 @@ export function getProgress(
         resolvePlantConfig(program),
         now,
       );
+    case "wheel":
+    case "scratch": {
+      const variant = program.type as "wheel" | "scratch";
+      return makeChanceStrategy(variant).progress(
+        resolveChanceState(card, variant),
+        resolveChanceConfig(program),
+        now,
+      );
+    }
     case "stamp":
     default:
       return stampStrategy.progress(

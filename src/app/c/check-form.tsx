@@ -5,6 +5,8 @@ import { Check, Gift } from "lucide-react";
 import { checkStatusAction } from "@/app/c/actions";
 import { STATUS_IDLE } from "@/app/c/status-state";
 import { Plant } from "@/components/plant";
+import { Wheel } from "@/components/wheel";
+import { ScratchCard } from "@/components/scratch-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,6 +64,24 @@ export function CheckForm({ programId }: { programId: string }) {
                 totalStages={view.totalStages}
                 wilting={view.wilting}
               />
+            </div>
+          ) : view?.kind === "chance" ? (
+            <div className="flex flex-col items-center gap-2">
+              {view.variant === "wheel" ? (
+                <Wheel segments={view.segments} landedId={view.landedId} />
+              ) : (
+                <ScratchCard
+                  revealed={view.landedId !== null}
+                  label={
+                    view.segments.find((s) => s.id === view.landedId)?.label ??
+                    ""
+                  }
+                  reward={
+                    view.segments.find((s) => s.id === view.landedId)?.reward ??
+                    false
+                  }
+                />
+              )}
             </div>
           ) : (
             <div className="flex flex-wrap gap-2">

@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-type ProgramType = "stamp" | "lucky" | "plant";
+type ProgramType = "stamp" | "lucky" | "plant" | "wheel" | "scratch";
+
+type SegmentInput = { label: string; weight: number; is_reward: boolean };
 
 const labelClass =
   "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
@@ -17,7 +19,14 @@ const typeLabels: Record<ProgramType, string> = {
   stamp: "Stamp card",
   lucky: "Lucky Tap",
   plant: "Sprout",
+  wheel: "Spin the Wheel",
+  scratch: "Scratch Card",
 };
+
+const DEFAULT_SEGMENTS: SegmentInput[] = [
+  { label: "Try again", weight: 5, is_reward: false },
+  { label: "Free item", weight: 1, is_reward: true },
+];
 
 export function SetupForm({
   program,
@@ -28,7 +37,10 @@ export function SetupForm({
 }) {
   const [state, formAction, pending] = useActionState(saveProgramAction, {});
   const initialType: ProgramType =
-    program?.type === "lucky" || program?.type === "plant"
+    program?.type === "lucky" ||
+    program?.type === "plant" ||
+    program?.type === "wheel" ||
+    program?.type === "scratch"
       ? program.type
       : "stamp";
   const [type, setType] = useState<ProgramType>(initialType);
@@ -37,9 +49,34 @@ export function SetupForm({
     pity_ceiling?: number;
     reward_text?: string;
     stages?: { threshold: number }[];
+    segments?: { label: string; weight: number; reward_text?: string }[];
   };
   const visitsToBloom =
     config.stages?.[config.stages.length - 1]?.threshold ?? 6;
+  const [segments, setSegments] = useState<SegmentInput[]>(
+    config.segments?.map((s) => ({
+      label: s.label,
+      weight: s.weight,
+      is_reward: !!s.reward_text,
+    })) ?? DEFAULT_SEGMENTS,
+  );
+
+  function updateSegment(index: number, patch: Partial<SegmentInput>) {
+    setSegments((prev) =>
+      prev.map((s, i) => (i === index ? { ...s, ...patch } : s)),
+    );
+  }
+
+  function addSegment() {
+    setSegments((prev) => [
+      ...prev,
+      { label: "New prize", weight: 1, is_reward: false },
+    ]);
+  }
+
+  function removeSegment(index: number) {
+    setSegments((prev) => prev.filter((_, i) => i !== index));
+  }
 
   return (
     <form action={formAction} className="mt-7 space-y-5">
@@ -57,6 +94,8 @@ export function SetupForm({
                 { value: "stamp", label: "Stamp card" },
                 { value: "lucky", label: "Lucky Tap" },
                 { value: "plant", label: "Sprout" },
+                { value: "wheel", label: "Spin the Wheel" },
+                { value: "scratch", label: "Scratch Card" },
               ] as const
             ).map((option) => (
               <button
@@ -93,7 +132,11 @@ export function SetupForm({
               ? "Lucky topping"
               : type === "plant"
                 ? "Grow-a-kopi"
-                : "Coffee card"
+                : type === "wheel"
+                  ? "Spin to win"
+                  : type === "scratch"
+                    ? "Scratch & win"
+                    : "Coffee card"
           }
           defaultValue={program?.name ?? ""}
           className="h-11 rounded-xl"
@@ -134,6 +177,92 @@ export function SetupForm({
             className="h-11 rounded-xl"
           />
         </div>
+      ) : type === "wheel" || type === "scratch" ? (
+        <>
+          <div className="space-y-2">
+            <Label className={labelClass}>
+              {type === "wheel" ? "Wheel segments" : "Scratch prizes"}
+            </Label>
+            <div className="space-y-2">
+              {segments.map((segment, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    required
+                    maxLength={40}
+                    value={segment.label}
+                    onChange={(e) =>
+                      updateSegment(i, { label: e.target.value })
+                    }
+                    placeholder="Label"
+                    className="h-11 flex-1 rounded-xl"
+                  />
+                  <Input
+                    type="number"
+                    required
+                    min={1}
+                    max={100}
+                    value={segment.weight}
+                    onChange={(e) =>
+                      updateSegment(i, { weight: Number(e.target.value) })
+                    }
+                    className="h-11 w-20 rounded-xl"
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateSegment(i, { is_reward: !segment.is_reward })
+                    }
+                    className={cn(
+                      "h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold transition-colors",
+                      segment.is_reward
+                        ? "border-gold bg-gold/10 text-gold-foreground"
+                        : "bg-card text-muted-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    {segment.is_reward ? "Reward" : "No win"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeSegment(i)}
+                    disabled={segments.length <= 2}
+                    className="h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted/50 disabled:opacity-40"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={addSegment}
+              disabled={segments.length >= 6}
+              className="h-11 w-full rounded-xl border text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-40"
+            >
+              Add segment
+            </button>
+            <input
+              type="hidden"
+              name="segments"
+              value={JSON.stringify(segments)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="pity_ceiling" className={labelClass}>
+              Guaranteed win by (optional)
+            </Label>
+            <Input
+              id="pity_ceiling"
+              name="pity_ceiling"
+              type="number"
+              min={2}
+              max={20}
+              placeholder="No guarantee"
+              defaultValue={config.pity_ceiling ?? ""}
+              className="h-11 rounded-xl"
+            />
+          </div>
+        </>
       ) : (
         <>
           <div className="space-y-2">

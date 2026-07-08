@@ -2,6 +2,7 @@ import { z } from "zod";
 import { requireVendor } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import type { PlantConfig } from "@/lib/engine/plant";
+import type { ChanceConfig } from "@/lib/engine/chance";
 
 const PROGRAM_COLUMNS =
   "id,name,stamps_required,reward_text,type,config,active";
@@ -22,9 +23,30 @@ export const programInputSchema = z.object({
   reward_text: z.string().trim().min(1).max(80),
 });
 
+const segmentInputSchema = z.object({
+  label: z.string().trim().min(1).max(40),
+  weight: z.coerce.number().int().min(1).max(100),
+  is_reward: z.boolean(),
+});
+
+function parseSegments(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
+
+function emptyToUndefined(value: unknown): unknown {
+  return value === "" || value == null ? undefined : value;
+}
+
 // Type-aware program input for the /setup type picker. A discriminated union on
 // `type`: the stamp variant keeps the legacy fields; the lucky variant takes a
-// win-chance percentage (turned into a [0,1) probability) and a pity ceiling.
+// win-chance percentage (turned into a [0,1) probability) and a pity ceiling;
+// the wheel/scratch variants share a weighted-segment editor (JSON-encoded in
+// a hidden field) plus an optional pity ceiling.
 export const saveProgramSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("stamp"),
@@ -45,9 +67,36 @@ export const saveProgramSchema = z.discriminatedUnion("type", [
     reward_text: z.string().trim().min(1).max(80),
     visits_to_bloom: z.coerce.number().int().min(4).max(20),
   }),
+  z.object({
+    type: z.literal("wheel"),
+    name: z.string().trim().min(1).max(60),
+    reward_text: z.string().trim().min(1).max(80),
+    segments: z.preprocess(
+      parseSegments,
+      z.array(segmentInputSchema).min(2).max(6),
+    ),
+    pity_ceiling: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().int().min(2).max(20).optional(),
+    ),
+  }),
+  z.object({
+    type: z.literal("scratch"),
+    name: z.string().trim().min(1).max(60),
+    reward_text: z.string().trim().min(1).max(80),
+    segments: z.preprocess(
+      parseSegments,
+      z.array(segmentInputSchema).min(2).max(6),
+    ),
+    pity_ceiling: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().int().min(2).max(20).optional(),
+    ),
+  }),
 ]);
 
 export type SaveProgramInput = z.infer<typeof saveProgramSchema>;
+export type SegmentInput = z.infer<typeof segmentInputSchema>;
 
 // Derive a Sprout plant's config from the single vendor-facing knob (visits to
 // bloom): five named stages at even quarters up to the bloom threshold, a floor
@@ -70,6 +119,30 @@ export function buildPlantConfig(
     grace_days: 5,
     decay_rate: 0.5,
     floor_growth: stages[1].threshold,
+    reward_text: rewardText,
+  };
+}
+
+// Derive a Wheel/Scratch program's config from the vendor-facing segment editor
+// and optional pity ceiling. Each segment gets a fresh id (the engine tracks
+// the landed segment by id); a reward segment carries the program's single
+// reward text, a non-reward segment carries none.
+export function buildChanceConfig(
+  variant: "wheel" | "scratch",
+  segments: SegmentInput[],
+  pityCeiling: number | undefined,
+  rewardText: string,
+): ChanceConfig {
+  return {
+    variant,
+    segments: segments.map((s) => ({
+      id: crypto.randomUUID(),
+      label: s.label,
+      weight: s.weight,
+      reward_text: s.is_reward ? rewardText : undefined,
+    })),
+    pity_ceiling: pityCeiling,
+    cooldown_visits: 0,
     reward_text: rewardText,
   };
 }

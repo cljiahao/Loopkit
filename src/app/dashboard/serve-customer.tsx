@@ -13,6 +13,8 @@ import {
 import { RedeemButton } from "@/app/dashboard/redeem-button";
 import { ScanButton } from "@/app/dashboard/scan-button";
 import { Plant } from "@/components/plant";
+import { Wheel } from "@/components/wheel";
+import { ScratchCard } from "@/components/scratch-card";
 import type { StampCard } from "@/app/dashboard/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +39,13 @@ type PlantView = {
   wilting: boolean;
 };
 
+type ChanceView = {
+  kind: "chance";
+  variant: "wheel" | "scratch";
+  segments: { id: string; label: string; reward: boolean }[];
+  landedId: string | null;
+};
+
 type ServeResult =
   | { mode: "stamp"; phone: string; card: StampCard; rewardReady: boolean }
   | {
@@ -53,12 +62,22 @@ type ServeResult =
       label: string;
       rewardReady: boolean;
       rewardUnlocked: boolean;
+    }
+  | {
+      mode: "chance";
+      phone: string;
+      view: ChanceView;
+      label: string;
+      wonThisTime: boolean;
+      rewardText: string;
     };
 
 const ACTION_COPY: Record<string, { idle: string; pending: string }> = {
   lucky: { idle: "Play", pending: "Playing…" },
   plant: { idle: "Water", pending: "Watering…" },
   stamp: { idle: "Add stamp", pending: "Stamping…" },
+  wheel: { idle: "Spin", pending: "Spinning…" },
+  scratch: { idle: "Scratch", pending: "Scratching…" },
 };
 
 export function ServeCustomer({
@@ -127,6 +146,26 @@ export function ServeCustomer({
           rewardReady: res.progress.rewardReady,
           rewardUnlocked: res.rewardUnlocked,
         });
+      } else if (type === "wheel" || type === "scratch") {
+        const res = await recordVisitAction(formData);
+        if (!res.success) {
+          toast.error(res.error);
+          return;
+        }
+        if (res.progress.view.kind !== "chance") return;
+        if (res.rewardUnlocked) {
+          toast.success(`🎉 ${res.phone} won ${res.reward_text}!`);
+        } else {
+          toast(`No win this time for ${res.phone}.`);
+        }
+        setResult({
+          mode: "chance",
+          phone: res.phone,
+          view: res.progress.view,
+          label: res.progress.label,
+          wonThisTime: res.rewardUnlocked,
+          rewardText: res.reward_text,
+        });
       } else {
         const res = await stampAction(formData);
         if (!res.success) {
@@ -178,6 +217,16 @@ export function ServeCustomer({
             played: false,
             won: false,
             label: res.progress.label,
+          });
+        } else if (type === "wheel" || type === "scratch") {
+          if (res.progress.view.kind !== "chance") return;
+          setResult({
+            mode: "chance",
+            phone: res.card.phone,
+            view: res.progress.view,
+            label: res.progress.label,
+            wonThisTime: false,
+            rewardText,
           });
         } else {
           setResult({
@@ -390,6 +439,50 @@ export function ServeCustomer({
               </AlertDialog>
             </div>
           )}
+        </div>
+      )}
+
+      {result?.mode === "chance" && (
+        <div
+          className={
+            result.wonThisTime
+              ? "rounded-xl border border-gold bg-gold/10 p-4"
+              : "rounded-xl border bg-muted/40 p-4"
+          }
+        >
+          <div className="flex items-center gap-4">
+            {result.view.variant === "wheel" ? (
+              <Wheel
+                segments={result.view.segments}
+                landedId={result.view.landedId}
+                className="shrink-0"
+              />
+            ) : (
+              <ScratchCard
+                revealed={result.view.landedId !== null}
+                label={
+                  result.view.segments.find(
+                    (s) => s.id === result.view.landedId,
+                  )?.label ?? ""
+                }
+                reward={
+                  result.view.segments.find(
+                    (s) => s.id === result.view.landedId,
+                  )?.reward ?? false
+                }
+                className="shrink-0"
+              />
+            )}
+            <div className="min-w-0 space-y-1">
+              <p className="text-sm font-medium">{result.phone}</p>
+              <p className="text-sm text-muted-foreground">{result.label}</p>
+              {result.wonThisTime && (
+                <p className="text-sm font-semibold text-gold-foreground">
+                  🎉 Won {result.rewardText}!
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>
