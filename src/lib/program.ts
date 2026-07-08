@@ -3,6 +3,7 @@ import { requireVendor } from "@/lib/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import type { PlantConfig } from "@/lib/engine/plant";
 import type { ChanceConfig } from "@/lib/engine/chance";
+import type { StreakConfig } from "@/lib/engine/streak";
 
 const PROGRAM_COLUMNS =
   "id,name,stamps_required,reward_text,type,config,active";
@@ -93,6 +94,13 @@ export const saveProgramSchema = z.discriminatedUnion("type", [
       z.coerce.number().int().min(2).max(20).optional(),
     ),
   }),
+  z.object({
+    type: z.literal("streak"),
+    name: z.string().trim().min(1).max(60),
+    reward_text: z.string().trim().min(1).max(80),
+    period_days: z.coerce.number().int().min(1).max(30),
+    target_streak: z.coerce.number().int().min(2).max(20),
+  }),
 ]);
 
 export type SaveProgramInput = z.infer<typeof saveProgramSchema>;
@@ -143,6 +151,21 @@ export function buildChanceConfig(
     })),
     pity_ceiling: pityCeiling,
     cooldown_visits: 0,
+    reward_text: rewardText,
+  };
+}
+
+// Derive a Streak Club program's config from the two vendor-facing knobs: how
+// often a visit is due (period, in days) and how many consecutive periods earn
+// the reward. The engine (src/lib/engine/streak.ts) reads this directly.
+export function buildStreakConfig(
+  periodDays: number,
+  targetStreak: number,
+  rewardText: string,
+): StreakConfig {
+  return {
+    period_days: periodDays,
+    target_streak: targetStreak,
     reward_text: rewardText,
   };
 }

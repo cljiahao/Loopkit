@@ -64,6 +64,28 @@ describe("saveProgramSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts a valid streak program", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "streak",
+      name: "Weekly regular",
+      reward_text: "Free kopi",
+      period_days: "7",
+      target_streak: "4",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a streak program with a target below the two-streak minimum", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "streak",
+      name: "Weekly regular",
+      reward_text: "Free kopi",
+      period_days: "7",
+      target_streak: "1",
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("rejects an unknown program type", () => {
     const result = saveProgramSchema.safeParse({
       type: "mystery",

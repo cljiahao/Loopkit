@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-type ProgramType = "stamp" | "lucky" | "plant" | "wheel" | "scratch";
+type ProgramType = "stamp" | "lucky" | "plant" | "wheel" | "scratch" | "streak";
 
 type SegmentInput = { label: string; weight: number; is_reward: boolean };
 
@@ -21,6 +21,7 @@ const typeLabels: Record<ProgramType, string> = {
   plant: "Sprout",
   wheel: "Spin the Wheel",
   scratch: "Scratch Card",
+  streak: "Streak Club",
 };
 
 const DEFAULT_SEGMENTS: SegmentInput[] = [
@@ -40,7 +41,8 @@ export function SetupForm({
     program?.type === "lucky" ||
     program?.type === "plant" ||
     program?.type === "wheel" ||
-    program?.type === "scratch"
+    program?.type === "scratch" ||
+    program?.type === "streak"
       ? program.type
       : "stamp";
   const [type, setType] = useState<ProgramType>(initialType);
@@ -50,6 +52,8 @@ export function SetupForm({
     reward_text?: string;
     stages?: { threshold: number }[];
     segments?: { label: string; weight: number; reward_text?: string }[];
+    period_days?: number;
+    target_streak?: number;
   };
   const visitsToBloom =
     config.stages?.[config.stages.length - 1]?.threshold ?? 6;
@@ -96,6 +100,7 @@ export function SetupForm({
                 { value: "plant", label: "Sprout" },
                 { value: "wheel", label: "Spin the Wheel" },
                 { value: "scratch", label: "Scratch Card" },
+                { value: "streak", label: "Streak Club" },
               ] as const
             ).map((option) => (
               <button
@@ -136,7 +141,9 @@ export function SetupForm({
                   ? "Spin to win"
                   : type === "scratch"
                     ? "Scratch & win"
-                    : "Coffee card"
+                    : type === "streak"
+                      ? "Weekly regular"
+                      : "Coffee card"
           }
           defaultValue={program?.name ?? ""}
           className="h-11 rounded-xl"
@@ -177,6 +184,41 @@ export function SetupForm({
             className="h-11 rounded-xl"
           />
         </div>
+      ) : type === "streak" ? (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="period_days" className={labelClass}>
+              Days per streak window
+            </Label>
+            <Input
+              id="period_days"
+              name="period_days"
+              type="number"
+              required
+              min={1}
+              max={30}
+              placeholder="7"
+              defaultValue={config.period_days ?? 7}
+              className="h-11 rounded-xl"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="target_streak" className={labelClass}>
+              Streak length to earn reward
+            </Label>
+            <Input
+              id="target_streak"
+              name="target_streak"
+              type="number"
+              required
+              min={2}
+              max={20}
+              placeholder="4"
+              defaultValue={config.target_streak ?? 4}
+              className="h-11 rounded-xl"
+            />
+          </div>
+        </>
       ) : type === "wheel" || type === "scratch" ? (
         <>
           <div className="space-y-2">

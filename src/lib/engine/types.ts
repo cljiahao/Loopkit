@@ -17,6 +17,12 @@ export type ProgressView =
       variant: "wheel" | "scratch";
       segments: { id: string; label: string; reward: boolean }[];
       landedId: string | null;
+    }
+  | {
+      kind: "streak";
+      current: number;
+      target: number;
+      status: "active" | "grace" | "broken" | "none";
     };
 
 export type Progress = {

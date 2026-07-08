@@ -7,6 +7,7 @@ import { STATUS_IDLE } from "@/app/c/status-state";
 import { Plant } from "@/components/plant";
 import { Wheel } from "@/components/wheel";
 import { ScratchCard } from "@/components/scratch-card";
+import { StreakFlame } from "@/components/streak-flame";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,6 +64,14 @@ export function CheckForm({ programId }: { programId: string }) {
                 stage={view.stage}
                 totalStages={view.totalStages}
                 wilting={view.wilting}
+              />
+            </div>
+          ) : view?.kind === "streak" ? (
+            <div className="flex flex-col items-center gap-2">
+              <StreakFlame
+                current={view.current}
+                target={view.target}
+                status={view.status}
               />
             </div>
           ) : view?.kind === "chance" ? (

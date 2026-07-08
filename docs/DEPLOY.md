@@ -67,6 +67,11 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      in TypeScript (`src/lib/engine/chance.ts`) and reuse `record_visit` — no
      new tables/RPCs. Safe to re-run.
 
+   - apply `0011_loopkit_streak_type.sql` — widens the `programs.type` check
+     constraint to admit `streak`, the Streak Club template. Its lazy window
+     derivation lives in TypeScript (`src/lib/engine/streak.ts`) and reuses
+     `record_visit` — no new tables/RPCs. Safe to re-run.
+
    - **Optional — rate limiting on the public `/c` surface.** The card-check
      action is throttled per-IP only if an Upstash Redis is configured. Create a
      free Upstash Redis and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`

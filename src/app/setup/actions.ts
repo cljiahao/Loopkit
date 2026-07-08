@@ -7,6 +7,7 @@ import {
   saveProgramSchema,
   buildPlantConfig,
   buildChanceConfig,
+  buildStreakConfig,
   getProgramById,
   listPrograms,
   isPro,
@@ -50,6 +51,8 @@ export async function saveProgramAction(
     pity_ceiling: formData.get("pity_ceiling"),
     visits_to_bloom: formData.get("visits_to_bloom"),
     segments: formData.get("segments"),
+    period_days: formData.get("period_days"),
+    target_streak: formData.get("target_streak"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
@@ -83,6 +86,14 @@ export async function saveProgramAction(
     type = "plant";
     stampsRequired = data.visits_to_bloom;
     config = buildPlantConfig(data.visits_to_bloom, data.reward_text) as Json;
+  } else if (data.type === "streak") {
+    type = "streak";
+    stampsRequired = data.target_streak;
+    config = buildStreakConfig(
+      data.period_days,
+      data.target_streak,
+      data.reward_text,
+    ) as Json;
   } else {
     type = data.type;
     stampsRequired = data.pity_ceiling ?? 10;
