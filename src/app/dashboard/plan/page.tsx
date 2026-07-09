@@ -2,6 +2,7 @@ import { Check, Sparkles } from "lucide-react";
 import { requireVendor } from "@/lib/auth";
 import { isPro } from "@/lib/program";
 import { UpgradeCta } from "@/app/dashboard/plan/upgrade-cta";
+import { Badge } from "@/components/ui/badge";
 
 function Cell({ on }: { on: boolean }) {
   return (
@@ -30,15 +31,11 @@ export default async function PlanPage() {
             Plan
           </h1>
         </div>
-        <span
-          className={
-            pro
-              ? "inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-semibold text-primary"
-              : "inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-sm font-semibold text-muted-foreground"
-          }
-        >
-          {pro && <Sparkles className="size-3.5" />}
-          {pro ? "Pro" : "Free"}
+        <span className="inline-flex items-center gap-1.5">
+          {pro && <Sparkles className="size-3.5 text-primary" />}
+          <Badge variant={pro ? "gold" : "secondary"}>
+            {pro ? "Pro" : "Free"}
+          </Badge>
         </span>
       </div>
 
