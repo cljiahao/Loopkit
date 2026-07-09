@@ -27,7 +27,7 @@ export function Nav({ authed = false }: { authed?: boolean }) {
                 Log in
               </Link>
               <Button asChild size="sm">
-                <Link href="/login">Get started</Link>
+                <Link href="/login?mode=signup">Get started</Link>
               </Button>
             </>
           )}

@@ -21,7 +21,7 @@ export function Hero({ authed = false }: { authed?: boolean }) {
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Button asChild size="lg">
-            <Link href={authed ? "/dashboard" : "/login"}>
+            <Link href={authed ? "/dashboard" : "/login?mode=signup"}>
               {authed ? "Go to dashboard" : "Get started"}
               <ArrowRight className="size-4" />
             </Link>

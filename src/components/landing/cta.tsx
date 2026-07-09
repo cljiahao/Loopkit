@@ -20,7 +20,7 @@ export function Cta({ authed = false }: { authed?: boolean }) {
           size="lg"
           className="bg-gold text-gold-foreground hover:bg-gold/90"
         >
-          <Link href={authed ? "/dashboard" : "/login"}>
+          <Link href={authed ? "/dashboard" : "/login?mode=signup"}>
             {authed ? "Go to dashboard" : "Get started"}
             <ArrowRight className="size-4" />
           </Link>
