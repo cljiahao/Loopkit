@@ -48,12 +48,12 @@ export async function GET(request: Request) {
     supabase.from("vendor_pro").select("vendor_id"),
   ]);
 
-  // Check for errors in both table reads (not auth.admin.listUsers, which has a
-  // different error shape and will throw if it fails).
-  if (programsRes.error || proRes.error) {
+  if (usersRes.error || programsRes.error || proRes.error) {
     console.error(
       "merqo vendor-status: read failed",
-      programsRes.error?.message ?? proRes.error?.message,
+      usersRes.error?.message ??
+        programsRes.error?.message ??
+        proRes.error?.message,
     );
     return NextResponse.json(
       { error: "Upstream unavailable" },
