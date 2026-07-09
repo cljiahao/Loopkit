@@ -180,6 +180,10 @@ export async function resolveUpgradeRequest(
 
   const supabase = await createServiceClient();
 
+  // Inlined rather than calling setVendorPro() directly: this grant is
+  // audited as "resolve_upgrade_request", not "set_vendor_pro", so a report
+  // filtering admin_audit by action: "set_vendor_pro" will miss grants made
+  // through this path.
   const { error: proError } = await supabase
     .from("vendor_pro")
     .upsert({ vendor_id: parsed.data.vendorId }, { onConflict: "vendor_id" });
