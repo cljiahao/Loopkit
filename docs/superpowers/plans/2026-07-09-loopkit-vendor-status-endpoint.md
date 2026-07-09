@@ -22,10 +22,12 @@
 ### Task 1: `resolveVendorStatus` — pure lookup logic + test
 
 **Files:**
+
 - Create: `src/lib/merqo-vendor-status.ts`
 - Test: `src/lib/merqo-vendor-status.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing (pure function, takes plain data).
 - Produces: `resolveVendorStatus(email: string, authUsers: {id: string; email: string | null}[], programVendorIds: string[], proVendorIds: string[]): VendorStatus` — used by Task 2's route handler.
 
@@ -90,8 +92,7 @@ Expected: FAIL — `Cannot find module './merqo-vendor-status'`
 // src/lib/merqo-vendor-status.ts
 
 export type VendorStatus =
-  | { active: true; plan: "free" | "pro" }
-  | { active: false; plan: null };
+  { active: true; plan: "free" | "pro" } | { active: false; plan: null };
 
 /**
  * Neither loopkit.programs nor loopkit.vendor_pro has an email column (both
@@ -109,7 +110,10 @@ export function resolveVendorStatus(
   const user = authUsers.find((u) => u.email?.toLowerCase() === key);
   if (!user) return { active: false, plan: null };
   if (!programVendorIds.includes(user.id)) return { active: false, plan: null };
-  return { active: true, plan: proVendorIds.includes(user.id) ? "pro" : "free" };
+  return {
+    active: true,
+    plan: proVendorIds.includes(user.id) ? "pro" : "free",
+  };
 }
 ```
 
@@ -130,9 +134,11 @@ git commit -m "feat: add pure vendor-status lookup for the merqo sync endpoint"
 ### Task 2: `GET /api/merqo/vendor-status` route
 
 **Files:**
+
 - Create: `src/app/api/merqo/vendor-status/route.ts`
 
 **Interfaces:**
+
 - Consumes: `resolveVendorStatus` from Task 1 (`src/lib/merqo-vendor-status.ts`).
 - Produces: the HTTP contract Merqo's `checkVendorStatus` (Merqo plan, separate repo) calls: `GET /api/merqo/vendor-status?email=<email>` with `Authorization: Bearer <MERQO_METRICS_SECRET>` → `200 {active: boolean, plan: "free"|"pro"|null}` or `401 {error: "Unauthorized"}` or `400 {error: "..."}` on a missing/invalid email param. Same shape as qkit's endpoint.
 
@@ -209,15 +215,18 @@ export async function GET(request: Request) {
 - [ ] **Step 2: Manual verification (no colocated route test — matches the existing `/api/merqo/metrics` route, which also has no route-level test; only its pure compute/lookup function is unit-tested per Task 1)**
 
 Run: `pnpm dev`, then in another terminal:
+
 ```bash
 curl -s "http://localhost:3000/api/merqo/vendor-status?email=test@example.com" \
   -H "Authorization: Bearer $MERQO_METRICS_SECRET"
 ```
+
 Expected: `{"active":false,"plan":null}` for an email with no matching auth user (or `{"active":true,"plan":"free"}` / `"pro"` for a real vendor's email in your dev DB).
 
 ```bash
 curl -s -o /dev/null -w "%{http_code}\n" "http://localhost:3000/api/merqo/vendor-status?email=test@example.com"
 ```
+
 Expected: `401` (no bearer header)
 
 - [ ] **Step 3: Run full verification**
