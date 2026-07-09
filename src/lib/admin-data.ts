@@ -38,6 +38,13 @@ export type VendorRow = {
   is_pro: boolean;
 };
 
+export type PendingUpgradeRequest = {
+  id: string;
+  vendor_id: string;
+  email: string | null;
+  created_at: string;
+};
+
 export type ProgramDetail = {
   program: {
     id: string;
@@ -151,6 +158,31 @@ export async function listVendors(): Promise<VendorRow[]> {
       is_pro: pro.has(vendor_id),
     }))
     .sort((a, b) => (a.email ?? "").localeCompare(b.email ?? ""));
+}
+
+/**
+ * Pending self-serve upgrade requests, oldest first — the admin's grant-Pro
+ * inbox on /admin/vendors. Service-role read, same email-resolution pattern
+ * as listVendors.
+ */
+export async function listPendingUpgradeRequests(): Promise<
+  PendingUpgradeRequest[]
+> {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("upgrade_requests")
+    .select("id, vendor_id, created_at")
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(`listPendingUpgradeRequests: ${error.message}`);
+
+  const emails = await emailByUserId(supabase);
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    vendor_id: r.vendor_id,
+    email: emails.get(r.vendor_id) ?? null,
+    created_at: r.created_at,
+  }));
 }
 
 /** Platform-wide totals for the overview stat tiles. */
