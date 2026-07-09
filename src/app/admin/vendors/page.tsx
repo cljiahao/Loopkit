@@ -1,14 +1,19 @@
 import { requireAdmin } from "@/lib/admin";
-import { listVendors } from "@/lib/admin-data";
+import { listVendors, listPendingUpgradeRequests } from "@/lib/admin-data";
+import { formatSgtDateTime } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { VendorProToggle } from "@/app/admin/vendors/vendor-pro-toggle";
+import { ResolveUpgradeRequestButton } from "@/app/admin/vendors/resolve-upgrade-request-button";
 
 export const revalidate = 0;
 
 export default async function AdminVendorsPage() {
   await requireAdmin();
 
-  const vendors = await listVendors();
+  const [vendors, pendingRequests] = await Promise.all([
+    listVendors(),
+    listPendingUpgradeRequests(),
+  ]);
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-5 py-8">
@@ -21,6 +26,36 @@ export default async function AdminVendorsPage() {
           Grant Pro to lift a vendor&apos;s one-program limit.
         </p>
       </div>
+
+      {pendingRequests.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Pending upgrade requests
+          </h2>
+          <div className="divide-y overflow-hidden rounded-2xl border bg-card shadow-sm">
+            {pendingRequests.map((r) => (
+              <div
+                key={r.id}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {r.email ?? "—"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Requested {formatSgtDateTime(r.created_at)}
+                  </p>
+                </div>
+                <ResolveUpgradeRequestButton
+                  requestId={r.id}
+                  vendorId={r.vendor_id}
+                  email={r.email}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {vendors.length === 0 ? (
         <p className="rounded-2xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
