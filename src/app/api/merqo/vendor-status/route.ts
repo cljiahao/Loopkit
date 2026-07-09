@@ -43,6 +43,9 @@ export async function GET(request: Request) {
   const supabase = await createServiceClient();
 
   const [usersRes, programsRes, proRes] = await Promise.all([
+    // Known limitation: listUsers paginates but we only fetch page 1 (1000 users max).
+    // Once loopkit has >1000 auth users, vendors past the first page silently resolve as
+    // inactive. TODO: implement pagination to fetch all pages.
     supabase.auth.admin.listUsers({ perPage: 1000 }),
     supabase.from("programs").select("vendor_id"),
     supabase.from("vendor_pro").select("vendor_id"),
@@ -58,6 +61,12 @@ export async function GET(request: Request) {
     return NextResponse.json(
       { error: "Upstream unavailable" },
       { status: 503 },
+    );
+  }
+
+  if (usersRes.data?.users.length === 1000) {
+    console.error(
+      "merqo vendor-status: listUsers returned a full page (1000) — pagination not implemented, some vendors past this page may resolve as inactive",
     );
   }
 
