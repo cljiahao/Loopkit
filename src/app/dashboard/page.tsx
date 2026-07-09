@@ -29,32 +29,6 @@ export default async function DashboardPage({
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-5 py-10">
       <div>
-        {programs.length > 1 ? (
-          <form
-            action="/dashboard"
-            method="get"
-            className="mb-3 flex items-center gap-2"
-          >
-            <select
-              name="p"
-              defaultValue={program.id}
-              aria-label="Switch program"
-              className="h-9 flex-1 rounded-lg border bg-card px-3 text-sm"
-            >
-              {programs.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="h-9 rounded-lg border px-4 text-sm font-medium hover:bg-muted/50"
-            >
-              Switch
-            </button>
-          </form>
-        ) : null}
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <h1 className="truncate text-lg font-bold tracking-tight">
