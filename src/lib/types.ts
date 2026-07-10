@@ -255,6 +255,37 @@ export interface Database {
           cycle_started_at: string | null;
         }[];
       };
+      vendor_active_programs: {
+        Args: {
+          p_vendor: string;
+        };
+        Returns: {
+          id: string;
+          name: string;
+          type: string;
+          reward_text: string;
+        }[];
+      };
+      vendor_join: {
+        Args: {
+          p_vendor: string;
+          p_phone: string;
+        };
+        Returns: {
+          program_id: string;
+          name: string;
+          type: string;
+          config: Json;
+          state: Json;
+          stamp_count: number;
+          card_token: string;
+          reward_text: string;
+          stamps_required: number;
+          expiry_days: number | null;
+          cycle_started_at: string | null;
+          active: boolean;
+        }[];
+      };
       card_by_token: {
         Args: { p_token: string };
         Returns: {
