@@ -24,6 +24,7 @@ export interface Database {
           config: Json;
           active: boolean;
           expiry_days: number | null;
+          head_start: boolean;
           created_at: string;
         };
         Insert: {
@@ -36,6 +37,7 @@ export interface Database {
           config?: Json;
           active?: boolean;
           expiry_days?: number | null;
+          head_start?: boolean;
           created_at?: string;
         };
         Update: {
@@ -48,6 +50,7 @@ export interface Database {
           config?: Json;
           active?: boolean;
           expiry_days?: number | null;
+          head_start?: boolean;
           created_at?: string;
         };
         Relationships: [];
@@ -229,6 +232,7 @@ export interface Database {
           p_reward_text: string;
           p_config: Json;
           p_expiry_days?: number | null;
+          p_head_start?: boolean;
         };
         Returns: string;
       };
