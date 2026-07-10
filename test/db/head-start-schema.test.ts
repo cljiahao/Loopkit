@@ -45,4 +45,14 @@ describe("0014 head start", () => {
       /select \* into v_program from loopkit\.programs where id = p_program and active/i,
     );
   });
+
+  it("floors the plant seed at the Sprout-stage threshold (25% of stamps_required)", () => {
+    // Plant only renders a discrete growth-stage name (Seed/Sprout/.../Bloom),
+    // so a seed below the Sprout threshold is indistinguishable from a fresh
+    // card — the seed must floor at 25%, not the flat 20% stamp/streak ratio,
+    // while staying capped below the bloom threshold.
+    expect(sql).toMatch(
+      /'growth',\s*least\(\s*greatest\(v_seed, round\(v_program\.stamps_required \* 0\.25\)::int\),\s*v_program\.stamps_required - 1\s*\)/,
+    );
+  });
 });

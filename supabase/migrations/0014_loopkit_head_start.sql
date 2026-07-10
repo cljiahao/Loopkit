@@ -55,6 +55,15 @@ grant execute on function loopkit.create_program(text, text, int, text, jsonb, i
 -- covers all three seedable types. Lucky/wheel/scratch are untouched — no
 -- accumulating goal to seed, seeding their pity counter would be a different
 -- (and weaker) mechanic, out of scope here.
+--
+-- plant is a special case: unlike stamp (which shows a raw stamp_count),
+-- the customer-facing plant view only shows a discrete growth stage name
+-- (Seed/Sprout/Leafing/Budding/Bloom — src/lib/program.ts's
+-- buildPlantConfig), and Sprout's threshold (25% of stamps_required) sits
+-- above the flat 20% head-start ratio. A seed at 20% would render as a
+-- fresh, un-seeded "Seed" card for most configs, defeating the point of the
+-- feature. So plant's seed floors at the Sprout threshold — still capped
+-- below the bloom threshold — to guarantee the head start is visible.
 create or replace function loopkit.enroll_card(p_program uuid, p_phone text)
 returns text language plpgsql security definer set search_path = '' as $$
 declare
@@ -79,12 +88,18 @@ begin
       v_seed_stamp_count := least(v_seed, v_program.stamps_required - 1);
     elsif v_program.type = 'plant' then
       v_seed_state := jsonb_build_object(
-        'growth', least(v_seed, v_program.stamps_required - 1),
+        'growth', least(
+          greatest(v_seed, round(v_program.stamps_required * 0.25)::int),
+          v_program.stamps_required - 1
+        ),
         'last_visit_at', now(),
         'blooms', 0,
         'bloomed', false
       );
     elsif v_program.type = 'streak' then
+      -- current_streak is always exactly 1, not v_seed-scaled: streak's head
+      -- start is one full period, not a 20%/25%-of-threshold ratio like
+      -- stamp/plant (a fractional streak has no meaningful representation).
       v_seed_state := jsonb_build_object(
         'current_streak', 1,
         'window_start', now(),
