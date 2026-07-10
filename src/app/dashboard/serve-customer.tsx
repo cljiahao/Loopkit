@@ -324,7 +324,18 @@ export function ServeCustomer({
         return;
       }
       toast.success(`Reward redeemed for ${res.phone}.`);
-      setResult(null);
+      if (res.progress.view.kind === "plant") {
+        setResult({
+          mode: "plant",
+          phone: res.phone,
+          view: res.progress.view,
+          label: res.progress.label,
+          rewardReady: res.progress.rewardReady,
+          rewardUnlocked: false,
+        });
+      } else {
+        setResult(null);
+      }
       setRedeemOpen(false);
       router.refresh();
     });
@@ -343,7 +354,18 @@ export function ServeCustomer({
         return;
       }
       toast.success(`Reward redeemed for ${res.phone}.`);
-      setResult(null);
+      if (res.progress.view.kind === "streak") {
+        setResult({
+          mode: "streak",
+          phone: res.phone,
+          view: res.progress.view,
+          label: res.progress.label,
+          rewardReady: res.progress.rewardReady,
+          rewardUnlocked: false,
+        });
+      } else {
+        setResult(null);
+      }
       setRedeemOpen(false);
       router.refresh();
     });

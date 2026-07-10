@@ -164,7 +164,7 @@ export async function recordVisitAction(
 // card id needed, just the phone.
 export async function redeemPlantAction(
   formData: FormData,
-): Promise<ActionResult<{ phone: string }>> {
+): Promise<ActionResult<{ phone: string; progress: Progress }>> {
   await requireVendor();
   const program = await programFromForm(formData);
   if (!program) return { success: false, error: "Set up your card first." };
@@ -204,8 +204,14 @@ export async function redeemPlantAction(
     return { success: false, error: "Something went wrong. Try again." };
   }
 
+  const progress = getProgress(
+    program,
+    { state: reset, stamp_count: 0, reward_count: 0 },
+    new Date(),
+  );
+
   revalidatePath("/dashboard");
-  return { success: true, phone: normalized.phone };
+  return { success: true, phone: normalized.phone, progress };
 }
 
 // Redeem a maxed-out Streak Club card: the pure strategy clears the banked
@@ -214,7 +220,7 @@ export async function redeemPlantAction(
 // Reuses the generic write path — no card id needed, just the phone.
 export async function redeemStreakAction(
   formData: FormData,
-): Promise<ActionResult<{ phone: string }>> {
+): Promise<ActionResult<{ phone: string; progress: Progress }>> {
   await requireVendor();
   const program = await programFromForm(formData);
   if (!program) return { success: false, error: "Set up your card first." };
@@ -254,8 +260,14 @@ export async function redeemStreakAction(
     return { success: false, error: "Something went wrong. Try again." };
   }
 
+  const progress = getProgress(
+    program,
+    { state: reset, stamp_count: 0, reward_count: 0 },
+    new Date(),
+  );
+
   revalidatePath("/dashboard");
-  return { success: true, phone: normalized.phone };
+  return { success: true, phone: normalized.phone, progress };
 }
 
 // Regenerate a customer's card: reissues the card_token (invalidates the old

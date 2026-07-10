@@ -9,7 +9,10 @@ const { requireVendorMock, getProgramByIdMock, rpcMock, maybeSingleMock } =
   }));
 
 vi.mock("@/lib/auth", () => ({ requireVendor: requireVendorMock }));
-vi.mock("@/lib/program", () => ({ getProgramById: getProgramByIdMock }));
+vi.mock("@/lib/program", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/program")>();
+  return { ...actual, getProgramById: getProgramByIdMock };
+});
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const fromMock = vi.fn(() => ({
@@ -21,7 +24,13 @@ vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({ rpc: rpcMock, from: fromMock })),
 }));
 
-import { stampAction, lookupAction } from "@/app/dashboard/actions";
+import {
+  stampAction,
+  lookupAction,
+  redeemPlantAction,
+  redeemStreakAction,
+} from "@/app/dashboard/actions";
+import { buildPlantConfig, buildStreakConfig } from "@/lib/program";
 
 function form(fields: Record<string, string>): FormData {
   const fd = new FormData();
@@ -124,6 +133,98 @@ describe("dashboard actions thread program_id", () => {
         filled: 10,
         total: 10,
       });
+    }
+  });
+});
+
+describe("redeemPlantAction returns fresh progress", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireVendorMock.mockResolvedValue({ user: { id: "v1" } });
+  });
+
+  it("shows the reset Seed stage immediately after redeeming a bloomed plant", async () => {
+    const plantProgram = {
+      id: "p2",
+      name: "Sprout",
+      stamps_required: 8,
+      reward_text: "Free plant",
+      type: "plant",
+      config: buildPlantConfig(8, "Free plant"),
+      active: true,
+    };
+    getProgramByIdMock.mockResolvedValue(plantProgram);
+    maybeSingleMock.mockResolvedValue({
+      data: {
+        state: {
+          growth: 8,
+          last_visit_at: "2026-01-01T00:00:00Z",
+          blooms: 0,
+          bloomed: true,
+        },
+      },
+      error: null,
+    });
+    rpcMock.mockResolvedValue({ data: null, error: null });
+
+    const res = await redeemPlantAction(
+      form({ program_id: "p2", phone: "91234567" }),
+    );
+
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.progress.view).toEqual({
+        kind: "plant",
+        stage: 0,
+        stageName: "Seed",
+        totalStages: 5,
+        wilting: false,
+      });
+      expect(res.progress.rewardReady).toBe(false);
+    }
+  });
+});
+
+describe("redeemStreakAction returns fresh progress", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireVendorMock.mockResolvedValue({ user: { id: "v1" } });
+  });
+
+  it("shows the reset streak count immediately after redeeming", async () => {
+    const streakProgram = {
+      id: "p3",
+      name: "Regulars",
+      stamps_required: 4,
+      reward_text: "Free item",
+      type: "streak",
+      config: buildStreakConfig(7, 4, "Free item"),
+      active: true,
+    };
+    getProgramByIdMock.mockResolvedValue(streakProgram);
+    maybeSingleMock.mockResolvedValue({
+      data: {
+        state: {
+          current_streak: 4,
+          window_start: "2026-01-01T00:00:00Z",
+          reward_banked: true,
+        },
+      },
+      error: null,
+    });
+    rpcMock.mockResolvedValue({ data: null, error: null });
+
+    const res = await redeemStreakAction(
+      form({ program_id: "p3", phone: "91234567" }),
+    );
+
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.progress.view.kind).toBe("streak");
+      if (res.progress.view.kind === "streak") {
+        expect(res.progress.view.current).toBe(0);
+      }
+      expect(res.progress.rewardReady).toBe(false);
     }
   });
 });
