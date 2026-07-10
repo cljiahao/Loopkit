@@ -64,6 +64,7 @@ export function SetupForm({
       is_reward: !!s.reward_text,
     })) ?? DEFAULT_SEGMENTS,
   );
+  const [headStart, setHeadStart] = useState(program?.head_start ?? false);
 
   function updateSegment(index: number, patch: Partial<SegmentInput>) {
     setSegments((prev) =>
@@ -361,6 +362,30 @@ export function SetupForm({
           className="h-11 rounded-xl"
         />
       </div>
+
+      {(type === "stamp" || type === "plant" || type === "streak") && (
+        <div className="flex items-start gap-3 rounded-xl border bg-muted/40 p-3">
+          <input
+            type="checkbox"
+            id="head_start_checkbox"
+            checked={headStart}
+            onChange={(e) => setHeadStart(e.target.checked)}
+            className="mt-0.5 size-4 rounded border-input"
+          />
+          <label htmlFor="head_start_checkbox" className="text-sm">
+            <span className="font-medium">Give new customers a head start</span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              New signups start with a small amount of free progress toward
+              their first reward — shown to measurably increase completion.
+            </span>
+          </label>
+          <input
+            type="hidden"
+            name="head_start"
+            value={headStart ? "true" : "false"}
+          />
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="expiry_days" className={labelClass}>
