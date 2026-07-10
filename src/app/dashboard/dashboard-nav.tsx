@@ -19,12 +19,12 @@ import type { Program } from "@/lib/program";
 type Tier = "free" | "pro";
 
 const LINKS = [
-  { href: "/dashboard", label: "Counter" },
-  { href: "/dashboard/customers", label: "Customers" },
-  { href: "/dashboard/activity", label: "Activity" },
-  { href: "/dashboard/stats", label: "Stats" },
-  { href: "/dashboard/grow", label: "Grow" },
-  { href: "/dashboard/plan", label: "Plan" },
+  { href: "/dashboard", label: "Counter", scoped: true },
+  { href: "/dashboard/customers", label: "Customers", scoped: true },
+  { href: "/dashboard/activity", label: "Activity", scoped: true },
+  { href: "/dashboard/stats", label: "Stats", scoped: true },
+  { href: "/dashboard/grow", label: "Grow", scoped: false },
+  { href: "/dashboard/plan", label: "Plan", scoped: true },
 ];
 function isActive(path: string, href: string): boolean {
   return href === "/dashboard" ? path === "/dashboard" : path.startsWith(href);
@@ -142,7 +142,7 @@ export function DashboardNav({
           return (
             <Link
               key={link.href}
-              href={withProgram(link.href)}
+              href={link.scoped ? withProgram(link.href) : link.href}
               className={cn(
                 "rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary",
                 active && "bg-primary/10 text-primary hover:bg-primary/10",
@@ -237,7 +237,7 @@ export function DashboardNav({
               return (
                 <Link
                   key={link.href}
-                  href={withProgram(link.href)}
+                  href={link.scoped ? withProgram(link.href) : link.href}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
                     "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
