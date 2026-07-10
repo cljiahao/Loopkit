@@ -54,6 +54,7 @@ const stampFields = {
   name: "Coffee card",
   stamps_required: "10",
   reward_text: "Free kopi",
+  head_start: "false",
 };
 
 describe("saveProgramAction (gated create + edit)", () => {

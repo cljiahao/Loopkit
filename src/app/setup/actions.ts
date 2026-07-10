@@ -54,6 +54,7 @@ export async function saveProgramAction(
     period_days: formData.get("period_days"),
     target_streak: formData.get("target_streak"),
     expiry_days: formData.get("expiry_days"),
+    head_start: formData.get("head_start"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
