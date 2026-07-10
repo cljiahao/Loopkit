@@ -7,12 +7,29 @@ import { qrSvg } from "@/lib/qr";
 import { allowRequest } from "@/lib/rate-limit";
 import { isCardExpired } from "@/lib/expiry";
 import type { ActionResult } from "@/lib/action-result";
-import type { StatusState } from "@/app/c/status-state";
+import type { CardStatus, StatusState } from "@/app/c/status-state";
 
-// Public card-check action — no auth. The vendor shares /c?p=<programId>; the
-// phone the customer types in is the only input. enroll_card + card_view
-// (SECURITY DEFINER) are the sole read/write paths, so no table/PII is exposed
-// here. The engine computes progress, so the view is type-agnostic.
+type VendorJoinRow = {
+  program_id: string;
+  name: string;
+  type: string;
+  config: unknown;
+  state: unknown;
+  stamp_count: number;
+  card_token: string;
+  reward_text: string;
+  stamps_required: number;
+  expiry_days: number | null;
+  cycle_started_at: string | null;
+  active: boolean;
+};
+
+// Public card-check action — no auth. The vendor shares /c?v=<vendorId>; the
+// phone the customer types in is the only input. vendor_join (SECURITY
+// DEFINER) is the sole read/write path: it enrolls the phone into every
+// active program it doesn't already have a card for, then returns every
+// card the phone holds at this vendor. The engine computes progress per
+// card, so this stays type-agnostic across program types.
 export async function checkStatusAction(
   _prev: StatusState,
   formData: FormData,
@@ -32,72 +49,69 @@ export async function checkStatusAction(
     };
   }
 
-  const programId = String(formData.get("program") ?? "");
-  if (!programId) {
-    return { status: "error", message: "Missing program." };
+  const vendorId = String(formData.get("vendor") ?? "");
+  if (!vendorId) {
+    return { status: "error", message: "Missing shop." };
   }
 
   const supabase = await createServerClient();
 
-  const { error: enrollError } = await supabase.rpc("enroll_card", {
-    p_program: programId,
-    p_phone: normalized.phone,
-  });
-  if (enrollError) {
-    console.error("enroll_card failed", enrollError);
-    return { status: "error", message: "Something went wrong." };
-  }
-
-  const { data, error } = await supabase.rpc("card_view", {
-    p_program: programId,
+  const { data, error } = await supabase.rpc("vendor_join", {
+    p_vendor: vendorId,
     p_phone: normalized.phone,
   });
   if (error) {
-    console.error("card_view failed", error);
+    console.error("vendor_join failed", error);
     return { status: "error", message: "Something went wrong." };
   }
 
-  // No rows: the program doesn't exist or is inactive.
-  const row = data?.[0];
-  if (!row) {
-    return { status: "none", message: "We couldn't find that card." };
+  const rows = (data ?? []) as VendorJoinRow[];
+  if (rows.length === 0) {
+    return { status: "none", message: "We couldn't find any rewards here." };
   }
 
-  const programLike = {
-    type: row.type,
-    config: row.config,
-    stamps_required: row.stamps_required,
-    reward_text: row.reward_text,
-  };
-  const cardLike = {
-    state: row.state,
-    stamp_count: row.stamp_count ?? 0,
-    reward_count: 0,
-  };
-  const progress = getProgress(programLike, cardLike, new Date());
-  const qr = await qrSvg(row.card_token);
-  const expired =
-    row.cycle_started_at != null &&
-    isCardExpired(row.cycle_started_at, row.expiry_days, new Date());
+  const cards: CardStatus[] = await Promise.all(
+    rows.map(async (row) => {
+      const programLike = {
+        type: row.type,
+        config: row.config,
+        stamps_required: row.stamps_required,
+        reward_text: row.reward_text,
+      };
+      const cardLike = {
+        state: row.state,
+        stamp_count: row.stamp_count ?? 0,
+        reward_count: 0,
+      };
+      const progress = getProgress(programLike, cardLike, new Date());
+      const qr = await qrSvg(row.card_token);
+      const expired =
+        row.cycle_started_at != null &&
+        isCardExpired(row.cycle_started_at, row.expiry_days, new Date());
 
-  return {
-    status: "found",
-    name: row.name,
-    label: progress.label,
-    view: progress.view,
-    rewardReady: progress.rewardReady,
-    reward_text: row.reward_text,
-    qr,
-    expired,
-    programId,
-    phone: normalized.phone,
-  };
+      return {
+        programId: row.program_id,
+        name: row.name,
+        label: progress.label,
+        view: progress.view,
+        rewardReady: progress.rewardReady,
+        reward_text: row.reward_text,
+        qr,
+        expired,
+        active: row.active,
+      };
+    }),
+  );
+
+  return { status: "found", cards, phone: normalized.phone };
 }
 
 // Customer self-service card regeneration — for a lost QR or an expired card.
 // Same trust model as enroll_card/checkStatusAction: identity is the phone
 // number typed into /c, no separate customer auth exists in this app. Rate-
-// limited like the rest of the public /c surface.
+// limited like the rest of the public /c surface. Unchanged by the
+// vendor-level join redesign — still acts on one program's card at a time,
+// invoked per-card from the check-form's card list.
 export async function regenerateCardAction(
   formData: FormData,
 ): Promise<ActionResult<{ phone: string }>> {

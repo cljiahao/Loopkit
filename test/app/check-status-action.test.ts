@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mirrors qkit's sales/summary.test.ts mock style for the Supabase server
-// client — here stubbing the `rpc` calls the action makes.
+// client — here stubbing the `rpc` call the action makes.
 const { rpcMock } = vi.hoisted(() => ({ rpcMock: vi.fn() }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -21,12 +21,11 @@ function form(fields: Record<string, string>): FormData {
   return fd;
 }
 
-function mockRpcs(view: unknown[]) {
+function mockJoin(rows: unknown[]) {
   rpcMock.mockImplementation((fn: string) => {
-    if (fn === "enroll_card") {
-      return Promise.resolve({ data: "tok_abc", error: null });
-    }
-    return Promise.resolve({ data: view, error: null });
+    if (fn === "vendor_join")
+      return Promise.resolve({ data: rows, error: null });
+    return Promise.resolve({ data: null, error: null });
   });
 }
 
@@ -36,7 +35,7 @@ describe("checkStatusAction", () => {
   it("rejects an invalid phone without calling the RPC", async () => {
     const result = await checkStatusAction(
       STATUS_IDLE,
-      form({ program: "p1", phone: "not-a-phone" }),
+      form({ vendor: "v1", phone: "not-a-phone" }),
     );
 
     expect(result).toEqual({
@@ -46,19 +45,20 @@ describe("checkStatusAction", () => {
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
-  it("rejects a missing program without calling the RPC", async () => {
+  it("rejects a missing vendor without calling the RPC", async () => {
     const result = await checkStatusAction(
       STATUS_IDLE,
-      form({ program: "", phone: "91234567" }),
+      form({ vendor: "", phone: "91234567" }),
     );
 
-    expect(result).toEqual({ status: "error", message: "Missing program." });
+    expect(result).toEqual({ status: "error", message: "Missing shop." });
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
-  it("normalizes the phone and enrolls + reads with it", async () => {
-    mockRpcs([
+  it("calls vendor_join with the normalized phone", async () => {
+    mockJoin([
       {
+        program_id: "p1",
         name: "Kaya Toast Co.",
         type: "stamp",
         config: {},
@@ -67,27 +67,27 @@ describe("checkStatusAction", () => {
         card_token: "tok_abc",
         reward_text: "Free kopi",
         stamps_required: 10,
+        expiry_days: null,
+        cycle_started_at: null,
+        active: true,
       },
     ]);
 
     await checkStatusAction(
       STATUS_IDLE,
-      form({ program: "p1", phone: "9123 4567" }),
+      form({ vendor: "v1", phone: "9123 4567" }),
     );
 
-    expect(rpcMock).toHaveBeenCalledWith("enroll_card", {
-      p_program: "p1",
-      p_phone: "+6591234567",
-    });
-    expect(rpcMock).toHaveBeenCalledWith("card_view", {
-      p_program: "p1",
+    expect(rpcMock).toHaveBeenCalledWith("vendor_join", {
+      p_vendor: "v1",
       p_phone: "+6591234567",
     });
   });
 
-  it("reports found reading the stamp_count column, not the (empty) state blob", async () => {
-    mockRpcs([
+  it("returns one card per row, reading stamp_count not the (empty) state blob", async () => {
+    mockJoin([
       {
+        program_id: "p1",
         name: "Kaya Toast Co.",
         type: "stamp",
         config: {},
@@ -96,31 +96,112 @@ describe("checkStatusAction", () => {
         card_token: "tok_abc",
         reward_text: "Free kopi",
         stamps_required: 10,
+        expiry_days: null,
+        cycle_started_at: null,
+        active: true,
       },
     ]);
 
     const result = await checkStatusAction(
       STATUS_IDLE,
-      form({ program: "p1", phone: "91234567" }),
+      form({ vendor: "v1", phone: "91234567" }),
     );
 
     expect(result).toEqual({
       status: "found",
-      name: "Kaya Toast Co.",
-      label: "3/10 stamps",
-      view: { kind: "dots", filled: 3, total: 10 },
-      rewardReady: false,
-      reward_text: "Free kopi",
-      qr: '<svg data-token="tok_abc"></svg>',
-      expired: false,
-      programId: "p1",
       phone: "+6591234567",
+      cards: [
+        {
+          programId: "p1",
+          name: "Kaya Toast Co.",
+          label: "3/10 stamps",
+          view: { kind: "dots", filled: 3, total: 10 },
+          rewardReady: false,
+          reward_text: "Free kopi",
+          qr: '<svg data-token="tok_abc"></svg>',
+          expired: false,
+          active: true,
+        },
+      ],
     });
   });
 
-  it("reports expired once the program's expiry window has elapsed", async () => {
-    mockRpcs([
+  it("returns multiple cards when the phone has more than one program at this vendor", async () => {
+    mockJoin([
       {
+        program_id: "p1",
+        name: "Stamp Card",
+        type: "stamp",
+        config: {},
+        state: {},
+        stamp_count: 2,
+        card_token: "tok_1",
+        reward_text: "Free kopi",
+        stamps_required: 8,
+        expiry_days: null,
+        cycle_started_at: null,
+        active: true,
+      },
+      {
+        program_id: "p2",
+        name: "Streak Club",
+        type: "streak",
+        config: { period_days: 7, target_streak: 4, reward_text: "Free set" },
+        state: {
+          current_streak: 1,
+          window_start: "2026-07-01T00:00:00Z",
+          reward_banked: false,
+        },
+        stamp_count: 0,
+        card_token: "tok_2",
+        reward_text: "Free set",
+        stamps_required: 4,
+        expiry_days: null,
+        cycle_started_at: null,
+        active: true,
+      },
+    ]);
+
+    const result = await checkStatusAction(
+      STATUS_IDLE,
+      form({ vendor: "v1", phone: "91234567" }),
+    );
+
+    expect(result.status).toBe("found");
+    expect(result.cards).toHaveLength(2);
+    expect(result.cards?.map((c) => c.programId)).toEqual(["p1", "p2"]);
+  });
+
+  it("marks a card inactive when its program is no longer active, without dropping it", async () => {
+    mockJoin([
+      {
+        program_id: "p1",
+        name: "Old Program",
+        type: "stamp",
+        config: {},
+        state: {},
+        stamp_count: 5,
+        card_token: "tok_1",
+        reward_text: "Free item",
+        stamps_required: 10,
+        expiry_days: null,
+        cycle_started_at: null,
+        active: false,
+      },
+    ]);
+
+    const result = await checkStatusAction(
+      STATUS_IDLE,
+      form({ vendor: "v1", phone: "91234567" }),
+    );
+
+    expect(result.cards?.[0].active).toBe(false);
+  });
+
+  it("reports expired once a card's expiry window has elapsed", async () => {
+    mockJoin([
+      {
+        program_id: "p1",
         name: "Kaya Toast Co.",
         type: "stamp",
         config: {},
@@ -131,61 +212,40 @@ describe("checkStatusAction", () => {
         stamps_required: 10,
         expiry_days: 30,
         cycle_started_at: "2020-01-01T00:00:00Z",
+        active: true,
       },
     ]);
 
     const result = await checkStatusAction(
       STATUS_IDLE,
-      form({ program: "p1", phone: "91234567" }),
+      form({ vendor: "v1", phone: "91234567" }),
     );
 
-    expect(result.expired).toBe(true);
+    expect(result.cards?.[0].expired).toBe(true);
   });
 
-  it("reports none when card_view returns no rows (bad/inactive program)", async () => {
-    mockRpcs([]);
+  it("reports none when vendor_join returns no rows", async () => {
+    mockJoin([]);
 
     const result = await checkStatusAction(
       STATUS_IDLE,
-      form({ program: "bad-program", phone: "91234567" }),
+      form({ vendor: "bad-vendor", phone: "91234567" }),
     );
 
     expect(result).toEqual({
       status: "none",
-      message: "We couldn't find that card.",
+      message: "We couldn't find any rewards here.",
     });
   });
 
-  it("reports an error when enroll_card fails", async () => {
-    rpcMock.mockImplementation((fn: string) => {
-      if (fn === "enroll_card") {
-        return Promise.resolve({ data: null, error: { message: "db down" } });
-      }
-      return Promise.resolve({ data: [], error: null });
-    });
-
-    const result = await checkStatusAction(
-      STATUS_IDLE,
-      form({ program: "p1", phone: "91234567" }),
+  it("reports an error when vendor_join fails", async () => {
+    rpcMock.mockImplementation(() =>
+      Promise.resolve({ data: null, error: { message: "db down" } }),
     );
 
-    expect(result).toEqual({
-      status: "error",
-      message: "Something went wrong.",
-    });
-  });
-
-  it("reports an error when card_view fails", async () => {
-    rpcMock.mockImplementation((fn: string) => {
-      if (fn === "enroll_card") {
-        return Promise.resolve({ data: "tok_abc", error: null });
-      }
-      return Promise.resolve({ data: null, error: { message: "db down" } });
-    });
-
     const result = await checkStatusAction(
       STATUS_IDLE,
-      form({ program: "p1", phone: "91234567" }),
+      form({ vendor: "v1", phone: "91234567" }),
     );
 
     expect(result).toEqual({
