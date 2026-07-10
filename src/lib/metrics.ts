@@ -52,7 +52,10 @@ export type LoopkitMetricsInput = {
 // A visit event whose server-recorded roll won counts as a reward, same as an
 // explicit redeem. The roll/outcome is written by record_visit, never trusted
 // from the client.
-function isWonVisit(event: { kind: string; payload?: unknown }): boolean {
+export function isWonVisit(event: {
+  kind: string;
+  payload?: unknown;
+}): boolean {
   return (
     event.kind === "visit" &&
     typeof event.payload === "object" &&

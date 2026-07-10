@@ -1,0 +1,157 @@
+import { createServerClient } from "@/lib/supabase/server";
+import { sgtDateKey } from "@/lib/format";
+import { isWonVisit } from "@/lib/metrics";
+import { MS_PER_DAY } from "@/lib/utils";
+
+export type ProgramStats = {
+  enrolled: number;
+  newThisWeek: number;
+  visitsTotal: number;
+  visits30d: number;
+  visitsByDay: { date: string; count: number }[];
+  rewardsTotal: number;
+  rewards30d: number;
+  redemptionRate: number;
+  repeatVisitRate: number;
+  active: number;
+  lapsed: number;
+  avgVisitsPerCustomer: number;
+};
+
+type StatsEvent = {
+  card_id: string;
+  kind: string;
+  created_at: string;
+  payload?: unknown;
+};
+type StatsCard = { id: string; created_at: string };
+
+// Splits raw stamp_events into the two buckets every stat in this module is
+// built from. `regen` (card regeneration) events land in neither — they are
+// not a customer action.
+export function classifyActivity(events: StatsEvent[]): {
+  activityEvents: StatsEvent[];
+  rewardEvents: StatsEvent[];
+} {
+  const activityEvents = events.filter(
+    (e) => e.kind === "stamp" || e.kind === "visit",
+  );
+  const rewardEvents = events.filter(
+    (e) => e.kind === "redeem" || isWonVisit(e),
+  );
+  return { activityEvents, rewardEvents };
+}
+
+// Always 30 entries (oldest first, today last), zero-filled for days with no
+// activity — callers can render a fixed-width bar strip with no gap logic.
+export function bucketVisitsByDay(
+  activityEvents: { created_at: string }[],
+  nowMs: number,
+): { date: string; count: number }[] {
+  const countByDay = new Map<string, number>();
+  for (const e of activityEvents) {
+    const key = sgtDateKey(e.created_at);
+    countByDay.set(key, (countByDay.get(key) ?? 0) + 1);
+  }
+
+  const days: { date: string; count: number }[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const key = sgtDateKey(new Date(nowMs - i * MS_PER_DAY).toISOString());
+    days.push({ date: key, count: countByDay.get(key) ?? 0 });
+  }
+  return days;
+}
+
+// Pure card-level aggregation. `activityEvents`/`rewardEvents` are the
+// already-classified arrays from `classifyActivity` — this function does no
+// kind filtering itself.
+export function computeCardStats(
+  cards: StatsCard[],
+  activityEvents: StatsEvent[],
+  rewardEvents: StatsEvent[],
+  nowMs: number,
+): Omit<ProgramStats, "visitsByDay"> {
+  const enrolled = cards.length;
+  const cutoff7d = nowMs - 7 * MS_PER_DAY;
+  const cutoff30d = nowMs - 30 * MS_PER_DAY;
+
+  const newThisWeek = cards.filter(
+    (c) => Date.parse(c.created_at) >= cutoff7d,
+  ).length;
+
+  const visitsTotal = activityEvents.length;
+  const visits30d = activityEvents.filter(
+    (e) => Date.parse(e.created_at) >= cutoff30d,
+  ).length;
+
+  const rewardsTotal = rewardEvents.length;
+  const rewards30d = rewardEvents.filter(
+    (e) => Date.parse(e.created_at) >= cutoff30d,
+  ).length;
+
+  const activityCountByCard = new Map<string, number>();
+  const activeCardIds = new Set<string>();
+  for (const e of activityEvents) {
+    activityCountByCard.set(
+      e.card_id,
+      (activityCountByCard.get(e.card_id) ?? 0) + 1,
+    );
+    if (Date.parse(e.created_at) >= cutoff30d) activeCardIds.add(e.card_id);
+  }
+  const repeatCards = [...activityCountByCard.values()].filter(
+    (n) => n >= 2,
+  ).length;
+
+  return {
+    enrolled,
+    newThisWeek,
+    visitsTotal,
+    visits30d,
+    rewardsTotal,
+    rewards30d,
+    redemptionRate: enrolled === 0 ? 0 : rewardsTotal / enrolled,
+    repeatVisitRate: enrolled === 0 ? 0 : repeatCards / enrolled,
+    active: activeCardIds.size,
+    lapsed: enrolled - activeCardIds.size,
+    avgVisitsPerCustomer: enrolled === 0 ? 0 : visitsTotal / enrolled,
+  };
+}
+
+// Impure shell: fetch this program's cards + stamp_events (RLS scopes both
+// to the signed-in vendor, same as activity/page.tsx), then delegate to the
+// pure helpers above.
+export async function getProgramStats(
+  programId: string,
+): Promise<ProgramStats> {
+  const supabase = await createServerClient();
+  const nowMs = Date.now();
+
+  const { data: cards, error: cardsError } = await supabase
+    .from("cards")
+    .select("id,created_at")
+    .eq("program_id", programId);
+  if (cardsError) throw new Error(`getProgramStats: ${cardsError.message}`);
+
+  const cardIds = (cards ?? []).map((c) => c.id);
+
+  let events: StatsEvent[] = [];
+  if (cardIds.length > 0) {
+    const { data, error } = await supabase
+      .from("stamp_events")
+      .select("card_id,kind,payload,created_at")
+      .in("card_id", cardIds);
+    if (error) throw new Error(`getProgramStats: ${error.message}`);
+    events = data ?? [];
+  }
+
+  const { activityEvents, rewardEvents } = classifyActivity(events);
+  const cardStats = computeCardStats(
+    cards ?? [],
+    activityEvents,
+    rewardEvents,
+    nowMs,
+  );
+  const visitsByDay = bucketVisitsByDay(activityEvents, nowMs);
+
+  return { ...cardStats, visitsByDay };
+}

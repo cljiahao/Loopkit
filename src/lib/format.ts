@@ -24,3 +24,8 @@ export function formatSgtDate(iso: string): string {
     year: "numeric",
   });
 }
+
+/** e.g. "2026-07-10" — SGT calendar-day key for grouping/bucketing. */
+export function sgtDateKey(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-CA", { timeZone: SGT });
+}
