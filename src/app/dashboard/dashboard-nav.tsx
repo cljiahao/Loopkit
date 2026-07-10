@@ -77,11 +77,13 @@ export function DashboardNav({
   email,
   tier,
   programs,
+  activeByProgramId,
 }: {
   signOut: () => Promise<void>;
   email: string;
   tier: Tier;
   programs: Program[];
+  activeByProgramId: Record<string, number>;
 }) {
   const path = usePathname();
   const searchParams = useSearchParams();
@@ -118,7 +120,15 @@ export function DashboardNav({
             <DropdownMenuContent align="start" className="w-56 rounded-xl">
               {programs.map((prog) => (
                 <DropdownMenuItem key={prog.id} asChild>
-                  <Link href={`/dashboard?p=${prog.id}`}>{prog.name}</Link>
+                  <Link
+                    href={`/dashboard?p=${prog.id}`}
+                    className="flex items-center justify-between gap-2"
+                  >
+                    <span className="truncate">{prog.name}</span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      {activeByProgramId[prog.id] ?? 0} active
+                    </span>
+                  </Link>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -209,11 +219,14 @@ export function DashboardNav({
                   href={`/dashboard?p=${prog.id}`}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
+                    "flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
                     prog.id === currentProgram?.id && "text-primary",
                   )}
                 >
-                  {prog.name}
+                  <span className="truncate">{prog.name}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {activeByProgramId[prog.id] ?? 0} active
+                  </span>
                 </Link>
               ))}
             </div>

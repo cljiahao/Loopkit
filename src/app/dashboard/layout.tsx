@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireVendor } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { isPro, listPrograms } from "@/lib/program";
+import { getProgramStats } from "@/lib/stats";
 import { createServerClient } from "@/lib/supabase/server";
 import { DashboardNav } from "@/app/dashboard/dashboard-nav";
 
@@ -17,6 +18,18 @@ export default async function DashboardLayout({
   if (await isAdmin(user.id)) redirect("/admin");
 
   const [pro, programs] = await Promise.all([isPro(), listPrograms()]);
+
+  // Only fetch per-program stats when there's a switcher to show them in —
+  // the common single-program case pays no extra query.
+  const activeByProgramId: Record<string, number> = {};
+  if (programs.length > 1) {
+    const stats = await Promise.all(
+      programs.map((prog) => getProgramStats(prog.id)),
+    );
+    programs.forEach((prog, i) => {
+      activeByProgramId[prog.id] = stats[i].active;
+    });
+  }
 
   // Inline server action so the header's Sign out `<form>` can post directly —
   // no client bundle, no exposed endpoint beyond this closure.
@@ -36,6 +49,7 @@ export default async function DashboardLayout({
             email={user.email ?? ""}
             tier={pro ? "pro" : "free"}
             programs={programs}
+            activeByProgramId={activeByProgramId}
           />
         </Suspense>
       </header>
