@@ -10,6 +10,7 @@ const program = (id: string): Program => ({
   type: "stamp",
   config: {},
   active: true,
+  head_start: false,
 });
 
 describe("currentProgram", () => {

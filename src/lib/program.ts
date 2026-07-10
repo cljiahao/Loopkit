@@ -6,7 +6,7 @@ import type { ChanceConfig } from "@/lib/engine/chance";
 import type { StreakConfig } from "@/lib/engine/streak";
 
 const PROGRAM_COLUMNS =
-  "id,name,stamps_required,reward_text,type,config,active,expiry_days";
+  "id,name,stamps_required,reward_text,type,config,active,expiry_days,head_start";
 
 export type Program = {
   id: string;
@@ -17,6 +17,7 @@ export type Program = {
   config: unknown;
   active: boolean;
   expiry_days?: number | null;
+  head_start: boolean;
 };
 
 export const programInputSchema = z.object({
@@ -62,6 +63,7 @@ export const saveProgramSchema = z.discriminatedUnion("type", [
     name: z.string().trim().min(1).max(60),
     stamps_required: z.coerce.number().int().min(2).max(20),
     reward_text: z.string().trim().min(1).max(80),
+    head_start: z.enum(["true", "false"]).transform((v) => v === "true"),
     expiry_days: expiryDaysSchema,
   }),
   z.object({
@@ -77,6 +79,7 @@ export const saveProgramSchema = z.discriminatedUnion("type", [
     name: z.string().trim().min(1).max(60),
     reward_text: z.string().trim().min(1).max(80),
     visits_to_bloom: z.coerce.number().int().min(4).max(20),
+    head_start: z.enum(["true", "false"]).transform((v) => v === "true"),
     expiry_days: expiryDaysSchema,
   }),
   z.object({
@@ -113,6 +116,7 @@ export const saveProgramSchema = z.discriminatedUnion("type", [
     reward_text: z.string().trim().min(1).max(80),
     period_days: z.coerce.number().int().min(1).max(30),
     target_streak: z.coerce.number().int().min(2).max(20),
+    head_start: z.enum(["true", "false"]).transform((v) => v === "true"),
     expiry_days: expiryDaysSchema,
   }),
 ]);
