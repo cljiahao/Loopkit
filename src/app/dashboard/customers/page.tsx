@@ -25,7 +25,7 @@ export default async function CustomersPage({
   const now = new Date();
 
   return (
-    <main className="mx-auto max-w-2xl space-y-8 p-5 py-10">
+    <main className="mx-auto max-w-4xl space-y-8 p-5 py-10">
       <div>
         {programs.length > 1 ? (
           <form
@@ -78,42 +78,42 @@ export default async function CustomersPage({
         </Button>
       </form>
 
-      <div className="rounded-2xl border bg-card p-6 shadow-sm">
-        {cards.length === 0 ? (
+      {cards.length === 0 ? (
+        <div className="rounded-2xl border bg-card p-6 shadow-sm">
           <p className="text-sm text-muted-foreground">No customers yet.</p>
-        ) : (
-          <ul className="divide-y">
-            {cards.map((card) => (
-              <li
-                key={card.id}
-                className="flex items-center justify-between py-3 text-sm first:pt-0 last:pb-0"
-              >
-                <div>
-                  <p className="font-medium">{card.phone}</p>
-                  <p className="mt-0.5 text-muted-foreground">
-                    {
-                      getProgress(
-                        program,
-                        {
-                          state: card.state,
-                          stamp_count: card.stamp_count,
-                          reward_count: card.reward_count,
-                        },
-                        now,
-                      ).label
-                    }
-                    {card.reward_count > 0 &&
-                      ` · ${card.reward_count} reward${card.reward_count === 1 ? "" : "s"}`}
-                  </p>
-                </div>
-                <span className="text-muted-foreground">
-                  {formatSgtDate(card.updated_at)}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+        </div>
+      ) : (
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {cards.map((card) => (
+            <li
+              key={card.id}
+              className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3 text-sm shadow-sm"
+            >
+              <div className="min-w-0">
+                <p className="font-medium">{card.phone}</p>
+                <p className="mt-0.5 truncate text-muted-foreground">
+                  {
+                    getProgress(
+                      program,
+                      {
+                        state: card.state,
+                        stamp_count: card.stamp_count,
+                        reward_count: card.reward_count,
+                      },
+                      now,
+                    ).label
+                  }
+                  {card.reward_count > 0 &&
+                    ` · ${card.reward_count} reward${card.reward_count === 1 ? "" : "s"}`}
+                </p>
+              </div>
+              <span className="shrink-0 text-muted-foreground">
+                {formatSgtDate(card.updated_at)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }

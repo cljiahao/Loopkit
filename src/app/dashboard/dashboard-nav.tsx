@@ -3,18 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import {
-  ChevronDown,
-  History,
-  LogOut,
-  Menu,
-  QrCode,
-  Sparkles,
-  Store,
-  User,
-  Users,
-  X,
-} from "lucide-react";
+import { ChevronDown, LogOut, Menu, User, X } from "lucide-react";
 import { Wordmark } from "@/components/landing/wordmark";
 import {
   DropdownMenu,
@@ -30,11 +19,11 @@ import type { Program } from "@/lib/program";
 type Tier = "free" | "pro";
 
 const LINKS = [
-  { href: "/dashboard", label: "Counter", icon: Store },
-  { href: "/dashboard/customers", label: "Customers", icon: Users },
-  { href: "/dashboard/activity", label: "Activity", icon: History },
-  { href: "/dashboard/grow", label: "Grow", icon: QrCode },
-  { href: "/dashboard/plan", label: "Plan", icon: Sparkles },
+  { href: "/dashboard", label: "Counter" },
+  { href: "/dashboard/customers", label: "Customers" },
+  { href: "/dashboard/activity", label: "Activity" },
+  { href: "/dashboard/grow", label: "Grow" },
+  { href: "/dashboard/plan", label: "Plan" },
 ];
 
 function isActive(path: string, href: string): boolean {
@@ -139,18 +128,16 @@ export function DashboardNav({
 
       <nav className="hidden items-center gap-1 sm:flex">
         {LINKS.map((link) => {
-          const Icon = link.icon;
           const active = isActive(path, link.href);
           return (
             <Link
               key={link.href}
               href={withProgram(link.href)}
               className={cn(
-                "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary",
+                "rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary",
                 active && "bg-primary/10 text-primary hover:bg-primary/10",
               )}
             >
-              <Icon className="size-4" />
               {link.label}
             </Link>
           );
@@ -233,7 +220,6 @@ export function DashboardNav({
           )}
           <div className="flex flex-col gap-1">
             {LINKS.map((link) => {
-              const Icon = link.icon;
               const active = isActive(path, link.href);
               return (
                 <Link
@@ -241,11 +227,10 @@ export function DashboardNav({
                   href={withProgram(link.href)}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
+                    "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
                     active && "bg-primary/10 text-primary",
                   )}
                 >
-                  <Icon className="size-4" />
                   {link.label}
                 </Link>
               );

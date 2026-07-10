@@ -42,7 +42,7 @@ export default async function ActivityPage({
       : [];
 
   return (
-    <main className="mx-auto max-w-2xl space-y-8 p-5 py-10">
+    <main className="mx-auto max-w-4xl space-y-8 p-5 py-10">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -50,61 +50,58 @@ export default async function ActivityPage({
         </p>
       </div>
 
-      <div className="rounded-2xl border bg-card p-6 shadow-sm">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Recent activity
-        </h2>
-        <ul className="mt-4 space-y-2.5">
-          {events && events.length > 0 ? (
-            events.map((event) => {
-              const won =
-                event.kind === "visit" &&
-                typeof event.payload === "object" &&
-                event.payload !== null &&
-                (event.payload as { won?: boolean }).won === true;
-              const isReward = event.kind === "redeem" || won;
-              const label = won
-                ? "Won"
-                : event.kind === "visit"
-                  ? "Visit"
-                  : event.kind;
-              return (
-                <li
-                  key={event.id}
-                  className="flex items-center justify-between gap-3 text-sm"
-                >
-                  <span className="flex min-w-0 items-center gap-2.5">
-                    <span
-                      className={
-                        isReward
-                          ? "grid size-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold-accent"
-                          : "grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"
-                      }
-                    >
-                      {isReward ? (
-                        <Gift className="size-3.5" />
-                      ) : (
-                        <Stamp className="size-3.5" />
-                      )}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="font-medium capitalize">{label}</span>
-                      <span className="ml-2 truncate text-muted-foreground">
-                        {phoneByCardId.get(event.card_id) ?? "—"}
-                      </span>
+      {events && events.length > 0 ? (
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {events.map((event) => {
+            const won =
+              event.kind === "visit" &&
+              typeof event.payload === "object" &&
+              event.payload !== null &&
+              (event.payload as { won?: boolean }).won === true;
+            const isReward = event.kind === "redeem" || won;
+            const label = won
+              ? "Won"
+              : event.kind === "visit"
+                ? "Visit"
+                : event.kind;
+            return (
+              <li
+                key={event.id}
+                className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3 text-sm shadow-sm"
+              >
+                <span className="flex min-w-0 items-center gap-2.5">
+                  <span
+                    className={
+                      isReward
+                        ? "grid size-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold-accent"
+                        : "grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"
+                    }
+                  >
+                    {isReward ? (
+                      <Gift className="size-3.5" />
+                    ) : (
+                      <Stamp className="size-3.5" />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="font-medium capitalize">{label}</span>
+                    <span className="ml-2 truncate text-muted-foreground">
+                      {phoneByCardId.get(event.card_id) ?? "—"}
                     </span>
                   </span>
-                  <span className="shrink-0 text-muted-foreground">
-                    {formatSgtDateTime(event.created_at)}
-                  </span>
-                </li>
-              );
-            })
-          ) : (
-            <li className="text-sm text-muted-foreground">No stamps yet.</li>
-          )}
+                </span>
+                <span className="shrink-0 text-muted-foreground">
+                  {formatSgtDateTime(event.created_at)}
+                </span>
+              </li>
+            );
+          })}
         </ul>
-      </div>
+      ) : (
+        <div className="rounded-2xl border bg-card p-6 shadow-sm">
+          <p className="text-sm text-muted-foreground">No stamps yet.</p>
+        </div>
+      )}
     </main>
   );
 }
