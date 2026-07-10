@@ -5,9 +5,7 @@ import { redirect } from "next/navigation";
 import { requireVendor } from "@/lib/auth";
 import {
   saveProgramSchema,
-  buildPlantConfig,
-  buildChanceConfig,
-  buildStreakConfig,
+  buildProgramFields,
   getProgramById,
   listPrograms,
   isPro,
@@ -61,57 +59,7 @@ export async function saveProgramAction(
   }
 
   const data = parsed.data;
-  // A card's stamps_required column is NOT NULL and 2..20; lucky/wheel/scratch
-  // programs reuse the pity ceiling (defaulting to 10 when left unset) and
-  // plant programs reuse visits-to-bloom to satisfy it. The type-specific
-  // knobs live in the config blob the TypeScript strategy reads.
-  let type: string;
-  let stampsRequired: number;
-  let config: Json;
-  let headStart: boolean;
-  if (data.type === "stamp") {
-    type = "stamp";
-    stampsRequired = data.stamps_required;
-    headStart = data.head_start;
-    config = {
-      stamps_required: data.stamps_required,
-      reward_text: data.reward_text,
-    };
-  } else if (data.type === "lucky") {
-    type = "lucky";
-    stampsRequired = data.pity_ceiling;
-    headStart = false;
-    config = {
-      win_probability: data.win_percent / 100,
-      pity_ceiling: data.pity_ceiling,
-      cooldown_visits: 0,
-      reward_text: data.reward_text,
-    };
-  } else if (data.type === "plant") {
-    type = "plant";
-    stampsRequired = data.visits_to_bloom;
-    headStart = data.head_start;
-    config = buildPlantConfig(data.visits_to_bloom, data.reward_text) as Json;
-  } else if (data.type === "streak") {
-    type = "streak";
-    stampsRequired = data.target_streak;
-    headStart = data.head_start;
-    config = buildStreakConfig(
-      data.period_days,
-      data.target_streak,
-      data.reward_text,
-    ) as Json;
-  } else {
-    type = data.type;
-    stampsRequired = data.pity_ceiling ?? 10;
-    headStart = false;
-    config = buildChanceConfig(
-      data.type,
-      data.segments,
-      data.pity_ceiling,
-      data.reward_text,
-    ) as Json;
-  }
+  const { type, stampsRequired, config, headStart } = buildProgramFields(data);
 
   const supabase = await createServerClient();
 
