@@ -28,7 +28,7 @@ revamped `/dashboard/plan` page, and `dashboard-nav.tsx`'s program switcher.
 - No migration, no schema change — everything reads existing columns.
 - Event classification: activity = `kind === 'stamp' || kind === 'visit'`;
   reward = `kind === 'redeem'` or a `visit` event with `payload.won ===
-  true` (reuse `isWonVisit` from `src/lib/metrics.ts`, exported, not
+true` (reuse `isWonVisit` from `src/lib/metrics.ts`, exported, not
   reimplemented). `regen` events count toward neither.
 - All dates bucket to Asia/Singapore calendar days (`sgtDateKey`, new
   helper in `src/lib/format.ts`), matching every other timestamp in this
@@ -46,14 +46,16 @@ revamped `/dashboard/plan` page, and `dashboard-nav.tsx`'s program switcher.
 ### Task 1: Shared stats module
 
 **Files:**
+
 - Modify: `src/lib/format.ts` — add `sgtDateKey`
 - Modify: `src/lib/metrics.ts` — export `isWonVisit` (currently private)
 - Create: `src/lib/stats.ts`
 - Create: `test/lib/stats.test.ts`
 
 **Interfaces:**
+
 - Produces: `ProgramStats` type, `getProgramStats(programId: string):
-  Promise<ProgramStats>`, and the pure helpers `classifyActivity`,
+Promise<ProgramStats>`, and the pure helpers `classifyActivity`,
   `bucketVisitsByDay`, `computeCardStats` — all exported from
   `src/lib/stats.ts` for Tasks 2-4 to import.
 - Consumes: `isWonVisit` from `src/lib/metrics.ts`, `MS_PER_DAY` from
@@ -74,10 +76,13 @@ export function sgtDateKey(iso: string): string {
 - [ ] **Step 2: Export `isWonVisit` from `src/lib/metrics.ts`**
 
 Change:
+
 ```typescript
 function isWonVisit(event: { kind: string; payload?: unknown }): boolean {
 ```
+
 to:
+
 ```typescript
 export function isWonVisit(event: { kind: string; payload?: unknown }): boolean {
 ```
@@ -102,8 +107,18 @@ describe("classifyActivity", () => {
   it("splits stamp/visit into activity and redeem/won-visit into rewards", () => {
     const events = [
       { card_id: "c1", kind: "stamp", created_at: iso(1) },
-      { card_id: "c1", kind: "visit", created_at: iso(2), payload: { won: false } },
-      { card_id: "c1", kind: "visit", created_at: iso(3), payload: { won: true } },
+      {
+        card_id: "c1",
+        kind: "visit",
+        created_at: iso(2),
+        payload: { won: false },
+      },
+      {
+        card_id: "c1",
+        kind: "visit",
+        created_at: iso(3),
+        payload: { won: true },
+      },
       { card_id: "c1", kind: "redeem", created_at: iso(1) },
       { card_id: "c1", kind: "regen", created_at: iso(1) },
     ];
@@ -184,7 +199,9 @@ describe("computeCardStats", () => {
       { id: "c1", created_at: iso(20) },
       { id: "c2", created_at: iso(20) },
     ];
-    const rewardEvents = [{ card_id: "c1", kind: "redeem", created_at: iso(1) }];
+    const rewardEvents = [
+      { card_id: "c1", kind: "redeem", created_at: iso(1) },
+    ];
     const stats = computeCardStats(cards, [], rewardEvents, now);
 
     expect(stats.redemptionRate).toBe(0.5);
@@ -197,7 +214,9 @@ describe("computeCardStats", () => {
       { card_id: "c1", kind: "stamp", created_at: iso(5) },
       { card_id: "c1", kind: "stamp", created_at: iso(35) },
     ];
-    const rewardEvents = [{ card_id: "c1", kind: "redeem", created_at: iso(35) }];
+    const rewardEvents = [
+      { card_id: "c1", kind: "redeem", created_at: iso(35) },
+    ];
     const stats = computeCardStats(cards, activityEvents, rewardEvents, now);
 
     expect(stats.visitsTotal).toBe(2);
@@ -339,7 +358,9 @@ export function computeCardStats(
 // Impure shell: fetch this program's cards + stamp_events (RLS scopes both
 // to the signed-in vendor, same as activity/page.tsx), then delegate to the
 // pure helpers above.
-export async function getProgramStats(programId: string): Promise<ProgramStats> {
+export async function getProgramStats(
+  programId: string,
+): Promise<ProgramStats> {
   const supabase = await createServerClient();
   const nowMs = Date.now();
 
@@ -396,10 +417,12 @@ git commit -m "feat: add shared program-stats module (visit/reward/repeat metric
 ### Task 2: Stats page
 
 **Files:**
+
 - Create: `src/app/dashboard/stats/page.tsx`
 - Modify: `src/app/dashboard/dashboard-nav.tsx:21-27` (add to `LINKS`)
 
 **Interfaces:**
+
 - Consumes: `getProgramStats(programId: string): Promise<ProgramStats>` from
   Task 1's `src/lib/stats.ts`; `listPrograms()`/`currentProgram()` from
   `src/lib/program.ts` (existing, same pattern as
@@ -408,6 +431,7 @@ git commit -m "feat: add shared program-stats module (visit/reward/repeat metric
 - [ ] **Step 1: Add the Stats link to the nav**
 
 In `src/app/dashboard/dashboard-nav.tsx`, change:
+
 ```typescript
 const LINKS = [
   { href: "/dashboard", label: "Counter" },
@@ -417,7 +441,9 @@ const LINKS = [
   { href: "/dashboard/plan", label: "Plan" },
 ];
 ```
+
 to:
+
 ```typescript
 const LINKS = [
   { href: "/dashboard", label: "Counter" },
@@ -443,9 +469,7 @@ function Tile({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm">
       <p className="text-2xl font-bold tracking-tight">{value}</p>
-      <p className="mt-1 text-xs font-medium text-muted-foreground">
-        {label}
-      </p>
+      <p className="mt-1 text-xs font-medium text-muted-foreground">{label}</p>
     </div>
   );
 }
@@ -543,10 +567,12 @@ git commit -m "feat: add per-program stats page"
 ### Task 3: Plan page ROI revamp
 
 **Files:**
+
 - Modify: `src/app/dashboard/plan/page.tsx` (full file — see below for the
   complete new version)
 
 **Interfaces:**
+
 - Consumes: `getProgramStats` (Task 1), `listPrograms`/`currentProgram`
   from `src/lib/program.ts` (existing).
 
@@ -605,11 +631,10 @@ export default async function PlanPage() {
           <strong className="font-semibold">
             {Math.round(stats.repeatVisitRate * 100)}%
           </strong>{" "}
-          of your customers have come back for a second visit, and
-          you&apos;ve handed out{" "}
-          <strong className="font-semibold">{stats.rewardsTotal}</strong>{" "}
-          reward{stats.rewardsTotal === 1 ? "" : "s"} so far with{" "}
-          {program.name}.
+          of your customers have come back for a second visit, and you&apos;ve
+          handed out{" "}
+          <strong className="font-semibold">{stats.rewardsTotal}</strong> reward
+          {stats.rewardsTotal === 1 ? "" : "s"} so far with {program.name}.
         </p>
       )}
 
@@ -668,12 +693,14 @@ git commit -m "feat: lead plan page with the vendor's own stats"
 ### Task 4: Switcher active-customer badges
 
 **Files:**
+
 - Modify: `src/app/dashboard/layout.tsx` (full file — see below)
 - Modify: `src/app/dashboard/dashboard-nav.tsx` (switcher rendering — desktop
   dropdown around line 118-124, mobile inline list around line 206-218, plus
   the component's prop signature at line 75-85)
 
 **Interfaces:**
+
 - Consumes: `getProgramStats` (Task 1).
 - Produces: `DashboardNav` gains a required prop
   `activeByProgramId: Record<string, number>`.
@@ -745,6 +772,7 @@ export default async function DashboardLayout({
 - [ ] **Step 2: Add the prop to `DashboardNav`'s signature**
 
 In `src/app/dashboard/dashboard-nav.tsx`, change:
+
 ```typescript
 export function DashboardNav({
   signOut,
@@ -758,7 +786,9 @@ export function DashboardNav({
   programs: Program[];
 }) {
 ```
+
 to:
+
 ```typescript
 export function DashboardNav({
   signOut,
@@ -778,70 +808,80 @@ export function DashboardNav({
 - [ ] **Step 3: Render the badge in the desktop switcher dropdown**
 
 Change:
+
 ```tsx
-            <DropdownMenuContent align="start" className="w-56 rounded-xl">
-              {programs.map((prog) => (
-                <DropdownMenuItem key={prog.id} asChild>
-                  <Link href={`/dashboard?p=${prog.id}`}>{prog.name}</Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
+<DropdownMenuContent align="start" className="w-56 rounded-xl">
+  {programs.map((prog) => (
+    <DropdownMenuItem key={prog.id} asChild>
+      <Link href={`/dashboard?p=${prog.id}`}>{prog.name}</Link>
+    </DropdownMenuItem>
+  ))}
+</DropdownMenuContent>
 ```
+
 to:
+
 ```tsx
-            <DropdownMenuContent align="start" className="w-56 rounded-xl">
-              {programs.map((prog) => (
-                <DropdownMenuItem key={prog.id} asChild>
-                  <Link
-                    href={`/dashboard?p=${prog.id}`}
-                    className="flex items-center justify-between gap-2"
-                  >
-                    <span className="truncate">{prog.name}</span>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {activeByProgramId[prog.id] ?? 0} active
-                    </span>
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
+<DropdownMenuContent align="start" className="w-56 rounded-xl">
+  {programs.map((prog) => (
+    <DropdownMenuItem key={prog.id} asChild>
+      <Link
+        href={`/dashboard?p=${prog.id}`}
+        className="flex items-center justify-between gap-2"
+      >
+        <span className="truncate">{prog.name}</span>
+        <span className="shrink-0 text-xs text-muted-foreground">
+          {activeByProgramId[prog.id] ?? 0} active
+        </span>
+      </Link>
+    </DropdownMenuItem>
+  ))}
+</DropdownMenuContent>
 ```
 
 - [ ] **Step 4: Render the badge in the mobile inline switcher list**
 
 Change:
+
 ```tsx
-              {programs.map((prog) => (
-                <Link
-                  key={prog.id}
-                  href={`/dashboard?p=${prog.id}`}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
-                    prog.id === currentProgram?.id && "text-primary",
-                  )}
-                >
-                  {prog.name}
-                </Link>
-              ))}
+{
+  programs.map((prog) => (
+    <Link
+      key={prog.id}
+      href={`/dashboard?p=${prog.id}`}
+      onClick={() => setMobileOpen(false)}
+      className={cn(
+        "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
+        prog.id === currentProgram?.id && "text-primary",
+      )}
+    >
+      {prog.name}
+    </Link>
+  ));
+}
 ```
+
 to:
+
 ```tsx
-              {programs.map((prog) => (
-                <Link
-                  key={prog.id}
-                  href={`/dashboard?p=${prog.id}`}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
-                    prog.id === currentProgram?.id && "text-primary",
-                  )}
-                >
-                  <span className="truncate">{prog.name}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">
-                    {activeByProgramId[prog.id] ?? 0} active
-                  </span>
-                </Link>
-              ))}
+{
+  programs.map((prog) => (
+    <Link
+      key={prog.id}
+      href={`/dashboard?p=${prog.id}`}
+      onClick={() => setMobileOpen(false)}
+      className={cn(
+        "flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
+        prog.id === currentProgram?.id && "text-primary",
+      )}
+    >
+      <span className="truncate">{prog.name}</span>
+      <span className="shrink-0 text-xs text-muted-foreground">
+        {activeByProgramId[prog.id] ?? 0} active
+      </span>
+    </Link>
+  ));
+}
 ```
 
 - [ ] **Step 5: Run typecheck/lint/format and the full test suite**

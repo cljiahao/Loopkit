@@ -57,6 +57,7 @@ export async function getProgramStats(programId: string): Promise<ProgramStats>;
 
 **Event classification** (mirrors `isWonVisit`/activity filter already in
 `src/lib/metrics.ts` — reuse, don't reimplement):
+
 - Activity/visit event: `kind === 'stamp' || kind === 'visit'`.
 - Reward event: `kind === 'redeem'` or a `visit` event whose
   `payload.won === true` (lucky-tap wins).
@@ -67,7 +68,9 @@ export async function getProgramStats(programId: string): Promise<ProgramStats>;
 testing without mocking Supabase):
 
 ```typescript
-export function classifyActivity(events: { kind: string; payload?: unknown }[]): {
+export function classifyActivity(
+  events: { kind: string; payload?: unknown }[],
+): {
   activityEvents: typeof events;
   rewardEvents: typeof events;
 };
@@ -133,7 +136,7 @@ inserted above the feature table:
 - `dashboard-nav.tsx`'s switcher dropdown (`programs.length > 1` branch,
   both desktop `DropdownMenuContent` and the mobile inline list) renders the
   program name plus a trailing muted count: `{activeByProgramId[prog.id]}
-  active`. No color-coding, no "needs attention" heuristic — just the
+active`. No color-coding, no "needs attention" heuristic — just the
   number; the vendor reads it themselves.
 - This only fires the extra query when `programs.length > 1` (single-program
   vendors, the common case, pay no extra cost) — compute the map only in
