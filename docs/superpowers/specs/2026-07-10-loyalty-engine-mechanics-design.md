@@ -43,6 +43,7 @@ the page-level work.
 ## A. Post-redemption next-goal (Plant + Streak)
 
 **Current state** (confirmed via code exploration):
+
 - Stamp: `RedeemButton`'s `onRedeemed` callback in `serve-customer.tsx`
   already calls `setResult({ mode: "stamp", ..., card: next })` with the
   fresh zeroed card — correct behavior already.
@@ -77,13 +78,13 @@ needs to consult the program's `type` and `head_start` flag and, when true,
 seed the new card's initial progress at ~20% of that type's completion
 threshold (matching the research's 2-of-10 ratio) instead of zero:
 
-| Type | Seed | Cap |
-|---|---|---|
-| stamp | `stamp_count = max(1, round(0.2 × stamps_required))` | never reach `stamps_required` (no free reward at signup) |
-| plant | `growth` seeded to ~20% of the full bloom threshold (`stages[4].threshold`, i.e. the visits-to-bloom value); `last_visit_at = now()` | so it doesn't immediately decay/wilt |
-| streak | `current_streak = 1`, `window_start = now()` | one period's head start |
+| Type   | Seed                                                                                                                                 | Cap                                                      |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| stamp  | `stamp_count = max(1, round(0.2 × stamps_required))`                                                                                 | never reach `stamps_required` (no free reward at signup) |
+| plant  | `growth` seeded to ~20% of the full bloom threshold (`stages[4].threshold`, i.e. the visits-to-bloom value); `last_visit_at = now()` | so it doesn't immediately decay/wilt                     |
+| streak | `current_streak = 1`, `window_start = now()`                                                                                         | one period's head start                                  |
 
-This only applies to *new* enrollments going forward — no retroactive
+This only applies to _new_ enrollments going forward — no retroactive
 seeding of existing cards.
 
 ## Testing

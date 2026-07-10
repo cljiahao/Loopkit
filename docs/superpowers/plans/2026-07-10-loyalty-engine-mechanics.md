@@ -37,10 +37,12 @@
 ### Task 1: Migration — `head_start` column + seeding + additive `create_program` param
 
 **Files:**
+
 - Create: `supabase/migrations/0014_loopkit_head_start.sql`
 - Create: `test/db/head-start-schema.test.ts`
 
 **Interfaces:**
+
 - Produces: column `loopkit.programs.head_start boolean not null default false`; `loopkit.create_program(...)` gains additive `p_head_start boolean default false`; `loopkit.enroll_card(p_program uuid, p_phone text)` keeps its existing signature/Returns but seeds `cards.stamp_count`/`cards.state` on insert when the program's `head_start` is true. Consumed by Task 2 (`types.ts`), Task 3 (`program.ts`), Task 4 (`setup/actions.ts`).
 
 - [ ] **Step 1: Write the migration**
@@ -229,9 +231,11 @@ git commit -m "feat: add head_start column, seed endowed progress in enroll_card
 ### Task 2: Hand-mirror `types.ts`
 
 **Files:**
+
 - Modify: `src/lib/types.ts`
 
 **Interfaces:**
+
 - Consumes: the exact column/param shapes from Task 1's migration.
 - Produces: `Database["loopkit"]["Tables"]["programs"]["Row"|"Insert"|"Update"]` gain `head_start`; `Database["loopkit"]["Functions"]["create_program"]["Args"]` gains `p_head_start`. Consumed by Task 3 (`program.ts`), Task 4 (`setup/actions.ts`).
 
@@ -240,18 +244,21 @@ git commit -m "feat: add head_start column, seed endowed progress in enroll_card
 In `src/lib/types.ts`, the `programs` table's `Row`/`Insert`/`Update` blocks each currently end with `expiry_days`. Add `head_start` immediately after each:
 
 `Row` (around line 26):
+
 ```typescript
-          expiry_days: number | null;
-          head_start: boolean;
+expiry_days: number | null;
+head_start: boolean;
 ```
 
 `Insert` (around line 38):
+
 ```typescript
           expiry_days?: number | null;
           head_start?: boolean;
 ```
 
 `Update` (around line 50):
+
 ```typescript
           expiry_days?: number | null;
           head_start?: boolean;
@@ -293,9 +300,11 @@ git commit -m "feat: hand-mirror head_start into src/lib/types.ts"
 ### Task 3: `program.ts` — type, columns, schema
 
 **Files:**
+
 - Modify: `src/lib/program.ts`
 
 **Interfaces:**
+
 - Consumes: `Database["loopkit"]["Tables"]["programs"]["Row"]` (Task 2).
 - Produces: `Program.head_start: boolean`; `saveProgramSchema`'s `stamp`/`plant`/`streak` variants each gain `head_start: boolean` (parsed from a `"true"|"false"` string). Consumed by Task 4 (`setup/actions.ts`), Task 5 (`setup-form.tsx`).
 
@@ -380,9 +389,11 @@ git commit -m "feat: add head_start to Program type and saveProgramSchema"
 ### Task 4: `setup/actions.ts` — thread `head_start` through
 
 **Files:**
+
 - Modify: `src/app/setup/actions.ts`
 
 **Interfaces:**
+
 - Consumes: `saveProgramSchema` (Task 3), `Database["loopkit"]["Functions"]["create_program"]["Args"]` (Task 2).
 - Produces: create path passes `p_head_start`; update path includes `head_start` in the `ProgramUpdate`. Consumed by Task 5 (form submits the field this reads).
 
@@ -391,53 +402,53 @@ git commit -m "feat: add head_start to Program type and saveProgramSchema"
 In `saveProgramAction`, the existing `if (data.type === "stamp") { ... } else if (data.type === "lucky") { ... } else if (data.type === "plant") { ... } else if (data.type === "streak") { ... } else { ... }` block computes `type`/`stampsRequired`/`config` per branch. Add a parallel `let headStart: boolean;` declared alongside `let type: string;`, and set it in each branch:
 
 ```typescript
-  let type: string;
-  let stampsRequired: number;
-  let config: Json;
-  let headStart: boolean;
-  if (data.type === "stamp") {
-    type = "stamp";
-    stampsRequired = data.stamps_required;
-    headStart = data.head_start;
-    config = {
-      stamps_required: data.stamps_required,
-      reward_text: data.reward_text,
-    };
-  } else if (data.type === "lucky") {
-    type = "lucky";
-    stampsRequired = data.pity_ceiling;
-    headStart = false;
-    config = {
-      win_probability: data.win_percent / 100,
-      pity_ceiling: data.pity_ceiling,
-      cooldown_visits: 0,
-      reward_text: data.reward_text,
-    };
-  } else if (data.type === "plant") {
-    type = "plant";
-    stampsRequired = data.visits_to_bloom;
-    headStart = data.head_start;
-    config = buildPlantConfig(data.visits_to_bloom, data.reward_text) as Json;
-  } else if (data.type === "streak") {
-    type = "streak";
-    stampsRequired = data.target_streak;
-    headStart = data.head_start;
-    config = buildStreakConfig(
-      data.period_days,
-      data.target_streak,
-      data.reward_text,
-    ) as Json;
-  } else {
-    type = data.type;
-    stampsRequired = data.pity_ceiling ?? 10;
-    headStart = false;
-    config = buildChanceConfig(
-      data.type,
-      data.segments,
-      data.pity_ceiling,
-      data.reward_text,
-    ) as Json;
-  }
+let type: string;
+let stampsRequired: number;
+let config: Json;
+let headStart: boolean;
+if (data.type === "stamp") {
+  type = "stamp";
+  stampsRequired = data.stamps_required;
+  headStart = data.head_start;
+  config = {
+    stamps_required: data.stamps_required,
+    reward_text: data.reward_text,
+  };
+} else if (data.type === "lucky") {
+  type = "lucky";
+  stampsRequired = data.pity_ceiling;
+  headStart = false;
+  config = {
+    win_probability: data.win_percent / 100,
+    pity_ceiling: data.pity_ceiling,
+    cooldown_visits: 0,
+    reward_text: data.reward_text,
+  };
+} else if (data.type === "plant") {
+  type = "plant";
+  stampsRequired = data.visits_to_bloom;
+  headStart = data.head_start;
+  config = buildPlantConfig(data.visits_to_bloom, data.reward_text) as Json;
+} else if (data.type === "streak") {
+  type = "streak";
+  stampsRequired = data.target_streak;
+  headStart = data.head_start;
+  config = buildStreakConfig(
+    data.period_days,
+    data.target_streak,
+    data.reward_text,
+  ) as Json;
+} else {
+  type = data.type;
+  stampsRequired = data.pity_ceiling ?? 10;
+  headStart = false;
+  config = buildChanceConfig(
+    data.type,
+    data.segments,
+    data.pity_ceiling,
+    data.reward_text,
+  ) as Json;
+}
 ```
 
 - [ ] **Step 2: Pass it through the edit path**
@@ -458,15 +469,15 @@ In `saveProgramAction`, the existing `if (data.type === "stamp") { ... } else if
 - [ ] **Step 3: Pass it through the create path**
 
 ```typescript
-  const { data: created, error } = await supabase.rpc("create_program", {
-    p_type: type,
-    p_name: data.name,
-    p_stamps_required: stampsRequired,
-    p_reward_text: data.reward_text,
-    p_config: config,
-    p_expiry_days: data.expiry_days ?? null,
-    p_head_start: headStart,
-  });
+const { data: created, error } = await supabase.rpc("create_program", {
+  p_type: type,
+  p_name: data.name,
+  p_stamps_required: stampsRequired,
+  p_reward_text: data.reward_text,
+  p_config: config,
+  p_expiry_days: data.expiry_days ?? null,
+  p_head_start: headStart,
+});
 ```
 
 - [ ] **Step 4: Typecheck**
@@ -486,9 +497,11 @@ git commit -m "feat: thread head_start through saveProgramAction"
 ### Task 5: `/setup` form — head start checkbox
 
 **Files:**
+
 - Modify: `src/app/setup/setup-form.tsx`
 
 **Interfaces:**
+
 - Consumes: `Program.head_start` (Task 3).
 - Produces: a `head_start` form field (`"true"|"false"` string) that Task 4's `saveProgramSchema` parse already expects.
 
@@ -497,7 +510,7 @@ git commit -m "feat: thread head_start through saveProgramAction"
 Near the existing `const [segments, setSegments] = useState<SegmentInput[]>(...)` declaration, add:
 
 ```typescript
-  const [headStart, setHeadStart] = useState(program?.head_start ?? false);
+const [headStart, setHeadStart] = useState(program?.head_start ?? false);
 ```
 
 - [ ] **Step 2: Render the checkbox for stamp/plant/streak types only**
@@ -551,11 +564,13 @@ git commit -m "feat: add head-start checkbox to /setup for stamp/plant/streak"
 ### Task 6: Post-redemption next-goal (Plant + Streak)
 
 **Files:**
+
 - Modify: `src/app/dashboard/actions.ts`
 - Modify: `src/app/dashboard/serve-customer.tsx`
 - Modify: `test/app/dashboard-actions.test.ts`
 
 **Interfaces:**
+
 - Consumes: `getProgress` (`@/lib/engine`), `plantStrategy.redeem`/`streakStrategy.redeem` (already imported in `dashboard/actions.ts`).
 - Produces: `redeemPlantAction`/`redeemStreakAction` return type changes from `ActionResult<{ phone: string }>` to `ActionResult<{ phone: string; progress: Progress }>`.
 
@@ -680,69 +695,69 @@ export async function redeemStreakAction(
 Replace `confirmRedeemPlant`:
 
 ```typescript
-  function confirmRedeemPlant() {
-    if (!result || result.mode !== "plant") return;
-    const phone = result.phone;
-    run(async () => {
-      const fd = new FormData();
-      fd.set("phone", phone);
-      fd.set("program_id", programId);
-      const res = await redeemPlantAction(fd);
-      if (!res.success) {
-        toast.error(res.error);
-        return;
-      }
-      toast.success(`Reward redeemed for ${res.phone}.`);
-      if (res.progress.view.kind === "plant") {
-        setResult({
-          mode: "plant",
-          phone: res.phone,
-          view: res.progress.view,
-          label: res.progress.label,
-          rewardReady: res.progress.rewardReady,
-          rewardUnlocked: false,
-        });
-      } else {
-        setResult(null);
-      }
-      setRedeemOpen(false);
-      router.refresh();
-    });
-  }
+function confirmRedeemPlant() {
+  if (!result || result.mode !== "plant") return;
+  const phone = result.phone;
+  run(async () => {
+    const fd = new FormData();
+    fd.set("phone", phone);
+    fd.set("program_id", programId);
+    const res = await redeemPlantAction(fd);
+    if (!res.success) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success(`Reward redeemed for ${res.phone}.`);
+    if (res.progress.view.kind === "plant") {
+      setResult({
+        mode: "plant",
+        phone: res.phone,
+        view: res.progress.view,
+        label: res.progress.label,
+        rewardReady: res.progress.rewardReady,
+        rewardUnlocked: false,
+      });
+    } else {
+      setResult(null);
+    }
+    setRedeemOpen(false);
+    router.refresh();
+  });
+}
 ```
 
 Replace `confirmRedeemStreak`:
 
 ```typescript
-  function confirmRedeemStreak() {
-    if (!result || result.mode !== "streak") return;
-    const phone = result.phone;
-    run(async () => {
-      const fd = new FormData();
-      fd.set("phone", phone);
-      fd.set("program_id", programId);
-      const res = await redeemStreakAction(fd);
-      if (!res.success) {
-        toast.error(res.error);
-        return;
-      }
-      toast.success(`Reward redeemed for ${res.phone}.`);
-      if (res.progress.view.kind === "streak") {
-        setResult({
-          mode: "streak",
-          phone: res.phone,
-          view: res.progress.view,
-          label: res.progress.label,
-          rewardReady: res.progress.rewardReady,
-          rewardUnlocked: false,
-        });
-      } else {
-        setResult(null);
-      }
-      setRedeemOpen(false);
-      router.refresh();
-    });
-  }
+function confirmRedeemStreak() {
+  if (!result || result.mode !== "streak") return;
+  const phone = result.phone;
+  run(async () => {
+    const fd = new FormData();
+    fd.set("phone", phone);
+    fd.set("program_id", programId);
+    const res = await redeemStreakAction(fd);
+    if (!res.success) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success(`Reward redeemed for ${res.phone}.`);
+    if (res.progress.view.kind === "streak") {
+      setResult({
+        mode: "streak",
+        phone: res.phone,
+        view: res.progress.view,
+        label: res.progress.label,
+        rewardReady: res.progress.rewardReady,
+        rewardUnlocked: false,
+      });
+    } else {
+      setResult(null);
+    }
+    setRedeemOpen(false);
+    router.refresh();
+  });
+}
 ```
 
 - [ ] **Step 4: Write tests for the new return shape**
@@ -896,6 +911,7 @@ Expected: succeeds.
 This step requires the human to have applied Task 1's migration (via `/supabase-migrate` or the Supabase SQL editor) to a real environment first — flag this to the user rather than attempting it.
 
 Using `pnpm dev` against a linked/live Supabase project:
+
 1. Create a Stamp card program with "Give new customers a head start" checked. Enroll a brand-new phone number via `/c`. Confirm the vendor dashboard shows that customer starting at >0 stamps (not 0), and that the seed never equals `stamps_required` (no free reward at signup).
 2. Repeat for a Sprout (plant) program — confirm the new card starts above the "Seed" stage.
 3. Repeat for a Streak Club program — confirm the new card shows `current: 1` instead of 0.
@@ -911,4 +927,5 @@ Expected: all six behaviors match, no console errors.
 git add -A
 git commit -m "fix: address issues found in manual verification"
 ```
+
 (Only if Step 3 surfaced fixes — otherwise skip, nothing to commit.)
