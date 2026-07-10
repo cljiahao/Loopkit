@@ -6,7 +6,7 @@ import type { ChanceConfig } from "@/lib/engine/chance";
 import type { StreakConfig } from "@/lib/engine/streak";
 
 const PROGRAM_COLUMNS =
-  "id,name,stamps_required,reward_text,type,config,active,expiry_days,head_start";
+  "id,name,stamps_required,reward_text,type,config,active,expiry_days,head_start,replaced_by";
 
 export type Program = {
   id: string;
@@ -18,6 +18,7 @@ export type Program = {
   active: boolean;
   expiry_days?: number | null;
   head_start: boolean;
+  replaced_by: string | null;
 };
 
 export const programInputSchema = z.object({
