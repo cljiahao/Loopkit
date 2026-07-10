@@ -17,10 +17,15 @@ function Cell({ on }: { on: boolean }) {
   );
 }
 
-export default async function PlanPage() {
+export default async function PlanPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ p?: string }>;
+}) {
   await requireVendor();
   const [pro, programs] = await Promise.all([isPro(), listPrograms()]);
-  const program = currentProgram(programs);
+  const { p } = await searchParams;
+  const program = currentProgram(programs, p);
   const stats = program ? await getProgramStats(program.id) : null;
 
   return (

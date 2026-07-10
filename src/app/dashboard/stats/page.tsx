@@ -25,10 +25,7 @@ export default async function StatsPage({
   if (!program) redirect("/setup");
 
   const stats = await getProgramStats(program.id);
-  const maxDay = Math.max(
-    1,
-    ...stats.visitsByDay.map((d: { date: string; count: number }) => d.count),
-  );
+  const maxDay = Math.max(1, ...stats.visitsByDay.map((d) => d.count));
 
   return (
     <main className="mx-auto max-w-4xl space-y-8 p-5 py-10">
@@ -69,7 +66,7 @@ export default async function StatsPage({
               Last 30 days
             </h2>
             <div className="mt-4 flex h-24 items-end gap-[3px]">
-              {stats.visitsByDay.map((d: { date: string; count: number }) => (
+              {stats.visitsByDay.map((d) => (
                 <div
                   key={d.date}
                   title={`${d.date}: ${d.count}`}

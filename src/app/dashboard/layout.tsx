@@ -23,12 +23,20 @@ export default async function DashboardLayout({
   // the common single-program case pays no extra query.
   const activeByProgramId: Record<string, number> = {};
   if (programs.length > 1) {
-    const stats = await Promise.all(
-      programs.map((prog) => getProgramStats(prog.id)),
-    );
-    programs.forEach((prog, i) => {
-      activeByProgramId[prog.id] = stats[i].active;
-    });
+    // This is purely decorative (the nav badge). If any program's stats
+    // query fails, don't let it take down every page in the dashboard —
+    // fall back to no badges (dashboard-nav already handles missing
+    // entries via `activeByProgramId[prog.id] ?? 0`).
+    try {
+      const stats = await Promise.all(
+        programs.map((prog) => getProgramStats(prog.id)),
+      );
+      programs.forEach((prog, i) => {
+        activeByProgramId[prog.id] = stats[i].active;
+      });
+    } catch {
+      // Leave activeByProgramId empty — nav degrades to showing no badges.
+    }
   }
 
   // Inline server action so the header's Sign out `<form>` can post directly —

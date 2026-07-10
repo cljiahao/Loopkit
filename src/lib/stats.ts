@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerClient } from "@/lib/supabase/server";
 import { sgtDateKey } from "@/lib/format";
 import { isWonVisit } from "@/lib/metrics";
@@ -120,7 +121,7 @@ export function computeCardStats(
 // Impure shell: fetch this program's cards + stamp_events (RLS scopes both
 // to the signed-in vendor, same as activity/page.tsx), then delegate to the
 // pure helpers above.
-export async function getProgramStats(
+export const getProgramStats = cache(async function getProgramStats(
   programId: string,
 ): Promise<ProgramStats> {
   const supabase = await createServerClient();
@@ -154,4 +155,4 @@ export async function getProgramStats(
   const visitsByDay = bucketVisitsByDay(activityEvents, nowMs);
 
   return { ...cardStats, visitsByDay };
-}
+});
