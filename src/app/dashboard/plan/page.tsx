@@ -1,6 +1,7 @@
 import { Check, Sparkles } from "lucide-react";
 import { requireVendor } from "@/lib/auth";
-import { isPro } from "@/lib/program";
+import { isPro, listPrograms, currentProgram } from "@/lib/program";
+import { getProgramStats } from "@/lib/stats";
 import { UpgradeCta } from "@/app/dashboard/plan/upgrade-cta";
 import { Badge } from "@/components/ui/badge";
 
@@ -18,7 +19,9 @@ function Cell({ on }: { on: boolean }) {
 
 export default async function PlanPage() {
   await requireVendor();
-  const pro = await isPro();
+  const [pro, programs] = await Promise.all([isPro(), listPrograms()]);
+  const program = currentProgram(programs);
+  const stats = program ? await getProgramStats(program.id) : null;
 
   return (
     <main className="mx-auto max-w-2xl space-y-7 p-5 py-10">
@@ -38,6 +41,18 @@ export default async function PlanPage() {
           </Badge>
         </span>
       </div>
+
+      {stats && stats.enrolled > 0 && program && (
+        <p className="rounded-xl border bg-card px-5 py-4 text-sm">
+          <strong className="font-semibold">
+            {Math.round(stats.repeatVisitRate * 100)}%
+          </strong>{" "}
+          of your customers have come back for a second visit, and you&apos;ve
+          handed out{" "}
+          <strong className="font-semibold">{stats.rewardsTotal}</strong> reward
+          {stats.rewardsTotal === 1 ? "" : "s"} so far with {program.name}.
+        </p>
+      )}
 
       {pro ? (
         <p className="rounded-xl border bg-card px-5 py-4 text-sm text-muted-foreground">
