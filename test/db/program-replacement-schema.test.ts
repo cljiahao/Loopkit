@@ -47,4 +47,10 @@ describe("0016 program replacement", () => {
       /where p\.vendor_id = p_vendor and p\.active\s*\n\s*and not exists/i,
     );
   });
+
+  it("drops vendor_join before redefining it, since its RETURNS TABLE column list changed", () => {
+    expect(sql).toMatch(
+      /drop function if exists loopkit\.vendor_join\(uuid, text\);\s*\ncreate or replace function loopkit\.vendor_join\(p_vendor uuid, p_phone text\)/i,
+    );
+  });
 });
