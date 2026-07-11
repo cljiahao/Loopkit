@@ -32,10 +32,12 @@ export function SetupForm({
   program,
   isEdit,
   replacingId,
+  replacingType,
 }: {
   program: Program | null;
   isEdit: boolean;
   replacingId: string | null;
+  replacingType: string | null;
 }) {
   const [state, formAction, pending] = useActionState(
     replacingId ? changeTypeAction : saveProgramAction,
@@ -91,6 +93,9 @@ export function SetupForm({
     })) ?? DEFAULT_SEGMENTS,
   );
   const [headStart, setHeadStart] = useState(program?.head_start ?? false);
+  const [carryOverStamps, setCarryOverStamps] = useState(false);
+  const showCarryOverOption =
+    replacingId !== null && replacingType === "stamp" && type === "stamp";
 
   function pickTemplate(template: (typeof TEMPLATES)[number]) {
     setType(template.type);
@@ -477,6 +482,31 @@ export function SetupForm({
             type="hidden"
             name="head_start"
             value={headStart ? "true" : "false"}
+          />
+        </div>
+      )}
+
+      {showCarryOverOption && (
+        <div className="flex items-start gap-3 rounded-xl border bg-muted/40 p-3">
+          <input
+            type="checkbox"
+            id="carry_over_stamps_checkbox"
+            checked={carryOverStamps}
+            onChange={(e) => setCarryOverStamps(e.target.checked)}
+            className="mt-0.5 size-4 rounded border-input"
+          />
+          <label htmlFor="carry_over_stamps_checkbox" className="text-sm">
+            <span className="font-medium">
+              Carry over customers&apos; current stamp count onto the new card
+            </span>
+            <span className="mt-0.5 block text-xs text-muted-foreground">
+              Left unchecked, everyone starts the new card from zero.
+            </span>
+          </label>
+          <input
+            type="hidden"
+            name="carry_over_stamps"
+            value={carryOverStamps ? "true" : "false"}
           />
         </div>
       )}

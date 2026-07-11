@@ -149,6 +149,7 @@ export default async function SetupPage({
                 program={migrating ? null : editing}
                 isEdit={isEdit}
                 replacingId={migrating ? migrating.id : null}
+                replacingType={migrating ? migrating.type : null}
               />
             </div>
           </div>
