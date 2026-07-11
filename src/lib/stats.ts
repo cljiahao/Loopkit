@@ -43,6 +43,13 @@ export function classifyActivity(events: StatsEvent[]): {
   return { activityEvents, rewardEvents };
 }
 
+// Percent change of current vs prior. null when prior is 0 — growth from
+// nothing is undefined; the UI shows "—", never Infinity/NaN.
+export function pctChange(current: number, prior: number): number | null {
+  if (prior === 0) return null;
+  return ((current - prior) / prior) * 100;
+}
+
 // Always 30 entries (oldest first, today last), zero-filled for days with no
 // activity — callers can render a fixed-width bar strip with no gap logic.
 export function bucketVisitsByDay(

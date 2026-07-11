@@ -3,6 +3,7 @@ import {
   classifyActivity,
   bucketVisitsByDay,
   computeCardStats,
+  pctChange,
 } from "@/lib/stats";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -130,5 +131,24 @@ describe("computeCardStats", () => {
     expect(stats.rewardsTotal).toBe(1);
     expect(stats.rewards30d).toBe(0); // the redeem is 35d ago
     expect(stats.newThisWeek).toBe(0); // card enrolled 40d ago
+  });
+});
+
+describe("pctChange", () => {
+  it("returns null when prior is 0 (undefined growth from nothing)", () => {
+    expect(pctChange(5, 0)).toBeNull();
+    expect(pctChange(0, 0)).toBeNull();
+  });
+
+  it("computes positive percent change", () => {
+    expect(pctChange(15, 10)).toBe(50);
+  });
+
+  it("computes negative percent change", () => {
+    expect(pctChange(5, 10)).toBe(-50);
+  });
+
+  it("returns -100 when current drops to zero from a nonzero prior", () => {
+    expect(pctChange(0, 10)).toBe(-100);
   });
 });
