@@ -181,6 +181,30 @@ export interface Database {
         };
         Relationships: [];
       };
+      vendors: {
+        Row: {
+          vendor_id: string;
+          name: string | null;
+          phone: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          vendor_id: string;
+          name?: string | null;
+          phone?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          vendor_id?: string;
+          name?: string | null;
+          phone?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       upgrade_requests: {
         Row: {
           id: string;
