@@ -1,12 +1,45 @@
 import { redirect } from "next/navigation";
+import { ArrowUp, ArrowDown } from "lucide-react";
 import { requireVendor } from "@/lib/auth";
 import { listPrograms, currentProgram } from "@/lib/program";
 import { getProgramStats } from "@/lib/stats";
+import { cn } from "@/lib/utils";
 
-function Tile({ label, value }: { label: string; value: string }) {
+function Delta({ pct }: { pct: number | null }) {
+  if (pct === null) return null;
+  const up = pct >= 0;
+  const Icon = up ? ArrowUp : ArrowDown;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[0.65rem] font-semibold tabular-nums",
+        up
+          ? "bg-emerald-500/12 text-emerald-700 dark:text-emerald-400"
+          : "bg-destructive/12 text-destructive",
+      )}
+      title="vs. the prior 30 days"
+    >
+      <Icon className="size-3" />
+      {Math.abs(Math.round(pct))}%
+    </span>
+  );
+}
+
+function Tile({
+  label,
+  value,
+  delta,
+}: {
+  label: string;
+  value: string;
+  delta?: number | null;
+}) {
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm">
-      <p className="text-2xl font-bold tracking-tight">{value}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-2xl font-bold tracking-tight">{value}</p>
+        {delta !== undefined && <Delta pct={delta} />}
+      </div>
       <p className="mt-1 text-xs font-medium text-muted-foreground">{label}</p>
     </div>
   );
@@ -45,11 +78,12 @@ export default async function StatsPage({
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <Tile label="Enrolled customers" value={String(stats.enrolled)} />
             <Tile
               label="Active / lapsed (30d)"
               value={`${stats.active} / ${stats.lapsed}`}
+              delta={stats.activeDelta}
             />
             <Tile
               label="Redemption rate"
@@ -58,6 +92,24 @@ export default async function StatsPage({
             <Tile
               label="Repeat-visit rate"
               value={`${Math.round(stats.repeatVisitRate * 100)}%`}
+            />
+            <Tile
+              label="Visits (30d)"
+              value={String(stats.visits30d)}
+              delta={stats.visitsDelta}
+            />
+            <Tile
+              label="Rewards redeemed (30d)"
+              value={String(stats.rewards30d)}
+              delta={stats.rewardsDelta}
+            />
+            <Tile
+              label="Avg days between visits"
+              value={
+                stats.avgDaysBetweenVisits === null
+                  ? "—"
+                  : `${stats.avgDaysBetweenVisits.toFixed(1)}d`
+              }
             />
           </div>
 
