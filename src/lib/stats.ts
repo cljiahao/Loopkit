@@ -20,7 +20,8 @@ export type ProgramStats = {
   visitsDelta: number | null;
   rewardsDelta: number | null;
   activeDelta: number | null;
-  // wired in Task 3
+  // Average gap between a repeat customer's consecutive visits, pooled
+  // across cards, computed over full history (not the 30-day window).
   avgDaysBetweenVisits: number | null;
 };
 
@@ -73,6 +74,33 @@ export function bucketVisitsByDay(
     days.push({ date: key, count: countByDay.get(key) ?? 0 });
   }
   return days;
+}
+
+// Average days between a repeat customer's consecutive visits, pooled
+// across every card with 2+ activity events. null when no card in the
+// program has repeated yet — the UI shows "—", not a misleading 0.
+export function avgDaysBetweenVisits(
+  activityEvents: StatsEvent[],
+): number | null {
+  const byCard = new Map<string, number[]>();
+  for (const e of activityEvents) {
+    const t = Date.parse(e.created_at);
+    if (!Number.isFinite(t)) continue;
+    const arr = byCard.get(e.card_id) ?? [];
+    arr.push(t);
+    byCard.set(e.card_id, arr);
+  }
+
+  const gapsDays: number[] = [];
+  for (const timestamps of byCard.values()) {
+    if (timestamps.length < 2) continue;
+    timestamps.sort((a, b) => a - b);
+    for (let i = 1; i < timestamps.length; i++) {
+      gapsDays.push((timestamps[i] - timestamps[i - 1]) / MS_PER_DAY);
+    }
+  }
+  if (gapsDays.length === 0) return null;
+  return gapsDays.reduce((sum, g) => sum + g, 0) / gapsDays.length;
 }
 
 // Pure card-level aggregation. `activityEvents`/`rewardEvents` are the
@@ -187,5 +215,9 @@ export const getProgramStats = cache(async function getProgramStats(
   );
   const visitsByDay = bucketVisitsByDay(activityEvents, nowMs);
 
-  return { ...cardStats, visitsByDay };
+  return {
+    ...cardStats,
+    visitsByDay,
+    avgDaysBetweenVisits: avgDaysBetweenVisits(activityEvents),
+  };
 });

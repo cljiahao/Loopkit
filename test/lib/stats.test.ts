@@ -4,6 +4,7 @@ import {
   bucketVisitsByDay,
   computeCardStats,
   pctChange,
+  avgDaysBetweenVisits,
 } from "@/lib/stats";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -201,5 +202,50 @@ describe("pctChange", () => {
 
   it("returns -100 when current drops to zero from a nonzero prior", () => {
     expect(pctChange(0, 10)).toBe(-100);
+  });
+});
+
+describe("avgDaysBetweenVisits", () => {
+  it("returns null for no events", () => {
+    expect(avgDaysBetweenVisits([])).toBeNull();
+  });
+
+  it("returns null when every card has fewer than 2 events (no gaps to measure)", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(1) },
+      { card_id: "c2", kind: "stamp", created_at: iso(2) },
+    ];
+    expect(avgDaysBetweenVisits(events)).toBeNull();
+  });
+
+  it("computes the gap for a single repeat card", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(10) },
+      { card_id: "c1", kind: "stamp", created_at: iso(7) },
+    ];
+    expect(avgDaysBetweenVisits(events)).toBe(3);
+  });
+
+  it("pools gaps across multiple repeat cards, weighted by gap count not card count", () => {
+    // c1: 3 visits -> 2 gaps (5 days, 5 days). c2: 2 visits -> 1 gap (2 days).
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(20) },
+      { card_id: "c1", kind: "stamp", created_at: iso(15) },
+      { card_id: "c1", kind: "stamp", created_at: iso(10) },
+      { card_id: "c2", kind: "stamp", created_at: iso(5) },
+      { card_id: "c2", kind: "stamp", created_at: iso(3) },
+    ];
+    // Pooled: (5 + 5 + 2) / 3 = 4, not (5+5)/2 averaged with 2 per-card then
+    // re-averaged (which would give (5+2)/2 = 3.5) — pooling by gap, not by card.
+    expect(avgDaysBetweenVisits(events)).toBe(4);
+  });
+
+  it("skips events with an unparseable created_at instead of throwing", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: "not-a-date" },
+      { card_id: "c1", kind: "stamp", created_at: iso(5) },
+      { card_id: "c1", kind: "stamp", created_at: iso(2) },
+    ];
+    expect(avgDaysBetweenVisits(events)).toBe(3);
   });
 });
