@@ -138,13 +138,11 @@ Cheap, no new auth surface, but the phone number itself remains the entire
 security model (mildly guessable/social-engineerable — already true today,
 not a new exposure).
 
-**Recommendation:** (b), possibly evolving toward (c) later, unless there's
-a concrete reason a customer needs to act as an authenticated identity
-across vendors (e.g. a future customer-facing feature that requires knowing
-"this is definitely the same person," not just "someone who knows this phone
-number"). (a) is a real subsystem with real ongoing cost (SMS) and should
-only be built if there's a specific feature that needs it — flag if you have
-one in mind that isn't in this dump yet.
+**RESOLVED 2026-07-11: (b).** Confirmed — no new customer auth subsystem.
+Today's phone-number-is-the-credential model (re-enter phone at `/c?v=`,
+`vendor_join` re-derives every card) already satisfies "retrieve my QR
+without remembering anything." Revisit only if a concrete feature needs a
+real authenticated cross-vendor customer identity — none identified yet.
 
 ## Decision 3 — Grow → Counter merge (not contradictory, concrete proposal)
 
@@ -185,11 +183,8 @@ guessing.
 
 1. ~~Join QR scope (Decision 1)~~ — **RESOLVED 2026-07-11: (a) keep
    vendor-level.** See Decision 1 above.
-2. **Customer accounts** (Decision 2) — (a) full login/OTP subsystem, (b)
-   keep today's phone-number-is-the-credential model (recommended), or (c)
-   a no-auth "feels like an account" middle ground? If you lean (a), what's
-   the concrete feature that needs a real authenticated cross-vendor
-   customer identity — is it in this dump already or something new?
+2. ~~Customer accounts (Decision 2)~~ — **RESOLVED 2026-07-11: (b), keep
+   today's phone-number-is-the-credential model.** See Decision 2 above.
 3. ~~Does Grow→Counter merge (Decision 3) proceed regardless of how 1/2
    land~~ — moot now that Decision 1 is resolved; the merge is unblocked
    and ready to plan whenever Decision 2 (or independently) is greenlit.

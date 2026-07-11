@@ -179,22 +179,14 @@ call site doesn't need.
 - Any change to `/dashboard`, `/setup`, or other post-login vendor pages —
   this spec ends at "vendor has a session and a `loopkit.vendors` row."
 
-## Open questions for Clarence
+## Open questions for Clarence — RESOLVED 2026-07-11
 
-1. **Option 1 (unverified, free) vs. Option 2 (verified OTP, real SMS
-   cost + provider setup)** — recommending Option 1 above. Your call,
-   especially if you already have a Twilio account or see phone
-   verification as valuable beyond onboarding (e.g. fraud prevention).
-2. **If Option 2:** which provider — Supabase supports Twilio, Twilio
-   Verify, MessageBird, Vonage, TextLocal. I don't have current per-SMS
-   pricing for any of them; you'd need to check rates before we commit
-   spend.
-3. **Should vendor-side phone identity relate to customer-side phone
-   identity at all** (e.g., could a vendor also be recognized as a
-   "customer" of their own or another vendor's program using the same
-   number), or should they stay fully separate concepts as designed above?
-   Current draft keeps them separate — flag if that's wrong.
-4. **Option 1's device-recovery gap** (anonymous sessions don't survive a
-   cleared browser/new device) — acceptable for a first cut, or does this
-   need a fallback (e.g. "forgot my anonymous account" flow) before
-   shipping?
+1. **Option 1 (unverified, free)** — confirmed, over Option 2's real SMS
+   cost/provider setup. Not revisited unless a later spec needs verified
+   phone as a contact channel, not just a display label.
+2. Moot — Option 2 not chosen.
+3. **Vendor/customer phone identity stay fully separate**, as designed —
+   confirmed.
+4. **Option 1's device-recovery gap accepted for v1** — no "forgot my
+   anonymous account" fallback built now. Revisit only if it turns out to
+   be a real support burden after shipping.

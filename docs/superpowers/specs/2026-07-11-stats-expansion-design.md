@@ -229,18 +229,9 @@ counts without restructuring the grid from `sm:grid-cols-2` to 3 columns.
   today; the prior-period window is just a second filter pass over
   data already fetched, not a new table or cron job.
 
-## Open questions for Clarence
+## Open questions for Clarence — RESOLVED 2026-07-11
 
-1. Should `visitsDelta`/`rewardsDelta` (computed but unused in this
-   spec's UI) get their own tiles now, or wait until raw 30-day counts
-   have a UI slot? Leaning toward adding them now as two more tiles
-   (6 total, `sm:grid-cols-3`) rather than shipping unused fields — flag
-   if you'd rather keep the page terser.
-2. `avgDaysBetweenVisits` pools gaps across ALL cards with 2+ visits,
-   unweighted by recency (a customer who visited twice a year ago counts
-   the same as one visiting twice this week). An alternative is
-   restricting the pool to gaps that fall at least partly within the last
-   90 days. No strong reason to prefer one over the other without knowing
-   whether you want "historical rhythm" or "current rhythm" — picked the
-   simpler (unrestricted) version as the default; say if you want the
-   90-day restriction instead.
+1. **`visitsDelta`/`rewardsDelta` get their own tiles now** — confirmed,
+   6 tiles total (`sm:grid-cols-3`), no unused computed fields shipped.
+2. **`avgDaysBetweenVisits` stays unrestricted** (pools all-time gaps, not
+   windowed to the last 90 days) — confirmed as the simpler default.

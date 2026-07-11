@@ -161,15 +161,12 @@ picked for them:
 - `statsRanges`-style gating — depends on the separate stats-expansion spec
   (Sub-project E) actually adding a range picker first.
 
-## Open questions for Clarence
+## Open questions for Clarence — RESOLVED 2026-07-11
 
-1. **Does a third tier concept exist yet?** If yes: what's the time-boxed
-   or otherwise-differentiated unit it sells (there's no obvious
-   "event day" equivalent for an ongoing loyalty card — is it a trial
-   period? A per-campaign pass? Something else)? If no: this spec assumes
-   **no**, ships Section A+B only, and a third tier becomes its own future
-   spec once there's a concrete offer to design against.
-2. Should anything beyond program count become Pro-gated now (Section C),
-   or does Free vs. Pro stay differentiated by program count alone for
-   now? Recommend: alone for now — invent gates when a real feature needs
-   one, not preemptively.
+1. **No third tier concept yet** — confirmed. Ships Section A+B only
+   (entitlement refactor + honest 1-row-plus comparison table). A third
+   tier becomes its own future spec once there's a concrete offer to
+   design against.
+2. **Free vs. Pro stays differentiated by program count alone** —
+   confirmed. No preemptive gates invented; add one when a real feature
+   needs it.

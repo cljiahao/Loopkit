@@ -158,16 +158,14 @@ export async function saveStallName(name: string): Promise<{ error?: string }> {
   if (!parsed.success) return { error: "Enter a stall name." };
 
   const supabase = await createServerClient();
-  const { error } = await supabase
-    .from("vendors")
-    .upsert(
-      {
-        vendor_id: user.id,
-        name: parsed.data.name,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "vendor_id" },
-    );
+  const { error } = await supabase.from("vendors").upsert(
+    {
+      vendor_id: user.id,
+      name: parsed.data.name,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "vendor_id" },
+  );
   if (error) return { error: "Couldn't save your stall name. Try again." };
   return {};
 }
@@ -292,15 +290,11 @@ missing in review.
   stall name" step is part of the onboarding spec (sub-project B), not this
   one.
 
-## Open questions for Clarence
+## Open questions for Clarence — RESOLVED 2026-07-11
 
-1. **Bucket name** — used `vendor-images` (parallel to qkit's
-   `booth-images`). Fine, or prefer something else?
-2. **`next.config.ts` remote image config** — didn't confirm whether
-   loopkit's `next.config.ts` already has a `remotePatterns`/`images`
-   block for any other remote source. If it doesn't, this is the first
-   one; worth a quick look before implementation starts so the plan can
-   say "add" vs. "extend" precisely.
-3. Section D drops qkit's separate "display name" field (see Out of
-   scope) — confirm that's right, or if you actually want that
-   private/internal-only name concept too.
+1. **Bucket name** — `vendor-images`, confirmed.
+2. **`next.config.ts` remote image config** — not a decision, an
+   implementation-time check. The implementation plan verifies whether
+   `remotePatterns` already exists before deciding add-vs-extend.
+3. **Display name** — confirmed dropped, per the spec's own recommendation.
+   Stall name only; no separate private/internal name concept.

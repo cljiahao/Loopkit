@@ -263,20 +263,14 @@ This is strictly additive to migration `0016`'s existing
   20-stamp requirement) — v1 is a straight capped copy; proportional
   scaling is a vendor-facing complexity not requested.
 
-## Open questions for Clarence
+## Open questions for Clarence — RESOLVED 2026-07-11
 
-1. **Carryover default/scope** — confirm same-type-only, vendor-opt-in-checkbox
-   (Section A/B) matches what you meant by "the same number of stamps or
-   something else." If you actually want carryover attempted across
-   different types too (e.g. approximate a stamp count into a plant's
-   growth stage), that's a materially bigger design — say so before I plan
-   it as scoped here.
-2. **Notification approach** — v1 here is a strengthened _passive_ dialog
-   (Section C), not proactive SMS. Confirm that's an acceptable v1, or
-   that proactive SMS is a hard requirement now (in which case this spec
-   should be sequenced _after_ sub-project B's SMS-provider decision, not
-   parallel to it).
-3. **`carriedOverCount` copy** — confirm showing the exact carried-over
-   stamp count in the notice dialog is wanted, versus a vaguer "your
-   progress carried over" (exact numbers are more reassuring but also more
-   surface area if the seeding logic ever has an edge case).
+1. **Carryover default/scope** — same-type-only, vendor-opt-in checkbox
+   (Section A/B), confirmed. Cross-type carryover stays out of scope.
+2. **Notification approach** — v1 strengthened passive dialog (Section C),
+   confirmed. Proactive SMS deferred pending sub-project B's provider
+   decision (B resolved to Option 1, no SMS provider — so proactive SMS
+   stays deferred indefinitely until that changes).
+3. **`carriedOverCount` copy** — show the exact carried-over stamp count
+   (more reassuring, and the field is already designed and available —
+   no reason to hide it behind vaguer copy).
