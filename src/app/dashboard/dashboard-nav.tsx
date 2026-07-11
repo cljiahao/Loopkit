@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ChevronDown, LogOut, Menu, User, X } from "lucide-react";
 import { Wordmark } from "@/components/landing/wordmark";
@@ -56,10 +57,16 @@ function TierBadge({ tier }: { tier: Tier }) {
   );
 }
 
-/** Up to two initials from an email's local part; falls back to a bullet. */
-function initials(email: string): string {
-  const local = email.trim().split("@")[0] ?? "";
-  const parts = local.split(/[._-]+/).filter(Boolean);
+/**
+ * Up to two initials from a label (stall name when set, else the email
+ * local part); falls back to a bullet. Splitting on the same separators
+ * works for both "Kopi Corner" (space) and "jane.doe" (dot) shapes.
+ */
+function initials(label: string): string {
+  const parts = label
+    .trim()
+    .split(/[\s._-]+/)
+    .filter(Boolean);
   if (parts.length === 0) return "•";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
   return (parts[0][0] + parts[1][0]).toUpperCase();
@@ -75,12 +82,16 @@ function initials(email: string): string {
 export function DashboardNav({
   signOut,
   email,
+  vendorName,
+  avatarUrl,
   tier,
   programs,
   activeByProgramId,
 }: {
   signOut: () => Promise<void>;
   email: string;
+  vendorName: string | null;
+  avatarUrl: string | null;
   tier: Tier;
   programs: Program[];
   activeByProgramId: Record<string, number>;
@@ -89,6 +100,7 @@ export function DashboardNav({
   const searchParams = useSearchParams();
   const p = searchParams.get("p");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const label = vendorName?.trim() || email;
 
   const withProgram = (href: string) => (p ? `${href}?p=${p}` : href);
   const currentProgram = programs.find((prog) => prog.id === p) ?? programs[0];
@@ -173,20 +185,32 @@ export function DashboardNav({
             >
               <span
                 aria-hidden="true"
-                className="grid size-8 shrink-0 place-items-center rounded-md bg-primary/12 font-mono text-xs font-semibold tracking-tight text-primary ring-1 ring-inset ring-primary/25"
+                className="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-md bg-primary/12 font-mono text-xs font-semibold tracking-tight text-primary ring-1 ring-inset ring-primary/25"
               >
-                {initials(email)}
+                {avatarUrl ? (
+                  <Image
+                    src={avatarUrl}
+                    alt=""
+                    fill
+                    sizes="2rem"
+                    className="object-cover"
+                  />
+                ) : (
+                  initials(label)
+                )}
               </span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 rounded-xl">
             <DropdownMenuLabel className="px-2 py-2">
               <div className="flex items-center gap-2">
-                <p className="truncate text-sm font-semibold">{email}</p>
+                <p className="truncate text-sm font-semibold">
+                  {vendorName ?? email}
+                </p>
                 <TierBadge tier={tier} />
               </div>
               <p className="text-xs font-normal text-muted-foreground">
-                Vendor account
+                {vendorName ? email : "Vendor account"}
               </p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />

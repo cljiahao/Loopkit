@@ -4,6 +4,7 @@ import { requireVendor } from "@/lib/auth";
 import { isAdmin } from "@/lib/admin";
 import { isPro, listPrograms } from "@/lib/program";
 import { getProgramStats } from "@/lib/stats";
+import { getVendorProfile } from "@/lib/vendor";
 import { createServerClient } from "@/lib/supabase/server";
 import { DashboardNav } from "@/app/dashboard/dashboard-nav";
 
@@ -17,7 +18,11 @@ export default async function DashboardLayout({
   // Admins have no program and don't use the vendor dashboard — send them home.
   if (await isAdmin(user.id)) redirect("/admin");
 
-  const [pro, programs] = await Promise.all([isPro(), listPrograms()]);
+  const [pro, programs, vendorProfile] = await Promise.all([
+    isPro(),
+    listPrograms(),
+    getVendorProfile(),
+  ]);
 
   // Only fetch per-program stats when there's a switcher to show them in —
   // the common single-program case pays no extra query.
@@ -55,6 +60,8 @@ export default async function DashboardLayout({
           <DashboardNav
             signOut={signOut}
             email={user.email ?? ""}
+            vendorName={vendorProfile.name}
+            avatarUrl={user.user_metadata?.avatar_url ?? null}
             tier={pro ? "pro" : "free"}
             programs={programs}
             activeByProgramId={activeByProgramId}
