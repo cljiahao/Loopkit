@@ -10,6 +10,7 @@ import {
   listPrograms,
   isPro,
   canCreateProgram,
+  getEntitlement,
 } from "@/lib/program";
 import { createServerClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/types";
@@ -87,7 +88,12 @@ export async function saveProgramAction(
   // the database (SECURITY DEFINER), so a direct PostgREST insert can't bypass it.
   const programs = await listPrograms();
   const pro = await isPro();
-  if (!canCreateProgram(programs.filter((p) => p.active).length, pro)) {
+  if (
+    !canCreateProgram(
+      getEntitlement(pro),
+      programs.filter((p) => p.active).length,
+    )
+  ) {
     return { error: UPSELL_ERROR };
   }
 

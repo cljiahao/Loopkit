@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { currentProgram, canCreateProgram } from "@/lib/program";
+import {
+  currentProgram,
+  canCreateProgram,
+  getEntitlement,
+} from "@/lib/program";
 import type { Program } from "@/lib/program";
 
 const program = (id: string): Program => ({
@@ -42,19 +46,35 @@ describe("currentProgram", () => {
   });
 });
 
+describe("getEntitlement", () => {
+  it("free vendor gets a 1-active-program cap", () => {
+    expect(getEntitlement(false)).toEqual({
+      tier: "free",
+      maxActivePrograms: 1,
+    });
+  });
+
+  it("pro vendor gets unlimited", () => {
+    expect(getEntitlement(true)).toEqual({
+      tier: "pro",
+      maxActivePrograms: null,
+    });
+  });
+});
+
 describe("canCreateProgram", () => {
   it("lets a free vendor create their first program", () => {
-    expect(canCreateProgram(0, false)).toBe(true);
+    expect(canCreateProgram(getEntitlement(false), 0)).toBe(true);
   });
 
   it("blocks a free vendor at the one-program limit", () => {
-    expect(canCreateProgram(1, false)).toBe(false);
-    expect(canCreateProgram(2, false)).toBe(false);
+    expect(canCreateProgram(getEntitlement(false), 1)).toBe(false);
+    expect(canCreateProgram(getEntitlement(false), 2)).toBe(false);
   });
 
   it("lets a Pro vendor create regardless of count", () => {
-    expect(canCreateProgram(0, true)).toBe(true);
-    expect(canCreateProgram(1, true)).toBe(true);
-    expect(canCreateProgram(50, true)).toBe(true);
+    expect(canCreateProgram(getEntitlement(true), 0)).toBe(true);
+    expect(canCreateProgram(getEntitlement(true), 1)).toBe(true);
+    expect(canCreateProgram(getEntitlement(true), 50)).toBe(true);
   });
 });

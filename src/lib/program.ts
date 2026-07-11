@@ -305,9 +305,32 @@ export function currentProgram(
   return programs[0] ?? null;
 }
 
-// Pure: free vendors get one program; Pro vendors are unlimited.
-export function canCreateProgram(count: number, pro: boolean): boolean {
-  return pro || count < 1;
+export type Tier = "free" | "pro";
+
+export interface Entitlement {
+  tier: Tier;
+  // null = unlimited
+  maxActivePrograms: number | null;
+}
+
+const FREE: Entitlement = { tier: "free", maxActivePrograms: 1 };
+const PRO: Entitlement = { tier: "pro", maxActivePrograms: null };
+
+// Resolves a vendor's raw plan state (isPro's DB read) to what they can
+// actually do. Starts at one axis because program count is the only
+// thing Pro gates today — add fields here, not new ad-hoc isPro()
+// branches, when a second gate is actually needed.
+export function getEntitlement(pro: boolean): Entitlement {
+  return pro ? PRO : FREE;
+}
+
+// Pure: whether the vendor can create another active program under
+// their entitlement.
+export function canCreateProgram(
+  ent: Entitlement,
+  activeCount: number,
+): boolean {
+  return ent.maxActivePrograms === null || activeCount < ent.maxActivePrograms;
 }
 
 // Whether the signed-in vendor is on the Pro tier (present in vendor_pro).

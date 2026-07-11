@@ -5,6 +5,7 @@ import {
   currentProgram,
   isPro,
   canCreateProgram,
+  getEntitlement,
 } from "@/lib/program";
 import { SetupForm } from "@/app/setup/setup-form";
 import { Wordmark } from "@/components/landing/wordmark";
@@ -38,8 +39,8 @@ export default async function SetupPage({
     : null;
   const pro = await isPro();
   const canCreate = canCreateProgram(
+    getEntitlement(pro),
     programs.filter((p) => p.active).length,
-    pro,
   );
   const firstRun = programs.length === 0;
 
