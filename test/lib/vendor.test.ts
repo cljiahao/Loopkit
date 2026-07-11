@@ -10,7 +10,14 @@ const upsertMock = vi.fn(
     error: null,
   }),
 );
-const selectChain = { maybeSingle: vi.fn(async () => ({ data: null })) };
+const selectChain = {
+  maybeSingle: vi.fn(
+    async (): Promise<{
+      data: { name: string } | null;
+      error: { message: string } | null;
+    }> => ({ data: null, error: null }),
+  ),
+};
 const fromMock = vi.fn(() => ({
   upsert: upsertMock,
   select: () => selectChain,
@@ -80,5 +87,15 @@ describe("getVendorProfile", () => {
   it("returns name:null when the vendor has no row yet", async () => {
     const res = await getVendorProfile();
     expect(res).toEqual({ name: null });
+  });
+
+  it("throws when Supabase errors", async () => {
+    selectChain.maybeSingle.mockResolvedValueOnce({
+      data: null,
+      error: { message: "db down" },
+    });
+    await expect(getVendorProfile()).rejects.toThrow(
+      "getVendorProfile: db down",
+    );
   });
 });

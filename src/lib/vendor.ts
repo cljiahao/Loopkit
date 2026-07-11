@@ -15,7 +15,11 @@ export type VendorProfile = {
 // there's nothing to distinguish "not found" from "not theirs."
 export async function getVendorProfile(): Promise<VendorProfile> {
   const supabase = await createServerClient();
-  const { data } = await supabase.from("vendors").select("name").maybeSingle();
+  const { data, error } = await supabase
+    .from("vendors")
+    .select("name")
+    .maybeSingle();
+  if (error) throw new Error(`getVendorProfile: ${error.message}`);
   return { name: data?.name ?? null };
 }
 
