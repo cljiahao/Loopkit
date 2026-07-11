@@ -56,7 +56,7 @@ slate (e.g. "old card was being abused, restart everyone") or continuity
 (e.g. "just renaming/retuning the same program"), and only the vendor
 knows which. Concretely:
 
-`supabase/migrations/0017_loopkit_carry_over.sql` (new):
+`supabase/migrations/0018_loopkit_carry_over.sql` (new):
 
 ```sql
 alter table loopkit.programs
@@ -234,7 +234,7 @@ This is strictly additive to migration `0016`'s existing
 ## Testing
 
 - `test/db/carry-over-schema.test.ts` (new) — regex-match
-  `0017_loopkit_carry_over.sql`: `carry_over_stamps` column,
+  `0018_loopkit_carry_over.sql`: `carry_over_stamps` column,
   `create_program`'s new default-`false` parameter, `enroll_card`'s
   predecessor lookup and same-type guard.
 - `test/app/change-type-action.test.ts` — extend: checkbox value flows
