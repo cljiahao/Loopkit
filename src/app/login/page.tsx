@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { vendorPhoneOnboardAction } from "@/app/login/actions";
 import { Wordmark } from "@/components/landing/wordmark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,9 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showPhoneOnboard, setShowPhoneOnboard] = useState(false);
+  const [vendorName, setVendorName] = useState("");
+  const [vendorPhone, setVendorPhone] = useState("");
   // Set once we've emailed the user and are waiting on their click:
   // "signup" = confirm the new account, "reset" = choose a new password.
   const [sent, setSent] = useState<{
@@ -73,6 +77,27 @@ function LoginForm() {
       setError(error.message);
       setBusy(false);
     }
+  }
+
+  async function submitPhoneOnboard(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    const supabase = createClient();
+    const { error: anonError } = await supabase.auth.signInAnonymously();
+    if (anonError) {
+      setError(anonError.message);
+      setBusy(false);
+      return;
+    }
+    const result = await vendorPhoneOnboardAction(vendorName, vendorPhone);
+    setBusy(false);
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    router.push("/dashboard");
+    router.refresh();
   }
 
   async function submit(e: React.FormEvent) {
@@ -219,6 +244,62 @@ function LoginForm() {
               <GoogleMark />
               Continue with Google
             </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowPhoneOnboard((v) => !v)}
+              disabled={busy}
+              className="mt-2.5 h-12 w-full gap-2.5 rounded-xl text-[0.95rem] font-medium"
+            >
+              Continue with name & phone
+            </Button>
+
+            {showPhoneOnboard && (
+              <form onSubmit={submitPhoneOnboard} className="mt-5 space-y-5">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="vendor-name"
+                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Your name or business
+                  </Label>
+                  <Input
+                    id="vendor-name"
+                    required
+                    placeholder="Kopi Corner"
+                    className="h-11 rounded-xl"
+                    value={vendorName}
+                    onChange={(e) => setVendorName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="vendor-phone"
+                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    Phone number
+                  </Label>
+                  <Input
+                    id="vendor-phone"
+                    type="tel"
+                    required
+                    placeholder="9123 4567"
+                    className="h-11 rounded-xl"
+                    value={vendorPhone}
+                    onChange={(e) => setVendorPhone(e.target.value)}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="h-12 w-full rounded-xl text-base font-semibold"
+                  disabled={busy}
+                >
+                  {busy ? "Please wait…" : "Continue"}
+                </Button>
+              </form>
+            )}
 
             <div className="my-6 flex items-center gap-3">
               <span className="h-px flex-1 bg-border" />
