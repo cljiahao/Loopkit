@@ -90,14 +90,19 @@ function LoginForm() {
       setBusy(false);
       return;
     }
-    const result = await vendorPhoneOnboardAction(vendorName, vendorPhone);
-    setBusy(false);
-    if (result.error) {
-      setError(result.error);
-      return;
+    try {
+      const result = await vendorPhoneOnboardAction(vendorName, vendorPhone);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setBusy(false);
     }
-    router.push("/dashboard");
-    router.refresh();
   }
 
   async function submit(e: React.FormEvent) {
