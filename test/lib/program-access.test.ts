@@ -12,6 +12,7 @@ const program = (id: string): Program => ({
   active: true,
   head_start: false,
   replaced_by: null,
+  carry_over_stamps: false,
 });
 
 describe("currentProgram", () => {

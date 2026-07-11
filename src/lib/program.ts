@@ -10,7 +10,7 @@ export type ProgramType =
   "stamp" | "lucky" | "plant" | "wheel" | "scratch" | "streak";
 
 const PROGRAM_COLUMNS =
-  "id,name,stamps_required,reward_text,type,config,active,expiry_days,head_start,replaced_by";
+  "id,name,stamps_required,reward_text,type,config,active,expiry_days,head_start,replaced_by,carry_over_stamps";
 
 export type Program = {
   id: string;
@@ -23,6 +23,7 @@ export type Program = {
   expiry_days?: number | null;
   head_start: boolean;
   replaced_by: string | null;
+  carry_over_stamps: boolean;
 };
 
 export const programInputSchema = z.object({

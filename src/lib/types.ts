@@ -26,6 +26,7 @@ export interface Database {
           expiry_days: number | null;
           head_start: boolean;
           replaced_by: string | null;
+          carry_over_stamps: boolean;
           created_at: string;
         };
         Insert: {
@@ -40,6 +41,7 @@ export interface Database {
           expiry_days?: number | null;
           head_start?: boolean;
           replaced_by?: string | null;
+          carry_over_stamps?: boolean;
           created_at?: string;
         };
         Update: {
@@ -54,6 +56,7 @@ export interface Database {
           expiry_days?: number | null;
           head_start?: boolean;
           replaced_by?: string | null;
+          carry_over_stamps?: boolean;
           created_at?: string;
         };
         Relationships: [];
@@ -260,6 +263,7 @@ export interface Database {
           p_config: Json;
           p_expiry_days?: number | null;
           p_head_start?: boolean;
+          p_carry_over_stamps?: boolean;
         };
         Returns: string;
       };
@@ -312,6 +316,7 @@ export interface Database {
           cycle_started_at: string | null;
           active: boolean;
           replaced_by_name: string | null;
+          replaced_by_stamp_count: number | null;
         }[];
       };
       card_by_token: {
