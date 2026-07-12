@@ -80,6 +80,42 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      (adds `expiry_days`/`cycle_started_at`) — same grants as before. Safe to
      re-run.
 
+   - apply `0013_loopkit_upgrade_requests.sql` — adds `loopkit.upgrade_requests`
+     (vendor self-files on hitting the free-tier program cap; admin resolves on
+     `/admin/vendors` and grants Pro). No payment integration — same manual-
+     fulfillment model as qkit's `purchase_requests`. Safe to re-run.
+
+   - apply `0014_loopkit_head_start.sql` — adds `programs.head_start` (vendor
+     opt-in, off by default) and updates `create_program`/`enroll_card` to seed
+     new cards ~20% toward the first reward (Endowed Progress Effect) for
+     stamp/plant/streak types. Chance types (wheel/scratch) are untouched — no
+     accumulating goal to seed. Safe to re-run.
+
+   - apply `0015_loopkit_vendor_join.sql` — adds `vendor_active_programs` (public,
+     lists a vendor's active programs for the `/c` pre-phone preview) and
+     `vendor_join` (public; enrolls a phone into every active program it lacks a
+     card for, then returns all its cards at that vendor — including cards for
+     programs since deactivated). Supersedes the old empty-phone `card_view` hack.
+     Safe to re-run.
+
+   - apply `0016_loopkit_program_replacement.sql` — adds `programs.replaced_by`
+     and fixes the free-tier cap to count only _active_ programs (so
+     deactivating a program to migrate its type doesn't permanently burn a free
+     vendor's only slot). Recreates `vendor_join` to surface the replacement
+     program's name for a retired card. Safe to re-run.
+
+   - apply `0017_loopkit_vendor_profile.sql` — adds `loopkit.vendors` (lazily
+     created on first `/profile` save; name/phone) and a public-read
+     `vendor-images` storage bucket + per-vendor-folder write policies. Safe to
+     re-run.
+
+   - apply `0018_loopkit_carry_over.sql` — adds `programs.carry_over_stamps`
+     (vendor opt-in). On program-type migration, seeds a new stamp card with the
+     predecessor's stamp count (stamp→stamp only; takes precedence over
+     head_start when it applies, falls back to head_start otherwise). Recreates
+     `vendor_join` to also surface the replacement card's carried-over
+     stamp_count. Safe to re-run.
+
    - **Optional — rate limiting on the public `/c` surface.** The card-check
      action is throttled per-IP only if an Upstash Redis is configured. Create a
      free Upstash Redis and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
