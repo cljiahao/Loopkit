@@ -135,10 +135,12 @@ export default async function DashboardPage({
         </summary>
         <div className="px-6 pb-6">
           <QkitEarnSettings
-            programs={programs.map((prog) => ({
-              id: prog.id,
-              name: prog.name,
-            }))}
+            programs={programs
+              .filter((prog) => prog.type === "stamp")
+              .map((prog) => ({
+                id: prog.id,
+                name: prog.name,
+              }))}
             current={
               qkitEarnConfig
                 ? {
