@@ -387,6 +387,31 @@ export interface Database {
         Args: { p_uid: string };
         Returns: boolean;
       };
+      qkit_earn_lookup: {
+        Args: { p_order_id: string; p_phone: string };
+        Returns: {
+          vendor_id: string;
+          program_id: string;
+          program_type: string;
+          program_config: Json;
+          stamps_required: number;
+          reward_text: string;
+          already_claimed: boolean;
+          card_state: Json;
+          card_stamp_count: number;
+          card_reward_count: number;
+        }[];
+      };
+      qkit_earn_commit: {
+        Args: {
+          p_order_id: string;
+          p_phone: string;
+          p_name: string | null;
+          p_stamp_count: number;
+          p_state: Json;
+        };
+        Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
