@@ -2,11 +2,13 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { requireVendor } from "@/lib/auth";
-import { listPrograms, currentProgram } from "@/lib/program";
+import { listPrograms, currentProgram, isPro } from "@/lib/program";
 import { ServeCustomer } from "@/app/dashboard/serve-customer";
 import { Badge } from "@/components/ui/badge";
 import { qrSvg } from "@/lib/qr";
 import { CardLinkActions } from "@/app/dashboard/card-link";
+import { QkitEarnSettings } from "@/app/dashboard/qkit-earn-settings";
+import { createServerClient } from "@/lib/supabase/server";
 
 export default async function DashboardPage({
   searchParams,
@@ -21,6 +23,13 @@ export default async function DashboardPage({
   if (!program) redirect("/setup");
 
   const activePrograms = programs.filter((prog) => prog.active);
+
+  const [pro, supabase] = await Promise.all([isPro(), createServerClient()]);
+  const { data: qkitEarnConfig } = await supabase
+    .from("qkit_earn_config")
+    .select("program_id, enabled")
+    .eq("vendor_id", user.id)
+    .maybeSingle();
 
   // The QR must encode an absolute URL — a host-less path is unscannable. Fall
   // back to the request host when NEXT_PUBLIC_BASE_URL is unset.
@@ -117,6 +126,29 @@ export default async function DashboardPage({
               <CardLinkActions link={cardLink} />
             </div>
           </div>
+        </div>
+      </details>
+
+      <details className="group rounded-2xl border bg-card shadow-sm">
+        <summary className="cursor-pointer list-none px-6 py-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground [&::-webkit-details-marker]:hidden">
+          qkit integration
+        </summary>
+        <div className="px-6 pb-6">
+          <QkitEarnSettings
+            programs={programs.map((prog) => ({
+              id: prog.id,
+              name: prog.name,
+            }))}
+            current={
+              qkitEarnConfig
+                ? {
+                    programId: qkitEarnConfig.program_id,
+                    enabled: qkitEarnConfig.enabled,
+                  }
+                : null
+            }
+            isPro={pro}
+          />
         </div>
       </details>
     </main>
