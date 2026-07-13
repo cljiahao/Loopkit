@@ -72,6 +72,7 @@ export interface Database {
           card_token: string;
           last_event_at: string | null;
           cycle_started_at: string;
+          customer_name: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -85,6 +86,7 @@ export interface Database {
           card_token?: string;
           last_event_at?: string | null;
           cycle_started_at?: string;
+          customer_name?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -98,6 +100,7 @@ export interface Database {
           card_token?: string;
           last_event_at?: string | null;
           cycle_started_at?: string;
+          customer_name?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -225,6 +228,51 @@ export interface Database {
           id?: string;
           vendor_id?: string;
           status?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      qkit_earn_config: {
+        Row: {
+          vendor_id: string;
+          program_id: string;
+          enabled: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          vendor_id: string;
+          program_id: string;
+          enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          vendor_id?: string;
+          program_id?: string;
+          enabled?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      qkit_earn_events: {
+        Row: {
+          order_id: string;
+          vendor_id: string;
+          card_id: string;
+          created_at: string;
+        };
+        Insert: {
+          order_id: string;
+          vendor_id: string;
+          card_id: string;
+          created_at?: string;
+        };
+        Update: {
+          order_id?: string;
+          vendor_id?: string;
+          card_id?: string;
           created_at?: string;
         };
         Relationships: [];
