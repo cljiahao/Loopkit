@@ -8,7 +8,7 @@ import { PROGRAM_TYPE_BADGE, describeProgram } from "./program-display";
 import type { Program } from "@/lib/program";
 
 // One card per active program. Field order is fixed across every card
-// (header -> stat -> Open Counter -> footer links) so scanning a grid of
+// (header -> Open Counter -> footer links) so scanning a grid of
 // several cards stays fast regardless of how many a vendor has. Serve/
 // lookup lives on the dedicated Counter page now (see
 // app/dashboard/counter/page.tsx), not embedded here.
