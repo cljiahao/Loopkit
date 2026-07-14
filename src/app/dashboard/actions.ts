@@ -438,6 +438,6 @@ export async function saveQkitEarnConfigAction(
     return { success: false, error: "Something went wrong." };
   }
 
-  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/settings");
   return { success: true, enabled, programId };
 }

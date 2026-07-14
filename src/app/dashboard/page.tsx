@@ -9,12 +9,10 @@ import {
 } from "@/lib/program";
 import { requireVendor } from "@/lib/auth";
 import { qrSvg } from "@/lib/qr";
-import { createServerClient } from "@/lib/supabase/server";
 import { ProgramCard } from "@/app/dashboard/program-card";
 import { NewProgramTile } from "@/app/dashboard/new-program-tile";
 import { ShopQrBlock } from "@/app/dashboard/shop-qr-block";
 import { ScanAndRoute } from "@/app/dashboard/scan-and-route";
-import { QkitEarnSettings } from "@/app/dashboard/qkit-earn-settings";
 import { shouldShowQr } from "@/app/dashboard/dashboard-view";
 
 export default async function DashboardPage() {
@@ -30,12 +28,7 @@ export default async function DashboardPage() {
 
   const activePrograms = programs.filter((prog) => prog.active);
 
-  const [pro, supabase] = await Promise.all([isPro(), createServerClient()]);
-  const { data: qkitEarnConfig } = await supabase
-    .from("qkit_earn_config")
-    .select("program_id, enabled")
-    .eq("vendor_id", user.id)
-    .maybeSingle();
+  const pro = await isPro();
 
   // The QR must encode an absolute URL — a host-less path is unscannable. Fall
   // back to the request host when NEXT_PUBLIC_BASE_URL is unset.
@@ -79,31 +72,6 @@ export default async function DashboardPage() {
           </div>
         </>
       )}
-
-      <details className="group rounded-2xl border bg-card shadow-sm">
-        <summary className="cursor-pointer list-none px-6 py-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground [&::-webkit-details-marker]:hidden">
-          qkit integration
-        </summary>
-        <div className="px-6 pb-6">
-          <QkitEarnSettings
-            programs={programs
-              .filter((prog) => prog.type === "stamp")
-              .map((prog) => ({
-                id: prog.id,
-                name: prog.name,
-              }))}
-            current={
-              qkitEarnConfig
-                ? {
-                    programId: qkitEarnConfig.program_id,
-                    enabled: qkitEarnConfig.enabled,
-                  }
-                : null
-            }
-            isPro={pro}
-          />
-        </div>
-      </details>
     </main>
   );
 }

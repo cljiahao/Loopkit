@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu, User, Wallet, X } from "lucide-react";
+import { LogOut, Menu, Settings, User, Wallet, X } from "lucide-react";
 import { Wordmark } from "@/components/landing/wordmark";
 import {
   DropdownMenu,
@@ -178,6 +178,12 @@ export function DashboardNav({
               <Link href="/dashboard/plan" className="cursor-pointer">
                 <Wallet className="size-4" />
                 Plan
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/settings" className="cursor-pointer">
+                <Settings className="size-4" />
+                Settings
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>

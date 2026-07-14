@@ -64,7 +64,7 @@ describe("DashboardNav", () => {
     ).toBeInTheDocument();
   });
 
-  it("account menu has Plan, Profile, Sign out, and no separate Customers item", async () => {
+  it("account menu has Plan, Settings, Profile, Sign out, and no separate Customers item", async () => {
     const user = userEvent.setup();
     render(<DashboardNav {...baseProps} />);
     const accountButton = screen.getByRole("button", {
@@ -72,6 +72,7 @@ describe("DashboardNav", () => {
     });
     await user.click(accountButton);
     expect(screen.getByText("Plan")).toBeInTheDocument();
+    expect(screen.getByText("Settings")).toBeInTheDocument();
     expect(screen.getByText("Profile")).toBeInTheDocument();
     expect(screen.getByText("Sign out")).toBeInTheDocument();
     // "Customers" appears exactly once — the inline nav link (asserted by
