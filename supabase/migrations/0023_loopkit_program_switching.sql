@@ -88,7 +88,7 @@ begin
     where vendor_id = v_vendor and active and id <> p_program;
 
   update loopkit.programs
-    set active = true
+    set active = true, scheduled_deactivate_at = null
     where id = p_program
     returning * into v_program;
 

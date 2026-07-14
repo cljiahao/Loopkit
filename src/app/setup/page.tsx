@@ -145,7 +145,7 @@ export default async function SetupPage({
                       >
                         Edit
                       </Link>
-                      {program.active && !pro && (
+                      {program.active && (
                         <Link
                           href={`/setup?migrate=${program.id}`}
                           className="text-muted-foreground hover:text-foreground"
