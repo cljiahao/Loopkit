@@ -165,9 +165,9 @@ export function DashboardNav({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/plan" className="cursor-pointer">
-                <Wallet className="size-4" />
-                Plan
+              <Link href="/dashboard/profile" className="cursor-pointer">
+                <User className="size-4" />
+                Profile
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -177,9 +177,9 @@ export function DashboardNav({
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link href="/dashboard/profile" className="cursor-pointer">
-                <User className="size-4" />
-                Profile
+              <Link href="/dashboard/plan" className="cursor-pointer">
+                <Wallet className="size-4" />
+                Plan
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

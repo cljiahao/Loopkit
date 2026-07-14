@@ -64,16 +64,24 @@ describe("DashboardNav", () => {
     ).toBeInTheDocument();
   });
 
-  it("account menu has Plan, Settings, Profile, Sign out, and no separate Customers item", async () => {
+  it("account menu has Profile, Settings, Plan, Sign out (in that order), and no separate Customers item", async () => {
     const user = userEvent.setup();
     render(<DashboardNav {...baseProps} />);
     const accountButton = screen.getByRole("button", {
       name: /account menu/i,
     });
     await user.click(accountButton);
-    expect(screen.getByText("Plan")).toBeInTheDocument();
-    expect(screen.getByText("Settings")).toBeInTheDocument();
-    expect(screen.getByText("Profile")).toBeInTheDocument();
+
+    const dropdownLinks = screen
+      .getAllByRole("menuitem")
+      .filter((l) =>
+        ["Profile", "Settings", "Plan"].includes(l.textContent ?? ""),
+      );
+    expect(dropdownLinks.map((l) => l.textContent)).toEqual([
+      "Profile",
+      "Settings",
+      "Plan",
+    ]);
     expect(screen.getByText("Sign out")).toBeInTheDocument();
     // "Customers" appears exactly once — the inline nav link (asserted by
     // role "link" above) — proving the account-dropdown item was removed,

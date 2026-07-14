@@ -41,7 +41,7 @@ it("account menu has Profile, Settings, Plan, Sign out (in that order), and no s
   await user.click(accountButton);
 
   const dropdownLinks = screen
-    .getAllByRole("link")
+    .getAllByRole("menuitem")
     .filter((l) =>
       ["Profile", "Settings", "Plan"].includes(l.textContent ?? ""),
     );
