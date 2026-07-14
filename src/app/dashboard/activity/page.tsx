@@ -4,16 +4,92 @@ import { requireVendor } from "@/lib/auth";
 import { listPrograms, currentProgram } from "@/lib/program";
 import { formatSgtDateTime } from "@/lib/format";
 import { createServerClient } from "@/lib/supabase/server";
+import { listVendorActivity, type VendorActivityRow } from "@/lib/activity";
+import { Badge } from "@/components/ui/badge";
+
+// Extracted so it's testable with plain props. Renders the vendor-level
+// (no ?p=) feed: every event across every program, each tagged with which
+// program it belongs to (not implicit anymore once merged).
+export function VendorActivityList({
+  activity,
+}: {
+  activity: VendorActivityRow[];
+}) {
+  if (activity.length === 0) {
+    return (
+      <div className="rounded-2xl border bg-card p-6 shadow-sm">
+        <p className="text-sm text-muted-foreground">No activity yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {activity.map((event) => (
+        <li
+          key={event.id}
+          className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3 text-sm shadow-sm"
+        >
+          <span className="flex min-w-0 items-center gap-2.5">
+            <span
+              className={
+                event.isReward
+                  ? "grid size-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold-accent"
+                  : "grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"
+              }
+            >
+              {event.isReward ? (
+                <Gift className="size-3.5" />
+              ) : (
+                <Stamp className="size-3.5" />
+              )}
+            </span>
+            <span className="min-w-0">
+              <span className="font-medium capitalize">{event.label}</span>
+              <span className="ml-2 truncate text-muted-foreground">
+                {event.phone}
+              </span>
+              <Badge variant="secondary" className="ml-2">
+                {event.programName}
+              </Badge>
+            </span>
+          </span>
+          <span className="shrink-0 text-muted-foreground">
+            {formatSgtDateTime(event.createdAt)}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+type ActivityPageProps = {
+  searchParams: Promise<{ p?: string }>;
+};
 
 export default async function ActivityPage({
   searchParams,
-}: {
-  searchParams: Promise<{ p?: string }>;
-}) {
+}: ActivityPageProps) {
   await requireVendor();
 
   const programs = await listPrograms();
   const { p } = await searchParams;
+
+  if (!p) {
+    const activity = await listVendorActivity();
+    return (
+      <main className="mx-auto max-w-7xl space-y-8 p-5 py-10">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Recent stamps, plays, and redemptions across every program.
+          </p>
+        </div>
+        <VendorActivityList activity={activity} />
+      </main>
+    );
+  }
+
   const program = currentProgram(programs, p);
   if (!program) redirect("/setup");
 
