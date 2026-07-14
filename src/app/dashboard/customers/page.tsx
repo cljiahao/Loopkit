@@ -85,7 +85,7 @@ export default async function CustomersPage({
           <ProgramSwitcher
             programs={programs}
             currentId={programs[0]?.id ?? ""}
-            action="/dashboard/customers"
+            basePath="/dashboard/customers"
           />
           <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -122,33 +122,11 @@ export default async function CustomersPage({
   return (
     <main className="mx-auto max-w-7xl space-y-8 p-5 py-10">
       <div>
-        {programs.length > 1 ? (
-          <form
-            action="/dashboard/customers"
-            method="get"
-            className="mb-4 flex items-center gap-2"
-          >
-            <input type="hidden" name="q" value={q ?? ""} />
-            <select
-              name="p"
-              defaultValue={program.id}
-              aria-label="Switch program"
-              className="h-9 flex-1 rounded-lg border bg-card px-3 text-sm"
-            >
-              {programs.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="h-9 rounded-lg border px-4 text-sm font-medium hover:bg-muted/50"
-            >
-              Switch
-            </button>
-          </form>
-        ) : null}
+        <ProgramSwitcher
+          programs={programs}
+          currentId={program.id}
+          basePath="/dashboard/customers"
+        />
         <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Everyone who has a {program.name} card.

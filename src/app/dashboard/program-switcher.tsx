@@ -1,38 +1,49 @@
-// Same-page program switcher for Stats/Activity's filtered (?p=) view —
-// mirrors Customers' existing inline picker (customers/page.tsx), pulled
-// into a shared component since two pages need it identically. A plain GET
-// form; no client JS needed.
+"use client";
+
+import { useRouter, useSearchParams } from "next/navigation";
+
+// Same-page program switcher for every Stats/Activity/Customers view (merged
+// and filtered alike), mirroring qkit's StatsControls: one instant <select>,
+// no submit button. Copies the current URL's other params (e.g. Customers'
+// `q` search term) forward so switching programs never drops them.
 export function ProgramSwitcher({
   programs,
   currentId,
-  action,
+  basePath,
 }: {
   programs: { id: string; name: string }[];
   currentId: string;
-  action: string;
+  basePath: string;
 }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   if (programs.length <= 1) return null;
 
+  function handleChange(value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set("p", value);
+    } else {
+      params.delete("p");
+    }
+    const query = params.toString();
+    router.push(query ? `${basePath}?${query}` : basePath);
+  }
+
   return (
-    <form action={action} method="get" className="mb-4 flex items-center gap-2">
-      <select
-        name="p"
-        defaultValue={currentId}
-        aria-label="Switch program"
-        className="h-9 flex-1 rounded-lg border bg-card px-3 text-sm"
-      >
-        {programs.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.name}
-          </option>
-        ))}
-      </select>
-      <button
-        type="submit"
-        className="h-9 rounded-lg border px-4 text-sm font-medium hover:bg-muted/50"
-      >
-        Switch
-      </button>
-    </form>
+    <select
+      value={currentId}
+      onChange={(e) => handleChange(e.target.value)}
+      aria-label="Switch program"
+      className="mb-4 h-9 rounded-lg border bg-card px-3 text-sm"
+    >
+      <option value="">All programs</option>
+      {programs.map((option) => (
+        <option key={option.id} value={option.id}>
+          {option.name}
+        </option>
+      ))}
+    </select>
   );
 }

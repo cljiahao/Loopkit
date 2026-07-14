@@ -70,7 +70,7 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
           <ProgramSwitcher
             programs={programs}
             currentId={programs[0]?.id ?? ""}
-            action="/dashboard/stats"
+            basePath="/dashboard/stats"
           />
           <h1 className="text-2xl font-bold tracking-tight">Stats</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -157,7 +157,7 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
         <ProgramSwitcher
           programs={programs}
           currentId={program.id}
-          action="/dashboard/stats"
+          basePath="/dashboard/stats"
         />
         <h1 className="text-2xl font-bold tracking-tight">Stats</h1>
         <p className="mt-1 text-sm text-muted-foreground">
