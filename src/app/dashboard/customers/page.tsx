@@ -8,6 +8,7 @@ import { formatSgtDate } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
 
 type CustomersPageProps = {
   searchParams: Promise<{ q?: string; p?: string }>;
@@ -75,6 +76,11 @@ export default async function CustomersPage({
     return (
       <main className="mx-auto max-w-7xl space-y-8 p-5 py-10">
         <div>
+          <ProgramSwitcher
+            programs={programs}
+            currentId={programs[0]?.id ?? ""}
+            action="/dashboard/customers"
+          />
           <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Everyone who has a card at your shop, across every program.

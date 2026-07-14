@@ -63,6 +63,11 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
     return (
       <main className="mx-auto max-w-7xl space-y-8 p-5 py-10">
         <div>
+          <ProgramSwitcher
+            programs={programs}
+            currentId={programs[0]?.id ?? ""}
+            action="/dashboard/stats"
+          />
           <h1 className="text-2xl font-bold tracking-tight">Stats</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             How your shop is performing across every program.
