@@ -70,7 +70,7 @@ export const plantStrategy: Strategy<PlantConfig, PlantState> = {
     if (event.kind !== "visit") return { state, rewardUnlocked: false };
     const settled = decayedGrowth(state, config, now);
     const bloom = bloomThreshold(config);
-    const growth = Math.min(settled + config.growth_per_visit, bloom);
+    const growth = settled + config.growth_per_visit;
     const bloomed = state.bloomed === true || growth >= bloom;
     return {
       state: {
@@ -82,9 +82,9 @@ export const plantStrategy: Strategy<PlantConfig, PlantState> = {
       rewardUnlocked: settled < bloom && growth >= bloom,
     };
   },
-  redeem(state) {
+  redeem(state, config) {
     return {
-      growth: 0,
+      growth: Math.max(0, state.growth - bloomThreshold(config)),
       last_visit_at: state.last_visit_at,
       blooms: state.blooms + 1,
       bloomed: false,

@@ -65,6 +65,21 @@ describe("plantStrategy", () => {
     expect(r.rewardUnlocked).toBe(true);
     expect(plantStrategy.progress(r.state, cfg, day0).rewardReady).toBe(true);
   });
+  it("keeps growing past the bloom threshold instead of capping", () => {
+    const r = plantStrategy.apply(
+      { kind: "visit" },
+      {
+        growth: 8,
+        last_visit_at: day0.toISOString(),
+        blooms: 0,
+        bloomed: true,
+      },
+      cfg,
+      day0,
+    );
+    expect(r.state.growth).toBe(9);
+    expect(r.rewardUnlocked).toBe(false);
+  });
   it("banks the bloom so it survives idle decay", () => {
     const { state } = plantStrategy.apply(
       { kind: "visit" },
@@ -89,7 +104,7 @@ describe("plantStrategy", () => {
     );
     expect(p.rewardReady).toBe(false);
   });
-  it("redeem resets to a seed, counts the bloom, and clears the bank", () => {
+  it("redeem carries over exactly zero when growth equals the threshold", () => {
     const s = plantStrategy.redeem(
       {
         growth: 8,
@@ -103,5 +118,19 @@ describe("plantStrategy", () => {
     expect(s.blooms).toBe(2);
     expect(s.bloomed).toBe(false);
     expect(plantStrategy.progress(s, cfg, day0).rewardReady).toBe(false);
+  });
+  it("redeem carries over the excess when growth exceeds the threshold", () => {
+    const s = plantStrategy.redeem(
+      {
+        growth: 11,
+        last_visit_at: day0.toISOString(),
+        blooms: 1,
+        bloomed: true,
+      },
+      cfg,
+    );
+    expect(s.growth).toBe(3);
+    expect(s.blooms).toBe(2);
+    expect(s.bloomed).toBe(false);
   });
 });
