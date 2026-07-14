@@ -1,0 +1,80 @@
+"use client";
+
+import Link from "next/link";
+import { Pencil } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ServeCustomer } from "@/app/dashboard/serve-customer";
+import { PROGRAM_TYPE_BADGE, describeProgram } from "./program-display";
+import type { Program } from "@/lib/program";
+import type { ProgramStats } from "@/lib/stats";
+
+// One card per active program. Field order is fixed across every card
+// (header -> stat -> serve action -> footer links) so scanning a grid of
+// several cards stays fast regardless of how many a vendor has.
+export function ProgramCard({
+  program,
+  stats,
+}: {
+  program: Program;
+  stats: ProgramStats | null;
+}) {
+  const badge = PROGRAM_TYPE_BADGE[program.type] ?? PROGRAM_TYPE_BADGE.stamp;
+  const scoped = (href: string) => `${href}?p=${program.id}`;
+
+  return (
+    <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h2 className="truncate text-base font-bold tracking-tight">
+              {program.name}
+            </h2>
+            <Badge variant={badge.variant}>{badge.label}</Badge>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {describeProgram(program)}
+          </p>
+        </div>
+        <Link
+          href={`/setup?edit=${program.id}`}
+          aria-label={`Edit ${program.name}`}
+          className="shrink-0 rounded-lg p-1.5 text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        >
+          <Pencil className="size-4" />
+        </Link>
+      </div>
+
+      <p className="text-xs font-medium text-muted-foreground">
+        {stats ? `${stats.active} active (30d)` : "—"}
+      </p>
+
+      <ServeCustomer
+        programId={program.id}
+        type={program.type}
+        stampsRequired={program.stamps_required}
+        rewardText={program.reward_text}
+      />
+
+      <div className="flex gap-4 border-t pt-3 text-sm font-medium text-muted-foreground">
+        <Link
+          href={scoped("/dashboard/customers")}
+          className="hover:text-foreground"
+        >
+          Customers
+        </Link>
+        <Link
+          href={scoped("/dashboard/activity")}
+          className="hover:text-foreground"
+        >
+          Activity
+        </Link>
+        <Link
+          href={scoped("/dashboard/stats")}
+          className="hover:text-foreground"
+        >
+          Stats
+        </Link>
+      </div>
+    </div>
+  );
+}
