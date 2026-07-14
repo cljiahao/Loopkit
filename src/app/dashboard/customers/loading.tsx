@@ -1,6 +1,6 @@
 export default function CustomersLoading() {
   return (
-    <main className="mx-auto max-w-2xl space-y-8 p-5 py-10">
+    <main className="mx-auto max-w-7xl space-y-8 p-5 py-10">
       <div className="space-y-2">
         <div className="h-8 w-40 animate-pulse rounded-lg bg-muted" />
         <div className="h-4 w-56 animate-pulse rounded bg-muted" />

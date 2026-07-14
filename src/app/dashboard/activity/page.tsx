@@ -42,7 +42,7 @@ export default async function ActivityPage({
       : [];
 
   return (
-    <main className="mx-auto max-w-4xl space-y-8 p-5 py-10">
+    <main className="mx-auto max-w-7xl space-y-8 p-5 py-10">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
         <p className="mt-1 text-sm text-muted-foreground">

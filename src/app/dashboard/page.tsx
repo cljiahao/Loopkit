@@ -62,7 +62,7 @@ export default async function DashboardPage() {
   );
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 p-5 py-10">
+    <main className="mx-auto max-w-7xl space-y-6 p-5 py-10">
       {!shouldShowQr(activePrograms.length) ? (
         <div className="rounded-2xl border border-dashed bg-card p-6 text-center text-sm text-muted-foreground">
           None of your programs are active right now.{" "}
@@ -79,7 +79,7 @@ export default async function DashboardPage() {
             programNames={activePrograms.map((prog) => prog.name)}
           />
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {activePrograms.map((prog) => (
               <ProgramCard
                 key={prog.id}

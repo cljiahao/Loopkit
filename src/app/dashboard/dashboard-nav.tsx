@@ -79,7 +79,7 @@ export function DashboardNav({
   const label = vendorName?.trim() || email.trim().split("@")[0];
 
   return (
-    <div className="mx-auto flex max-w-4xl items-center justify-between gap-3">
+    <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
       <Link
         href="/dashboard"
         aria-label="loopkit dashboard home"
