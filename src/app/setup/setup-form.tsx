@@ -1,7 +1,11 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { saveProgramAction, changeTypeAction } from "@/app/setup/actions";
+import {
+  saveProgramAction,
+  changeTypeAction,
+  prepProgramAction,
+} from "@/app/setup/actions";
 import type { Program, ProgramType } from "@/lib/program";
 import { TEMPLATES } from "@/lib/templates";
 import { Button } from "@/components/ui/button";
@@ -33,14 +37,20 @@ export function SetupForm({
   isEdit,
   replacingId,
   replacingType,
+  prepping = false,
 }: {
   program: Program | null;
   isEdit: boolean;
   replacingId: string | null;
   replacingType: string | null;
+  prepping?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
-    replacingId ? changeTypeAction : saveProgramAction,
+    replacingId
+      ? changeTypeAction
+      : prepping
+        ? prepProgramAction
+        : saveProgramAction,
     {},
   );
   const initialType: ProgramType =
@@ -541,7 +551,13 @@ export function SetupForm({
         disabled={pending}
         className="h-12 w-full rounded-xl text-base font-semibold"
       >
-        {isEdit ? "Save changes" : replacingId ? "Change type" : "Create card"}
+        {isEdit
+          ? "Save changes"
+          : replacingId
+            ? "Change type"
+            : prepping
+              ? "Save as draft"
+              : "Create card"}
       </Button>
     </form>
   );

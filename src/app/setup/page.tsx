@@ -5,9 +5,13 @@ import {
   currentProgram,
   isPro,
   canCreateProgram,
+  canPrepProgram,
   getEntitlement,
+  applyDueCutovers,
 } from "@/lib/program";
 import { SetupForm } from "@/app/setup/setup-form";
+import { ScheduleRetirementForm } from "@/app/setup/schedule-retirement-form";
+import { activateProgramAction } from "@/app/setup/actions";
 import { Wordmark } from "@/components/landing/wordmark";
 import { ProLock } from "@/components/pro-lock";
 import { cn } from "@/lib/utils";
@@ -24,10 +28,16 @@ const typeLabel: Record<string, string> = {
 export default async function SetupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ edit?: string; migrate?: string }>;
+  searchParams: Promise<{
+    edit?: string;
+    migrate?: string;
+    prep?: string;
+    schedule?: string;
+  }>;
 }) {
   await requireVendor();
-  const { edit, migrate } = await searchParams;
+  await applyDueCutovers();
+  const { edit, migrate, schedule, prep } = await searchParams;
   const programs = await listPrograms();
   const editing = edit ? currentProgram(programs, edit) : null;
   const isEdit = editing !== null;
@@ -37,12 +47,33 @@ export default async function SetupPage({
   const migrating = migrate
     ? (programs.find((p) => p.id === migrate) ?? null)
     : null;
+  const prepping = prep ? (programs.find((p) => p.id === prep) ?? null) : null;
+  const scheduling = schedule
+    ? (programs.find((p) => p.id === schedule) ?? null)
+    : null;
   const pro = await isPro();
   const canCreate = canCreateProgram(
     getEntitlement(pro),
     programs.filter((p) => p.active).length,
   );
+  const canPrep = canPrepProgram(
+    getEntitlement(pro),
+    programs.filter((p) => p.replaced_by === null).length,
+  );
+  const activePrograms = programs.filter((p) => p.active);
   const firstRun = programs.length === 0;
+
+  // Thin inline server action: a plain <form action> can only pass the
+  // form's formData through a single-argument function, but
+  // activateProgramAction (Task 3) shares the two-argument
+  // (prevState, formData) shape used by every other action in this file so
+  // it plugs into useActionState identically to its siblings. This shim
+  // bridges the two, matching the existing signOut-in-a-Server-Component
+  // pattern (src/app/admin/layout.tsx).
+  async function activate(formData: FormData) {
+    "use server";
+    await activateProgramAction({}, formData);
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center p-5">
@@ -52,20 +83,28 @@ export default async function SetupPage({
           <h1 className="mt-3 font-display text-2xl font-bold tracking-tight">
             {migrating
               ? `Change ${migrating.name}'s type`
-              : isEdit
-                ? "Edit your card"
-                : firstRun
-                  ? "Set up your loyalty card"
-                  : "Your loyalty programs"}
+              : prepping
+                ? `Set up ${prepping.name}'s replacement`
+                : scheduling
+                  ? `Schedule ${scheduling.name}'s retirement`
+                  : isEdit
+                    ? "Edit your card"
+                    : firstRun
+                      ? "Set up your loyalty card"
+                      : "Your loyalty programs"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {migrating
               ? "Your current card stops collecting new stamps. Customers who already have it keep it and can still redeem what they've earned — they just won't see it as something to keep working toward. Everyone gets moved onto the new card automatically next time they check their rewards."
-              : isEdit
-                ? "Update your loyalty card details."
-                : firstRun
-                  ? "Set up your loyalty card in a minute."
-                  : "Manage your loyalty programs."}
+              : prepping
+                ? "Set up the card that replaces it. It stays hidden from customers until you activate it."
+                : scheduling
+                  ? "Pick the date it retires and which card takes over."
+                  : isEdit
+                    ? "Update your loyalty card details."
+                    : firstRun
+                      ? "Set up your loyalty card in a minute."
+                      : "Manage your loyalty programs."}
           </p>
         </div>
 
@@ -106,12 +145,39 @@ export default async function SetupPage({
                       >
                         Edit
                       </Link>
-                      {program.active && (
+                      {program.active && !pro && (
                         <Link
                           href={`/setup?migrate=${program.id}`}
                           className="text-muted-foreground hover:text-foreground"
                         >
                           Change type
+                        </Link>
+                      )}
+                      {program.active && !pro && canPrep && (
+                        <Link
+                          href={`/setup?prep=${program.id}`}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          Prep replacement
+                        </Link>
+                      )}
+                      {!program.active && program.replaced_by === null && (
+                        <form action={activate}>
+                          <input type="hidden" name="id" value={program.id} />
+                          <button
+                            type="submit"
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            Activate
+                          </button>
+                        </form>
+                      )}
+                      {program.active && pro && activePrograms.length > 1 && (
+                        <Link
+                          href={`/setup?schedule=${program.id}`}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          Schedule retirement
                         </Link>
                       )}
                       <Link
@@ -151,6 +217,43 @@ export default async function SetupPage({
                 isEdit={isEdit}
                 replacingId={migrating ? migrating.id : null}
                 replacingType={migrating ? migrating.type : null}
+              />
+            </div>
+          </div>
+        ) : prepping ? (
+          <div className="rounded-2xl border bg-card shadow-sm">
+            <div className="px-7 pt-9 pb-8">
+              <h2 className="text-3xl font-bold tracking-tight">
+                Set up the replacement
+              </h2>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                Pick a card type and set how customers earn their reward. It
+                stays hidden until you activate it.
+              </p>
+              <SetupForm
+                program={null}
+                isEdit={false}
+                replacingId={null}
+                replacingType={null}
+                prepping
+              />
+            </div>
+          </div>
+        ) : scheduling ? (
+          <div className="rounded-2xl border bg-card shadow-sm">
+            <div className="px-7 pt-9 pb-8">
+              <h2 className="text-3xl font-bold tracking-tight">
+                Schedule retirement
+              </h2>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                {scheduling.name} keeps running until the date you pick, then it
+                hands over automatically.
+              </p>
+              <ScheduleRetirementForm
+                program={scheduling}
+                successors={activePrograms.filter(
+                  (p) => p.id !== scheduling.id,
+                )}
               />
             </div>
           </div>

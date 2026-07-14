@@ -5,6 +5,7 @@ import {
   isPro,
   canCreateProgram,
   getEntitlement,
+  applyDueCutovers,
 } from "@/lib/program";
 import { getProgramStats, type ProgramStats } from "@/lib/stats";
 import { requireVendor } from "@/lib/auth";
@@ -19,6 +20,7 @@ import { shouldShowQr } from "@/app/dashboard/dashboard-view";
 
 export default async function DashboardPage() {
   const { user } = await requireVendor();
+  await applyDueCutovers();
 
   const programs = await listPrograms();
   // True first run — no programs of any kind yet. A vendor who has
