@@ -14,6 +14,21 @@ if (typeof Element !== "undefined") {
   if (!Element.prototype.scrollIntoView) {
     Element.prototype.scrollIntoView = () => {};
   }
+  // Radix's Avatar checks `image.complete`/`image.naturalWidth` synchronously
+  // right after setting `src` to decide whether to render the <img> or the
+  // fallback. jsdom never actually fetches images, so `complete` stays false
+  // forever and the avatar image never appears — report every image as
+  // already loaded so AvatarImage resolves the same way a real browser would.
+  if (typeof HTMLImageElement !== "undefined") {
+    Object.defineProperty(HTMLImageElement.prototype, "complete", {
+      configurable: true,
+      get: () => true,
+    });
+    Object.defineProperty(HTMLImageElement.prototype, "naturalWidth", {
+      configurable: true,
+      get: () => 1,
+    });
+  }
 }
 
 afterEach(async () => {

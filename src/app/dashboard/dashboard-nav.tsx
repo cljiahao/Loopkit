@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LogOut, Menu, Settings, User, Wallet, X } from "lucide-react";
 import { Wordmark } from "@/components/landing/wordmark";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -143,22 +143,12 @@ export function DashboardNav({
               aria-label="Account menu"
               className="flex items-center gap-2 rounded-lg py-1 pr-1 pl-1 text-left transition-colors outline-none hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50"
             >
-              <span
-                aria-hidden="true"
-                className="relative grid size-8 shrink-0 place-items-center overflow-hidden rounded-md bg-primary/12 font-mono text-xs font-semibold tracking-tight text-primary ring-1 ring-inset ring-primary/25"
-              >
-                {avatarUrl ? (
-                  <Image
-                    src={avatarUrl}
-                    alt=""
-                    fill
-                    sizes="2rem"
-                    className="object-cover"
-                  />
-                ) : (
-                  initials(label)
-                )}
-              </span>
+              <Avatar className="size-8 shrink-0 rounded-md ring-1 ring-inset ring-primary/25">
+                <AvatarImage src={avatarUrl ?? undefined} alt="" />
+                <AvatarFallback className="rounded-md bg-primary/12 font-mono text-xs font-semibold tracking-tight text-primary">
+                  {initials(label)}
+                </AvatarFallback>
+              </Avatar>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 rounded-xl">
