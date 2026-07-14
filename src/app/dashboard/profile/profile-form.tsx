@@ -20,9 +20,16 @@ interface Props {
   email: string;
   name: string | null;
   avatarUrl: string | null;
+  displayName: string;
 }
 
-export function ProfileForm({ vendorId, email, name, avatarUrl }: Props) {
+export function ProfileForm({
+  vendorId,
+  email,
+  name,
+  avatarUrl,
+  displayName,
+}: Props) {
   const router = useRouter();
   const supabase = createClient();
 
@@ -36,6 +43,13 @@ export function ProfileForm({ vendorId, email, name, avatarUrl }: Props) {
   // URL straight to auth user_metadata client-side, same channel the nav
   // reads from (Task 3). No server action needed for this piece.
   const [avatar, setAvatar] = useState(avatarUrl);
+
+  // Display name — private, decorative only (not shown anywhere else in
+  // the app). Persisted the same way avatar_url already is: directly on
+  // the auth user via the browser client, no server action needed.
+  const initialDisplayName = displayName;
+  const [display, setDisplay] = useState(initialDisplayName);
+  const { pending: savingDisplay, run: runDisplay } = useAsyncAction();
 
   // Password — persisted via the browser auth client's own session, matched
   // client-side against a confirm field before it's ever sent.
@@ -68,6 +82,22 @@ export function ProfileForm({ vendorId, email, name, avatarUrl }: Props) {
     router.refresh();
   }
 
+  function saveDisplayName() {
+    return runDisplay(async () => {
+      const trimmed = display.trim().slice(0, 60);
+      const { error } = await supabase.auth.updateUser({
+        data: { display_name: trimmed },
+      });
+      if (error) {
+        toast.error("Couldn't save your display name. Try again.");
+        return;
+      }
+      setDisplay(trimmed);
+      toast.success("Display name saved");
+      router.refresh();
+    });
+  }
+
   function savePassword() {
     if (password !== confirm) {
       toast.error("Passwords don't match.");
@@ -88,7 +118,7 @@ export function ProfileForm({ vendorId, email, name, avatarUrl }: Props) {
   const passwordsFilled = password.length > 0 && confirm.length > 0;
 
   return (
-    <div className="space-y-5">
+    <div className="md:columns-2 md:gap-5 [&>*]:mb-5 [&>*]:break-inside-avoid-column">
       <Card>
         <CardHeader>
           <CardTitle>Stall name</CardTitle>
@@ -136,6 +166,42 @@ export function ProfileForm({ vendorId, email, name, avatarUrl }: Props) {
               Shown in your account menu. Falls back to your initials when
               empty.
             </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Display name</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="display-name" className={labelClass}>
+              Display name
+            </Label>
+            <Input
+              id="display-name"
+              value={display}
+              maxLength={60}
+              onChange={(e) => setDisplay(e.target.value)}
+              placeholder="e.g. Aisha"
+              className="h-11 rounded-xl"
+            />
+            <p className="text-xs text-muted-foreground">
+              How we address you. Customers never see this.
+            </p>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={saveDisplayName}
+              disabled={
+                savingDisplay || display.trim() === initialDisplayName.trim()
+              }
+              className="h-10 rounded-xl font-semibold"
+            >
+              {savingDisplay ? "Saving…" : "Save"}
+            </Button>
           </div>
         </CardContent>
       </Card>
