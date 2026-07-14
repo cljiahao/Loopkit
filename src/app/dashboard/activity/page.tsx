@@ -6,6 +6,7 @@ import { formatSgtDateTime } from "@/lib/format";
 import { createServerClient } from "@/lib/supabase/server";
 import { listVendorActivity, type VendorActivityRow } from "@/lib/activity";
 import { Badge } from "@/components/ui/badge";
+import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
 
 // Extracted so it's testable with plain props. Renders the vendor-level
 // (no ?p=) feed: every event across every program, each tagged with which
@@ -120,6 +121,11 @@ export default async function ActivityPage({
   return (
     <main className="mx-auto max-w-7xl space-y-8 p-5 py-10">
       <div>
+        <ProgramSwitcher
+          programs={programs}
+          currentId={program.id}
+          action="/dashboard/activity"
+        />
         <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Recent stamps, plays, and redemptions for {program.name}.

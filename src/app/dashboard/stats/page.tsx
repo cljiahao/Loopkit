@@ -4,6 +4,7 @@ import { requireVendor } from "@/lib/auth";
 import { listPrograms, currentProgram } from "@/lib/program";
 import { getProgramStats, getVendorStats } from "@/lib/stats";
 import { cn } from "@/lib/utils";
+import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
 
 function Delta({ pct }: { pct: number | null }) {
   if (pct === null) return null;
@@ -144,6 +145,11 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
   return (
     <main className="mx-auto max-w-7xl space-y-8 p-5 py-10">
       <div>
+        <ProgramSwitcher
+          programs={programs}
+          currentId={program.id}
+          action="/dashboard/stats"
+        />
         <h1 className="text-2xl font-bold tracking-tight">Stats</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           How {program.name} is performing.
