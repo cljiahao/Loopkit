@@ -19,6 +19,19 @@ vi.mock("@/lib/program", () => ({
       replaced_by: null,
       carry_over_stamps: false,
     },
+    {
+      id: "p2",
+      name: "Bakery Stamps",
+      type: "stamp",
+      stamps_required: 10,
+      reward_text: "a free pastry",
+      config: {},
+      active: true,
+      expiry_days: null,
+      head_start: false,
+      replaced_by: null,
+      carry_over_stamps: false,
+    },
   ]),
   currentProgram: (programs: { id: string }[], id?: string) =>
     programs.find((p) => p.id === id) ?? null,
@@ -70,5 +83,27 @@ describe("CounterPage", () => {
       CounterPage({ searchParams: Promise.resolve({ p: "does-not-exist" }) }),
     ).rejects.toThrow("REDIRECT:/dashboard");
     expect(redirect).toHaveBeenCalledWith("/dashboard");
+  });
+
+  it("remounts ServeCustomer (re-applies phone pre-fill) when the resolved program changes on the same route", async () => {
+    const { rerender } = render(
+      await CounterPage({
+        searchParams: Promise.resolve({ p: "p1", phone: "+6591234567" }),
+      }),
+    );
+    expect(screen.getByText("Coffee Stamps")).toBeInTheDocument();
+    expect(screen.getByLabelText("Customer phone")).toHaveValue("+6591234567");
+
+    // Simulates a scan of a card from a different program while already on
+    // the Counter page: same route, only searchParams change. Without a
+    // `key` on ServeCustomer, React would reconcile the existing fiber and
+    // the uncontrolled phone input's stale defaultValue would linger.
+    rerender(
+      await CounterPage({
+        searchParams: Promise.resolve({ p: "p2", phone: "+6598765432" }),
+      }),
+    );
+    expect(screen.getByText("Bakery Stamps")).toBeInTheDocument();
+    expect(screen.getByLabelText("Customer phone")).toHaveValue("+6598765432");
   });
 });

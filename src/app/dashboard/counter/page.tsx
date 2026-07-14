@@ -40,6 +40,7 @@ export default async function CounterPage({ searchParams }: CounterPageProps) {
       </div>
 
       <ServeCustomer
+        key={program.id}
         programId={program.id}
         type={program.type}
         stampsRequired={program.stamps_required}
