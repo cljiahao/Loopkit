@@ -19,7 +19,7 @@
 
 ---
 
-### Task A: `schedule-retirement-form.tsx` → shadcn `Select`
+### Task 1: `schedule-retirement-form.tsx` → shadcn `Select`
 
 **Files:**
 
@@ -171,7 +171,7 @@ git commit -m "feat: migrate ScheduleRetirementForm's successor picker to shadcn
 
 ---
 
-### Task B: `qkit-earn-settings.tsx` → shadcn `Select` + `Switch`
+### Task 2: `qkit-earn-settings.tsx` → shadcn `Select` + `Switch`
 
 **Files:**
 
@@ -348,7 +348,7 @@ git commit -m "feat: migrate QkitEarnSettings to shadcn Select + Switch"
 
 ---
 
-### Task C: `setup-form.tsx` → shadcn `Switch` (×2)
+### Task 3: `setup-form.tsx` → shadcn `Switch` (×2)
 
 **Files:**
 
