@@ -216,237 +216,279 @@ export function SetupForm({
         <input type="hidden" name="type" value={type} />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="name" className={labelClass}>
-          Card name
-        </Label>
-        <Input
-          key={`name-${prefillGeneration}`}
-          id="name"
-          name="name"
-          type="text"
-          required
-          maxLength={60}
-          placeholder={
-            type === "lucky"
-              ? "Lucky topping"
-              : type === "plant"
-                ? "Grow-a-kopi"
-                : type === "wheel"
-                  ? "Spin to win"
-                  : type === "scratch"
-                    ? "Scratch & win"
-                    : type === "streak"
-                      ? "Weekly regular"
-                      : "Coffee card"
-          }
-          defaultValue={prefill?.name ?? program?.name ?? ""}
-          className="h-11 rounded-xl"
-        />
-      </div>
-
       {type === "stamp" ? (
-        <div className="space-y-2">
-          <Label htmlFor="stamps_required" className={labelClass}>
-            Stamps required
-          </Label>
-          <Input
-            key={`stamps_required-${prefillGeneration}`}
-            id="stamps_required"
-            name="stamps_required"
-            type="number"
-            required
-            min={2}
-            max={20}
-            placeholder="10"
-            defaultValue={
-              prefill?.stamps_required ?? program?.stamps_required ?? 10
-            }
-            className="h-11 rounded-xl"
-          />
-        </div>
-      ) : type === "plant" ? (
-        <div className="space-y-2">
-          <Label htmlFor="visits_to_bloom" className={labelClass}>
-            Visits to bloom
-          </Label>
-          <Input
-            key={`visits_to_bloom-${prefillGeneration}`}
-            id="visits_to_bloom"
-            name="visits_to_bloom"
-            type="number"
-            required
-            min={4}
-            max={20}
-            placeholder="6"
-            defaultValue={visitsToBloom}
-            className="h-11 rounded-xl"
-          />
-        </div>
-      ) : type === "streak" ? (
-        <>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="period_days" className={labelClass}>
-              Days per streak window
+            <Label htmlFor="name" className={labelClass}>
+              Card name
             </Label>
             <Input
-              key={`period_days-${prefillGeneration}`}
-              id="period_days"
-              name="period_days"
-              type="number"
+              key={`name-${prefillGeneration}`}
+              id="name"
+              name="name"
+              type="text"
               required
-              min={1}
-              max={30}
-              placeholder="7"
-              defaultValue={prefill?.period_days ?? config.period_days ?? 7}
+              maxLength={60}
+              placeholder="Coffee card"
+              defaultValue={prefill?.name ?? program?.name ?? ""}
               className="h-11 rounded-xl"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="target_streak" className={labelClass}>
-              Streak length to earn reward
+            <Label htmlFor="stamps_required" className={labelClass}>
+              Stamps required
             </Label>
             <Input
-              key={`target_streak-${prefillGeneration}`}
-              id="target_streak"
-              name="target_streak"
+              key={`stamps_required-${prefillGeneration}`}
+              id="stamps_required"
+              name="stamps_required"
               type="number"
               required
               min={2}
               max={20}
-              placeholder="4"
-              defaultValue={prefill?.target_streak ?? config.target_streak ?? 4}
-              className="h-11 rounded-xl"
-            />
-          </div>
-        </>
-      ) : type === "wheel" || type === "scratch" ? (
-        <>
-          <div className="space-y-2">
-            <Label className={labelClass}>
-              {type === "wheel" ? "Wheel segments" : "Scratch prizes"}
-            </Label>
-            <div className="space-y-2">
-              {segments.map((segment, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <Input
-                    type="text"
-                    required
-                    maxLength={40}
-                    value={segment.label}
-                    onChange={(e) =>
-                      updateSegment(i, { label: e.target.value })
-                    }
-                    placeholder="Label"
-                    className="h-11 flex-1 rounded-xl"
-                  />
-                  <Input
-                    type="number"
-                    required
-                    min={1}
-                    max={100}
-                    value={segment.weight}
-                    onChange={(e) =>
-                      updateSegment(i, { weight: Number(e.target.value) })
-                    }
-                    className="h-11 w-20 rounded-xl"
-                  />
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateSegment(i, { is_reward: !segment.is_reward })
-                    }
-                    className={cn(
-                      "h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold transition-colors",
-                      segment.is_reward
-                        ? "border-gold bg-gold/10 text-gold-accent"
-                        : "bg-card text-muted-foreground hover:bg-muted/50",
-                    )}
-                  >
-                    {segment.is_reward ? "Reward" : "No win"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => removeSegment(i)}
-                    disabled={segments.length <= 2}
-                    className="h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted/50 disabled:opacity-40"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={addSegment}
-              disabled={segments.length >= 6}
-              className="h-11 w-full rounded-xl border text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-40"
-            >
-              Add segment
-            </button>
-            <input
-              type="hidden"
-              name="segments"
-              value={JSON.stringify(segments)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="pity_ceiling" className={labelClass}>
-              Guaranteed win by (optional)
-            </Label>
-            <Input
-              id="pity_ceiling"
-              name="pity_ceiling"
-              type="number"
-              min={2}
-              max={20}
-              placeholder="No guarantee"
-              defaultValue={config.pity_ceiling ?? ""}
-              className="h-11 rounded-xl"
-            />
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="win_percent" className={labelClass}>
-              Win chance (%)
-            </Label>
-            <Input
-              key={`win_percent-${prefillGeneration}`}
-              id="win_percent"
-              name="win_percent"
-              type="number"
-              required
-              min={2}
-              max={100}
-              placeholder="20"
+              placeholder="10"
               defaultValue={
-                prefill?.win_percent ??
-                (config.win_probability
-                  ? Math.round(config.win_probability * 100)
-                  : 20)
+                prefill?.stamps_required ?? program?.stamps_required ?? 10
               }
               className="h-11 rounded-xl"
             />
           </div>
+        </div>
+      ) : type === "plant" ? (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="pity_ceiling" className={labelClass}>
-              Guaranteed win by
+            <Label htmlFor="name" className={labelClass}>
+              Card name
             </Label>
             <Input
-              key={`pity_ceiling-${prefillGeneration}`}
-              id="pity_ceiling"
-              name="pity_ceiling"
-              type="number"
+              key={`name-${prefillGeneration}`}
+              id="name"
+              name="name"
+              type="text"
               required
-              min={2}
-              max={20}
-              placeholder="8"
-              defaultValue={prefill?.pity_ceiling ?? config.pity_ceiling ?? 8}
+              maxLength={60}
+              placeholder="Grow-a-kopi"
+              defaultValue={prefill?.name ?? program?.name ?? ""}
               className="h-11 rounded-xl"
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="visits_to_bloom" className={labelClass}>
+              Visits to bloom
+            </Label>
+            <Input
+              key={`visits_to_bloom-${prefillGeneration}`}
+              id="visits_to_bloom"
+              name="visits_to_bloom"
+              type="number"
+              required
+              min={4}
+              max={20}
+              placeholder="6"
+              defaultValue={visitsToBloom}
+              className="h-11 rounded-xl"
+            />
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="space-y-2">
+            <Label htmlFor="name" className={labelClass}>
+              Card name
+            </Label>
+            <Input
+              key={`name-${prefillGeneration}`}
+              id="name"
+              name="name"
+              type="text"
+              required
+              maxLength={60}
+              placeholder={
+                type === "lucky"
+                  ? "Lucky topping"
+                  : type === "wheel"
+                    ? "Spin to win"
+                    : type === "scratch"
+                      ? "Scratch & win"
+                      : "Weekly regular"
+              }
+              defaultValue={prefill?.name ?? program?.name ?? ""}
+              className="h-11 rounded-xl"
+            />
+          </div>
+
+          {type === "streak" ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="period_days" className={labelClass}>
+                  Days per streak window
+                </Label>
+                <Input
+                  key={`period_days-${prefillGeneration}`}
+                  id="period_days"
+                  name="period_days"
+                  type="number"
+                  required
+                  min={1}
+                  max={30}
+                  placeholder="7"
+                  defaultValue={prefill?.period_days ?? config.period_days ?? 7}
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="target_streak" className={labelClass}>
+                  Streak length to earn reward
+                </Label>
+                <Input
+                  key={`target_streak-${prefillGeneration}`}
+                  id="target_streak"
+                  name="target_streak"
+                  type="number"
+                  required
+                  min={2}
+                  max={20}
+                  placeholder="4"
+                  defaultValue={
+                    prefill?.target_streak ?? config.target_streak ?? 4
+                  }
+                  className="h-11 rounded-xl"
+                />
+              </div>
+            </div>
+          ) : type === "wheel" || type === "scratch" ? (
+            <>
+              <div className="space-y-2">
+                <Label className={labelClass}>
+                  {type === "wheel" ? "Wheel segments" : "Scratch prizes"}
+                </Label>
+                <div className="space-y-2">
+                  {segments.map((segment, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        type="text"
+                        required
+                        maxLength={40}
+                        value={segment.label}
+                        onChange={(e) =>
+                          updateSegment(i, { label: e.target.value })
+                        }
+                        placeholder="Label"
+                        className="h-11 flex-1 rounded-xl"
+                      />
+                      <Input
+                        type="number"
+                        required
+                        min={1}
+                        max={100}
+                        value={segment.weight}
+                        onChange={(e) =>
+                          updateSegment(i, {
+                            weight: Number(e.target.value),
+                          })
+                        }
+                        className="h-11 w-20 rounded-xl"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateSegment(i, { is_reward: !segment.is_reward })
+                        }
+                        className={cn(
+                          "h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold transition-colors",
+                          segment.is_reward
+                            ? "border-gold bg-gold/10 text-gold-accent"
+                            : "bg-card text-muted-foreground hover:bg-muted/50",
+                        )}
+                      >
+                        {segment.is_reward ? "Reward" : "No win"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeSegment(i)}
+                        disabled={segments.length <= 2}
+                        className="h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted/50 disabled:opacity-40"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={addSegment}
+                  disabled={segments.length >= 6}
+                  className="h-11 w-full rounded-xl border text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-40"
+                >
+                  Add segment
+                </button>
+                <input
+                  type="hidden"
+                  name="segments"
+                  value={JSON.stringify(segments)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pity_ceiling" className={labelClass}>
+                  Guaranteed win by (optional)
+                </Label>
+                <Input
+                  id="pity_ceiling"
+                  name="pity_ceiling"
+                  type="number"
+                  min={2}
+                  max={20}
+                  placeholder="No guarantee"
+                  defaultValue={config.pity_ceiling ?? ""}
+                  className="h-11 rounded-xl"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="win_percent" className={labelClass}>
+                  Win chance (%)
+                </Label>
+                <Input
+                  key={`win_percent-${prefillGeneration}`}
+                  id="win_percent"
+                  name="win_percent"
+                  type="number"
+                  required
+                  min={2}
+                  max={100}
+                  placeholder="20"
+                  defaultValue={
+                    prefill?.win_percent ??
+                    (config.win_probability
+                      ? Math.round(config.win_probability * 100)
+                      : 20)
+                  }
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pity_ceiling" className={labelClass}>
+                  Guaranteed win by
+                </Label>
+                <Input
+                  key={`pity_ceiling-${prefillGeneration}`}
+                  id="pity_ceiling"
+                  name="pity_ceiling"
+                  type="number"
+                  required
+                  min={2}
+                  max={20}
+                  placeholder="8"
+                  defaultValue={
+                    prefill?.pity_ceiling ?? config.pity_ceiling ?? 8
+                  }
+                  className="h-11 rounded-xl"
+                />
+              </div>
+            </div>
+          )}
         </>
       )}
 
