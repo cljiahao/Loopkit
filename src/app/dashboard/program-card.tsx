@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { ServeCustomer } from "@/app/dashboard/serve-customer";
+import { Button } from "@/components/ui/button";
 import { PROGRAM_TYPE_BADGE, describeProgram } from "./program-display";
 import type { Program } from "@/lib/program";
 import type { ProgramStats } from "@/lib/stats";
 
 // One card per active program. Field order is fixed across every card
-// (header -> stat -> serve action -> footer links) so scanning a grid of
-// several cards stays fast regardless of how many a vendor has.
+// (header -> stat -> Open Counter -> footer links) so scanning a grid of
+// several cards stays fast regardless of how many a vendor has. Serve/
+// lookup lives on the dedicated Counter page now (see
+// app/dashboard/counter/page.tsx), not embedded here.
 export function ProgramCard({
   program,
   stats,
@@ -48,12 +50,9 @@ export function ProgramCard({
         {stats ? `${stats.active} active (30d)` : "—"}
       </p>
 
-      <ServeCustomer
-        programId={program.id}
-        type={program.type}
-        stampsRequired={program.stamps_required}
-        rewardText={program.reward_text}
-      />
+      <Button asChild className="h-11 w-full rounded-xl font-semibold">
+        <Link href={scoped("/dashboard/counter")}>Open Counter</Link>
+      </Button>
 
       <div className="flex gap-4 border-t pt-3 text-sm font-medium text-muted-foreground">
         <Link

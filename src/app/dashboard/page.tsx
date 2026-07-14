@@ -13,6 +13,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { ProgramCard } from "@/app/dashboard/program-card";
 import { NewProgramTile } from "@/app/dashboard/new-program-tile";
 import { ShopQrBlock } from "@/app/dashboard/shop-qr-block";
+import { ScanAndRoute } from "@/app/dashboard/scan-and-route";
 import { QkitEarnSettings } from "@/app/dashboard/qkit-earn-settings";
 import { shouldShowQr } from "@/app/dashboard/dashboard-view";
 
@@ -78,6 +79,8 @@ export default async function DashboardPage() {
             link={cardLink}
             programNames={activePrograms.map((prog) => prog.name)}
           />
+
+          <ScanAndRoute />
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {activePrograms.map((prog) => (

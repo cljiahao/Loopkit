@@ -1,16 +1,8 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import type { Program } from "@/lib/program";
 import type { ProgramStats } from "@/lib/stats";
-
-// ProgramCard renders the unchanged ServeCustomer widget, which calls
-// useRouter().refresh() — stub next/navigation so it can mount outside a
-// real App Router context, matching test/app/serve-customer.test.tsx.
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
-}));
-
 import { ProgramCard } from "./program-card";
 
 const program: Program = {
@@ -70,8 +62,11 @@ describe("ProgramCard", () => {
     );
   });
 
-  it("renders the ServeCustomer widget for this program", () => {
+  it("links Open Counter to /dashboard/counter?p=<id>", () => {
     render(<ProgramCard program={program} stats={stats} />);
-    expect(screen.getByLabelText(/customer phone/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /open counter/i })).toHaveAttribute(
+      "href",
+      "/dashboard/counter?p=p1",
+    );
   });
 });
