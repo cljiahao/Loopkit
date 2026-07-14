@@ -4,7 +4,11 @@ import Link from "next/link";
 import { Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PROGRAM_TYPE_BADGE, describeProgram } from "./program-display";
+import {
+  PROGRAM_TYPE_BADGE,
+  describeProgram,
+  programDetails,
+} from "./program-display";
 import type { Program } from "@/lib/program";
 
 // One card per active program. Field order is fixed across every card
@@ -31,6 +35,11 @@ export function ProgramCard({ program }: { program: Program }) {
           <p className="mt-1 text-xs text-muted-foreground">
             {describeProgram(program)}
           </p>
+          <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+            {programDetails(program).map((detail) => (
+              <li key={detail}>{detail}</li>
+            ))}
+          </ul>
         </div>
         <Link
           href={`/setup?edit=${program.id}`}

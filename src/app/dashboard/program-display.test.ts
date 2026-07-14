@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { PROGRAM_TYPE_BADGE, describeProgram } from "./program-display";
+import {
+  PROGRAM_TYPE_BADGE,
+  describeProgram,
+  programDetails,
+} from "./program-display";
 
 describe("PROGRAM_TYPE_BADGE", () => {
   it("has an entry for every program type", () => {
@@ -81,5 +85,33 @@ describe("describeProgram", () => {
         config: {},
       }),
     ).toBe("Check in 5 times in a row to unlock a free meal");
+  });
+});
+
+describe("programDetails", () => {
+  it("shows 'Never expires' when expiry_days is null", () => {
+    expect(programDetails({ expiry_days: null, head_start: false })).toEqual([
+      "Never expires",
+    ]);
+  });
+
+  it("shows the reset window when expiry_days is set", () => {
+    expect(programDetails({ expiry_days: 30, head_start: false })).toEqual([
+      "Resets after 30 days",
+    ]);
+  });
+
+  it("adds a head-start note when head_start is true", () => {
+    expect(programDetails({ expiry_days: null, head_start: true })).toEqual([
+      "Never expires",
+      "New customers get a head start",
+    ]);
+  });
+
+  it("combines a reset window and head-start note", () => {
+    expect(programDetails({ expiry_days: 14, head_start: true })).toEqual([
+      "Resets after 14 days",
+      "New customers get a head start",
+    ]);
   });
 });

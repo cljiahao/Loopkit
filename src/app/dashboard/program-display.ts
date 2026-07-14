@@ -43,3 +43,24 @@ export function describeProgram(program: DescribableProgram): string {
   }
   return `Buy ${stamps_required}, get 1 ${reward_text}`;
 }
+
+type DetailableProgram = {
+  expiry_days?: number | null;
+  head_start: boolean;
+};
+
+// Short supplementary detail line(s) for the dashboard card, below the
+// one-line describeProgram() blurb. Pure — built only from fields already
+// on the program row, no new query.
+export function programDetails(program: DetailableProgram): string[] {
+  const details: string[] = [];
+  details.push(
+    program.expiry_days
+      ? `Resets after ${program.expiry_days} days`
+      : "Never expires",
+  );
+  if (program.head_start) {
+    details.push("New customers get a head start");
+  }
+  return details;
+}

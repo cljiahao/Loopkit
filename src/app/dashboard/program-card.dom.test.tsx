@@ -26,6 +26,24 @@ describe("ProgramCard", () => {
     expect(screen.getByText(/buy 8, get 1 a free coffee/i)).toBeInTheDocument();
   });
 
+  it("renders the expiry and head-start detail lines", () => {
+    const withDetails: Program = {
+      ...program,
+      expiry_days: 30,
+      head_start: true,
+    };
+    render(<ProgramCard program={withDetails} />);
+    expect(screen.getByText("Resets after 30 days")).toBeInTheDocument();
+    expect(
+      screen.getByText("New customers get a head start"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows 'Never expires' when there is no expiry", () => {
+    render(<ProgramCard program={program} />);
+    expect(screen.getByText("Never expires")).toBeInTheDocument();
+  });
+
   it("links Edit to /setup?edit=<id>", () => {
     render(<ProgramCard program={program} />);
     expect(
