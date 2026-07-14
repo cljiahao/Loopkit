@@ -418,6 +418,8 @@ export function SetupForm({
                               weight: Number(e.target.value),
                             })
                           }
+                          aria-label="Odds weight"
+                          title="Odds weight — higher numbers land more often relative to the other prizes"
                           className="h-11 w-20 rounded-xl"
                         />
                         <button
