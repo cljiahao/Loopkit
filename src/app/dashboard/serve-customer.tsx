@@ -393,7 +393,13 @@ export function ServeCustomer({
   return (
     <div className="space-y-4">
       <ScanButton
-        onScanned={(phone) => {
+        onResolved={({ phone, programId: scannedProgramId }) => {
+          if (scannedProgramId !== programId) {
+            router.push(
+              `/dashboard/counter?p=${scannedProgramId}&phone=${encodeURIComponent(phone)}`,
+            );
+            return;
+          }
           if (phoneRef.current) {
             phoneRef.current.value = phone;
             formRef.current?.requestSubmit();

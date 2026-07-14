@@ -22,13 +22,17 @@ describe("resolveTokenAction", () => {
     vi.clearAllMocks();
     requireVendorMock.mockResolvedValue({ user: { id: "v" } });
   });
-  it("returns the phone for a token the vendor owns", async () => {
+  it("returns the phone and programId for a token the vendor owns", async () => {
     rpcMock.mockResolvedValue({
       data: [{ program_id: "p", card_id: "c", phone: "+6591234567" }],
       error: null,
     });
     const res = await resolveTokenAction(fd("tok"));
-    expect(res).toEqual({ success: true, phone: "+6591234567" });
+    expect(res).toEqual({
+      success: true,
+      phone: "+6591234567",
+      programId: "p",
+    });
   });
   it("errors when the token is empty", async () => {
     const res = await resolveTokenAction(fd(""));

@@ -7,9 +7,11 @@ import { resolveTokenAction } from "@/app/dashboard/actions";
 import { Button } from "@/components/ui/button";
 
 export function ScanButton({
-  onScanned,
+  label = "Scan to serve",
+  onResolved,
 }: {
-  onScanned: (phone: string) => void;
+  label?: string;
+  onResolved: (result: { phone: string; programId: string }) => void;
 }) {
   const [open, setOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -33,7 +35,7 @@ export function ScanButton({
             fd.set("token", result.getText());
             const res = await resolveTokenAction(fd);
             if (res.success) {
-              onScanned(res.phone);
+              onResolved({ phone: res.phone, programId: res.programId });
               setOpen(false);
             } else {
               toast.error(res.error);
@@ -51,7 +53,7 @@ export function ScanButton({
       cancelled = true;
       stop?.();
     };
-  }, [open, onScanned]);
+  }, [open, onResolved]);
 
   return (
     <>
@@ -62,7 +64,7 @@ export function ScanButton({
         className="h-14 w-full rounded-xl text-base font-semibold"
       >
         <Camera className="size-5" />
-        Scan to serve
+        {label}
       </Button>
       {open && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-black/90 p-5">

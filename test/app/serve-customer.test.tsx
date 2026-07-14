@@ -28,8 +28,24 @@ const { toast, toastSuccess, toastError } = vi.hoisted(() => {
 });
 vi.mock("sonner", () => ({ toast }));
 
+const { routerPush } = vi.hoisted(() => ({ routerPush: vi.fn() }));
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ refresh: vi.fn() }),
+  useRouter: () => ({ refresh: vi.fn(), push: routerPush }),
+}));
+
+vi.mock("@/app/dashboard/scan-button", () => ({
+  ScanButton: ({
+    onResolved,
+  }: {
+    onResolved: (result: { phone: string; programId: string }) => void;
+  }) => (
+    <button
+      type="button"
+      onClick={() => onResolved({ phone: "+6591234567", programId: "p2" })}
+    >
+      Mock scan
+    </button>
+  ),
 }));
 
 import { ServeCustomer } from "@/app/dashboard/serve-customer";
@@ -225,5 +241,42 @@ describe("ServeCustomer", () => {
     expect(
       screen.queryByRole("heading", { name: "🎉 Reward unlocked!" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("redirects to the scanned card's own Counter page when it belongs to a different program", async () => {
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="stamp"
+        stampsRequired={10}
+        rewardText="Free kopi"
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Mock scan" }));
+    expect(routerPush).toHaveBeenCalledWith(
+      "/dashboard/counter?p=p2&phone=%2B6591234567",
+    );
+    expect(stampMock).not.toHaveBeenCalled();
+  });
+
+  it("fills and submits in place when the scanned card matches the current program", async () => {
+    stampMock.mockResolvedValue({
+      success: true,
+      card: { id: "card-1", phone: "+6591234567", stamp_count: 3 },
+      rewardReady: false,
+    });
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p2"
+        type="stamp"
+        stampsRequired={10}
+        rewardText="Free kopi"
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Mock scan" }));
+    await waitFor(() => expect(stampMock).toHaveBeenCalled());
+    expect(routerPush).not.toHaveBeenCalled();
   });
 });

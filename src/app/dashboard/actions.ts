@@ -304,7 +304,7 @@ export async function regenerateCardAction(
 // RPC. Identifies only — the phone flows into the existing stamp/play action.
 export async function resolveTokenAction(
   formData: FormData,
-): Promise<ActionResult<{ phone: string }>> {
+): Promise<ActionResult<{ phone: string; programId: string }>> {
   await requireVendor();
   const token = String(formData.get("token") ?? "").trim();
   if (!token) return { success: false, error: "No code scanned." };
@@ -319,7 +319,7 @@ export async function resolveTokenAction(
   }
   const row = data?.[0];
   if (!row) return { success: false, error: "That card isn't for this shop." };
-  return { success: true, phone: row.phone };
+  return { success: true, phone: row.phone, programId: row.program_id };
 }
 
 type LookupResult = ActionResult<{ card: StampCard; progress: Progress }>;
