@@ -71,6 +71,12 @@ export default async function CustomersPage({
   const programs = await listPrograms();
   const { q, p } = await searchParams;
 
+  if (!p && programs.length === 1) {
+    redirect(
+      `/dashboard/customers?p=${programs[0].id}${q ? `&q=${encodeURIComponent(q)}` : ""}`,
+    );
+  }
+
   if (!p) {
     const customers = await listVendorCustomers(q);
     return (

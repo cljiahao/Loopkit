@@ -56,6 +56,10 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
   const programs = await listPrograms();
   const { p } = await searchParams;
 
+  if (!p && programs.length === 1) {
+    redirect(`/dashboard/stats?p=${programs[0].id}`);
+  }
+
   if (!p) {
     const stats = await getVendorStats(programs.map((prog) => prog.id));
     const maxDay = Math.max(1, ...stats.visitsByDay.map((d) => d.count));

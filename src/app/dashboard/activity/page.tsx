@@ -76,6 +76,10 @@ export default async function ActivityPage({
   const programs = await listPrograms();
   const { p } = await searchParams;
 
+  if (!p && programs.length === 1) {
+    redirect(`/dashboard/activity?p=${programs[0].id}`);
+  }
+
   if (!p) {
     const activity = await listVendorActivity();
     return (
