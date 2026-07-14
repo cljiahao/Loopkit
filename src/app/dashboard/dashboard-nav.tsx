@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { LogOut, User, Wallet } from "lucide-react";
+import { LogOut, User, Users, Wallet } from "lucide-react";
 import { Wordmark } from "@/components/landing/wordmark";
 import {
   DropdownMenu,
@@ -59,8 +59,9 @@ function initials(label: string): string {
 
 /**
  * Dashboard sticky-header row: brand + account menu only. Program-scoped
- * navigation (switcher, Counter/Customers/Activity/Stats) moved onto each
- * program's dashboard card — see program-card.tsx.
+ * navigation (switcher, Counter/Activity/Stats) moved onto each program's
+ * dashboard card — see program-card.tsx. Customers is vendor-level (not
+ * program-scoped), so it lives in the account menu instead.
  */
 export function DashboardNav({
   signOut,
@@ -125,6 +126,12 @@ export function DashboardNav({
             </p>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/customers" className="cursor-pointer">
+              <Users className="size-4" />
+              Customers
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/dashboard/plan" className="cursor-pointer">
               <Wallet className="size-4" />

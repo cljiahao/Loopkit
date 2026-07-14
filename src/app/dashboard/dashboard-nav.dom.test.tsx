@@ -34,11 +34,12 @@ describe("DashboardNav", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("includes Plan in the account menu alongside Profile and Sign out", async () => {
+  it("includes Customers, Plan, Profile, and Sign out in the account menu", async () => {
     const user = userEvent.setup();
     render(<DashboardNav {...baseProps} />);
     const accountButton = screen.getByRole("button", { name: /account menu/i });
     await user.click(accountButton);
+    expect(screen.getByText("Customers")).toBeInTheDocument();
     expect(screen.getByText("Plan")).toBeInTheDocument();
     expect(screen.getByText("Profile")).toBeInTheDocument();
     expect(screen.getByText("Sign out")).toBeInTheDocument();
