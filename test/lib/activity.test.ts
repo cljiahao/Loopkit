@@ -1,80 +1,104 @@
-import { describe, it, expect } from "vitest";
-import { aggregateActivity } from "@/lib/activity";
+import { describe, expect, it } from "vitest";
+import { mapActivityRow, listActivity } from "@/lib/activity";
 
-describe("aggregateActivity", () => {
-  const cardsById = new Map([
-    ["c1", { id: "c1", phone: "+6591111111", program_id: "p1" }],
-    ["c2", { id: "c2", phone: "+6592222222", program_id: "p2" }],
-  ]);
-  const programNameById = { p1: "Coffee Stamps", p2: "Lucky Tap" };
+describe("mapActivityRow", () => {
+  const programNameById = { p1: "Coffee Stamps" };
+  const card = { id: "c1", phone: "+6591234567", program_id: "p1" };
 
-  it("tags each event with its program name and phone", () => {
-    const events = [
+  it("maps a stamp event", () => {
+    const row = mapActivityRow(
       {
         id: "e1",
         card_id: "c1",
         kind: "stamp",
         created_at: "2026-07-10T00:00:00Z",
       },
-    ];
-    const result = aggregateActivity(events, cardsById, programNameById);
-    expect(result).toEqual([
-      {
-        id: "e1",
-        phone: "+6591111111",
-        programName: "Coffee Stamps",
-        kind: "stamp",
-        isReward: false,
-        label: "stamp",
-        createdAt: "2026-07-10T00:00:00Z",
-      },
-    ]);
+      card,
+      programNameById,
+    );
+    expect(row).toEqual({
+      id: "e1",
+      phone: "+6591234567",
+      programName: "Coffee Stamps",
+      kind: "stamp",
+      isReward: false,
+      label: "stamp",
+      createdAt: "2026-07-10T00:00:00Z",
+    });
   });
 
-  it("marks redeem and won visits as rewards", () => {
-    const events = [
+  it("maps a redeem event as a reward", () => {
+    const row = mapActivityRow(
       {
-        id: "e1",
+        id: "e2",
         card_id: "c1",
         kind: "redeem",
         created_at: "2026-07-10T00:00:00Z",
       },
+      card,
+      programNameById,
+    );
+    expect(row?.isReward).toBe(true);
+    expect(row?.label).toBe("redeem");
+  });
+
+  it("maps a won visit as 'Won' and a reward", () => {
+    const row = mapActivityRow(
       {
-        id: "e2",
-        card_id: "c2",
+        id: "e3",
+        card_id: "c1",
         kind: "visit",
         payload: { won: true },
-        created_at: "2026-07-09T00:00:00Z",
+        created_at: "2026-07-10T00:00:00Z",
       },
-    ];
-    const result = aggregateActivity(events, cardsById, programNameById);
-    expect(result[0].isReward).toBe(true);
-    expect(result[0].label).toBe("redeem");
-    expect(result[1].isReward).toBe(true);
-    expect(result[1].label).toBe("Won");
+      card,
+      programNameById,
+    );
+    expect(row?.label).toBe("Won");
+    expect(row?.isReward).toBe(true);
   });
 
-  it("sorts newest first and caps at 15", () => {
-    const events = Array.from({ length: 20 }, (_, i) => ({
-      id: `e${i}`,
-      card_id: "c1",
-      kind: "stamp",
-      created_at: new Date(2026, 6, i + 1).toISOString(),
-    }));
-    const result = aggregateActivity(events, cardsById, programNameById);
-    expect(result).toHaveLength(15);
-    expect(result[0].id).toBe("e19");
-  });
-
-  it("skips an event whose card is missing from cardsById (defensive)", () => {
-    const events = [
+  it("maps a losing visit as 'Visit', not a reward", () => {
+    const row = mapActivityRow(
       {
-        id: "e1",
+        id: "e4",
+        card_id: "c1",
+        kind: "visit",
+        payload: { won: false },
+        created_at: "2026-07-10T00:00:00Z",
+      },
+      card,
+      programNameById,
+    );
+    expect(row?.label).toBe("Visit");
+    expect(row?.isReward).toBe(false);
+  });
+
+  it("returns null when the event's card is missing", () => {
+    const row = mapActivityRow(
+      {
+        id: "e5",
         card_id: "unknown",
         kind: "stamp",
         created_at: "2026-07-10T00:00:00Z",
       },
-    ];
-    expect(aggregateActivity(events, cardsById, programNameById)).toEqual([]);
+      undefined,
+      programNameById,
+    );
+    expect(row).toBeNull();
+  });
+
+  it("falls back to '—' when the card's program has no name entry", () => {
+    const row = mapActivityRow(
+      {
+        id: "e6",
+        card_id: "c1",
+        kind: "stamp",
+        created_at: "2026-07-10T00:00:00Z",
+      },
+      { id: "c1", phone: "+6591234567", program_id: "unknown-program" },
+      programNameById,
+    );
+    expect(row?.programName).toBe("—");
   });
 });
