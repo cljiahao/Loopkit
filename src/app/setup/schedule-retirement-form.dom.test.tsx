@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const { scheduleMock } = vi.hoisted(() => ({
@@ -39,10 +39,10 @@ describe("ScheduleRetirementForm", () => {
     await userEvent.click(trigger);
     // Radix's hidden bubble <select> (rendered because this Select has a
     // `name`, for native FormData submission) duplicates every option's
-    // text, so scope the visible-listbox assertion to the open listbox
-    // rather than a bare getByText which would match both nodes.
+    // text, but getByRole("option", ...) already excludes it since its
+    // <option>s live under an aria-hidden ancestor.
     expect(
-      within(screen.getByRole("listbox")).getByText("Another card"),
+      screen.getByRole("option", { name: "Another card" }),
     ).toBeInTheDocument();
   });
 
@@ -58,9 +58,7 @@ describe("ScheduleRetirementForm", () => {
       />,
     );
     await user.click(screen.getByLabelText("Replacement card"));
-    await user.click(
-      within(screen.getByRole("listbox")).getByText("Another card"),
-    );
+    await user.click(screen.getByRole("option", { name: "Another card" }));
     await user.type(screen.getByLabelText("Retirement date"), "2030-01-01");
     await user.click(
       screen.getByRole("button", { name: "Schedule retirement" }),
