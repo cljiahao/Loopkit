@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ProgramSwitcher } from "./program-switcher";
 
 const { routerPush, searchParamsValue } = vi.hoisted(() => ({
@@ -19,7 +20,7 @@ const programs = [
 ];
 
 describe("ProgramSwitcher", () => {
-  it("renders All programs plus every program, with the current one selected", () => {
+  it("renders All programs plus every program, with the current one selected", async () => {
     searchParamsValue.current = "p=p2";
     render(
       <ProgramSwitcher
@@ -28,20 +29,12 @@ describe("ProgramSwitcher", () => {
         basePath="/dashboard/stats"
       />,
     );
-    const select = screen.getByLabelText("Switch program") as HTMLSelectElement;
-    expect(select.value).toBe("p2");
-    expect(
-      screen.getByRole("option", { name: "All programs" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("option", { name: "Coffee Stamps" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("option", { name: "Bubble Tea Club" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: "Switch" }),
-    ).not.toBeInTheDocument();
+    const trigger = screen.getByLabelText("Switch program");
+    expect(trigger).toHaveTextContent("Bubble Tea Club");
+
+    await userEvent.click(trigger);
+    expect(screen.getByText("All programs")).toBeInTheDocument();
+    expect(screen.getAllByText("Coffee Stamps").length).toBeGreaterThan(0);
   });
 
   it("selects All programs when currentId is empty", () => {
@@ -53,11 +46,12 @@ describe("ProgramSwitcher", () => {
         basePath="/dashboard/stats"
       />,
     );
-    const select = screen.getByLabelText("Switch program") as HTMLSelectElement;
-    expect(select.value).toBe("");
+    expect(screen.getByLabelText("Switch program")).toHaveTextContent(
+      "All programs",
+    );
   });
 
-  it("pushes the base path with p set, preserving other params, on change", () => {
+  it("pushes the base path with p set, preserving other params, on selecting a program", async () => {
     searchParamsValue.current = "q=alice";
     render(
       <ProgramSwitcher
@@ -66,15 +60,14 @@ describe("ProgramSwitcher", () => {
         basePath="/dashboard/customers"
       />,
     );
-    fireEvent.change(screen.getByLabelText("Switch program"), {
-      target: { value: "p1" },
-    });
+    await userEvent.click(screen.getByLabelText("Switch program"));
+    await userEvent.click(screen.getByText("Coffee Stamps"));
     expect(routerPush).toHaveBeenCalledWith(
       "/dashboard/customers?q=alice&p=p1",
     );
   });
 
-  it("pushes the base path with p removed when All programs is chosen", () => {
+  it("pushes the base path with p removed when All programs is chosen", async () => {
     searchParamsValue.current = "p=p1&q=alice";
     render(
       <ProgramSwitcher
@@ -83,9 +76,8 @@ describe("ProgramSwitcher", () => {
         basePath="/dashboard/customers"
       />,
     );
-    fireEvent.change(screen.getByLabelText("Switch program"), {
-      target: { value: "" },
-    });
+    await userEvent.click(screen.getByLabelText("Switch program"));
+    await userEvent.click(screen.getByText("All programs"));
     expect(routerPush).toHaveBeenCalledWith("/dashboard/customers?q=alice");
   });
 
