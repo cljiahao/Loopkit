@@ -33,6 +33,20 @@ describe("DashboardNav", () => {
     );
   });
 
+  it("renders Dashboard as the first inline nav link", () => {
+    render(<DashboardNav {...baseProps} />);
+    const links = screen.getAllByRole("link");
+    const navLabels = ["Dashboard", "Customers", "Activity", "Stats"];
+    const navLinks = links.filter((l) =>
+      navLabels.includes(l.textContent ?? ""),
+    );
+    expect(navLinks.map((l) => l.textContent)).toEqual(navLabels);
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "href",
+      "/dashboard",
+    );
+  });
+
   it("renders a mobile menu toggle", () => {
     render(<DashboardNav {...baseProps} />);
     expect(

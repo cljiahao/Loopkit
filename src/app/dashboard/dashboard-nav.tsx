@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 type Tier = "free" | "pro";
 
 const LINKS = [
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/customers", label: "Customers" },
   { href: "/dashboard/activity", label: "Activity" },
   { href: "/dashboard/stats", label: "Stats" },
@@ -94,31 +95,36 @@ export function DashboardNav({
 
   return (
     <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-      <Link
-        href="/dashboard"
-        aria-label="loopkit dashboard home"
-        className="shrink-0 rounded-sm outline-none transition-opacity hover:opacity-80 focus-visible:ring-[3px] focus-visible:ring-ring/50"
-      >
-        <Wordmark className="text-xl" />
-      </Link>
+      <div className="flex min-w-0 items-center gap-1 sm:gap-3">
+        <Link
+          href="/dashboard"
+          aria-label="loopkit dashboard home"
+          className="shrink-0 rounded-sm outline-none transition-opacity hover:opacity-80 focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        >
+          <Wordmark className="text-xl" />
+        </Link>
 
-      <nav className="hidden items-center gap-1 sm:flex">
-        {LINKS.map((link) => {
-          const active = isActive(path, link.href);
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary",
-                active && "bg-primary/10 text-primary hover:bg-primary/10",
-              )}
-            >
-              {link.label}
-            </Link>
-          );
-        })}
-      </nav>
+        <nav className="hidden items-center gap-1 sm:flex">
+          {LINKS.map((link) => {
+            const active =
+              link.href === "/dashboard"
+                ? path === "/dashboard"
+                : isActive(path, link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary",
+                  active && "bg-primary/10 text-primary hover:bg-primary/10",
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
       <div className="flex items-center gap-1">
         <button
@@ -197,7 +203,10 @@ export function DashboardNav({
         <div className="absolute inset-x-0 top-full z-20 border-b bg-background/95 px-5 py-3 backdrop-blur-md sm:hidden">
           <div className="flex flex-col gap-1">
             {LINKS.map((link) => {
-              const active = isActive(path, link.href);
+              const active =
+                link.href === "/dashboard"
+                  ? path === "/dashboard"
+                  : isActive(path, link.href);
               return (
                 <Link
                   key={link.href}
