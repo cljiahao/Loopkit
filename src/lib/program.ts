@@ -311,10 +311,23 @@ export interface Entitlement {
   tier: Tier;
   // null = unlimited
   maxActivePrograms: number | null;
+  // null = unlimited; caps how many "live-in-play" (replaced_by is null)
+  // programs a vendor may have at once — the free-tier prep-a-replacement
+  // cap. Pro is unlimited here too (it never needs the prep flow, but
+  // isn't blocked from it either).
+  maxLiveInPlayPrograms: number | null;
 }
 
-const FREE: Entitlement = { tier: "free", maxActivePrograms: 1 };
-const PRO: Entitlement = { tier: "pro", maxActivePrograms: null };
+const FREE: Entitlement = {
+  tier: "free",
+  maxActivePrograms: 1,
+  maxLiveInPlayPrograms: 2,
+};
+const PRO: Entitlement = {
+  tier: "pro",
+  maxActivePrograms: null,
+  maxLiveInPlayPrograms: null,
+};
 
 // Resolves a vendor's raw plan state (isPro's DB read) to what they can
 // actually do. Starts at one axis because program count is the only
@@ -333,6 +346,19 @@ export function canCreateProgram(
   return ent.maxActivePrograms === null || activeCount < ent.maxActivePrograms;
 }
 
+// Pure: whether the vendor can prep another live-in-play (replaced_by is
+// null) program under their entitlement — the free-tier "create a second,
+// inactive, to switch to later" cap.
+export function canPrepProgram(
+  ent: Entitlement,
+  liveInPlayCount: number,
+): boolean {
+  return (
+    ent.maxLiveInPlayPrograms === null ||
+    liveInPlayCount < ent.maxLiveInPlayPrograms
+  );
+}
+
 // Whether the signed-in vendor is on the Pro tier (present in vendor_pro).
 export async function isPro(): Promise<boolean> {
   const { user } = await requireVendor();
@@ -343,6 +369,22 @@ export async function isPro(): Promise<boolean> {
     .eq("vendor_id", user.id)
     .maybeSingle();
   return !!data;
+}
+
+// Lazy cutover check for Pro's scheduled retirement (schedule_retirement
+// RPC, migration 0023): deactivates any of the signed-in vendor's active
+// programs whose scheduled_deactivate_at has passed. RLS (programs_own)
+// already scopes this update to the vendor's own rows. No cron — this
+// runs at the top of every /dashboard and /setup page load (Task 4) so a
+// due cutover takes effect the next time either page is viewed, matching
+// isCardExpired's existing lazy-check precedent (src/lib/expiry.ts).
+export async function applyDueCutovers(): Promise<void> {
+  const supabase = await createServerClient();
+  await supabase
+    .from("programs")
+    .update({ active: false })
+    .lte("scheduled_deactivate_at", new Date().toISOString())
+    .eq("active", true);
 }
 
 // Transitional single-program shim (= first program). Retained only for callers

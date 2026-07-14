@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { programInputSchema } from "@/lib/program";
+import {
+  programInputSchema,
+  canPrepProgram,
+  getEntitlement,
+} from "@/lib/program";
 
 describe("programInputSchema", () => {
   it("accepts a valid program", () => {
@@ -45,5 +49,17 @@ describe("programInputSchema", () => {
       reward_text: "",
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("canPrepProgram", () => {
+  it("allows a free vendor to prep a second live-in-play program", () => {
+    expect(canPrepProgram(getEntitlement(false), 1)).toBe(true);
+  });
+  it("blocks a free vendor already at 2 live-in-play programs", () => {
+    expect(canPrepProgram(getEntitlement(false), 2)).toBe(false);
+  });
+  it("never blocks a Pro vendor regardless of count", () => {
+    expect(canPrepProgram(getEntitlement(true), 50)).toBe(true);
   });
 });

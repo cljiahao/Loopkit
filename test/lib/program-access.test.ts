@@ -51,6 +51,7 @@ describe("getEntitlement", () => {
     expect(getEntitlement(false)).toEqual({
       tier: "free",
       maxActivePrograms: 1,
+      maxLiveInPlayPrograms: 2,
     });
   });
 
@@ -58,6 +59,7 @@ describe("getEntitlement", () => {
     expect(getEntitlement(true)).toEqual({
       tier: "pro",
       maxActivePrograms: null,
+      maxLiveInPlayPrograms: null,
     });
   });
 });
