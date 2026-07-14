@@ -2,6 +2,15 @@
 
 import { useTransition } from "react";
 import { saveQkitEarnConfigAction } from "./actions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 type Program = { id: string; name: string };
 
@@ -34,29 +43,29 @@ export function QkitEarnSettings({
         });
       }}
     >
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
+      <div className="flex items-center gap-2">
+        <Switch
+          id="qkit-earn-enabled"
           name="enabled"
           defaultChecked={current?.enabled ?? false}
           aria-label="Earn from qkit orders"
         />
-        Earn from qkit orders
-      </label>
-      <select
-        name="program_id"
-        defaultValue={current?.programId ?? ""}
-        className="w-full rounded border p-2 text-sm"
-      >
-        <option value="" disabled>
-          Choose a program
-        </option>
-        {programs.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.name}
-          </option>
-        ))}
-      </select>
+        <Label htmlFor="qkit-earn-enabled" className="text-sm">
+          Earn from qkit orders
+        </Label>
+      </div>
+      <Select name="program_id" defaultValue={current?.programId || undefined}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Choose a program" />
+        </SelectTrigger>
+        <SelectContent>
+          {programs.map((p) => (
+            <SelectItem key={p.id} value={p.id}>
+              {p.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <button type="submit" disabled={pending} className="text-sm font-medium">
         Save
       </button>

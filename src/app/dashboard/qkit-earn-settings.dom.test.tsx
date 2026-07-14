@@ -30,10 +30,10 @@ describe("QkitEarnSettings", () => {
     );
     expect(screen.getByRole("combobox")).toBeInTheDocument();
     fireEvent.click(
-      screen.getByRole("checkbox", { name: /earn from qkit orders/i }),
+      screen.getByRole("switch", { name: /earn from qkit orders/i }),
     );
     expect(
-      screen.getByRole("checkbox", { name: /earn from qkit orders/i }),
+      screen.getByRole("switch", { name: /earn from qkit orders/i }),
     ).toBeChecked();
   });
 });
