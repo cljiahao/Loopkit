@@ -204,6 +204,26 @@ describe("buildPreviewProgram", () => {
     expect(program.config).toMatchObject({ variant: "flame" });
   });
 
+  it("points variant threads points_per_visit into the built stamp config", () => {
+    const program = buildPreviewProgram({
+      type: "stamp",
+      name: "Coffee Points",
+      rewardText: "Free drink",
+      stampsRequired: 500,
+      visitsToBloom: 6,
+      winPercent: 20,
+      pityCeiling: undefined,
+      segments: [],
+      headStartPercent: 20,
+      variant: "points",
+      pointsPerVisit: 25,
+    });
+    expect(program.config).toMatchObject({
+      points_per_visit: 25,
+      variant: "points",
+    });
+  });
+
   it("builds a lucky program, defaulting the pity ceiling to 8", () => {
     const program = buildPreviewProgram({
       ...base,

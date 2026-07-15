@@ -40,6 +40,7 @@ export function usePreviewAnimation(input: PreviewInput): {
     headStart,
     headStartPercent,
     variant,
+    pointsPerVisit,
   } = input;
 
   // Every field is part of the "recipe" — any edit (including name, which
@@ -57,6 +58,7 @@ export function usePreviewAnimation(input: PreviewInput): {
     headStart,
     headStartPercent,
     variant,
+    pointsPerVisit,
   ]);
 
   const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion);
