@@ -21,7 +21,6 @@ import {
 import { cn } from "@/lib/utils";
 import { usePreviewAnimation } from "@/app/setup/preview-animation";
 import { PreviewCard } from "@/app/setup/preview-card";
-import { ConfettiBurst } from "@/components/confetti-burst";
 import { Tag, SlidersHorizontal } from "lucide-react";
 
 type SegmentInput = { label: string; weight: number; is_reward: boolean };
@@ -191,7 +190,11 @@ export function SetupForm({
   const showCarryOverOption =
     replacingId !== null && replacingType === "stamp" && type === "stamp";
 
-  const { progress: previewProgress, celebrating } = usePreviewAnimation({
+  const {
+    progress: previewProgress,
+    celebrating,
+    lastChanceResult,
+  } = usePreviewAnimation({
     type,
     name,
     rewardText,
@@ -294,8 +297,9 @@ export function SetupForm({
           progress={previewProgress}
           name={name}
           rewardText={rewardText}
+          celebrating={celebrating}
+          lastChanceResult={lastChanceResult}
         />
-        <ConfettiBurst active={celebrating} />
       </div>
 
       <form action={formAction} className="space-y-6">

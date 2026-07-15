@@ -152,4 +152,115 @@ describe("PreviewCard", () => {
     expect(screen.getByText("Your card")).toBeInTheDocument();
     expect(screen.getByText("Reward: —")).toBeInTheDocument();
   });
+
+  it("reveals the scratch card result from the real engine view, not a hardcoded placeholder", () => {
+    const progress: Progress = {
+      stage: "play",
+      label: "Scratch to reveal",
+      view: {
+        kind: "chance",
+        variant: "scratch",
+        segments: [
+          { id: "a", label: "Try again", reward: false },
+          { id: "b", label: "Free item", reward: true },
+        ],
+        landedId: "b",
+      },
+      rewardReady: false,
+    };
+    render(
+      <PreviewCard
+        progress={progress}
+        name="Scratch to win"
+        rewardText="Free item"
+      />,
+    );
+    expect(screen.getByText("Free item")).toBeInTheDocument();
+  });
+
+  it("renders a card burst overlay when celebrating", () => {
+    const progress: Progress = {
+      stage: "collecting",
+      label: "2/2 stamps",
+      view: { kind: "dots", filled: 2, total: 2 },
+      rewardReady: true,
+    };
+    const { container } = render(
+      <PreviewCard
+        progress={progress}
+        name="Coffee card"
+        rewardText="Free kopi"
+        celebrating={true}
+      />,
+    );
+    expect(
+      container.querySelectorAll(".card-burst-piece").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("does not render a card burst overlay when not celebrating", () => {
+    const progress: Progress = {
+      stage: "collecting",
+      label: "1/2 stamps",
+      view: { kind: "dots", filled: 1, total: 2 },
+      rewardReady: false,
+    };
+    const { container } = render(
+      <PreviewCard
+        progress={progress}
+        name="Coffee card"
+        rewardText="Free kopi"
+      />,
+    );
+    expect(container.querySelectorAll(".card-burst-piece")).toHaveLength(0);
+  });
+
+  it("shows a win popup for a chance result that won", () => {
+    const progress: Progress = {
+      stage: "play",
+      label: "Spin to play",
+      view: {
+        kind: "chance",
+        variant: "wheel",
+        segments: [{ id: "a", label: "Free item", reward: true }],
+        landedId: "a",
+      },
+      rewardReady: false,
+    };
+    render(
+      <PreviewCard
+        progress={progress}
+        name="Spin to win"
+        rewardText="Free item"
+        lastChanceResult={{ won: true }}
+      />,
+    );
+    expect(screen.getByText("🎉 You won!")).toBeInTheDocument();
+  });
+
+  it("shows a lose popup for a chance result that lost", () => {
+    const progress: Progress = {
+      stage: "play",
+      label: "Spin to play",
+      view: {
+        kind: "chance",
+        variant: "wheel",
+        segments: [{ id: "a", label: "No prize", reward: false }],
+        landedId: "a",
+      },
+      rewardReady: false,
+    };
+    render(
+      <PreviewCard
+        progress={progress}
+        name="Spin to win"
+        rewardText="Free item"
+        lastChanceResult={{ won: false }}
+      />,
+    );
+    // Segment label is "No prize" (not "Try again") to avoid colliding with
+    // the popup's own literal "Try again" text — the wheel segment and the
+    // lose-popup badge would otherwise both render that exact string.
+    expect(screen.getByText("Try again")).toBeInTheDocument();
+  });
 });
