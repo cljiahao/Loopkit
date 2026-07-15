@@ -181,6 +181,27 @@ body {
   animation-fill-mode: forwards;
 }
 
+/* Card-contained celebration burst (CardBurst) — particles radiate outward
+   from the center of whatever relative-positioned container it's mounted in;
+   disabled under reduced-motion below. */
+@keyframes card-burst-particle {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--burst-angle)) translateX(0)
+      scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(var(--burst-angle))
+      translateX(var(--burst-distance)) scale(0.4);
+    opacity: 0;
+  }
+}
+.card-burst-piece {
+  animation-name: card-burst-particle;
+  animation-timing-function: ease-out;
+  animation-fill-mode: forwards;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
@@ -192,6 +213,10 @@ body {
     animation: none;
   }
   .confetti-piece {
+    animation: none;
+    opacity: 0;
+  }
+  .card-burst-piece {
     animation: none;
     opacity: 0;
   }
