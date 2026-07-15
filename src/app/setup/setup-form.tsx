@@ -30,11 +30,19 @@ const labelClass =
   "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
 type TypeOptionValue =
-  "stamp" | "flame" | "lucky" | "plant" | "cup" | "wheel" | "scratch";
+  | "stamp"
+  | "flame"
+  | "points"
+  | "lucky"
+  | "plant"
+  | "cup"
+  | "wheel"
+  | "scratch";
 
 const typeLabels: Record<TypeOptionValue, string> = {
   stamp: "Stamp card",
   flame: "Flame Club",
+  points: "Points Club",
   lucky: "Lucky Tap",
   plant: "Sprout",
   cup: "Fill the Cup",
@@ -52,6 +60,11 @@ const TYPE_OPTIONS = [
     value: "flame",
     label: "Flame Club",
     description: "Build a flame with every visit",
+  },
+  {
+    value: "points",
+    label: "Points Club",
+    description: "Earn a set number of points every visit",
   },
   {
     value: "lucky",
@@ -124,19 +137,22 @@ export function SetupForm({
     variant?: string;
   };
 
-  const [variant, setVariant] = useState<"dots" | "flame" | "plant" | "cup">(
-    () => {
-      if (config.variant === "flame") return "flame";
-      if (config.variant === "cup") return "cup";
-      return initialType === "plant" ? "plant" : "dots";
-    },
-  );
+  const [variant, setVariant] = useState<
+    "dots" | "flame" | "points" | "plant" | "cup"
+  >(() => {
+    if (config.variant === "flame") return "flame";
+    if (config.variant === "points") return "points";
+    if (config.variant === "cup") return "cup";
+    return initialType === "plant" ? "plant" : "dots";
+  });
   const selectedOptionKey: TypeOptionValue =
     type === "stamp" && variant === "flame"
       ? "flame"
-      : type === "plant" && variant === "cup"
-        ? "cup"
-        : (type as TypeOptionValue);
+      : type === "stamp" && variant === "points"
+        ? "points"
+        : type === "plant" && variant === "cup"
+          ? "cup"
+          : (type as TypeOptionValue);
 
   // Every field below is controlled — the same state drives both form
   // submission and the live preview, updated on every keystroke.
@@ -146,6 +162,9 @@ export function SetupForm({
   );
   const [stampsRequired, setStampsRequired] = useState(
     program?.stamps_required ?? 10,
+  );
+  const [pointsPerVisit, setPointsPerVisit] = useState(
+    (config as { points_per_visit?: number }).points_per_visit ?? 10,
   );
   const [visitsToBloom, setVisitsToBloom] = useState(
     config.stages?.[config.stages.length - 1]?.threshold ?? 6,
@@ -184,6 +203,7 @@ export function SetupForm({
     headStart,
     headStartPercent,
     variant,
+    pointsPerVisit,
   });
 
   // Sets the type plus its sensible numeric defaults, and always resets
@@ -192,25 +212,34 @@ export function SetupForm({
   // tile maps to type "stamp" + variant "flame" — it is never a distinct
   // ProgramType (see program-config.ts).
   function pickType(value: TypeOptionValue) {
-    setType(value === "flame" ? "stamp" : value === "cup" ? "plant" : value);
+    setType(
+      value === "flame" || value === "points"
+        ? "stamp"
+        : value === "cup"
+          ? "plant"
+          : value,
+    );
     setVariant(
       value === "flame"
         ? "flame"
-        : value === "cup"
-          ? "cup"
-          : value === "stamp"
-            ? "dots"
-            : value === "plant"
-              ? "plant"
-              : "dots",
+        : value === "points"
+          ? "points"
+          : value === "cup"
+            ? "cup"
+            : value === "stamp"
+              ? "dots"
+              : value === "plant"
+                ? "plant"
+                : "dots",
     );
     setName("");
     setRewardText("");
-    setStampsRequired(10);
+    setStampsRequired(value === "points" ? 500 : 10);
     setVisitsToBloom(6);
     setWinPercent(20);
     setPityCeiling(value === "lucky" ? 8 : undefined);
     setHeadStartPercent(20);
+    setPointsPerVisit(10);
   }
 
   function updateSegment(index: number, patch: Partial<SegmentInput>) {
@@ -278,6 +307,9 @@ export function SetupForm({
         {type === "stamp" || type === "plant" ? (
           <input type="hidden" name="variant" value={variant} />
         ) : null}
+        {variant === "points" && (
+          <input type="hidden" name="points_per_visit" value={pointsPerVisit} />
+        )}
 
         <Card>
           <CardHeader>
@@ -319,7 +351,9 @@ export function SetupForm({
                   <Label htmlFor="stamps_required" className={labelClass}>
                     {variant === "flame"
                       ? "Visits for full blaze"
-                      : "Stamps required"}
+                      : variant === "points"
+                        ? "Points required"
+                        : "Stamps required"}
                   </Label>
                   <Input
                     id="stamps_required"
@@ -327,14 +361,17 @@ export function SetupForm({
                     type="number"
                     required
                     min={2}
-                    max={20}
-                    placeholder="10"
+                    max={variant === "points" ? 100000 : 20}
+                    placeholder={variant === "points" ? "500" : "10"}
                     value={stampsRequired}
                     onChange={(e) => setStampsRequired(Number(e.target.value))}
                     className="h-11 rounded-xl"
                   />
                   <div className="flex gap-1.5">
-                    {[5, 10, 15].map((n) => (
+                    {(variant === "points"
+                      ? [100, 500, 1000]
+                      : [5, 10, 15]
+                    ).map((n) => (
                       <button
                         key={n}
                         type="button"
@@ -351,6 +388,27 @@ export function SetupForm({
                     ))}
                   </div>
                 </div>
+                {variant === "points" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="points_per_visit" className={labelClass}>
+                      Points per visit
+                    </Label>
+                    <Input
+                      id="points_per_visit"
+                      name="points_per_visit"
+                      type="number"
+                      required
+                      min={1}
+                      max={1000}
+                      placeholder="10"
+                      value={pointsPerVisit}
+                      onChange={(e) =>
+                        setPointsPerVisit(Number(e.target.value))
+                      }
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                )}
               </div>
             ) : type === "plant" ? (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

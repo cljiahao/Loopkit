@@ -21,6 +21,7 @@ describe("buildProgramFields", () => {
         stamps_required: 10,
         reward_text: "Free kopi",
         variant: "dots",
+        points_per_visit: 1,
       },
     });
   });
@@ -167,6 +168,36 @@ describe("buildProgramFields", () => {
     } as SaveProgramInput);
 
     expect(result.config).toMatchObject({ variant: "dots" });
+  });
+
+  it("threads points_per_visit into the stamp config, defaulting to 1", () => {
+    const fields = buildProgramFields({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: 1000,
+      reward_text: "Free drink",
+      head_start: false,
+      variant: "points",
+      points_per_visit: 25,
+      expiry_days: undefined,
+    } as SaveProgramInput);
+    expect(fields.config).toMatchObject({
+      points_per_visit: 25,
+      variant: "points",
+    });
+  });
+
+  it("defaults points_per_visit to 1 when absent, even for the points variant", () => {
+    const fields = buildProgramFields({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: 1000,
+      reward_text: "Free drink",
+      head_start: false,
+      variant: "points",
+      expiry_days: undefined,
+    } as SaveProgramInput);
+    expect(fields.config).toMatchObject({ points_per_visit: 1 });
   });
 
   it("builds a wheel/scratch program's fields via buildChanceConfig, defaulting the pity ceiling", () => {

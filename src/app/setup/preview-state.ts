@@ -17,7 +17,8 @@ export type PreviewInput = {
   segments: { label: string; weight: number; is_reward: boolean }[];
   headStart: boolean;
   headStartPercent: number;
-  variant: "dots" | "flame" | "plant" | "cup";
+  variant: "dots" | "flame" | "points" | "plant" | "cup";
+  pointsPerVisit?: number;
 };
 
 // Mirrors enroll_card's seed math (supabase/migrations/0014_loopkit_head_start.sql)

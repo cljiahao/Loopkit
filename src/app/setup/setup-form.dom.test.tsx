@@ -147,6 +147,40 @@ describe("SetupForm type picker", () => {
     expect(submitted.get("variant")).toBe("flame");
   });
 
+  it("Points Club tile saves type=stamp with variant=points, wider range, and points_per_visit", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Points Club" }));
+    expect(screen.getByText("Points required")).toBeInTheDocument();
+    expect(screen.getByLabelText("Points per visit")).toBeInTheDocument();
+
+    const stampsInput = screen.getByLabelText("Points required");
+    await user.clear(stampsInput);
+    await user.type(stampsInput, "500");
+
+    const perVisitInput = screen.getByLabelText("Points per visit");
+    await user.clear(perVisitInput);
+    await user.type(perVisitInput, "20");
+
+    await user.type(screen.getByLabelText("Card name"), "Coffee Points");
+    await user.type(screen.getByLabelText("Reward"), "Free drink");
+    await user.click(screen.getByRole("button", { name: "Create card" }));
+
+    expect(saveMock).toHaveBeenCalled();
+    const submitted = saveMock.mock.calls[0][1] as FormData;
+    expect(submitted.get("type")).toBe("stamp");
+    expect(submitted.get("variant")).toBe("points");
+    expect(submitted.get("stamps_required")).toBe("500");
+    expect(submitted.get("points_per_visit")).toBe("20");
+  });
+
   it("Fill the Cup tile saves type=plant with variant=cup and the fill-specific label", async () => {
     const user = userEvent.setup();
     render(

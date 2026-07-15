@@ -195,3 +195,71 @@ describe("saveProgramSchema", () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe("saveProgramSchema — points variant", () => {
+  const base = {
+    type: "stamp",
+    name: "Coffee Points",
+    reward_text: "Free drink",
+    head_start: "false",
+  };
+
+  it("accepts a wide stamps_required (up to 100,000) when variant is points", () => {
+    const result = saveProgramSchema.safeParse({
+      ...base,
+      stamps_required: "1000",
+      variant: "points",
+      points_per_visit: "10",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects stamps_required over 20 when variant is dots (unchanged existing behavior)", () => {
+    const result = saveProgramSchema.safeParse({
+      ...base,
+      stamps_required: "1000",
+      variant: "dots",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects stamps_required over 20 when variant is absent (Stamp Card default, unchanged)", () => {
+    const result = saveProgramSchema.safeParse({
+      ...base,
+      stamps_required: "1000",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("still rejects stamps_required over 100,000 even for points", () => {
+    const result = saveProgramSchema.safeParse({
+      ...base,
+      stamps_required: "200000",
+      variant: "points",
+      points_per_visit: "10",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("points_per_visit defaults to undefined (later defaulted to 1) when absent", () => {
+    const result = saveProgramSchema.safeParse({
+      ...base,
+      stamps_required: "100",
+      variant: "points",
+    });
+    expect(result.success).toBe(true);
+    if (result.success && result.data.type === "stamp") {
+      expect(result.data.points_per_visit).toBeUndefined();
+    }
+  });
+
+  it("rejects points_per_visit over 1000", () => {
+    const result = saveProgramSchema.safeParse({
+      ...base,
+      stamps_required: "1000",
+      variant: "points",
+      points_per_visit: "5000",
+    });
+    expect(result.success).toBe(false);
+  });
+});

@@ -62,76 +62,95 @@ const expiryDaysSchema = z.preprocess(
 // a hidden field) plus an optional pity ceiling. Every variant also carries an
 // optional expiry_days — type-agnostic, so it's applied uniformly rather than
 // baked into any one variant.
-export const saveProgramSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("stamp"),
-    name: z.string().trim().min(1).max(60),
-    stamps_required: z.coerce.number().int().min(2).max(20),
-    reward_text: z.string().trim().min(1).max(80),
-    head_start: z.enum(["true", "false"]).transform((v) => v === "true"),
-    head_start_percent: z.preprocess(
-      emptyToUndefined,
-      z.coerce.number().int().min(5).max(50).optional(),
-    ),
-    variant: z.preprocess(
-      emptyToUndefined,
-      z.enum(["dots", "flame"]).optional(),
-    ),
-    expiry_days: expiryDaysSchema,
-  }),
-  z.object({
-    type: z.literal("lucky"),
-    name: z.string().trim().min(1).max(60),
-    reward_text: z.string().trim().min(1).max(80),
-    win_percent: z.coerce.number().int().min(2).max(100),
-    pity_ceiling: z.coerce.number().int().min(2).max(20),
-    expiry_days: expiryDaysSchema,
-  }),
-  z.object({
-    type: z.literal("plant"),
-    name: z.string().trim().min(1).max(60),
-    reward_text: z.string().trim().min(1).max(80),
-    visits_to_bloom: z.coerce.number().int().min(4).max(20),
-    head_start: z.enum(["true", "false"]).transform((v) => v === "true"),
-    head_start_percent: z.preprocess(
-      emptyToUndefined,
-      z.coerce.number().int().min(5).max(50).optional(),
-    ),
-    variant: z.preprocess(
-      emptyToUndefined,
-      z.enum(["plant", "cup"]).optional(),
-    ),
-    expiry_days: expiryDaysSchema,
-  }),
-  z.object({
-    type: z.literal("wheel"),
-    name: z.string().trim().min(1).max(60),
-    reward_text: z.string().trim().min(1).max(80),
-    segments: z.preprocess(
-      parseSegments,
-      z.array(segmentInputSchema).min(2).max(6),
-    ),
-    pity_ceiling: z.preprocess(
-      emptyToUndefined,
-      z.coerce.number().int().min(2).max(20).optional(),
-    ),
-    expiry_days: expiryDaysSchema,
-  }),
-  z.object({
-    type: z.literal("scratch"),
-    name: z.string().trim().min(1).max(60),
-    reward_text: z.string().trim().min(1).max(80),
-    segments: z.preprocess(
-      parseSegments,
-      z.array(segmentInputSchema).min(2).max(6),
-    ),
-    pity_ceiling: z.preprocess(
-      emptyToUndefined,
-      z.coerce.number().int().min(2).max(20).optional(),
-    ),
-    expiry_days: expiryDaysSchema,
-  }),
-]);
+export const saveProgramSchema = z
+  .discriminatedUnion("type", [
+    z.object({
+      type: z.literal("stamp"),
+      name: z.string().trim().min(1).max(60),
+      stamps_required: z.coerce.number().int().min(2).max(100000),
+      reward_text: z.string().trim().min(1).max(80),
+      head_start: z.enum(["true", "false"]).transform((v) => v === "true"),
+      head_start_percent: z.preprocess(
+        emptyToUndefined,
+        z.coerce.number().int().min(5).max(50).optional(),
+      ),
+      variant: z.preprocess(
+        emptyToUndefined,
+        z.enum(["dots", "flame", "points"]).optional(),
+      ),
+      points_per_visit: z.preprocess(
+        emptyToUndefined,
+        z.coerce.number().int().min(1).max(1000).optional(),
+      ),
+      expiry_days: expiryDaysSchema,
+    }),
+    z.object({
+      type: z.literal("lucky"),
+      name: z.string().trim().min(1).max(60),
+      reward_text: z.string().trim().min(1).max(80),
+      win_percent: z.coerce.number().int().min(2).max(100),
+      pity_ceiling: z.coerce.number().int().min(2).max(20),
+      expiry_days: expiryDaysSchema,
+    }),
+    z.object({
+      type: z.literal("plant"),
+      name: z.string().trim().min(1).max(60),
+      reward_text: z.string().trim().min(1).max(80),
+      visits_to_bloom: z.coerce.number().int().min(4).max(20),
+      head_start: z.enum(["true", "false"]).transform((v) => v === "true"),
+      head_start_percent: z.preprocess(
+        emptyToUndefined,
+        z.coerce.number().int().min(5).max(50).optional(),
+      ),
+      variant: z.preprocess(
+        emptyToUndefined,
+        z.enum(["plant", "cup"]).optional(),
+      ),
+      expiry_days: expiryDaysSchema,
+    }),
+    z.object({
+      type: z.literal("wheel"),
+      name: z.string().trim().min(1).max(60),
+      reward_text: z.string().trim().min(1).max(80),
+      segments: z.preprocess(
+        parseSegments,
+        z.array(segmentInputSchema).min(2).max(6),
+      ),
+      pity_ceiling: z.preprocess(
+        emptyToUndefined,
+        z.coerce.number().int().min(2).max(20).optional(),
+      ),
+      expiry_days: expiryDaysSchema,
+    }),
+    z.object({
+      type: z.literal("scratch"),
+      name: z.string().trim().min(1).max(60),
+      reward_text: z.string().trim().min(1).max(80),
+      segments: z.preprocess(
+        parseSegments,
+        z.array(segmentInputSchema).min(2).max(6),
+      ),
+      pity_ceiling: z.preprocess(
+        emptyToUndefined,
+        z.coerce.number().int().min(2).max(20).optional(),
+      ),
+      expiry_days: expiryDaysSchema,
+    }),
+  ])
+  .superRefine((data, ctx) => {
+    if (
+      data.type === "stamp" &&
+      data.variant !== "points" &&
+      data.stamps_required > 20
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["stamps_required"],
+        message:
+          "Stamps required must be between 2 and 20 for this card style.",
+      });
+    }
+  });
 
 export type SaveProgramInput = z.infer<typeof saveProgramSchema>;
 
@@ -161,6 +180,7 @@ export function buildProgramFields(data: SaveProgramInput): {
         stamps_required: data.stamps_required,
         reward_text: data.reward_text,
         variant: data.variant ?? "dots",
+        points_per_visit: data.points_per_visit ?? 1,
       },
     };
   }
