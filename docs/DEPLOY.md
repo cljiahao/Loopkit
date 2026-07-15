@@ -149,6 +149,15 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      program's future deactivation and successor). No cron — the scheduled
      cutover is applied lazily on page load. Safe to re-run.
 
+   - apply `0024_loopkit_head_start_percent.sql` — adds
+     `programs.head_start_percent` (integer, NOT NULL default 20, CHECK
+     5–50) so vendors set how much of a head start a new stamp/plant card
+     gets, replacing the old flat ~20% seed. Recreates `create_program`
+     (additive `p_head_start_percent`, defaulted) and `enroll_card`
+     (stamp/plant seed now scales by the column). Plant's Sprout-stage
+     floor (25%) and streak's fixed one-period seed are unchanged. Safe to
+     re-run.
+
    - **Optional — rate limiting on the public `/c` surface.** The card-check
      action is throttled per-IP only if an Upstash Redis is configured. Create a
      free Upstash Redis and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
