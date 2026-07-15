@@ -50,15 +50,15 @@ head-start percentage shipped in the previous feature.
   field (range 2–20, same quick-pick chips 5/10/15) and `reward_text` field
   verbatim — no new form fields. Label copy becomes "Visits for full blaze"
   instead of "Stamps required" when the flame variant is selected.
-- **Old Streak Club removal**: full deletion of the old mechanic's
-  application code (engine strategy, config builder, UI, tests) — this
-  codebase's standing convention is no dead code. The one exception: the
-  database's `programs_type_check` constraint is **left as-is** (still
-  nominally permits `'streak'` as an unused value) rather than shrunk via a
-  new migration, since every migration in this codebase's history is
-  purely additive/never-removes, and shrinking it here would be the first
-  break of that pattern for zero practical benefit (nothing can insert
-  `type='streak'` through the app after this ships).
+- **Old Streak Club removal**: full deletion of the old mechanic —
+  application code (engine strategy, config builder, UI, tests) _and_ the
+  database surface (the `programs_type_check` constraint's `'streak'`
+  value, and `enroll_card`'s streak branch). No product has been onboarded
+  yet (zero live vendors of any kind, not just zero Streak Club vendors),
+  so this migration is exempt from the usual purely-additive/never-remove
+  convention — there is no live-data risk to weigh against a fully clean
+  removal, and this codebase's standing "no dead code" rule wins by
+  default in the absence of that risk.
 
 ## A. `src/lib/engine/stamp.ts` — variant-aware progress
 
@@ -157,12 +157,27 @@ type === "plant"` for the percent input (per the previous feature) — no
   `buildProgramFields`
 - The streak branches in `preview-state.ts`'s `buildPreviewProgram`/
   `buildInitialCard`
-- The SQL `enroll_card` streak branch (migrations 0014/0024) is **left
-  as-is** — SQL is never edited retroactively once shipped in this
-  codebase's convention (only the TS/app layer is cleaned up); it becomes
-  simply unreachable dead code inside a SECURITY DEFINER function, which
-  is acceptable since the app can never again produce `type='streak'` rows
-  for it to run against.
+
+## I. Migration `0025_loopkit_remove_streak_type.sql`
+
+Zero live vendors of any kind exist yet, so this migration removes the old
+type outright instead of leaving it dormant:
+
+- `alter table loopkit.programs drop constraint programs_type_check;`
+  followed by `add constraint programs_type_check check (type in
+('stamp','lucky','plant','wheel','scratch'))` — drops `'streak'` from the
+  allowed values (mirrors migration 0011's exact style, which added it).
+- Recreate `enroll_card` (currently defined in migration 0024) with the
+  `elsif v_program.type = 'streak' then ...` branch (lines 104–112 of 0024) deleted — the `if`/`elsif` chain for stamp/plant becomes a plain
+  `if`/`else` with no third branch, matching how a two-way conditional
+  looks anywhere else in this file.
+- `create_program` is **not** recreated — nothing in its body references
+  `'streak'` by name (the type value is just data it inserts, not a
+  branch), so no change is needed there.
+- New schema test `test/db/remove-streak-type-schema.test.ts`: asserts the
+  migration's raw SQL text drops+recreates `programs_type_check` without
+  `'streak'` in the allowed list, and that the recreated `enroll_card` no
+  longer contains a `type = 'streak'` branch.
 
 ## Testing
 
@@ -183,14 +198,16 @@ type === "plant"` for the percent input (per the previous feature) — no
   "Visits for full blaze"; existing streak-specific tests deleted.
 - `test/lib/save-program-schema.test.ts` / `build-program-fields.test.ts`:
   stamp variant field accepted/defaulted; streak cases deleted.
+- `test/db/remove-streak-type-schema.test.ts`: constraint no longer
+  permits `'streak'`, `enroll_card` no longer branches on it.
 - Full repo-wide grep for `streak`/`Streak` after deletion to confirm no
   orphaned references survive outside this spec/plan and historical
-  ledger/docs.
+  ledger/docs, plus migration 0011/0014/0024's own text (kept, as
+  historical record — migrations are never edited retroactively, only
+  superseded by a later one).
 
 ## Out of scope
 
-- Any database migration (constraint shrink, column change) — explicitly
-  not needed per the Decisions section.
 - New program types beyond Flame Club (points accumulation — still
   queued, scope not yet clarified; "fill the cup" — still queued, plant
   reskin).
