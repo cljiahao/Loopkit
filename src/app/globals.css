@@ -163,24 +163,6 @@ body {
   animation: fade-rise 0.5s ease-out both;
 }
 
-/* Reward-celebration confetti (ConfettiBurst) — each piece falls from the top
-   of the viewport, tumbling and fading out; disabled under reduced-motion below. */
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(-10%) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(420%) rotate(360deg);
-    opacity: 0;
-  }
-}
-.confetti-piece {
-  animation-name: confetti-fall;
-  animation-timing-function: ease-in;
-  animation-fill-mode: forwards;
-}
-
 /* Card-contained celebration burst (CardBurst) — particles radiate outward
    from the center of whatever relative-positioned container it's mounted in;
    disabled under reduced-motion below. */
@@ -211,10 +193,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .fade-rise {
     animation: none;
-  }
-  .confetti-piece {
-    animation: none;
-    opacity: 0;
   }
   .card-burst-piece {
     animation: none;

@@ -1,6 +1,6 @@
 "use client";
 
-import { ConfettiBurst } from "@/components/confetti-burst";
+import { CardBurst } from "@/components/card-burst";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,28 +23,26 @@ export function RewardCelebration({
   onOpenChange: (open: boolean) => void;
 }) {
   return (
-    <>
-      <ConfettiBurst active={open} />
-      <AlertDialog open={open} onOpenChange={onOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-center text-2xl">
-              🎉 Reward unlocked!
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center">
-              {phone} just earned {rewardText}.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction
-              className="w-full"
-              onClick={() => onOpenChange(false)}
-            >
-              Nice!
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="overflow-hidden">
+        <CardBurst active={open} />
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-center text-2xl">
+            🎉 Reward unlocked!
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-center">
+            {phone} just earned {rewardText}.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogAction
+            className="w-full"
+            onClick={() => onOpenChange(false)}
+          >
+            Nice!
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
