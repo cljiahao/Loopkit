@@ -38,19 +38,19 @@ describe("usePreviewAnimation", () => {
     vi.useRealTimers();
   });
 
-  it("ticks the stamp count up every 3 seconds", () => {
+  it("ticks the stamp count up every 2 seconds", () => {
     const { result } = renderHook(() =>
       usePreviewAnimation({ ...base, type: "stamp" }),
     );
     expect(result.current.progress.label).toBe("0/10 stamps");
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(2000);
     });
     expect(result.current.progress.label).toBe("1/10 stamps");
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(2000);
     });
     expect(result.current.progress.label).toBe("2/10 stamps");
   });
@@ -61,13 +61,13 @@ describe("usePreviewAnimation", () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(2000);
     });
     expect(result.current.progress.label).toBe("1/2 stamps");
     expect(result.current.celebrating).toBe(false);
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(2000);
     });
     expect(result.current.progress.label).toBe("2/2 stamps");
     expect(result.current.celebrating).toBe(true);
@@ -91,7 +91,7 @@ describe("usePreviewAnimation", () => {
     expect(result.current.progress.label).toBe("1/2 stamps");
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(2000);
     });
     expect(result.current.progress.label).toBe("2/2 stamps");
     expect(result.current.celebrating).toBe(true);
@@ -109,7 +109,7 @@ describe("usePreviewAnimation", () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(2000);
     });
     expect(result.current.progress.label).toBe("1/10 stamps");
 
@@ -129,7 +129,7 @@ describe("usePreviewAnimation", () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(2000);
     });
     expect(result.current.celebrating).toBe(true);
     rollSpy.mockRestore();
@@ -146,7 +146,7 @@ describe("usePreviewAnimation", () => {
     );
 
     act(() => {
-      vi.advanceTimersByTime(3000);
+      vi.advanceTimersByTime(2000);
     });
     expect(result.current.celebrating).toBe(false);
     rollSpy.mockRestore();
@@ -164,5 +164,87 @@ describe("usePreviewAnimation", () => {
       vi.advanceTimersByTime(10000);
     });
     expect(result.current.progress.label).toBe("0/10 stamps");
+  });
+
+  it("sets lastChanceResult when a wheel spin wins", () => {
+    const rollSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
+    const { result } = renderHook(() =>
+      usePreviewAnimation({ ...base, type: "wheel", pityCeiling: undefined }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(result.current.lastChanceResult).toEqual({ won: true });
+    rollSpy.mockRestore();
+  });
+
+  it("sets lastChanceResult when a wheel spin loses", () => {
+    const rollSpy = vi.spyOn(Math, "random").mockReturnValue(0.1);
+    const { result } = renderHook(() =>
+      usePreviewAnimation({ ...base, type: "wheel", pityCeiling: undefined }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(result.current.lastChanceResult).toEqual({ won: false });
+    rollSpy.mockRestore();
+  });
+
+  it("sets lastChanceResult for scratch the same way as wheel", () => {
+    const rollSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
+    const { result } = renderHook(() =>
+      usePreviewAnimation({
+        ...base,
+        type: "scratch",
+        pityCeiling: undefined,
+      }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(result.current.lastChanceResult).toEqual({ won: true });
+    rollSpy.mockRestore();
+  });
+
+  it("never sets lastChanceResult for non-chance types", () => {
+    const { result } = renderHook(() =>
+      usePreviewAnimation({ ...base, type: "stamp" }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(result.current.lastChanceResult).toBeNull();
+  });
+
+  it("resets lastChanceResult to null when the recipe changes", () => {
+    const rollSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
+    const { result, rerender } = renderHook(
+      (props: PreviewInput) => usePreviewAnimation(props),
+      {
+        initialProps: {
+          ...base,
+          type: "wheel" as const,
+          pityCeiling: undefined,
+        },
+      },
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(result.current.lastChanceResult).toEqual({ won: true });
+
+    rerender({
+      ...base,
+      type: "wheel",
+      pityCeiling: undefined,
+      name: "New name",
+    });
+    expect(result.current.lastChanceResult).toBeNull();
+    rollSpy.mockRestore();
   });
 });

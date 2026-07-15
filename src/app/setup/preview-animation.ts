@@ -10,7 +10,7 @@ import {
   type PreviewInput,
 } from "@/app/setup/preview-state";
 
-const TICK_MS = 3000;
+const TICK_MS = 2000;
 const CELEBRATE_MS = 2000;
 
 function prefersReducedMotion(): boolean {
@@ -19,7 +19,7 @@ function prefersReducedMotion(): boolean {
 }
 
 // Drives the real applyVisit()/getProgress() engine functions on a timer, so
-// the /setup preview simulates a customer actually visiting every 3 seconds
+// the /setup preview simulates a customer actually visiting every 2 seconds
 // instead of showing one static snapshot. Every tick is a genuine visit
 // event through the same engine src/app/c's real customer page uses — the
 // animation can never show a transition a real card couldn't actually
@@ -27,6 +27,7 @@ function prefersReducedMotion(): boolean {
 export function usePreviewAnimation(input: PreviewInput): {
   progress: Progress;
   celebrating: boolean;
+  lastChanceResult: { won: boolean } | null;
 } {
   const {
     type,
@@ -86,6 +87,9 @@ export function usePreviewAnimation(input: PreviewInput): {
   const [card, setCard] = useState<CardLike>(initialCard);
   const [simulatedNow, setSimulatedNow] = useState(() => new Date());
   const [phase, setPhase] = useState<"ticking" | "celebrating">("ticking");
+  const [lastChanceResult, setLastChanceResult] = useState<{
+    won: boolean;
+  } | null>(null);
 
   // Any recipe change restarts the loop immediately from the (possibly
   // head-start-seeded) initial position. Keyed on recipeKey rather than
@@ -102,6 +106,7 @@ export function usePreviewAnimation(input: PreviewInput): {
     setCard(initialCard);
     setSimulatedNow(new Date());
     setPhase("ticking");
+    setLastChanceResult(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recipeKey]);
 
@@ -128,17 +133,25 @@ export function usePreviewAnimation(input: PreviewInput): {
       );
       setCard({ ...card, state });
       setSimulatedNow(nextNow);
+      if (type === "wheel" || type === "scratch") {
+        setLastChanceResult({ won: rewardUnlocked });
+      }
       if (rewardUnlocked) setPhase("celebrating");
     }, delay);
     return () => clearTimeout(timer);
-  }, [reducedMotion, phase, card, simulatedNow, program, initialCard]);
+  }, [reducedMotion, phase, card, simulatedNow, program, initialCard, type]);
 
   if (reducedMotion) {
-    return { progress: buildPreviewProgress(input), celebrating: false };
+    return {
+      progress: buildPreviewProgress(input),
+      celebrating: false,
+      lastChanceResult: null,
+    };
   }
 
   return {
     progress: getProgress(program, card, simulatedNow),
     celebrating: phase === "celebrating",
+    lastChanceResult,
   };
 }
