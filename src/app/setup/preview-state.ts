@@ -54,7 +54,8 @@ export function buildPreviewProgram(
         stamps_required: input.stampsRequired,
         reward_text: input.rewardText,
         variant: input.variant,
-        points_per_visit: input.pointsPerVisit,
+        points_per_visit:
+          input.variant === "points" ? input.pointsPerVisit : undefined,
       },
     };
   }

@@ -224,6 +224,30 @@ describe("buildPreviewProgram", () => {
     });
   });
 
+  it("does not leak points_per_visit into a dots-variant stamp config", () => {
+    const program = buildPreviewProgram({
+      ...base,
+      type: "stamp",
+      variant: "dots",
+      pointsPerVisit: 10,
+    });
+    expect(
+      (program.config as { points_per_visit?: number }).points_per_visit,
+    ).toBeUndefined();
+  });
+
+  it("does not leak points_per_visit into a flame-variant stamp config", () => {
+    const program = buildPreviewProgram({
+      ...base,
+      type: "stamp",
+      variant: "flame",
+      pointsPerVisit: 10,
+    });
+    expect(
+      (program.config as { points_per_visit?: number }).points_per_visit,
+    ).toBeUndefined();
+  });
+
   it("builds a lucky program, defaulting the pity ceiling to 8", () => {
     const program = buildPreviewProgram({
       ...base,
