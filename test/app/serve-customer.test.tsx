@@ -291,6 +291,7 @@ describe("ServeCustomer", () => {
           stageName: "Bloom",
           totalStages: 5,
           wilting: false,
+          variant: "plant",
         },
         label: "Bloom",
         rewardReady: true,

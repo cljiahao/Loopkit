@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { plantStrategy, type PlantConfig } from "@/lib/engine/plant";
+import { buildPlantConfig } from "@/lib/program-config";
 
 const cfg: PlantConfig = {
   stages: [
@@ -146,5 +147,70 @@ describe("plantStrategy", () => {
     expect(s.growth).toBe(8);
     expect(s.bloomed).toBe(true);
     expect(plantStrategy.progress(s, cfg, day0).rewardReady).toBe(true);
+  });
+});
+
+describe("plantStrategy cup variant", () => {
+  it("cup variant names stages Empty/Sip/Quarter Full/Nearly Full/Full at the same thresholds as plant", () => {
+    const plantCfg = buildPlantConfig(8, "free kopi", "plant");
+    const cupCfg = buildPlantConfig(8, "free kopi", "cup");
+    expect(plantCfg.stages.map((s) => s.threshold)).toEqual(
+      cupCfg.stages.map((s) => s.threshold),
+    );
+    expect(cupCfg.stages.map((s) => s.name)).toEqual([
+      "Empty",
+      "Sip",
+      "Quarter Full",
+      "Nearly Full",
+      "Full",
+    ]);
+    expect(plantCfg.stages.map((s) => s.name)).toEqual([
+      "Seed",
+      "Sprout",
+      "Leafing",
+      "Budding",
+      "Bloom",
+    ]);
+  });
+
+  it("defaults to plant variant when omitted", () => {
+    const cfg = buildPlantConfig(8, "free kopi");
+    expect(cfg.variant).toBe("plant");
+    expect(cfg.stages[0].name).toBe("Seed");
+  });
+
+  it("progress() reports the cup variant in its view", () => {
+    const cupCfg = buildPlantConfig(8, "free kopi", "cup");
+    const p = plantStrategy.progress(
+      { growth: 4, last_visit_at: null, blooms: 0 },
+      cupCfg,
+      new Date("2026-07-07T00:00:00Z"),
+    );
+    expect(p.view).toMatchObject({ kind: "plant", variant: "cup" });
+    expect(p.stage).toBe("Quarter Full");
+  });
+
+  it("progress() defaults to plant variant when config.variant is absent", () => {
+    const p = plantStrategy.progress(
+      { growth: 4, last_visit_at: null, blooms: 0 },
+      cfg,
+      new Date("2026-07-07T00:00:00Z"),
+    );
+    expect(p.view).toMatchObject({ kind: "plant", variant: "plant" });
+  });
+
+  it("cup variant wilts and floors exactly like plant", () => {
+    const cupCfg = buildPlantConfig(8, "free kopi", "cup");
+    const p = plantStrategy.progress(
+      { growth: 6, last_visit_at: "2026-07-01T00:00:00Z", blooms: 0 },
+      cupCfg,
+      new Date("2026-07-30T00:00:00Z"),
+    );
+    expect(p.view).toMatchObject({
+      kind: "plant",
+      variant: "cup",
+      wilting: true,
+    });
+    expect(p.stage).toBe("Sip");
   });
 });

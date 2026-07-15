@@ -21,21 +21,30 @@ export const segmentInputSchema = z.object({
 });
 export type SegmentInput = z.infer<typeof segmentInputSchema>;
 
-// Derive a Sprout plant's config from the single vendor-facing knob (visits to
-// bloom): five named stages at even quarters up to the bloom threshold, a floor
-// at the Sprout stage so a wilted plant never dies, and fixed grace/decay.
+const PLANT_STAGE_NAMES = ["Seed", "Sprout", "Leafing", "Budding", "Bloom"];
+const CUP_STAGE_NAMES = ["Empty", "Sip", "Quarter Full", "Nearly Full", "Full"];
+
+// Derive a Plant/Cup program's config from the single vendor-facing knob
+// (visits to bloom/fill): five stages at even quarters up to the top
+// threshold, a floor at the second stage so a wilted card never dies, and
+// fixed grace/decay — identical math for both variants. `variant` only
+// selects which stage-name table gets baked into `stages[].name`; the
+// thresholds themselves never differ between "plant" and "cup".
 export function buildPlantConfig(
   visitsToBloom: number,
   rewardText: string,
+  variant: "plant" | "cup" = "plant",
 ): PlantConfig {
   const b = visitsToBloom;
-  const stages = [
-    { name: "Seed", threshold: 0 },
-    { name: "Sprout", threshold: Math.round(b * 0.25) },
-    { name: "Leafing", threshold: Math.round(b * 0.5) },
-    { name: "Budding", threshold: Math.round(b * 0.75) },
-    { name: "Bloom", threshold: b },
+  const names = variant === "cup" ? CUP_STAGE_NAMES : PLANT_STAGE_NAMES;
+  const thresholds = [
+    0,
+    Math.round(b * 0.25),
+    Math.round(b * 0.5),
+    Math.round(b * 0.75),
+    b,
   ];
+  const stages = names.map((name, i) => ({ name, threshold: thresholds[i] }));
   return {
     stages,
     growth_per_visit: 1,
@@ -43,6 +52,7 @@ export function buildPlantConfig(
     decay_rate: 0.5,
     floor_growth: stages[1].threshold,
     reward_text: rewardText,
+    variant,
   };
 }
 

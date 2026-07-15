@@ -19,6 +19,7 @@ export type ProgressView =
       stageName: string;
       totalStages: number;
       wilting: boolean;
+      variant: "plant" | "cup";
     }
   | {
       kind: "chance";

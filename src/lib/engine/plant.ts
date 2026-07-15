@@ -8,6 +8,7 @@ export type PlantConfig = {
   decay_rate: number;
   floor_growth: number;
   reward_text: string;
+  variant?: "plant" | "cup";
 };
 export type PlantState = {
   growth: number;
@@ -62,6 +63,7 @@ export const plantStrategy: Strategy<PlantConfig, PlantState> = {
         stageName: config.stages[idx].name,
         totalStages: config.stages.length,
         wilting,
+        variant: config.variant ?? "plant",
       },
       rewardReady: state.bloomed ?? g >= bloomThreshold(config),
     };

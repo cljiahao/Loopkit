@@ -34,6 +34,7 @@ describe("PreviewCard", () => {
         stageName: "Sprout",
         totalStages: 5,
         wilting: false,
+        variant: "plant",
       },
       rewardReady: false,
     };

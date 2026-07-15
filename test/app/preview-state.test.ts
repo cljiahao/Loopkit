@@ -46,6 +46,7 @@ describe("buildPreviewProgress", () => {
       stageName: "Seed",
       totalStages: 5,
       wilting: false,
+      variant: "plant",
     });
   });
 
@@ -61,6 +62,7 @@ describe("buildPreviewProgress", () => {
       stageName: "Sprout",
       totalStages: 5,
       wilting: false,
+      variant: "plant",
     });
   });
 
@@ -120,6 +122,7 @@ describe("buildPreviewProgress", () => {
       stageName: "Sprout",
       totalStages: 5,
       wilting: false,
+      variant: "plant",
     });
   });
 
