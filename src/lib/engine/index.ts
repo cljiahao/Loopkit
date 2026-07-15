@@ -19,11 +19,6 @@ import {
   type ChanceConfig,
   type ChanceState,
 } from "@/lib/engine/chance";
-import {
-  streakStrategy,
-  type StreakConfig,
-  type StreakState,
-} from "@/lib/engine/streak";
 
 export type ProgramLike = {
   type: string;
@@ -90,15 +85,6 @@ function resolveChanceState(
   return makeChanceStrategy(variant).defaults({} as ChanceConfig);
 }
 
-function resolveStreakConfig(program: ProgramLike): StreakConfig {
-  return program.config as StreakConfig;
-}
-
-export function resolveStreakState(card: CardLike): StreakState {
-  if (hasKeys(card.state)) return card.state as StreakState;
-  return streakStrategy.defaults({} as StreakConfig);
-}
-
 export function applyVisit(
   program: ProgramLike,
   card: CardLike,
@@ -130,13 +116,6 @@ export function applyVisit(
         now,
       );
     }
-    case "streak":
-      return streakStrategy.apply(
-        event,
-        resolveStreakState(card),
-        resolveStreakConfig(program),
-        now,
-      );
     case "stamp":
     default:
       return stampStrategy.apply(
@@ -175,12 +154,6 @@ export function getProgress(
         now,
       );
     }
-    case "streak":
-      return streakStrategy.progress(
-        resolveStreakState(card),
-        resolveStreakConfig(program),
-        now,
-      );
     case "stamp":
     default:
       return stampStrategy.progress(

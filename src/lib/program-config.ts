@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type { PlantConfig } from "@/lib/engine/plant";
 import type { ChanceConfig } from "@/lib/engine/chance";
-import type { StreakConfig } from "@/lib/engine/streak";
 
 // Pure program-config builders and their supporting types — deliberately
 // kept free of any server-only import (no @/lib/supabase/server, no
@@ -13,8 +12,7 @@ import type { StreakConfig } from "@/lib/engine/streak";
 // Router" — next/headers can't be bundled for the client regardless of
 // whether the client code actually calls the server-only exports.
 
-export type ProgramType =
-  "stamp" | "lucky" | "plant" | "wheel" | "scratch" | "streak";
+export type ProgramType = "stamp" | "lucky" | "plant" | "wheel" | "scratch";
 
 export const segmentInputSchema = z.object({
   label: z.string().trim().min(1).max(40),
@@ -68,21 +66,6 @@ export function buildChanceConfig(
     })),
     pity_ceiling: pityCeiling,
     cooldown_visits: 0,
-    reward_text: rewardText,
-  };
-}
-
-// Derive a Streak Club program's config from the two vendor-facing knobs: how
-// often a visit is due (period, in days) and how many consecutive periods earn
-// the reward. The engine (src/lib/engine/streak.ts) reads this directly.
-export function buildStreakConfig(
-  periodDays: number,
-  targetStreak: number,
-  rewardText: string,
-): StreakConfig {
-  return {
-    period_days: periodDays,
-    target_streak: targetStreak,
     reward_text: rewardText,
   };
 }
