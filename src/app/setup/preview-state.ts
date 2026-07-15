@@ -62,7 +62,11 @@ export function buildPreviewProgram(
       type: "plant",
       stamps_required: input.visitsToBloom,
       reward_text: input.rewardText,
-      config: buildPlantConfig(input.visitsToBloom, input.rewardText),
+      config: buildPlantConfig(
+        input.visitsToBloom,
+        input.rewardText,
+        input.variant === "cup" ? "cup" : "plant",
+      ),
     };
   }
 

@@ -135,6 +135,39 @@ describe("buildPreviewProgress", () => {
     });
     expect(progress.view.kind).toBe("flame");
   });
+
+  it("plant: cup variant shows the cup stage names", () => {
+    const progress = buildPreviewProgress({
+      ...base,
+      type: "plant",
+      variant: "cup",
+    });
+    expect(progress.view).toEqual({
+      kind: "plant",
+      stage: 0,
+      stageName: "Empty",
+      totalStages: 5,
+      wilting: false,
+      variant: "cup",
+    });
+  });
+
+  it("plant: cup variant head start floors growth at the Sip stage, same as plant floors at Sprout", () => {
+    const progress = buildPreviewProgress({
+      ...base,
+      type: "plant",
+      variant: "cup",
+      headStart: true,
+    });
+    expect(progress.view).toEqual({
+      kind: "plant",
+      stage: 1,
+      stageName: "Sip",
+      totalStages: 5,
+      wilting: false,
+      variant: "cup",
+    });
+  });
 });
 
 describe("buildPreviewProgram", () => {
