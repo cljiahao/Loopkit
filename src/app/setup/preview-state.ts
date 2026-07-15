@@ -81,17 +81,13 @@ export function buildPreviewProgram(
     };
   }
 
-  // wheel / scratch — "streak" is unreachable here (no PreviewInput caller
-  // ever sets type to "streak"; the type picker's Flame Club tile maps to
-  // type "stamp" + variant "flame" instead), but ProgramType still includes
-  // it until Task 6 shrinks the shared union, so a narrowing cast is needed.
-  const chanceType = input.type as "wheel" | "scratch";
+  // wheel / scratch
   return {
-    type: chanceType,
+    type: input.type,
     stamps_required: input.pityCeiling ?? 10,
     reward_text: input.rewardText,
     config: buildChanceConfig(
-      chanceType,
+      input.type,
       input.segments,
       input.pityCeiling,
       input.rewardText,
@@ -107,7 +103,7 @@ export function buildPreviewProgram(
 // call — buildPreviewProgress below relies on this to match its
 // pre-refactor behavior exactly. Lucky/wheel/scratch never offer head
 // start, always the zero/unplayed state, matching the toggle's own
-// conditional rendering in SetupForm (only shown for stamp/plant/streak).
+// conditional rendering in SetupForm (only shown for stamp/plant).
 export function buildInitialCard(
   input: Pick<
     PreviewInput,
