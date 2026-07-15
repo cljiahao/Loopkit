@@ -14,6 +14,7 @@ const program: Program = {
   active: true,
   expiry_days: null,
   head_start: false,
+  head_start_percent: 20,
   replaced_by: null,
   carry_over_stamps: false,
 };

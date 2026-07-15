@@ -13,6 +13,53 @@ describe("saveProgramSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts a stamp program with a custom head_start_percent", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee card",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "true",
+      head_start_percent: "30",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a stamp program with head_start_percent absent (toggle off)", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee card",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a stamp program with head_start_percent below the 5% minimum", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee card",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "true",
+      head_start_percent: "4",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a stamp program with head_start_percent above the 50% maximum", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee card",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "true",
+      head_start_percent: "51",
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("accepts a valid lucky program", () => {
     const result = saveProgramSchema.safeParse({
       type: "lucky",
@@ -42,6 +89,18 @@ describe("saveProgramSchema", () => {
       reward_text: "Free kopi",
       visits_to_bloom: "6",
       head_start: "false",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a plant program with a custom head_start_percent", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "plant",
+      name: "Grow-a-kopi",
+      reward_text: "Free kopi",
+      visits_to_bloom: "6",
+      head_start: "true",
+      head_start_percent: "35",
     });
     expect(result.success).toBe(true);
   });

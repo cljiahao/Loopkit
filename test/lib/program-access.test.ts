@@ -15,6 +15,7 @@ const program = (id: string): Program => ({
   config: {},
   active: true,
   head_start: false,
+  head_start_percent: 20,
   replaced_by: null,
   carry_over_stamps: false,
 });

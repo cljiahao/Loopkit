@@ -55,13 +55,15 @@ export async function saveProgramAction(
     target_streak: formData.get("target_streak"),
     expiry_days: formData.get("expiry_days"),
     head_start: formData.get("head_start"),
+    head_start_percent: formData.get("head_start_percent"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
   }
 
   const data = parsed.data;
-  const { type, stampsRequired, config, headStart } = buildProgramFields(data);
+  const { type, stampsRequired, config, headStart, headStartPercent } =
+    buildProgramFields(data);
 
   const supabase = await createServerClient();
 
@@ -74,6 +76,7 @@ export async function saveProgramAction(
       config,
       expiry_days: data.expiry_days ?? null,
       head_start: headStart,
+      head_start_percent: headStartPercent,
     };
     const { error } = await supabase
       .from("programs")
@@ -106,6 +109,7 @@ export async function saveProgramAction(
     p_config: config,
     p_expiry_days: data.expiry_days ?? null,
     p_head_start: headStart,
+    p_head_start_percent: headStartPercent,
   });
   if (error) {
     if (error.code === "42501") return { error: UPSELL_ERROR };
@@ -151,14 +155,14 @@ export async function changeTypeAction(
     target_streak: formData.get("target_streak"),
     expiry_days: formData.get("expiry_days"),
     head_start: formData.get("head_start"),
+    head_start_percent: formData.get("head_start_percent"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
   }
 
-  const { type, stampsRequired, config, headStart } = buildProgramFields(
-    parsed.data,
-  );
+  const { type, stampsRequired, config, headStart, headStartPercent } =
+    buildProgramFields(parsed.data);
 
   // Belt-and-suspenders: the UI only renders the checkbox when the
   // predecessor's type and the new type both resolve to "stamp" (Task 3),
@@ -193,6 +197,7 @@ export async function changeTypeAction(
       p_expiry_days: parsed.data.expiry_days ?? null,
       p_head_start: headStart,
       p_carry_over_stamps: carryOverStamps,
+      p_head_start_percent: headStartPercent,
     },
   );
   if (createError || !created) {
@@ -245,14 +250,14 @@ export async function prepProgramAction(
     target_streak: formData.get("target_streak"),
     expiry_days: formData.get("expiry_days"),
     head_start: formData.get("head_start"),
+    head_start_percent: formData.get("head_start_percent"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
   }
 
-  const { type, stampsRequired, config, headStart } = buildProgramFields(
-    parsed.data,
-  );
+  const { type, stampsRequired, config, headStart, headStartPercent } =
+    buildProgramFields(parsed.data);
 
   const programs = await listPrograms();
   const pro = await isPro();
@@ -275,6 +280,7 @@ export async function prepProgramAction(
     p_expiry_days: parsed.data.expiry_days ?? null,
     p_head_start: headStart,
     p_active: false,
+    p_head_start_percent: headStartPercent,
   });
   if (error) {
     if (error.code === "42501") return { error: PREP_UPSELL_ERROR };

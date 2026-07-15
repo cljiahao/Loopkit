@@ -15,7 +15,7 @@ export type { ProgramType, SegmentInput };
 export { buildChanceConfig, buildPlantConfig, buildStreakConfig };
 
 const PROGRAM_COLUMNS =
-  "id,name,stamps_required,reward_text,type,config,active,expiry_days,head_start,replaced_by,carry_over_stamps";
+  "id,name,stamps_required,reward_text,type,config,active,expiry_days,head_start,head_start_percent,replaced_by,carry_over_stamps";
 
 export type Program = {
   id: string;
@@ -27,6 +27,7 @@ export type Program = {
   active: boolean;
   expiry_days?: number | null;
   head_start: boolean;
+  head_start_percent: number;
   replaced_by: string | null;
   carry_over_stamps: boolean;
 };
@@ -69,6 +70,10 @@ export const saveProgramSchema = z.discriminatedUnion("type", [
     stamps_required: z.coerce.number().int().min(2).max(20),
     reward_text: z.string().trim().min(1).max(80),
     head_start: z.enum(["true", "false"]).transform((v) => v === "true"),
+    head_start_percent: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().int().min(5).max(50).optional(),
+    ),
     expiry_days: expiryDaysSchema,
   }),
   z.object({
@@ -85,6 +90,10 @@ export const saveProgramSchema = z.discriminatedUnion("type", [
     reward_text: z.string().trim().min(1).max(80),
     visits_to_bloom: z.coerce.number().int().min(4).max(20),
     head_start: z.enum(["true", "false"]).transform((v) => v === "true"),
+    head_start_percent: z.preprocess(
+      emptyToUndefined,
+      z.coerce.number().int().min(5).max(50).optional(),
+    ),
     expiry_days: expiryDaysSchema,
   }),
   z.object({
@@ -142,12 +151,14 @@ export function buildProgramFields(data: SaveProgramInput): {
   stampsRequired: number;
   config: Json;
   headStart: boolean;
+  headStartPercent: number;
 } {
   if (data.type === "stamp") {
     return {
       type: "stamp",
       stampsRequired: data.stamps_required,
       headStart: data.head_start,
+      headStartPercent: data.head_start_percent ?? 20,
       config: {
         stamps_required: data.stamps_required,
         reward_text: data.reward_text,
@@ -159,6 +170,7 @@ export function buildProgramFields(data: SaveProgramInput): {
       type: "lucky",
       stampsRequired: data.pity_ceiling,
       headStart: false,
+      headStartPercent: 20,
       config: {
         win_probability: data.win_percent / 100,
         pity_ceiling: data.pity_ceiling,
@@ -172,6 +184,7 @@ export function buildProgramFields(data: SaveProgramInput): {
       type: "plant",
       stampsRequired: data.visits_to_bloom,
       headStart: data.head_start,
+      headStartPercent: data.head_start_percent ?? 20,
       config: buildPlantConfig(data.visits_to_bloom, data.reward_text) as Json,
     };
   }
@@ -180,6 +193,7 @@ export function buildProgramFields(data: SaveProgramInput): {
       type: "streak",
       stampsRequired: data.target_streak,
       headStart: data.head_start,
+      headStartPercent: 20,
       config: buildStreakConfig(
         data.period_days,
         data.target_streak,
@@ -191,6 +205,7 @@ export function buildProgramFields(data: SaveProgramInput): {
     type: data.type,
     stampsRequired: data.pity_ceiling ?? 10,
     headStart: false,
+    headStartPercent: 20,
     config: buildChanceConfig(
       data.type,
       data.segments,

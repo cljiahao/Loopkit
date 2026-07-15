@@ -16,8 +16,50 @@ describe("buildProgramFields", () => {
       type: "stamp",
       stampsRequired: 10,
       headStart: true,
+      headStartPercent: 20,
       config: { stamps_required: 10, reward_text: "Free kopi" },
     });
+  });
+
+  it("defaults headStartPercent to 20 when absent from a stamp program", () => {
+    const result = buildProgramFields({
+      type: "stamp",
+      name: "Coffee card",
+      stamps_required: 10,
+      reward_text: "Free kopi",
+      head_start: false,
+      head_start_percent: undefined,
+      expiry_days: undefined,
+    } as SaveProgramInput);
+
+    expect(result.headStartPercent).toBe(20);
+  });
+
+  it("passes through a custom headStartPercent for a stamp program", () => {
+    const result = buildProgramFields({
+      type: "stamp",
+      name: "Coffee card",
+      stamps_required: 10,
+      reward_text: "Free kopi",
+      head_start: true,
+      head_start_percent: 35,
+      expiry_days: undefined,
+    } as SaveProgramInput);
+
+    expect(result.headStartPercent).toBe(35);
+  });
+
+  it("defaults headStartPercent to 20 for types that never use it", () => {
+    const result = buildProgramFields({
+      type: "lucky",
+      name: "Lucky tap",
+      reward_text: "Free item",
+      win_percent: 20,
+      pity_ceiling: 8,
+      expiry_days: undefined,
+    } as SaveProgramInput);
+
+    expect(result.headStartPercent).toBe(20);
   });
 
   it("builds a lucky program's fields, converting win_percent to a probability", () => {
