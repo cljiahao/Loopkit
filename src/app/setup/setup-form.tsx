@@ -307,9 +307,6 @@ export function SetupForm({
         {type === "stamp" || type === "plant" ? (
           <input type="hidden" name="variant" value={variant} />
         ) : null}
-        {variant === "points" && (
-          <input type="hidden" name="points_per_visit" value={pointsPerVisit} />
-        )}
 
         <Card>
           <CardHeader>
