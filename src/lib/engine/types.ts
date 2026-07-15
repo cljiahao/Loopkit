@@ -6,6 +6,14 @@ export type EngineEvent = {
 export type ProgressView =
   | { kind: "dots"; filled: number; total: number }
   | {
+      kind: "flame";
+      filled: number;
+      total: number;
+      stage: number;
+      stageName: string;
+      totalStages: number;
+    }
+  | {
       kind: "plant";
       stage: number;
       stageName: string;

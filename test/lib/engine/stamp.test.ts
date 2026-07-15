@@ -49,3 +49,85 @@ describe("stampStrategy", () => {
     ).toEqual({ kind: "dots", filled: 3, total: 5 });
   });
 });
+
+describe("stampStrategy flame variant", () => {
+  const flameCfg = {
+    stamps_required: 8,
+    reward_text: "free kopi",
+    variant: "flame" as const,
+  };
+
+  it("stage 0 (Spark) below the 50% threshold", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 2, reward_count: 0 },
+      flameCfg,
+      now,
+    );
+    expect(p.view).toEqual({
+      kind: "flame",
+      filled: 2,
+      total: 8,
+      stage: 0,
+      stageName: "Spark",
+      totalStages: 3,
+    });
+  });
+
+  it("stage 1 (Inner Flame) at exactly the 50% threshold", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 4, reward_count: 0 },
+      flameCfg,
+      now,
+    );
+    expect(p.view).toEqual({
+      kind: "flame",
+      filled: 4,
+      total: 8,
+      stage: 1,
+      stageName: "Inner Flame",
+      totalStages: 3,
+    });
+  });
+
+  it("stage 2 (Full Blaze) at 100%", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 8, reward_count: 0 },
+      flameCfg,
+      now,
+    );
+    expect(p.view).toEqual({
+      kind: "flame",
+      filled: 8,
+      total: 8,
+      stage: 2,
+      stageName: "Full Blaze",
+      totalStages: 3,
+    });
+  });
+
+  it("rounds the 50% threshold sensibly for an odd stamps_required", () => {
+    const oddCfg = { ...flameCfg, stamps_required: 7 };
+    // round(7 * 0.5) = 4
+    const below = stampStrategy.progress(
+      { stamp_count: 3, reward_count: 0 },
+      oddCfg,
+      now,
+    );
+    expect(below.view).toMatchObject({ stage: 0 });
+    const at = stampStrategy.progress(
+      { stamp_count: 4, reward_count: 0 },
+      oddCfg,
+      now,
+    );
+    expect(at.view).toMatchObject({ stage: 1 });
+  });
+
+  it("dots variant (default, no variant field) is unaffected", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 3, reward_count: 0 },
+      cfg,
+      now,
+    );
+    expect(p.view).toEqual({ kind: "dots", filled: 3, total: 5 });
+  });
+});
