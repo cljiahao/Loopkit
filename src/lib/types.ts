@@ -495,6 +495,24 @@ export interface Database {
         };
         Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
       };
+      expire_stale_vouchers: {
+        Args: { p_card: string };
+        Returns: number;
+      };
+      grant_reward_voucher: {
+        Args: {
+          p_card: string;
+          p_reward_text: string;
+          p_expiry_days: number | null;
+          p_count?: number;
+          p_immediate?: boolean;
+        };
+        Returns: void;
+      };
+      redeem_oldest_voucher: {
+        Args: { p_card: string };
+        Returns: void;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
