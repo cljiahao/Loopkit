@@ -35,19 +35,31 @@ pnpm format       # prettier --write
 ## File Layout
 
 ```
-src/app/                — app router (pages, layouts, server actions)
+src/app/dashboard/      — vendor console (programs, cards, stats)
+src/app/c/              — customer-facing card view (QR entry point)
+src/app/admin/          — Merqo-team admin console
+src/app/setup/          — vendor onboarding
+src/app/login/, auth/   — auth pages
+src/app/api/            — route handlers (merqo metrics, etc.)
 src/proxy.ts            — Supabase session refresh + /dashboard,/setup guard (Next 16)
+src/lib/engine/         — stamp/points/lucky-reward core logic
+src/lib/program.ts      — program CRUD + rules
+src/lib/cards.ts        — customer card state
+src/lib/loyalty.ts      — stamping/redemption flow
+src/lib/stats.ts        — vendor-facing metrics
+src/lib/merqo-vendor-status.ts — reports status/metrics to merqo over HTTP
 src/lib/supabase/       — browser / server / service clients + middleware helper
-src/lib/types.ts        — DB types (placeholder — mirror of supabase/migrations once schema lands)
+src/lib/types.ts        — DB types (mirror of supabase/migrations)
 src/lib/utils.ts        — cn() + shared formatting helpers
+src/components/         — wheel, scratch-card, flame-layers, cup, points-bar, stamp-dots, etc.
 src/components/ui/      — shadcn primitives (CLI-managed, do not hand-edit)
-supabase/migrations/    — SQL schema + RLS (to be added — this skeleton has none yet)
+supabase/migrations/    — SQL schema + RLS (26 migrations)
 ```
 
-This is a clean skeleton — no domain code (schema/programs/cards/auth pages)
-has been built yet. See `docs/superpowers/specs/2026-07-07-loopkit-core-design.md`
-and `docs/superpowers/plans/2026-07-07-loopkit-core.md` for the planned data
-model and MVP scope before adding it.
+Domain code (schema, programs/cards/stamps, auth pages, admin) is implemented,
+per the v1 scope in `docs/superpowers/specs/2026-07-07-loopkit-core-design.md`
+and `docs/superpowers/plans/2026-07-07-loopkit-core.md`. Later work is tracked
+as further specs/plans in the same `docs/superpowers/{specs,plans}/` dirs.
 
 ## Rules (always)
 
@@ -66,9 +78,8 @@ model and MVP scope before adding it.
   shared Merqo Supabase project and must never read/write another kit's schema
   (e.g. qkit's) directly. Cross-kit data goes over HTTP (the merqo metrics API),
   not a cross-schema query.
-- After adding the schema, create `supabase/migrations/` and regenerate
-  `src/lib/types.ts` (or run `supabase gen types typescript` once the CLI is
-  linked) — keep the `loopkit` schema key in sync everywhere it's referenced.
+- After every new migration, regenerate `src/lib/types.ts` (`supabase gen types
+typescript`) — keep the `loopkit` schema key in sync everywhere it's referenced.
 
 ## Skills
 
@@ -120,11 +131,12 @@ Manifest: `.claude/harness.json`
 
 ## Project-Specific Notes
 
-- This repo is a fresh harness seeded from the sibling project `qkit` (same
+- This repo was seeded as a harness from the sibling project `qkit` (same
   templateCentral Supabase variant, same shared Supabase project, different
-  schema). No domain code (programs/cards/stamps, auth pages, dashboard) exists
-  yet — that's later work, tracked in `docs/superpowers/plans/2026-07-07-loopkit-core.md`.
-- Plan of record: `docs/superpowers/plans/2026-07-07-loopkit-core.md` (design:
-  `docs/superpowers/specs/2026-07-07-loopkit-core-design.md`).
+  schema). Domain code (programs/cards/stamps, auth pages, dashboard, admin)
+  is implemented; v1 plan/design: `docs/superpowers/plans/2026-07-07-loopkit-core.md`
+  (design: `docs/superpowers/specs/2026-07-07-loopkit-core-design.md`).
+- Later features are tracked as further specs/plans in the same
+  `docs/superpowers/{specs,plans}/` dirs (v2 phases, workspace phases, etc.).
 
 <!-- [[post-harness]] — reserved for trace capture and meta-harness integration -->
