@@ -733,7 +733,7 @@ git commit -m "feat: mirror reward_vouchers table and reward_expiry_days column 
 
 - Modify: `src/lib/program.ts`
 - Modify: `src/app/setup/actions.ts`
-- Test: create `test/lib/program.test.ts` (this file doesn't exist yet — `buildProgramFields` etc. currently have no dedicated unit test file; `expiry_days`'s schema is only exercised indirectly. This task adds the first one, scoped to just the new field's validation.)
+- Modify: `test/lib/program.test.ts` (this file already exists — 8 tests for `programInputSchema`/`canPrepProgram`. Add `saveProgramSchema` to the existing import from `@/lib/program`, and append a new `describe` block below the existing ones. Do not remove or rewrite any existing test.)
 
 **Interfaces:**
 
@@ -741,11 +741,20 @@ git commit -m "feat: mirror reward_vouchers table and reward_expiry_days column 
 
 - [ ] **Step 1: Write the failing test**
 
-```typescript
-// test/lib/program.test.ts
-import { describe, it, expect } from "vitest";
-import { saveProgramSchema } from "@/lib/program";
+In `test/lib/program.test.ts`, change the existing import line from `import { programInputSchema, canPrepProgram, getEntitlement } from "@/lib/program";` to also include `saveProgramSchema`:
 
+```typescript
+import {
+  programInputSchema,
+  saveProgramSchema,
+  canPrepProgram,
+  getEntitlement,
+} from "@/lib/program";
+```
+
+Then append this new `describe` block at the end of the file (after the existing `describe("canPrepProgram", ...)` block):
+
+```typescript
 describe("saveProgramSchema reward_expiry_days", () => {
   it("accepts a stamp program with reward_expiry_days set", () => {
     const result = saveProgramSchema.safeParse({
