@@ -54,7 +54,7 @@ describe("countThresholdCrossings", () => {
   });
 
   it("returns 2 when a large jump (e.g. points_per_visit) crosses two multiples in one call", () => {
-    expect(countThresholdCrossings(8, 33, 10)).toBe(2);
+    expect(countThresholdCrossings(8, 28, 10)).toBe(2);
   });
 
   it("returns 0 for the first-ever value that hasn't reached the threshold yet", () => {
