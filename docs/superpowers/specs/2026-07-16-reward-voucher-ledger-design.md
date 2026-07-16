@@ -128,9 +128,15 @@ stamps_required, 0)` (Stamp) / `growth = greatest(growth - bloom, 0)`
    voucher state gates redemption, not just the raw counter.
 
 Same lazy-expire pass (step 1 only, no consumption) also runs inside
-`add_stamp`, Plant's visit path, and the counter's `lookupAction` — so an
-expired-but-unviewed voucher is swept the next time the card is touched at
-all, not only at redeem time.
+`add_stamp` and Plant's visit path (both are already mutating writes) — so an
+expired-but-unviewed voucher is swept the next time the card is stamped/
+watered, not only at redeem time. `lookupAction` stays read-only (`cards`
+grants `select` only to `authenticated` — no direct update, all mutation is
+through `security definer` RPCs — so a read-only action has no path to write
+a sweep even if it wanted to): it computes an already-past-expiry voucher's
+display state (e.g. show "expired" instead of "ready") from `expires_at`
+alone, without writing `status`/forfeiting anything. The DB row and the
+counter get reconciled on the next actual stamp/visit/redeem.
 
 ## F. UI — Setup page (`src/app/setup`)
 
@@ -206,8 +212,8 @@ within {N} days" when `voucherExpiresAt` is set.
   Decisions.
 - A background/cron job to proactively expire vouchers ahead of the next
   card touch — lazy (on-touch) expiry is sufficient per Decisions; a
-  voucher that's expired but never looked up again simply stays `active`
-  with a past `expires_at` until the next stamp/lookup/redeem, which is
+  voucher that's expired but never stamped/redeemed again simply stays
+  `active` with a past `expires_at` until the next mutating touch, which is
   fine (it doesn't over-count in the stats tile until it's actually swept).
 - Any change to the existing card-cycle `expiry_days`/`isCardExpired`
   concept (`src/lib/expiry.ts`) — unrelated, same-sounding-but-different
