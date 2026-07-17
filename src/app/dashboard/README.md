@@ -7,11 +7,11 @@ Vendor console root: program grid, shared shop QR, scan-to-serve entry point, an
 ## Contents
 
 - `actions.ts` — server actions (`stampAction`, `recordVisitAction`, `redeemPlantAction`, `regenerateCardAction`, `resolveTokenAction`, `lookupAction`, `redeemAction`, `saveQkitEarnConfigAction`) that stamp/play/redeem/regenerate cards and save qkit-earn config, each RLS-scoped via `requireVendor`
-- `activity/` (subfolder)
+- `activity/`
 - `card-link.tsx` — client `CardLinkActions`: copy-link and print-QR buttons for the shop QR block
 - `card.ts` — exports the shared `StampCard` type `{ id, phone, stamp_count }` used across actions and form components
-- `counter/` (subfolder)
-- `customers/` (subfolder)
+- `counter/`
+- `customers/`
 - `dashboard-nav.dom.test.tsx` — jsdom tests asserting `DashboardNav`'s inline nav links, mobile menu toggle, and account-dropdown item order (Profile/Settings/Plan/Sign out, no duplicate Customers item)
 - `dashboard-nav.tsx` — client `DashboardNav`: sticky header with brand, Dashboard/Customers/Activity/Stats nav links, mobile burger menu, and account dropdown (Profile/Settings/Plan/Sign out) with initials avatar and tier badge
 - `dashboard-view.test.ts` — unit tests for `shouldShowQr` (hides QR block at zero active programs, shows it otherwise)
@@ -21,8 +21,8 @@ Vendor console root: program grid, shared shop QR, scan-to-serve entry point, an
 - `new-program-tile.dom.test.tsx` — jsdom tests for `NewProgramTile` linking to `/setup` when allowed, showing an upgrade prompt at the free-tier cap
 - `new-program-tile.tsx` — `NewProgramTile`: trailing grid tile linking to `/setup` to add a program, or a Pro upgrade prompt when at the free-plan cap
 - `page.tsx` — `DashboardPage` server component: loads programs, redirects to `/setup` on zero programs, renders the shop QR block + scan entry + program card grid + new-program tile for active programs
-- `plan/` (subfolder)
-- `profile/` (subfolder)
+- `plan/`
+- `profile/`
 - `program-card.dom.test.tsx` — jsdom tests for `ProgramCard` rendering name/badge/description, expiry/head-start detail lines, Edit and Open Counter links
 - `program-card.tsx` — client `ProgramCard`: one card per active program showing type badge, description, detail lines, Edit link, and "Open Counter" button
 - `program-display.test.ts` — unit tests for `PROGRAM_TYPE_BADGE`, `describeProgram`, and `programDetails` across every program type
@@ -38,10 +38,10 @@ Vendor console root: program grid, shared shop QR, scan-to-serve entry point, an
 - `scan-button.dom.test.tsx` — jsdom tests for `ScanButton`'s default and custom label rendering
 - `scan-button.tsx` — client `ScanButton`: opens a camera modal, decodes a QR via `@zxing/browser`, resolves the token through `resolveTokenAction`, and reports `{ phone, programId }`
 - `serve-customer.tsx` — client `ServeCustomer`: the full serve flow (stamp/lucky/plant/wheel/scratch) — scan-or-manual phone entry, primary action + lookup, per-type result rendering (stamp progress, lucky win, plant growth, wheel/scratch), redeem and regenerate-card dialogs, reward celebration
-- `settings/` (subfolder)
+- `settings/`
 - `shop-qr-block.dom.test.tsx` — jsdom tests for `ShopQrBlock`'s join copy (named programs vs. generic fallback) and rendered link
 - `shop-qr-block.tsx` — `ShopQrBlock`: shared shop-wide QR code panel with join copy naming active programs, the raw link, and `CardLinkActions`
-- `stats/` (subfolder)
+- `stats/`
 
 ## Connectivity
 

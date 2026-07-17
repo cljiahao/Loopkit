@@ -8,22 +8,22 @@ customer, and admin surfaces.
 
 ## Contents
 
-- `admin/` (subfolder)
-- `api/` (subfolder)
-- `auth/` (subfolder)
-- `c/` (subfolder)
-- `dashboard/` (subfolder)
-- `earn/` (subfolder)
+- `admin/`
+- `api/`
+- `auth/`
+- `c/`
+- `dashboard/`
+- `earn/`
 - `error.tsx` — client root error boundary; replaces Next's error overlay in production with a retry UI, logs the error to the console
 - `global-error.tsx` — client root error boundary rendered only when the root layout itself throws; ships its own `<html>`/`<body>` with inline styles since the global stylesheet may not have loaded
 - `globals.css` — Tailwind v4 theme ("Mulberry & Gold"): light/dark CSS custom properties, `stamp-pop`/card-burst keyframe animations, reduced-motion overrides
 - `icon.svg` — static favicon asset
 - `layout.tsx` — `RootLayout`: loads Google fonts (Bricolage Grotesque, Plus Jakarta Sans, IBM Plex Mono), sets page metadata, wraps children in `<Providers>`
-- `login/` (subfolder)
+- `login/`
 - `not-found.tsx` — branded 404 page, e.g. for a stale or mistyped customer card link
 - `page.tsx` — `Home`: landing page composing Nav/Hero/HowItWorks/Benefits/Cta/Footer, checks the Supabase session to toggle authed CTAs
-- `reset-password/` (subfolder)
-- `setup/` (subfolder)
+- `reset-password/`
+- `setup/`
 
 ## Connectivity
 

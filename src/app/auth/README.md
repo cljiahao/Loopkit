@@ -7,7 +7,7 @@ recovery callback handler.
 
 ## Contents
 
-- `callback/` (subfolder)
+- `callback/`
 
 ## Connectivity
 
