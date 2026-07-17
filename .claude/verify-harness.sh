@@ -25,7 +25,7 @@ while IFS=$'\t' read -r path origin; do
   case "$origin" in "<"*) continue;; esac
   if [ ! -f "$path" ]; then echo "MISSING:  $path" >&2; drift=1; continue; fi
   [ "$(sha "$path")" = "$origin" ] || { echo "MODIFIED: $path" >&2; drift=1; }
-done < <(read_manifest)
+done < <(read_manifest | tr -d '\r')
 
 if [ "$drift" -ne 0 ]; then
   echo "❌ harness integrity drift. If intentional, a human runs: bash .claude/regen-harness.sh" >&2
