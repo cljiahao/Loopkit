@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-// .claude/hooks/user-prompt-guard.cjs
 // UserPromptSubmit — OWASP LLM01 injection guard + LLM02 credential-leak detection. Exit 2 = block.
 const input = require('fs').readFileSync(0, 'utf8');
 let prompt = '';
