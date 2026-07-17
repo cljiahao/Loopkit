@@ -90,6 +90,18 @@ current harness is missing entirely:
 by path instead of embedding the logic inline. `permissions.ask` shrinks back
 down since `protect-files.sh` now covers that ground dynamically.
 
+### 1a. Comment-hygiene ESLint hard gate
+
+`eslint.config.mjs` currently has `no-inline-comments: "warn"` (with an
+override turning it `"off"` for tests/scripts). Canonical templateCentral for
+TS stacks ships this as a hard gate: promote to `"error"` (keep the existing
+test/scripts override at `"off"` — that carve-out is templateCentral's own
+documented rationale, not a loopkit deviation) and add
+`sonarjs/no-commented-code: "error"` (new `eslint-plugin-sonarjs`
+devDependency) in the same top-level rules block. This was part of the "full
+parity" option the user picked and is folded into this spec even though the
+in-chat design summary didn't call it out as its own numbered section.
+
 ### 2. Git-hook layer (lefthook + gitleaks)
 
 Remove: `.husky/`, the `husky` devDependency, the `"prepare": "husky"` script.
