@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: check + unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Harness integrity
+        run: bash .claude/verify-harness.sh
+      - run: pnpm check
+      - run: pnpm test
+      - run: pnpm exec vitest --run --coverage
+      - name: Changed-line coverage (>= 80%)
+        run: pipx run diff-cover coverage/cobertura-coverage.xml --compare-branch=origin/main --fail-under=80
+
+  build:
+    name: build (next build)
+    runs-on: ubuntu-latest
+    env:
+      # next build renders dynamic routes at request time, so real Supabase
+      # creds aren't needed — dummy values satisfy the non-null env reads.
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_dummy
+      SUPABASE_SECRET_KEY: sb_secret_ci_dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  e2e:
+    name: e2e (public smoke)
+    runs-on: ubuntu-latest
+    env:
+      # The smoke only boots the app and hits public routes; the middleware
+      # constructs a Supabase client but makes no network call without a
+      # session, so dummy creds suffice (no live Supabase needed).
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_ci_dummy
+      SUPABASE_SECRET_KEY: sb_secret_ci_dummy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm exec playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  changelog:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require CHANGELOG for src changes (apply 'skip-changelog' label to bypass)
+        env:
+          { LABELS: "${{ join(github.event.pull_request.labels.*.name, ' ') }}" }
+        run: |
+          base="origin/${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD)
+          if echo "$changed" | grep -qE '^src/' && ! echo "$changed" | grep -qx 'CHANGELOG.md'; then
+            echo " $LABELS " | grep -q ' skip-changelog ' && { echo "skip-changelog label present — OK"; exit 0; }
+            echo "::error::src/ changed but CHANGELOG.md was not updated. Add an entry or apply the 'skip-changelog' label."
+            exit 1
+          fi
+
+  readme-freshness:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require README.md update for changed folders (apply 'skip-readme-check' label to bypass)
+        env:
+          { LABELS: "${{ join(github.event.pull_request.labels.*.name, ' ') }}" }
+        run: |
+          base="origin/${{ github.base_ref }}"
+          tmp=$(mktemp)
+          git diff --name-only "$base"...HEAD > "$tmp"
+          missing=""
+          while IFS= read -r f; do
+            case "$f" in */README.md|README.md) continue ;; esac
+            d=$(dirname "$f")
+            rm_path="README.md"
+            [ "$d" != "." ] && rm_path="$d/README.md"
+            grep -qxF "$rm_path" "$tmp" || missing="$missing\n  - $d/"
+          done < "$tmp"
+          rm -f "$tmp"
+          missing=$(printf '%b' "$missing" | sort -u)
+          if [ -n "$missing" ]; then
+            echo " $LABELS " | grep -q ' skip-readme-check ' && { echo "skip-readme-check label present — OK"; exit 0; }
+            echo "::error::Folders changed without updating their README.md (see list below)"
+            printf '%s\n' "$missing"
+            echo "Update the listed README.md files, or apply the 'skip-readme-check' label to bypass."
+            exit 1
+          fi

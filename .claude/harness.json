@@ -1,33 +1,87 @@
 {
-  "templatecentral_version": "5.8.0",
+  "templatecentral_version": "5.11.0",
   "stack": "nextjs",
   "adapted": "Next 16 + Supabase (auth/db/realtime) — Supabase variant, based on qkit harness",
-  "seeded_at": "2026-07-07",
+  "seeded_at": "2026-07-17",
   "review_note": "Fresh skeleton seeded from sibling project qkit's harness (same templateCentral Supabase variant, shared Supabase project, schema per kit — loopkit owns `loopkit`). No domain code carried over.",
+  "adoWiki": false,
+  "richReadme": true,
   "seeded_files": {
     "AGENTS.md": {
-      "origin_hash": "9ff8e13b5f8d3c131db709626a32aa09cc6810342a1201c359f19cb1992737b6",
+      "origin_hash": "e0c5b36198b687f76d0bc3592162294a2cf0fa3780c39a4d31048a4ba7c1fe43",
       "path": "AGENTS.md"
     },
-    "CLAUDE.md": {
-      "origin_hash": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
-      "path": "CLAUDE.md"
-    },
     ".claude/settings.json": {
-      "origin_hash": "b547fe15e4533dde2a0da7530ce5f9b38bc66370a3d547927ad17db6de1bd1ff",
+      "origin_hash": "74cea7cc828c95d07efabfcb6968f26ca2f00c979a53fcdf538a8fd57dcc163b",
       "path": ".claude/settings.json"
     },
-    ".claude/hooks/verify.sh": {
-      "origin_hash": "ccf4bb6c4cec18d0210387a608c1bfff84348719d09fe2efc959561d10f86ac6",
-      "path": ".claude/hooks/verify.sh"
-    },
     ".claude/skills/next-verify/SKILL.md": {
-      "origin_hash": "c05a03648c172cb6aa8ee200a8cede2f50fe2311db5a9f39ad15f63c2b651cf8",
+      "origin_hash": "bce9095dcc32ca4e80409d009e99c3980d9cf52664bfbe8ba74d97e48fe31a80",
       "path": ".claude/skills/next-verify/SKILL.md"
     },
-    ".claude/skills/supabase-migrate/SKILL.md": {
-      "origin_hash": "c32eb13ef9528a2ba24939ea6dcc3d14bd0be0ee08a0c42fbef01a24634c5297",
-      "path": ".claude/skills/supabase-migrate/SKILL.md"
+    ".claude/skills/skill-audit/SKILL.md": {
+      "origin_hash": "66b433e578e33f17e0f4fc701c297435f38f7b81288621449d6c1e4ed398a7f8",
+      "path": ".claude/skills/skill-audit/SKILL.md"
+    },
+    ".claude/hooks/protect-files.sh": {
+      "origin_hash": "2ba25f7c278bbd4c803b283b91fcb1ef4836af2429b8ae9847a9e64a4a0e3b76",
+      "path": ".claude/hooks/protect-files.sh"
+    },
+    ".claude/hooks/block-no-verify.sh": {
+      "origin_hash": "f0f147dcf4bd5df66bd723a7b5c3bde69df758f232b1403e9eb02ab7500d35ea",
+      "path": ".claude/hooks/block-no-verify.sh"
+    },
+    ".claude/hooks/user-prompt-guard.cjs": {
+      "origin_hash": "d1c376ffcbaba440838b52da3114b4671038042958126c4a316b4ef7de4056f6",
+      "path": ".claude/hooks/user-prompt-guard.cjs"
+    },
+    ".claude/hooks/post-edit-typecheck.sh": {
+      "origin_hash": "f17a4f6cb67b023f1058acb542b43ccf294de612e5d15352776ffbb50366b509",
+      "path": ".claude/hooks/post-edit-typecheck.sh"
+    },
+    ".claude/hooks/post-tool-failure.sh": {
+      "origin_hash": "31af87da10f31b5ead1d5fa455ffeb8903956ed2dacb5ef7319b1e8a2822efcd",
+      "path": ".claude/hooks/post-tool-failure.sh"
+    },
+    ".claude/hooks/stop-checks.sh": {
+      "origin_hash": "6c1142a9207b1ff1f055596875eb962d6ef3da8dd1c7d97c5c9f35fcad973b2e",
+      "path": ".claude/hooks/stop-checks.sh"
+    },
+    ".claude/hooks/subagent-stop.sh": {
+      "origin_hash": "8107bdb11b7dbe71121d24e1e585284f430503f96713b5bcc646308a9c777da5",
+      "path": ".claude/hooks/subagent-stop.sh"
+    },
+    ".claude/hooks/session-context.sh": {
+      "origin_hash": "f7e2464fd25dc4149686ada47a938b7a8ea478fc9636772907ea5e747c940cd5",
+      "path": ".claude/hooks/session-context.sh"
+    },
+    ".claude/hooks/skill-usage-log.sh": {
+      "origin_hash": "5405cf6e00bfee4c2f0bf7f90285215825f9671376383154b2a7aff2dd6db74f",
+      "path": ".claude/hooks/skill-usage-log.sh"
+    },
+    "lefthook.yml": {
+      "origin_hash": "0c791d0690f70631f89185b3157d2082c1fa7ff7e9e6adb9f092af329faf3413",
+      "path": "lefthook.yml"
+    },
+    ".lefthook/commit-msg.sh": {
+      "origin_hash": "65d9b8f755a4103b466f4ac3c0291af7a0ddd30721c1913afac0cffefc4384e3",
+      "path": ".lefthook/commit-msg.sh"
+    },
+    ".gitleaks.toml": {
+      "origin_hash": "f9cd4aac35f474f9a48c691b4fd46642388389fa650481342fc4d5ad6216de4e",
+      "path": ".gitleaks.toml"
+    },
+    ".github/workflows/ci.yml": {
+      "origin_hash": "494763e76076b4328e3de2d93a1b5458a8bf509eaaedadb21e2666cd14243686",
+      "path": ".github/workflows/ci.yml"
+    },
+    ".claude/verify-harness.sh": {
+      "origin_hash": "8c50cc319c80fb1b6e4129f149b69a7341803dc078f388fe0e3127e64d7f08bd",
+      "path": ".claude/verify-harness.sh"
+    },
+    ".claude/regen-harness.sh": {
+      "origin_hash": "a8c844610843c39550ac920d1d29323244bdecbcdeaa4519c97d8867de1b37a0",
+      "path": ".claude/regen-harness.sh"
     }
   }
 }
