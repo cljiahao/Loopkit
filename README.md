@@ -60,3 +60,27 @@ goes over HTTP (the merqo metrics API).
 - Plans/specs: `docs/superpowers/`
 
 See `AGENTS.md` for full engineering rules, harness details, and skills.
+
+## Structure
+
+### Contents
+
+- `.claude/` — Claude Code harness: hooks, project skills, harness manifest
+- `.github/` — CI workflows
+- `.lefthook/` — git commit-msg gate script
+- `docs/` — deploy runbook, superpowers specs/plans, CONSTITUTION
+- `e2e/` — Playwright end-to-end smoke tests
+- `src/` — application source (App Router pages, lib, components)
+- `supabase/` — SQL migrations and seed data
+- `test/` — Vitest unit/integration tests
+
+### Connectivity
+
+`src/app/` (App Router pages) composes from `src/lib/` (domain logic, Supabase
+clients, the stamp/points/lucky engine) and `src/components/` (shared UI).
+`supabase/migrations/` is the schema `src/lib/types.ts` mirrors by hand and
+`src/lib/supabase/` connects to at runtime. `test/` mirrors `src/`'s
+structure one-to-one for unit/integration coverage; `e2e/` drives the app
+as a browser would, independent of that structure. `.claude/` and
+`.github/` are the enforcement layer around all of the above — they gate
+what can be committed/merged but contain no application logic themselves.
