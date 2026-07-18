@@ -12,6 +12,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   login/reset-password UI) moved into `src/features/auth/` — a pure
   code-location migration, no behavioral change. External consumers now
   import from `@/features/auth`.
+- Card-check code (`src/app/c/actions.ts`, `check-form.tsx`,
+  `program-card-status.tsx`, `status-state.ts`) moved into
+  `src/features/card-check/` — a pure code-location migration, no
+  behavioral change. `src/app/c/page.tsx` now imports `CheckForm` from
+  `@/features/card-check`.
 
 ### Fixed
 
