@@ -7,7 +7,7 @@ import { qrSvg } from "@/lib/qr";
 import { allowRequest } from "@/lib/rate-limit";
 import { isCardExpired } from "@/lib/expiry";
 import type { ActionResult } from "@/lib/action-result";
-import type { CardStatus, StatusState } from "@/app/c/status-state";
+import type { CardStatus, StatusState } from "../types";
 
 type VendorJoinRow = {
   program_id: string;

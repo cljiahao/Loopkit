@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
+// src/features/card-check/components/program-card-status.dom.test.tsx
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
-import { ProgramCardStatus } from "@/app/c/program-card-status";
-import type { CardStatus } from "@/app/c/status-state";
+import { ProgramCardStatus } from "./program-card-status";
+import type { CardStatus } from "../types";
 
 function baseCard(overrides: Partial<CardStatus>): CardStatus {
   return {

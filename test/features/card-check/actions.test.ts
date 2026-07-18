@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mirrors qkit's sales/summary.test.ts mock style for the Supabase server
-// client — here stubbing the `rpc` call the action makes.
-const { rpcMock } = vi.hoisted(() => ({ rpcMock: vi.fn() }));
+const { rpcMock, allowRequestMock } = vi.hoisted(() => ({
+  rpcMock: vi.fn(),
+  allowRequestMock: vi.fn(async () => true),
+}));
 
 vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({ rpc: rpcMock })),
@@ -12,8 +13,15 @@ vi.mock("@/lib/qr", () => ({
   qrSvg: vi.fn(async (text: string) => `<svg data-token="${text}"></svg>`),
 }));
 
-import { checkStatusAction } from "@/app/c/actions";
-import { STATUS_IDLE } from "@/app/c/status-state";
+vi.mock("@/lib/rate-limit", () => ({
+  allowRequest: allowRequestMock,
+}));
+
+import {
+  checkStatusAction,
+  regenerateCardAction,
+} from "@/features/card-check/api/actions";
+import { STATUS_IDLE } from "@/features/card-check/types";
 
 function form(fields: Record<string, string>): FormData {
   const fd = new FormData();
@@ -29,8 +37,19 @@ function mockJoin(rows: unknown[]) {
   });
 }
 
+function mockRegenerate(card: unknown) {
+  rpcMock.mockImplementation((fn: string) => {
+    if (fn === "regenerate_card")
+      return Promise.resolve({ data: card, error: null });
+    return Promise.resolve({ data: null, error: null });
+  });
+}
+
 describe("checkStatusAction", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    allowRequestMock.mockResolvedValue(true);
+  });
 
   it("rejects an invalid phone without calling the RPC", async () => {
     const result = await checkStatusAction(
@@ -52,6 +71,20 @@ describe("checkStatusAction", () => {
     );
 
     expect(result).toEqual({ status: "error", message: "Missing shop." });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("returns a rate-limit error without calling the RPC when too many attempts have been made", async () => {
+    allowRequestMock.mockResolvedValue(false);
+    const result = await checkStatusAction(
+      STATUS_IDLE,
+      form({ vendor: "v1", phone: "91234567" }),
+    );
+
+    expect(result).toEqual({
+      status: "error",
+      message: "Too many attempts — try again in a minute.",
+    });
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
@@ -351,5 +384,88 @@ describe("checkStatusAction", () => {
       status: "error",
       message: "Something went wrong.",
     });
+  });
+});
+
+describe("regenerateCardAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    allowRequestMock.mockResolvedValue(true);
+  });
+
+  it("rejects an invalid phone without calling the RPC", async () => {
+    const result = await regenerateCardAction(
+      form({ phone: "not-a-phone", program: "p1" }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: "Enter a valid Singapore phone number.",
+    });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing program id without calling the RPC", async () => {
+    const result = await regenerateCardAction(
+      form({ phone: "91234567", program: "" }),
+    );
+
+    expect(result).toEqual({ success: false, error: "Missing program." });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("returns a rate-limit error without calling the RPC when too many attempts have been made", async () => {
+    allowRequestMock.mockResolvedValue(false);
+    const result = await regenerateCardAction(
+      form({ phone: "91234567", program: "p1" }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: "Too many attempts — try again in a minute.",
+    });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("reports an error when the RPC fails", async () => {
+    rpcMock.mockImplementation(() =>
+      Promise.resolve({ data: null, error: { message: "db down" } }),
+    );
+
+    const result = await regenerateCardAction(
+      form({ phone: "91234567", program: "p1" }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: "Something went wrong.",
+    });
+  });
+
+  it("reports an error when the RPC returns no card", async () => {
+    mockRegenerate(null);
+
+    const result = await regenerateCardAction(
+      form({ phone: "91234567", program: "p1" }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: "Something went wrong.",
+    });
+  });
+
+  it("calls regenerate_card with the normalized phone and returns it on success", async () => {
+    mockRegenerate({ id: "card-1" });
+
+    const result = await regenerateCardAction(
+      form({ phone: "9123 4567", program: "p1" }),
+    );
+
+    expect(rpcMock).toHaveBeenCalledWith("regenerate_card", {
+      p_program: "p1",
+      p_phone: "+6591234567",
+    });
+    expect(result).toEqual({ success: true, phone: "+6591234567" });
   });
 });

@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { regenerateCardAction } from "@/app/c/actions";
-import type { CardStatus } from "@/app/c/status-state";
+import { regenerateCardAction } from "../api/actions";
+import type { CardStatus } from "../types";
 import { Plant } from "@/components/plant";
 import { Cup } from "@/components/cup";
 import { Wheel } from "@/components/wheel";

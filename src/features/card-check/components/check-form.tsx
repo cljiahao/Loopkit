@@ -1,9 +1,9 @@
 "use client";
 
 import { useActionState } from "react";
-import { checkStatusAction } from "@/app/c/actions";
-import { STATUS_IDLE } from "@/app/c/status-state";
-import { ProgramCardStatus } from "@/app/c/program-card-status";
+import { checkStatusAction } from "../api/actions";
+import { STATUS_IDLE } from "../types";
+import { ProgramCardStatus } from "./program-card-status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
