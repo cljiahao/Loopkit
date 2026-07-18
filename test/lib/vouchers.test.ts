@@ -1,9 +1,23 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const { fromMock, rpcMock } = vi.hoisted(() => ({
+  fromMock: vi.fn(),
+  rpcMock: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/server", () => ({
+  createServerClient: vi.fn(async () => ({ from: fromMock, rpc: rpcMock })),
+}));
+
 import {
   oldestActiveVoucher,
   isPastExpiry,
   daysUntilExpiry,
   countJustExpired,
+  listCardVouchers,
+  expireStaleVouchers,
+  grantRewardVoucher,
+  redeemOldestVoucher,
   type VoucherRow,
 } from "@/lib/vouchers";
 
@@ -102,5 +116,105 @@ describe("countJustExpired", () => {
       }),
     ];
     expect(countJustExpired(vouchers, "2026-07-10T09:00:00Z")).toBe(1);
+  });
+});
+
+describe("listCardVouchers", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns the card's vouchers, most recently earned first", async () => {
+    const rows = [voucher({ id: "v1" })];
+    const order = vi.fn(async () => ({ data: rows, error: null }));
+    const eq = vi.fn(() => ({ order }));
+    const select = vi.fn(() => ({ eq }));
+    fromMock.mockReturnValue({ select });
+
+    const result = await listCardVouchers("card-1");
+
+    expect(result).toEqual(rows);
+    expect(fromMock).toHaveBeenCalledWith("reward_vouchers");
+    expect(eq).toHaveBeenCalledWith("card_id", "card-1");
+    expect(order).toHaveBeenCalledWith("earned_at", { ascending: false });
+  });
+
+  it("throws when the query errors", async () => {
+    const order = vi.fn(async () => ({
+      data: null,
+      error: { message: "boom" },
+    }));
+    fromMock.mockReturnValue({
+      select: () => ({ eq: () => ({ order }) }),
+    });
+
+    await expect(listCardVouchers("card-1")).rejects.toThrow(/boom/);
+  });
+});
+
+describe("expireStaleVouchers", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns how many vouchers were swept", async () => {
+    rpcMock.mockResolvedValue({ data: 2, error: null });
+
+    const count = await expireStaleVouchers("card-1");
+
+    expect(count).toBe(2);
+    expect(rpcMock).toHaveBeenCalledWith("expire_stale_vouchers", {
+      p_card: "card-1",
+    });
+  });
+
+  it("throws when the RPC errors", async () => {
+    rpcMock.mockResolvedValue({ data: null, error: { message: "boom" } });
+
+    await expect(expireStaleVouchers("card-1")).rejects.toThrow(/boom/);
+  });
+});
+
+describe("grantRewardVoucher", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("calls grant_reward_voucher with the given fields", async () => {
+    rpcMock.mockResolvedValue({ error: null });
+
+    await grantRewardVoucher("card-1", "Free kopi", 30, 1, false);
+
+    expect(rpcMock).toHaveBeenCalledWith("grant_reward_voucher", {
+      p_card: "card-1",
+      p_reward_text: "Free kopi",
+      p_expiry_days: 30,
+      p_count: 1,
+      p_immediate: false,
+    });
+  });
+
+  it("throws when the RPC errors", async () => {
+    rpcMock.mockResolvedValue({ error: { message: "boom" } });
+
+    await expect(
+      grantRewardVoucher("card-1", "Free kopi", null, 1, true),
+    ).rejects.toThrow(/boom/);
+  });
+});
+
+describe("redeemOldestVoucher", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("calls redeem_oldest_voucher for the card", async () => {
+    rpcMock.mockResolvedValue({ error: null });
+
+    await redeemOldestVoucher("card-1");
+
+    expect(rpcMock).toHaveBeenCalledWith("redeem_oldest_voucher", {
+      p_card: "card-1",
+    });
+  });
+
+  it("throws the raw Postgres message when the RPC errors", async () => {
+    rpcMock.mockResolvedValue({ error: { message: "no_active_voucher" } });
+
+    await expect(redeemOldestVoucher("card-1")).rejects.toThrow(
+      "no_active_voucher",
+    );
   });
 });
