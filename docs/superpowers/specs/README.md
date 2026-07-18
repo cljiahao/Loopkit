@@ -53,6 +53,7 @@ below.
 - `2026-07-17-templatecentral-harness-parity-design.md`
 - `2026-07-18-feature-auth-migration-design.md`
 - `2026-07-18-card-check-migration-design.md`
+- `2026-07-18-plant-cup-growth-animation-design.md`
 
 ## Parent
 
