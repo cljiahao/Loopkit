@@ -1,8 +1,5 @@
 import { cn } from "@/lib/utils";
 
-const GROWTH_TRANSITION =
-  "motion-safe:transition-all motion-safe:duration-[1600ms] motion-safe:ease-out";
-
 export function Cup({
   stage,
   totalStages,
@@ -51,7 +48,7 @@ export function Cup({
           height={cupBottomY - liquidTopY}
           clipPath="url(#cup-body-clip)"
           className={cn(
-            GROWTH_TRANSITION,
+            "motion-safe:transition-all motion-safe:duration-500",
             wilting ? "fill-muted-foreground/50" : "fill-primary/60",
           )}
         />
@@ -71,13 +68,7 @@ export function Cup({
         strokeLinecap="round"
       />
       {isFull && (
-        <g
-          style={{ transformOrigin: `50px ${liquidTopY + 2}px` }}
-          className={cn(
-            GROWTH_TRANSITION,
-            "opacity-100 scale-100 starting:opacity-0 starting:scale-0",
-          )}
-        >
+        <g>
           <circle
             cx="43"
             cy={liquidTopY + 2}
