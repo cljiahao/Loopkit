@@ -8,7 +8,6 @@ Supabase clients and `@/lib` collaborators mocked via `vi.mock`/`vi.hoisted`.
 ## Contents
 
 - `change-type-action.test.ts` — `changeTypeAction`: free-tier prep-and-activate vs. Pro scheduled-cutover program type migration
-- `check-status-action.test.ts` — dashboard "check status" action: resolves a card token to progress via RPC, renders its QR
 - `dashboard-actions.test.ts` — misc `src/app/dashboard/actions.ts` Server Actions covering program/card RPC calls
 - `dashboard-nav.test.tsx` — jsdom: `DashboardNav` renders the active route highlighted based on `usePathname`
 - `preview-state.test.ts` — `buildPreviewProgress`/`buildPreviewProgram`/`buildInitialCard`: `/setup` live-preview state builders
