@@ -47,6 +47,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   counter page, replacing the separate "Open Counter" button. The pencil
   edit link stays independently tappable. A small chevron signals the card
   opens something.
+- `/setup` no longer shows the "Your programs" management list alongside
+  the create form (or any other action view) — bare `/setup` is now a
+  clean create/upsell page, and the list moved behind a new
+  `/setup?manage=1` view reached via a new "Manage your programs" link.
 
 ### Fixed
 
@@ -54,3 +58,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and `tsconfig.json` — previously only `.prettierignore` knew about it, so
   a sibling worktree's un-migrated source could trip false-positive lint
   errors on a fresh checkout.
+- `/setup`'s "Schedule retirement" action was silently unreachable for Pro
+  vendors — `canCreate` is unconditionally true for Pro (unlimited
+  programs), so the old view-routing check let it always win over the
+  `schedule` query param, showing the create form instead. Fixed via a new
+  `resolveSetupView` precedence that gives explicit query-param intents
+  priority over the ambient `canCreate` default.
