@@ -51,6 +51,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the create form (or any other action view) — bare `/setup` is now a
   clean create/upsell page, and the list moved behind a new
   `/setup?manage=1` view reached via a new "Manage your programs" link.
+- `/setup`'s card-type picker now groups its 8 styles into 4 families
+  (Stamp Card, Sprout, Chance Card, Lucky Tap) with a style sub-step,
+  instead of one flat grid of 8 tiles. Purely a picker UI change — every
+  family/style combination still saves the exact same `type`/`variant`
+  pair as before (e.g. Stamp Card → Flame Club still saves
+  `type=stamp, variant=flame`), so existing programs and the engine are
+  unaffected.
 
 ### Fixed
 
