@@ -75,4 +75,15 @@ describe("updateSocialLinksAction", () => {
     expect(res.error).toBe("Not signed in");
     expect(upsertVendorProfileMock).not.toHaveBeenCalled();
   });
+
+  it("returns an error and does not revalidate when upsertVendorProfile fails", async () => {
+    upsertVendorProfileMock.mockRejectedValueOnce(new Error("db down"));
+
+    const res = await updateSocialLinksAction({
+      website: "https://kopicorner.com",
+    });
+
+    expect(res.error).toBe("Could not save links");
+    expect(revalidatePathMock).not.toHaveBeenCalled();
+  });
 });
