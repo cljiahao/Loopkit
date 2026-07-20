@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { vendorPhoneOnboardAction } from "../api/actions";
 import { Wordmark } from "@/components/landing/wordmark";
+import { ElevatedCard } from "@/components/elevated-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -169,7 +170,7 @@ export function LoginForm() {
     return (
       <main className="flex min-h-screen items-center justify-center p-5">
         <div className="w-full max-w-md text-center">
-          <div className="rounded-2xl border bg-card px-7 py-10 shadow-sm">
+          <ElevatedCard className="px-7 py-10">
             <Wordmark className="text-2xl" />
             <h1 className="mt-6 text-3xl font-bold tracking-tight">
               Check your email
@@ -204,7 +205,7 @@ export function LoginForm() {
             >
               Back to sign in
             </Button>
-          </div>
+          </ElevatedCard>
         </div>
       </main>
     );
@@ -220,7 +221,7 @@ export function LoginForm() {
           </p>
         </div>
 
-        <div className="rounded-2xl border bg-card shadow-sm">
+        <ElevatedCard>
           <div className="px-7 pt-9 pb-8">
             <h1 className="text-3xl font-bold tracking-tight">
               {isSignin ? "Welcome back" : "Create your account"}
@@ -392,7 +393,7 @@ export function LoginForm() {
               {isSignin ? "Create an account" : "Sign in"}
             </button>
           </p>
-        </div>
+        </ElevatedCard>
       </div>
     </main>
   );
