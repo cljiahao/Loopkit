@@ -96,6 +96,16 @@ export function DashboardNav({
   return (
     <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-1 sm:gap-3">
+        <button
+          type="button"
+          aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen((v) => !v)}
+          className="-ml-1.5 shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-secondary sm:hidden"
+        >
+          {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+        </button>
+
         <Link
           href="/dashboard"
           aria-label="loopkit dashboard home"
@@ -127,15 +137,6 @@ export function DashboardNav({
       </div>
 
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          onClick={() => setMobileOpen((v) => !v)}
-          className="rounded-lg p-1.5 text-muted-foreground hover:bg-secondary sm:hidden"
-        >
-          {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
@@ -196,29 +197,38 @@ export function DashboardNav({
       </div>
 
       {mobileOpen && (
-        <div className="absolute inset-x-0 top-full z-20 border-b bg-background/95 px-5 py-3 backdrop-blur-md sm:hidden">
-          <div className="flex flex-col gap-1">
-            {LINKS.map((link) => {
-              const active =
-                link.href === "/dashboard"
-                  ? path === "/dashboard"
-                  : isActive(path, link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
-                    active && "bg-primary/10 text-primary",
-                  )}
-                >
-                  {link.label}
-                </Link>
-              );
-            })}
+        <>
+          <button
+            type="button"
+            aria-hidden
+            tabIndex={-1}
+            onClick={() => setMobileOpen(false)}
+            className="fixed inset-0 z-30 cursor-default sm:hidden"
+          />
+          <div className="absolute inset-x-0 top-full z-40 border-b bg-background/95 px-5 py-3 backdrop-blur-md sm:hidden">
+            <div className="flex flex-col gap-1">
+              {LINKS.map((link) => {
+                const active =
+                  link.href === "/dashboard"
+                    ? path === "/dashboard"
+                    : isActive(path, link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
+                      active && "bg-primary/10 text-primary",
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

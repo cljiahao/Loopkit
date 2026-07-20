@@ -64,6 +64,38 @@ describe("DashboardNav", () => {
     ).toBeInTheDocument();
   });
 
+  it("places the burger toggle to the left of the wordmark, opposite the account menu", () => {
+    render(<DashboardNav {...baseProps} />);
+    const toggle = screen.getByRole("button", { name: /open menu/i });
+    const home = screen.getByRole("link", {
+      name: /loopkit dashboard home/i,
+    });
+    const account = screen.getByRole("button", { name: /account menu/i });
+    // DOM order: burger, then the wordmark link, both left of the account menu.
+    expect(
+      toggle.compareDocumentPosition(home) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      home.compareDocumentPosition(account) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it("closes the mobile panel when the tap-away scrim is clicked", async () => {
+    const user = userEvent.setup();
+    render(<DashboardNav {...baseProps} />);
+    await user.click(screen.getByRole("button", { name: /open menu/i }));
+    expect(
+      screen.getByRole("button", { name: /close menu/i }),
+    ).toBeInTheDocument();
+
+    const scrim = document.querySelector('button[aria-hidden="true"]');
+    expect(scrim).not.toBeNull();
+    await user.click(scrim as HTMLButtonElement);
+    expect(
+      screen.getByRole("button", { name: /open menu/i }),
+    ).toBeInTheDocument();
+  });
+
   it("account menu has Profile, Settings, Plan, Sign out (in that order), and no separate Customers item", async () => {
     const user = userEvent.setup();
     render(<DashboardNav {...baseProps} />);
