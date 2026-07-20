@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin";
 import { platformTotals, recentActivity } from "@/lib/admin-data";
 import { formatSgtDateTime } from "@/lib/format";
 import { Stat } from "@/app/admin/stat";
+import { ElevatedCard } from "@/components/elevated-card";
 
 export const revalidate = 0;
 
@@ -35,7 +36,7 @@ export default async function AdminOverviewPage() {
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
           Recent activity across all shops
         </h2>
-        <div className="rounded-2xl border bg-card p-6 shadow-sm">
+        <ElevatedCard className="p-6">
           <ul className="space-y-2.5">
             {activity.length > 0 ? (
               activity.map((event) => {
@@ -80,7 +81,7 @@ export default async function AdminOverviewPage() {
               </li>
             )}
           </ul>
-        </div>
+        </ElevatedCard>
       </section>
     </main>
   );
