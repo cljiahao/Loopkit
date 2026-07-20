@@ -28,13 +28,15 @@ export function ActivityFilters({
   const clearHref = currentP ? `${basePath}?p=${currentP}` : basePath;
 
   return (
+    // Matches ElevatedCard's classes directly — a <form> needs action/method,
+    // which ElevatedCard's as="div"|"section"|"li" prop type doesn't support.
     <form
       action={basePath}
       method="get"
-      className="flex flex-wrap items-end gap-3 rounded-2xl border bg-card p-4"
+      className="flex flex-wrap items-end gap-3 rounded-[20px] border bg-card p-4 shadow-[0_1px_0_0_var(--color-border),0_12px_28px_-20px_rgba(0,0,0,0.35)]"
     >
       {currentP && <input type="hidden" name="p" value={currentP} />}
-      <div className="space-y-1.5">
+      <div className="w-full space-y-1.5 sm:w-auto">
         <Label
           htmlFor="activity-type"
           className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
@@ -42,7 +44,7 @@ export function ActivityFilters({
           Type
         </Label>
         <Select name="type" defaultValue={type ?? TYPE_ALL}>
-          <SelectTrigger id="activity-type" className="h-9 w-36">
+          <SelectTrigger id="activity-type" className="h-9 w-full sm:w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -52,7 +54,7 @@ export function ActivityFilters({
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-1.5">
+      <div className="w-full space-y-1.5 sm:w-auto">
         <Label
           htmlFor="activity-from"
           className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
@@ -64,10 +66,10 @@ export function ActivityFilters({
           type="date"
           name="from"
           defaultValue={from ?? ""}
-          className="h-9 w-40"
+          className="h-9 w-full sm:w-40"
         />
       </div>
-      <div className="space-y-1.5">
+      <div className="w-full space-y-1.5 sm:w-auto">
         <Label
           htmlFor="activity-to"
           className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
@@ -79,10 +81,14 @@ export function ActivityFilters({
           type="date"
           name="to"
           defaultValue={to ?? ""}
-          className="h-9 w-40"
+          className="h-9 w-full sm:w-40"
         />
       </div>
-      <Button type="submit" variant="outline" className="h-9 rounded-lg">
+      <Button
+        type="submit"
+        variant="outline"
+        className="h-9 w-full rounded-lg sm:w-auto"
+      >
         Apply filters
       </Button>
       {hasActiveFilters && (
