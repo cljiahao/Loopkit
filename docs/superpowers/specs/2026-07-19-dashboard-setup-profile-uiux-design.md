@@ -20,14 +20,19 @@ Three vendor-facing areas need work, per user feedback (item 4 of the loopkit UX
 
 ### `src/components/elevated-card.tsx` (new)
 
-A plain primitive: `rounded-[20px] border` + a two-layer soft shadow (`shadow-[0_1px_0_0_var(--border),0_12px_28px_-20px_rgba(0,0,0,0.35)]` — matches the brainstorm mockup's "style C"), subtle background tint (`bg-card`). No scallop, no dashed edges, no food-ticket theming. Accepts `as?: "div" | "section"` like qkit's `Ticket` (for semantic `<section>` usage) but nothing else from that API — this is a deliberately smaller primitive since loopkit doesn't need `Ticket`'s shadow/dashed/clip/borderColor variants (all of which exist in qkit to serve *other* qkit-specific card contexts like order tickets, none of which loopkit has).
+A plain primitive: `rounded-[20px] border` + a two-layer soft shadow (`shadow-[0_1px_0_0_var(--border),0_12px_28px_-20px_rgba(0,0,0,0.35)]` — matches the brainstorm mockup's "style C"), subtle background tint (`bg-card`). No scallop, no dashed edges, no food-ticket theming. Accepts `as?: "div" | "section"` like qkit's `Ticket` (for semantic `<section>` usage) but nothing else from that API — this is a deliberately smaller primitive since loopkit doesn't need `Ticket`'s shadow/dashed/clip/borderColor variants (all of which exist in qkit to serve _other_ qkit-specific card contexts like order tickets, none of which loopkit has).
 
 ### `src/components/section.tsx` (new)
 
 Same API shape as qkit's `Section` (`icon`, `eyebrow?`, `title`, `description`, `children`) so callers read identically to the sibling repo, but wraps `ElevatedCard` instead of `Ticket`:
 
 ```tsx
-<Section icon={<Store className="size-4" />} eyebrow="Shown to customers" title="Stall name" description="...">
+<Section
+  icon={<Store className="size-4" />}
+  eyebrow="Shown to customers"
+  title="Stall name"
+  description="..."
+>
   {/* field(s) + save button */}
 </Section>
 ```

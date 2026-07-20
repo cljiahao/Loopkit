@@ -284,7 +284,6 @@ type MerqoSchema = {
 Then append, at the end of the file, after the existing `getOrCreateVendorProfile` function:
 
 ```typescript
-
 /**
  * Update the vendor's shared merqo.vendor_profile row (stall name +
  * social links). Mirrors qkit's implementation exactly — same RPC,
@@ -501,7 +500,10 @@ describe("updateSocialLinksAction", () => {
       expect.anything(),
       "v1",
       "Kopi Corner",
-      { website: "https://kopicorner.com", instagram: "https://instagram.com/kopicorner" },
+      {
+        website: "https://kopicorner.com",
+        instagram: "https://instagram.com/kopicorner",
+      },
     );
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard/profile");
   });
@@ -509,7 +511,9 @@ describe("updateSocialLinksAction", () => {
   it("rejects an invalid URL without calling upsertVendorProfile", async () => {
     const res = await updateSocialLinksAction({ website: "not-a-url" });
 
-    expect(res.error).toBe("Enter a valid URL, e.g. https://instagram.com/yourstall");
+    expect(res.error).toBe(
+      "Enter a valid URL, e.g. https://instagram.com/yourstall",
+    );
     expect(upsertVendorProfileMock).not.toHaveBeenCalled();
   });
 
@@ -806,8 +810,8 @@ export default async function ProfilePage() {
       <div>
         <h1 className="font-display text-2xl font-bold">Profile</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Your stall name, social links, profile icon, how we address you,
-          and your sign-in password. Each section saves on its own.
+          Your stall name, social links, profile icon, how we address you, and
+          your sign-in password. Each section saves on its own.
         </p>
       </div>
       <ProfileForm
@@ -1012,7 +1016,11 @@ export function ProfileForm({
         title="Social & website"
         description="Shown on your customer's card. Each link is optional."
       >
-        <SocialLinksFields value={links} onChange={setLinks} idPrefix="profile" />
+        <SocialLinksFields
+          value={links}
+          onChange={setLinks}
+          idPrefix="profile"
+        />
         <div className="flex justify-end">
           <Button
             type="button"
@@ -1205,7 +1213,10 @@ describe("ProfileForm", () => {
       "https://kopicorner.com",
     );
 
-    await user.type(screen.getByLabelText(/instagram/i), "https://instagram.com/x");
+    await user.type(
+      screen.getByLabelText(/instagram/i),
+      "https://instagram.com/x",
+    );
     await user.click(screen.getByRole("button", { name: "Save links" }));
 
     expect(updateSocialLinksMock).toHaveBeenCalledWith({
@@ -1285,41 +1296,41 @@ import { ElevatedCard } from "@/components/elevated-card";
 Find:
 
 ```tsx
-  return (
-    <div className="flex flex-col items-start gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center">
-      <div
-        className="shrink-0 rounded-xl border bg-white p-2 [&_svg]:size-20"
-        dangerouslySetInnerHTML={{ __html: qrSvgMarkup }}
-      />
-      <div className="min-w-0 flex-1 space-y-2">
-        <p className="text-sm font-medium">{joinCopy}</p>
-        <code className="block truncate rounded-lg bg-muted px-3 py-2 font-mono text-xs">
-          {link}
-        </code>
-        <CardLinkActions link={link} />
-      </div>
+return (
+  <div className="flex flex-col items-start gap-4 rounded-2xl border bg-card p-5 shadow-sm sm:flex-row sm:items-center">
+    <div
+      className="shrink-0 rounded-xl border bg-white p-2 [&_svg]:size-20"
+      dangerouslySetInnerHTML={{ __html: qrSvgMarkup }}
+    />
+    <div className="min-w-0 flex-1 space-y-2">
+      <p className="text-sm font-medium">{joinCopy}</p>
+      <code className="block truncate rounded-lg bg-muted px-3 py-2 font-mono text-xs">
+        {link}
+      </code>
+      <CardLinkActions link={link} />
     </div>
-  );
+  </div>
+);
 ```
 
 Replace with:
 
 ```tsx
-  return (
-    <ElevatedCard className="flex h-full flex-col items-start gap-4 p-5 sm:flex-row sm:items-center">
-      <div
-        className="shrink-0 rounded-xl border bg-white p-2 [&_svg]:size-20"
-        dangerouslySetInnerHTML={{ __html: qrSvgMarkup }}
-      />
-      <div className="min-w-0 flex-1 space-y-2">
-        <p className="text-sm font-medium">{joinCopy}</p>
-        <code className="block truncate rounded-lg bg-muted px-3 py-2 font-mono text-xs">
-          {link}
-        </code>
-        <CardLinkActions link={link} />
-      </div>
-    </ElevatedCard>
-  );
+return (
+  <ElevatedCard className="flex h-full flex-col items-start gap-4 p-5 sm:flex-row sm:items-center">
+    <div
+      className="shrink-0 rounded-xl border bg-white p-2 [&_svg]:size-20"
+      dangerouslySetInnerHTML={{ __html: qrSvgMarkup }}
+    />
+    <div className="min-w-0 flex-1 space-y-2">
+      <p className="text-sm font-medium">{joinCopy}</p>
+      <code className="block truncate rounded-lg bg-muted px-3 py-2 font-mono text-xs">
+        {link}
+      </code>
+      <CardLinkActions link={link} />
+    </div>
+  </ElevatedCard>
+);
 ```
 
 - [ ] **Step 2: Reskin `src/app/dashboard/scan-and-route.tsx` and add a heading**
@@ -1366,9 +1377,7 @@ export function ScanAndRoute() {
   const router = useRouter();
   return (
     <ElevatedCard className="flex h-full flex-col justify-center gap-3 p-5">
-      <p className="text-sm font-medium">
-        Scan a customer to stamp or redeem.
-      </p>
+      <p className="text-sm font-medium">Scan a customer to stamp or redeem.</p>
       <ScanButton
         label="Scan a customer"
         onResolved={({ phone, programId }) => {
