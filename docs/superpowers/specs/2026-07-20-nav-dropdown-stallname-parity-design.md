@@ -10,9 +10,9 @@ reviewing the just-merged dashboard/setup/profile UI-UX pass (PR #14):
    avatar always alone on the far right — the standard hamburger-left/account-right
    mobile pattern. loopkit also lacks the tap-away scrim qkit's mobile panel has.
 2. **Program switcher dropdown** (`/dashboard/stats`, `/customers`, `/activity`) renders
-   *above* the page's `<h1>` heading, in all 6 call sites (all-programs + single-program
+   _above_ the page's `<h1>` heading, in all 6 call sites (all-programs + single-program
    branch × 3 pages). qkit's equivalent (`StatsControls`) renders as its own block
-   *below* the header.
+   _below_ the header.
 3. **Stall name is not actually on the shared `merqo.vendor_profile` table.** Social
    links (added in PR #14) correctly write to and read from `merqo.vendor_profile` —
    but stall name still writes to local `loopkit.vendors.name` only
