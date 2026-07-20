@@ -80,12 +80,20 @@ present), matching qkit's `StatsControls`-after-header ordering.
 around `saveStallName` already — no change needed there beyond what `vendor.ts` does
 internally. Its stale comment ("RLS-scoped write to loopkit.vendors") gets corrected.
 
-**Tests:** `src/lib/vendor.ts` has no dedicated test file today (`actions.test.ts`
-mocks it wholesale and doesn't exercise `updateStallNameAction`) — add
-`src/lib/vendor.test.ts` covering: `getVendorProfile` returning the merqo
-`stall_name` (not the local column), and `saveStallName` calling
-`upsertVendorProfile` with the preserved existing `social_links`, plus its error
-path. `actions.test.ts`'s existing wholesale `@/lib/vendor` mock needs no change.
+**Tests:** `test/lib/vendor.test.ts` already exists and covers the local-table
+version of both functions — rewrite its Supabase mock to also mock
+`@/lib/merqo-vendor-profile`'s `getOrCreateVendorProfile`/`upsertVendorProfile`:
+
+- `getVendorProfile` tests: assert the returned `name` is the merqo
+  `stall_name`, not the local `vendors.name` row (the "no row yet" and
+  "Supabase errors" cases both need updating — the local `select` becomes just
+  the seed value passed into `getOrCreateVendorProfile`).
+- `saveStallName` tests: assert `upsertVendorProfile` is called with the
+  preserved existing `social_links` (mirroring `updateSocialLinksAction`'s
+  "preserving stall name" test in `actions.test.ts`), plus its existing
+  invalid-name and Supabase-error cases re-pointed at the new call.
+
+`actions.test.ts`'s existing wholesale `@/lib/vendor` mock needs no change.
 
 ## Out of scope
 
