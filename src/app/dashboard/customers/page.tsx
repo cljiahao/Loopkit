@@ -8,6 +8,7 @@ import { formatSgtDate } from "@/lib/format";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ElevatedCard } from "@/components/elevated-card";
 import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
 
 type CustomersPageProps = {
@@ -24,18 +25,19 @@ export function VendorCustomerList({
 }) {
   if (customers.length === 0) {
     return (
-      <div className="rounded-2xl border bg-card p-6 shadow-sm">
+      <ElevatedCard className="p-6">
         <p className="text-sm text-muted-foreground">No customers yet.</p>
-      </div>
+      </ElevatedCard>
     );
   }
 
   return (
     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {customers.map((customer) => (
-        <li
+        <ElevatedCard
+          as="li"
           key={customer.phone}
-          className="flex flex-col gap-2 rounded-xl border bg-card p-3 text-sm shadow-sm"
+          className="flex flex-col gap-2 p-3 text-sm"
         >
           <div className="flex items-center justify-between gap-3">
             <p className="font-medium">{customer.name ?? customer.phone}</p>
@@ -57,7 +59,7 @@ export function VendorCustomerList({
             {customer.totalStamps} total stamps/visits · {customer.totalRewards}{" "}
             reward{customer.totalRewards === 1 ? "" : "s"}
           </p>
-        </li>
+        </ElevatedCard>
       ))}
     </ul>
   );
@@ -152,15 +154,16 @@ export default async function CustomersPage({
       </form>
 
       {cards.length === 0 ? (
-        <div className="rounded-2xl border bg-card p-6 shadow-sm">
+        <ElevatedCard className="p-6">
           <p className="text-sm text-muted-foreground">No customers yet.</p>
-        </div>
+        </ElevatedCard>
       ) : (
         <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {cards.map((card) => (
-            <li
+            <ElevatedCard
+              as="li"
               key={card.id}
-              className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3 text-sm shadow-sm"
+              className="flex items-center justify-between gap-3 p-3 text-sm"
             >
               <div className="min-w-0">
                 <p className="font-medium">{card.phone}</p>
@@ -183,7 +186,7 @@ export default async function CustomersPage({
               <span className="shrink-0 text-muted-foreground">
                 {formatSgtDate(card.updated_at)}
               </span>
-            </li>
+            </ElevatedCard>
           ))}
         </ul>
       )}
