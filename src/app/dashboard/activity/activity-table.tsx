@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { ElevatedCard } from "@/components/elevated-card";
 import { formatSgtDateTime } from "@/lib/format";
 import type { VendorActivityRow } from "@/lib/activity";
 
@@ -22,11 +23,11 @@ export function ActivityTable({
 }) {
   if (activity.length === 0) {
     return (
-      <div className="rounded-2xl border bg-card p-6 shadow-sm">
+      <ElevatedCard className="p-6">
         <p className="text-sm text-muted-foreground">
           No activity matches these filters.
         </p>
-      </div>
+      </ElevatedCard>
     );
   }
 
