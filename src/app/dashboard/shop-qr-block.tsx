@@ -25,7 +25,7 @@ export function ShopQrBlock({
         className="shrink-0 rounded-xl border bg-white p-2 [&_svg]:size-20"
         dangerouslySetInnerHTML={{ __html: qrSvgMarkup }}
       />
-      <div className="min-w-0 flex-1 space-y-2">
+      <div className="min-w-0 w-full flex-1 shrink self-stretch space-y-2 sm:w-auto sm:self-auto">
         <p className="text-sm font-medium">{joinCopy}</p>
         <code className="block truncate rounded-lg bg-muted px-3 py-2 font-mono text-xs">
           {link}

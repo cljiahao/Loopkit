@@ -13,6 +13,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   rebuilt onto two independent flex-column stacks with the locked
   cross-kit order (column 1: stall name, profile icon, change password;
   column 2: display name, social links).
+- The dashboard's shared shop QR block overflowed its card on mobile: the
+  link-text container's parent used `items-start` in the mobile
+  (`flex-col`) layout, which sizes flex children to their own content
+  width rather than the container's width, so `min-w-0`/`truncate` on the
+  long URL never actually took effect. Fixed with a `self-stretch`
+  (mobile) / `self-auto` (`sm:` and up) override.
+- `/dashboard/customers`'s program-switcher + search row could overflow on
+  narrow phones (the search `<input>` had no `min-w-0`, so it refused to
+  shrink below its intrinsic width, pushing the Search button off-screen);
+  now stacks the switcher above a full-width search form below the `sm`
+  breakpoint, matching the activity filters' existing mobile pattern.
 
 ### Changed
 

@@ -90,13 +90,15 @@ export default async function CustomersPage({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <ProgramSwitcher
-            programs={programs}
-            currentId=""
-            basePath="/dashboard/customers"
-          />
+          <div className="w-full sm:w-auto">
+            <ProgramSwitcher
+              programs={programs}
+              currentId=""
+              basePath="/dashboard/customers"
+            />
+          </div>
           <form
-            className="flex flex-1 items-center gap-3"
+            className="flex w-full min-w-0 flex-1 items-center gap-3 sm:w-auto"
             action="/dashboard/customers"
           >
             <Input
@@ -104,12 +106,12 @@ export default async function CustomersPage({
               name="q"
               defaultValue={q ?? ""}
               placeholder="Search by phone"
-              className="h-11 rounded-xl"
+              className="h-11 min-w-0 rounded-xl"
             />
             <Button
               type="submit"
               variant="outline"
-              className="h-11 rounded-xl px-6"
+              className="h-11 shrink-0 rounded-xl px-6"
             >
               Search
             </Button>
@@ -136,13 +138,15 @@ export default async function CustomersPage({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <ProgramSwitcher
-          programs={programs}
-          currentId={program.id}
-          basePath="/dashboard/customers"
-        />
+        <div className="w-full sm:w-auto">
+          <ProgramSwitcher
+            programs={programs}
+            currentId={program.id}
+            basePath="/dashboard/customers"
+          />
+        </div>
         <form
-          className="flex flex-1 items-center gap-3"
+          className="flex w-full min-w-0 flex-1 items-center gap-3 sm:w-auto"
           action="/dashboard/customers"
         >
           <input type="hidden" name="p" value={program.id} />
@@ -151,12 +155,12 @@ export default async function CustomersPage({
             name="q"
             defaultValue={q ?? ""}
             placeholder="Search by phone"
-            className="h-11 rounded-xl"
+            className="h-11 min-w-0 rounded-xl"
           />
           <Button
             type="submit"
             variant="outline"
-            className="h-11 rounded-xl px-6"
+            className="h-11 shrink-0 rounded-xl px-6"
           >
             Search
           </Button>

@@ -41,7 +41,7 @@ Vendor console root: program grid, shared shop QR, scan-to-serve entry point, an
 - `serve-customer.tsx` — client `ServeCustomer`: the full serve flow (stamp/lucky/plant/wheel/scratch) — scan-or-manual phone entry, primary action + lookup, per-type result rendering (stamp progress, lucky win, plant growth, wheel/scratch), redeem and regenerate-card dialogs, reward celebration
 - `settings/`
 - `shop-qr-block.dom.test.tsx` — jsdom tests for `ShopQrBlock`'s join copy (named programs vs. generic fallback) and rendered link
-- `shop-qr-block.tsx` — `ShopQrBlock`: an `ElevatedCard`-based shared shop-wide QR code panel with join copy naming active programs, the raw link, and `CardLinkActions`
+- `shop-qr-block.tsx` — `ShopQrBlock`: an `ElevatedCard`-based shared shop-wide QR code panel with join copy naming active programs, the raw link, and `CardLinkActions`; the link-text column uses `self-stretch sm:self-auto` so it's actually width-constrained (and its `truncate` takes effect) in the mobile `flex-col` layout, where the parent's `items-start` alone doesn't stretch flex children to the container width
 - `stats/`
 
 ## Connectivity
