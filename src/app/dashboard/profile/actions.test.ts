@@ -22,60 +22,9 @@ vi.mock("@/lib/merqo-vendor-profile", () => ({
   upsertVendorProfile: upsertVendorProfileMock,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
+vi.mock("@/lib/vendor", () => ({ saveStallName: vi.fn() }));
 
-import { updateStallNameAction, updateSocialLinksAction } from "./actions";
-
-describe("updateStallNameAction", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    getUserMock.mockResolvedValue({ data: { user: { id: "v1" } } });
-    getOrCreateVendorProfileMock.mockResolvedValue({
-      vendor_id: "v1",
-      stall_name: "Kopi Corner",
-      social_links: { website: "https://kopicorner.com" },
-      created_at: "",
-      updated_at: "",
-    });
-  });
-
-  it("saves a valid name, preserving the existing social links", async () => {
-    const res = await updateStallNameAction("New Name");
-
-    expect(res.error).toBeUndefined();
-    expect(upsertVendorProfileMock).toHaveBeenCalledWith(
-      expect.anything(),
-      "v1",
-      "New Name",
-      { website: "https://kopicorner.com" },
-    );
-    expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard", "layout");
-  });
-
-  it("rejects an empty name without calling upsertVendorProfile", async () => {
-    const res = await updateStallNameAction("   ");
-
-    expect(res.error).toBe("Enter a stall name.");
-    expect(upsertVendorProfileMock).not.toHaveBeenCalled();
-  });
-
-  it("returns an error when not signed in", async () => {
-    getUserMock.mockResolvedValue({ data: { user: null } });
-
-    const res = await updateStallNameAction("New Name");
-
-    expect(res.error).toBe("Not signed in");
-    expect(upsertVendorProfileMock).not.toHaveBeenCalled();
-  });
-
-  it("returns an error and does not revalidate when upsertVendorProfile fails", async () => {
-    upsertVendorProfileMock.mockRejectedValueOnce(new Error("db down"));
-
-    const res = await updateStallNameAction("New Name");
-
-    expect(res.error).toBe("Couldn't save your stall name. Try again.");
-    expect(revalidatePathMock).not.toHaveBeenCalled();
-  });
-});
+import { updateSocialLinksAction } from "./actions";
 
 describe("updateSocialLinksAction", () => {
   beforeEach(() => {

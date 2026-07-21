@@ -1,4 +1,5 @@
 import { requireVendor } from "@/features/auth";
+import { getVendorProfile } from "@/lib/vendor";
 import { createServerClient } from "@/lib/supabase/server";
 import { getOrCreateVendorProfile } from "@/lib/merqo-vendor-profile";
 import { ProfileForm } from "@/app/dashboard/profile/profile-form";
@@ -8,24 +9,19 @@ export default async function ProfilePage() {
   const { user } = await requireVendor();
   const rawDisplayName = user.user_metadata?.display_name;
   const displayName = typeof rawDisplayName === "string" ? rawDisplayName : "";
+  const profile = await getVendorProfile();
 
   const supabase = await createServerClient();
-  // Same cross-schema, degrade-to-email-on-failure pattern as /setup's page
-  // (src/app/setup/page.tsx) — a merqo hiccup shouldn't hard-fail the whole
-  // profile page, but it does mean stall name temporarily falls back to the
-  // vendor's email until the shared read succeeds again. loopkit no longer
-  // has a local stall-name column to fall back to (loopkit.vendors.name was
-  // dropped in migration 0028 once this page's write path — and the phone-
-  // onboarding flow's — moved to the shared merqo.vendor_profile RPC).
-  let stallName = user.email ?? "";
+  // Same cross-schema, degrade-to-empty-on-failure pattern as /setup's page
+  // (src/app/setup/page.tsx) — social links are a nice-to-have, not worth
+  // hard-failing the whole profile page over a merqo hiccup.
   let socialLinks: SocialLinks = {};
   try {
     const vendorProfile = await getOrCreateVendorProfile(
       supabase,
       user.id,
-      user.email ?? null,
+      profile.name,
     );
-    stallName = vendorProfile.stall_name;
     socialLinks = vendorProfile.social_links as SocialLinks;
   } catch (err) {
     console.error(
@@ -46,7 +42,7 @@ export default async function ProfilePage() {
       <ProfileForm
         vendorId={user.id}
         email={user.email ?? ""}
-        name={stallName}
+        name={profile.name}
         avatarUrl={user.user_metadata?.avatar_url ?? null}
         displayName={displayName}
         socialLinks={socialLinks}

@@ -37,7 +37,6 @@ exception.
 - `0025_loopkit_remove_streak_type.sql` — removes the Streak Club program type entirely, replaced by Flame Club (a Stamp visual variant); no live rows existed, so this is a full removal rather than the usual additive-only convention
 - `0026_loopkit_points_per_visit.sql` — Points Club: `points_per_visit` config field (default 1) instead of Stamp's implicit +1; widens the `stamps_required` range to 100,000
 - `0027_loopkit_reward_vouchers.sql` — `reward_vouchers` table (per-reward `active`/`redeemed`/`expired` ledger row, RLS via `owns_program`) and `programs.reward_expiry_days`; `grant_reward_voucher`/`redeem_oldest_voucher`/`expire_stale_vouchers` SECURITY DEFINER functions, and `create_program`/`update_program` gain a trailing `p_reward_expiry_days` parameter
-- `0028_loopkit_drop_vendor_name.sql` — drops `loopkit.vendors.name`: the shared-vendor-profile cutover (business/2026-07-21-profile-settings-page-standard.md) moved stall-name writes to `merqo.vendor_profile` (both `/dashboard/profile`'s save action and the phone-onboarding login flow), leaving this column dead. `loopkit.vendors` itself is untouched (still holds `phone`, reserved for the vendor-phone-onboarding spec). Bundled into the same PR as the code swap rather than the spec's normal separate-later-migration sequencing, per explicit product decision — see the file's own header for the manual review checklist
 
 ## Parent
 

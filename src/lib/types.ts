@@ -247,18 +247,21 @@ export interface Database {
       vendors: {
         Row: {
           vendor_id: string;
+          name: string | null;
           phone: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           vendor_id: string;
+          name?: string | null;
           phone?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           vendor_id?: string;
+          name?: string | null;
           phone?: string | null;
           created_at?: string;
           updated_at?: string;

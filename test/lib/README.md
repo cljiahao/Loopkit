@@ -3,7 +3,7 @@
 ## Purpose
 
 Vitest unit tests for `src/lib/` domain logic — mostly pure-function tests;
-a few (`cards.test.ts`) mock the Supabase server client.
+a few (`cards.test.ts`, `vendor.test.ts`) mock the Supabase server client.
 
 ## Contents
 
@@ -23,6 +23,7 @@ a few (`cards.test.ts`) mock the Supabase server client.
 - `qr.test.ts` — `qrSvg`: renders a valid `<svg>…</svg>` string for a token
 - `save-program-schema.test.ts` — `saveProgramSchema`: discriminated-union Zod validation per program type
 - `stats.test.ts` — `classifyActivity`/`bucketVisitsByDay`/`computeCardStats`/`pctChange`/`avgDaysBetweenVisits`: stats aggregation pipeline
+- `vendor.test.ts` — `stallNameSchema` validation; `saveStallName`/`getVendorProfile`: both mock `@/lib/merqo-vendor-profile`, asserting the shared `merqo.vendor_profile` row (not local `vendors.name`) is the source of truth, the seed/fallback precedence between a local row, a passed-in `fallbackName`, and a merqo read failure
 - `vouchers.test.ts` — `oldestActiveVoucher`/`isPastExpiry`/`daysUntilExpiry`/`countJustExpired`: pure derivations over `reward_vouchers` rows
 
 ## Parent

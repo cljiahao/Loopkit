@@ -15,65 +15,33 @@ vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({ from: fromMock })),
 }));
 
-const { getOrCreateVendorProfileMock, upsertVendorProfileMock } = vi.hoisted(
-  () => ({
-    getOrCreateVendorProfileMock: vi.fn(async () => ({
-      vendor_id: "v1",
-      stall_name: "",
-      social_links: {},
-      created_at: "",
-      updated_at: "",
-    })),
-    upsertVendorProfileMock: vi.fn(async () => ({})),
-  }),
-);
-vi.mock("@/lib/merqo-vendor-profile", () => ({
-  getOrCreateVendorProfile: getOrCreateVendorProfileMock,
-  upsertVendorProfile: upsertVendorProfileMock,
-}));
-
 import { vendorPhoneOnboardAction } from "@/features/auth/api/actions";
 
 describe("vendorPhoneOnboardAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     upsertCalls.length = 0;
-    getOrCreateVendorProfileMock.mockResolvedValue({
-      vendor_id: "v1",
-      stall_name: "",
-      social_links: {},
-      created_at: "",
-      updated_at: "",
-    });
   });
 
   it("rejects an empty name without writing", async () => {
     const res = await vendorPhoneOnboardAction("  ", "91234567");
     expect(res.error).toBeTruthy();
     expect(fromMock).not.toHaveBeenCalled();
-    expect(upsertVendorProfileMock).not.toHaveBeenCalled();
   });
 
   it("rejects an invalid phone without writing", async () => {
     const res = await vendorPhoneOnboardAction("Kopi Corner", "12345");
     expect(res.error).toBeTruthy();
     expect(fromMock).not.toHaveBeenCalled();
-    expect(upsertVendorProfileMock).not.toHaveBeenCalled();
   });
 
-  it("upserts a normalized phone locally and the trimmed name to the shared vendor profile", async () => {
+  it("upserts a normalized phone and trimmed name on the happy path", async () => {
     const res = await vendorPhoneOnboardAction(" Kopi Corner ", "91234567");
     expect(res.error).toBeUndefined();
     expect(upsertCalls[0]).toMatchObject({
-      values: { vendor_id: "v1", phone: "+6591234567" },
+      values: { vendor_id: "v1", name: "Kopi Corner", phone: "+6591234567" },
       onConflict: "vendor_id",
     });
-    expect(upsertVendorProfileMock).toHaveBeenCalledWith(
-      expect.anything(),
-      "v1",
-      "Kopi Corner",
-      {},
-    );
   });
 
   it("allows a duplicate name/phone already used by another vendor", async () => {
@@ -83,17 +51,10 @@ describe("vendorPhoneOnboardAction", () => {
     expect(res.error).toBeUndefined();
   });
 
-  it("surfaces a Supabase error without writing to the shared profile", async () => {
+  it("surfaces a Supabase error without throwing", async () => {
     fromMock.mockReturnValueOnce({
       upsert: () => Promise.resolve({ error: { message: "db down" } as const }),
     });
-    const res = await vendorPhoneOnboardAction("Kopi Corner", "91234567");
-    expect(res.error).toBeTruthy();
-    expect(upsertVendorProfileMock).not.toHaveBeenCalled();
-  });
-
-  it("surfaces a shared vendor profile write failure", async () => {
-    upsertVendorProfileMock.mockRejectedValueOnce(new Error("db down"));
     const res = await vendorPhoneOnboardAction("Kopi Corner", "91234567");
     expect(res.error).toBeTruthy();
   });

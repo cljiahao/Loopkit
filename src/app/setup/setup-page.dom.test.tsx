@@ -20,17 +20,8 @@ vi.mock("@/lib/program", async (importActual) => {
     applyDueCutovers: vi.fn(async () => {}),
   };
 });
-vi.mock("@/lib/supabase/server", () => ({
-  createServerClient: vi.fn(async () => ({})),
-}));
-vi.mock("@/lib/merqo-vendor-profile", () => ({
-  getOrCreateVendorProfile: vi.fn(async () => ({
-    vendor_id: "v1",
-    stall_name: "Test Stall",
-    social_links: {},
-    created_at: "",
-    updated_at: "",
-  })),
+vi.mock("@/lib/vendor", () => ({
+  getVendorProfile: vi.fn(async () => ({ name: "Test Stall" })),
 }));
 vi.mock("@/app/setup/actions", () => ({
   activateProgramAction: vi.fn(),

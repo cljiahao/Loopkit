@@ -11,7 +11,7 @@ Supabase clients and `@/lib` collaborators mocked via `vi.mock`/`vi.hoisted`.
 - `dashboard-actions.test.ts` — misc `src/app/dashboard/actions.ts` Server Actions covering program/card RPC calls
 - `dashboard-nav.test.tsx` — jsdom: `DashboardNav` renders the active route highlighted based on `usePathname`
 - `preview-state.test.ts` — `buildPreviewProgress`/`buildPreviewProgram`/`buildInitialCard`: `/setup` live-preview state builders
-- `profile-actions.test.ts` — vendor `/profile` action: `updatePasswordAction` only (`updateStallNameAction`'s own shared-`merqo.vendor_profile` RPC coverage lives in `src/app/dashboard/profile/actions.test.ts`, colocated with its mocks)
+- `profile-actions.test.ts` — vendor `/profile` action: `saveStallName` call after `requireVendor`
 - `request-upgrade-action.test.ts` — self-serve Pro upgrade request action: dedupes an already-pending request, inserts a new one
 - `resolve-token-action.test.ts` — `resolveTokenAction`: resolves a card token via RPC after `requireVendor`
 - `resolve-upgrade-request-action.test.ts` — admin action resolving an upgrade request: grants Pro (upsert), marks the request resolved
