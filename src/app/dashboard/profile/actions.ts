@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { saveStallName } from "@/lib/vendor";
 import { createServerClient } from "@/lib/supabase/server";
 import {
   getOrCreateVendorProfile,
@@ -10,12 +9,47 @@ import {
 } from "@/lib/merqo-vendor-profile";
 import type { SocialLinks } from "@/lib/types";
 
+const stallNameSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+});
+
+/**
+ * Update the vendor's stall name. Persisted in the shared
+ * merqo.vendor_profile row (see business/2026-07-21-profile-settings-page-standard.md)
+ * via the upsert_vendor_profile RPC — NOT loopkit.vendors.name, which is a
+ * pre-cutover local column, same cutover as qkit's updateStallName. Preserves
+ * the row's existing social_links — this action only ever changes stall_name.
+ */
 export async function updateStallNameAction(
   name: string,
 ): Promise<{ error?: string }> {
-  const res = await saveStallName(name);
-  if (!res.error) revalidatePath("/dashboard", "layout");
-  return res;
+  const parsed = stallNameSchema.safeParse({ name });
+  if (!parsed.success) return { error: "Enter a stall name." };
+
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in" };
+
+  try {
+    const current = await getOrCreateVendorProfile(supabase, user.id, null);
+    await upsertVendorProfile(
+      supabase,
+      user.id,
+      parsed.data.name,
+      current.social_links,
+    );
+  } catch (err) {
+    console.error(
+      "updateStallNameAction failed",
+      err instanceof Error ? err.message : err,
+    );
+    return { error: "Couldn't save your stall name. Try again." };
+  }
+
+  revalidatePath("/dashboard", "layout");
+  return {};
 }
 
 const passwordSchema = z.string().min(8).max(72);

@@ -32,9 +32,6 @@ vi.mock("@/lib/merqo-vendor-profile", () => ({
     updated_at: "",
   })),
 }));
-vi.mock("@/lib/vendor", () => ({
-  getVendorProfile: vi.fn(async () => ({ name: "Test Vendor" })),
-}));
 vi.mock("@/app/setup/actions", () => ({
   activateProgramAction: vi.fn(),
 }));

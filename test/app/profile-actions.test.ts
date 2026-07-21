@@ -1,15 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { requireVendorMock, saveStallNameMock } = vi.hoisted(() => ({
-  requireVendorMock: vi.fn(async () => ({ user: { id: "vendor-1" } })),
-  saveStallNameMock: vi.fn(async () => ({})),
-}));
-vi.mock("@/features/auth", () => ({ requireVendor: requireVendorMock }));
-vi.mock("@/lib/vendor", async (importActual) => {
-  const actual = await importActual<typeof import("@/lib/vendor")>();
-  return { ...actual, saveStallName: saveStallNameMock };
-});
-
+// updateStallNameAction's own coverage (shared merqo.vendor_profile RPC
+// write path) lives in src/app/dashboard/profile/actions.test.ts, colocated
+// with the mocks for getOrCreateVendorProfile/upsertVendorProfile — this
+// file only covers updatePasswordAction.
 const updateUserMock = vi.fn(async () => ({ error: null }));
 vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({
@@ -18,23 +12,12 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import {
-  updateStallNameAction,
-  updatePasswordAction,
-} from "@/app/dashboard/profile/actions";
+import { updatePasswordAction } from "@/app/dashboard/profile/actions";
 
 beforeEach(() => {
   // Clears call history only (not the default implementations set above via
   // vi.fn(impl)) — each test starts from a clean "not yet called" baseline.
   vi.clearAllMocks();
-});
-
-describe("updateStallNameAction", () => {
-  it("delegates to saveStallName", async () => {
-    const res = await updateStallNameAction("Kopi Corner");
-    expect(saveStallNameMock).toHaveBeenCalledWith("Kopi Corner");
-    expect(res.error).toBeUndefined();
-  });
 });
 
 describe("updatePasswordAction", () => {

@@ -144,168 +144,179 @@ export function ProfileForm({
   const passwordsFilled = password.length > 0 && confirm.length > 0;
 
   return (
-    <div className="md:columns-2 md:gap-5 [&>*]:mb-5 [&>*]:break-inside-avoid-column">
-      <Section
-        icon={<Store className="size-4" />}
-        eyebrow="Shown to customers"
-        title="Stall name"
-        description="The name on your customers' card and at the counter."
-      >
-        <div className="space-y-2">
-          <Label htmlFor="stall-name" className={labelClass}>
-            Stall name
-          </Label>
-          <Input
-            id="stall-name"
-            value={stallName}
-            maxLength={60}
-            onChange={(e) => setStallName(e.target.value)}
-            placeholder="Kopi Corner"
-            className="h-11 rounded-xl"
-          />
-        </div>
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            onClick={saveStallName}
-            disabled={savingName || stallName.trim() === initialName.trim()}
-            className="h-10 rounded-xl font-semibold"
-          >
-            {savingName ? "Saving…" : "Save"}
-          </Button>
-        </div>
-      </Section>
+    // Two independent flex-column stacks, not a CSS grid/columns layout: a
+    // grid's row tracks size to the tallest cell in that row (and CSS
+    // `columns` lets visual order drift from DOM/tab order) — either way,
+    // "Social & website" (several rows) outgrowing "Stall name" (one input)
+    // would misalign every section after it. Column 1: stall name, profile
+    // picture, change password. Column 2: display name, social links — the
+    // locked cross-kit order (see business/2026-07-21-profile-settings-page-standard.md).
+    <div className="flex flex-col gap-5 md:flex-row md:items-start">
+      <div className="flex flex-1 flex-col gap-5">
+        <Section
+          icon={<Store className="size-4" />}
+          eyebrow="Shown to customers"
+          title="Stall name"
+          description="The name on your customers' card and at the counter."
+        >
+          <div className="space-y-2">
+            <Label htmlFor="stall-name" className={labelClass}>
+              Stall name
+            </Label>
+            <Input
+              id="stall-name"
+              value={stallName}
+              maxLength={60}
+              onChange={(e) => setStallName(e.target.value)}
+              placeholder="Kopi Corner"
+              className="h-11 rounded-xl"
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={saveStallName}
+              disabled={savingName || stallName.trim() === initialName.trim()}
+              className="h-10 rounded-xl font-semibold"
+            >
+              {savingName ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </Section>
 
-      <Section
-        icon={<Share2 className="size-4" />}
-        eyebrow="Shown to customers"
-        title="Social & website"
-        description="Shown on your customer's card. Each link is optional."
-      >
-        <SocialLinksFields
-          value={links}
-          onChange={setLinks}
-          idPrefix="profile"
-        />
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            onClick={saveLinks}
-            disabled={savingLinks}
-            className="h-10 rounded-xl font-semibold"
-          >
-            {savingLinks ? "Saving…" : "Save links"}
-          </Button>
-        </div>
-      </Section>
+        <Section
+          icon={<UserRound className="size-4" />}
+          eyebrow="Your account menu"
+          title="Profile icon"
+          description="A small image for your account menu. Defaults to your initials."
+        >
+          <ImageUploader
+            bucket="vendor-images"
+            pathPrefix={vendorId}
+            value={avatar}
+            onChange={handleAvatarChange}
+          />
+        </Section>
 
-      <Section
-        icon={<UserRound className="size-4" />}
-        eyebrow="Your account menu"
-        title="Profile icon"
-        description="A small image for your account menu. Defaults to your initials."
-      >
-        <ImageUploader
-          bucket="vendor-images"
-          pathPrefix={vendorId}
-          value={avatar}
-          onChange={handleAvatarChange}
-        />
-      </Section>
+        <Section
+          icon={<KeyRound className="size-4" />}
+          eyebrow="Sign-in security"
+          title="Change password"
+          description="Set a new password. At least 8 characters."
+        >
+          <div className="space-y-2">
+            <Label htmlFor="email" className={labelClass}>
+              Email
+            </Label>
+            <Input
+              id="email"
+              value={email}
+              readOnly
+              disabled
+              className="h-11 rounded-xl bg-muted/40"
+            />
+            <p className="text-xs text-muted-foreground">
+              Your sign-in email. It can&apos;t be changed here.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="new-password" className={labelClass}>
+              New password
+            </Label>
+            <Input
+              id="new-password"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              placeholder="••••••••"
+              onChange={(e) => setPassword(e.target.value)}
+              className="h-11 rounded-xl"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirm-password" className={labelClass}>
+              Confirm new password
+            </Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              placeholder="••••••••"
+              onChange={(e) => setConfirm(e.target.value)}
+              className="h-11 rounded-xl"
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={savePassword}
+              disabled={savingPassword || !passwordsFilled}
+              className="h-10 rounded-xl font-semibold"
+            >
+              {savingPassword ? "Updating…" : "Update password"}
+            </Button>
+          </div>
+        </Section>
+      </div>
 
-      <Section
-        icon={<IdCard className="size-4" />}
-        eyebrow="Just for you"
-        title="Display name"
-        description="How loopkit addresses you. Customers never see this."
-      >
-        <div className="space-y-2">
-          <Label htmlFor="display-name" className={labelClass}>
-            Display name
-          </Label>
-          <Input
-            id="display-name"
-            value={display}
-            maxLength={60}
-            onChange={(e) => setDisplay(e.target.value)}
-            placeholder="e.g. Aisha"
-            className="h-11 rounded-xl"
-          />
-        </div>
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            onClick={saveDisplayName}
-            disabled={
-              savingDisplay || display.trim() === initialDisplayName.trim()
-            }
-            className="h-10 rounded-xl font-semibold"
-          >
-            {savingDisplay ? "Saving…" : "Save"}
-          </Button>
-        </div>
-      </Section>
+      <div className="flex flex-1 flex-col gap-5">
+        <Section
+          icon={<IdCard className="size-4" />}
+          eyebrow="Just for you"
+          title="Display name"
+          description="How loopkit addresses you. Customers never see this."
+        >
+          <div className="space-y-2">
+            <Label htmlFor="display-name" className={labelClass}>
+              Display name
+            </Label>
+            <Input
+              id="display-name"
+              value={display}
+              maxLength={60}
+              onChange={(e) => setDisplay(e.target.value)}
+              placeholder="e.g. Aisha"
+              className="h-11 rounded-xl"
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={saveDisplayName}
+              disabled={
+                savingDisplay || display.trim() === initialDisplayName.trim()
+              }
+              className="h-10 rounded-xl font-semibold"
+            >
+              {savingDisplay ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </Section>
 
-      <Section
-        icon={<KeyRound className="size-4" />}
-        eyebrow="Sign-in security"
-        title="Change password"
-        description="Set a new password. At least 8 characters."
-      >
-        <div className="space-y-2">
-          <Label htmlFor="email" className={labelClass}>
-            Email
-          </Label>
-          <Input
-            id="email"
-            value={email}
-            readOnly
-            disabled
-            className="h-11 rounded-xl bg-muted/40"
+        <Section
+          icon={<Share2 className="size-4" />}
+          eyebrow="Shown to customers"
+          title="Social & website"
+          description="Shown on your customer's card. Each link is optional."
+        >
+          <SocialLinksFields
+            value={links}
+            onChange={setLinks}
+            idPrefix="profile"
           />
-          <p className="text-xs text-muted-foreground">
-            Your sign-in email. It can&apos;t be changed here.
-          </p>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="new-password" className={labelClass}>
-            New password
-          </Label>
-          <Input
-            id="new-password"
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            placeholder="••••••••"
-            onChange={(e) => setPassword(e.target.value)}
-            className="h-11 rounded-xl"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm-password" className={labelClass}>
-            Confirm new password
-          </Label>
-          <Input
-            id="confirm-password"
-            type="password"
-            autoComplete="new-password"
-            value={confirm}
-            placeholder="••••••••"
-            onChange={(e) => setConfirm(e.target.value)}
-            className="h-11 rounded-xl"
-          />
-        </div>
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            onClick={savePassword}
-            disabled={savingPassword || !passwordsFilled}
-            className="h-10 rounded-xl font-semibold"
-          >
-            {savingPassword ? "Updating…" : "Update password"}
-          </Button>
-        </div>
-      </Section>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              onClick={saveLinks}
+              disabled={savingLinks}
+              className="h-10 rounded-xl font-semibold"
+            >
+              {savingLinks ? "Saving…" : "Save links"}
+            </Button>
+          </div>
+        </Section>
+      </div>
     </div>
   );
 }

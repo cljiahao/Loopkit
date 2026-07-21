@@ -22,7 +22,6 @@ import {
   getOrCreateVendorProfile,
   type VendorProfile,
 } from "@/lib/merqo-vendor-profile";
-import { getVendorProfile } from "@/lib/vendor";
 
 const typeLabel: Record<string, string> = {
   stamp: "Stamp card",
@@ -46,25 +45,18 @@ export default async function SetupPage({
   const { user } = await requireVendor();
   await applyDueCutovers();
   const supabase = await createServerClient();
-  // Prefer the vendor's existing loopkit.vendors name (set via
-  // /dashboard/profile) as the seed for the shared merqo.vendor_profile row
-  // — falling back to email only if they've never set one — so a vendor who
-  // already has a real stall name doesn't get overwritten with their raw
-  // email on first /setup visit after this table's introduction.
-  const localProfile = await getVendorProfile();
-  // The merqo.vendor_profile row is a one-time seed, not a live mirror —
-  // nothing re-syncs stall_name after the first /setup visit, so
-  // loopkit.vendors (localProfile, edited at /dashboard/profile) stays the
-  // live source of truth for display; vendorProfile is only a fallback (and
-  // the seed input above). It's also cross-schema and can fail independently
-  // of the rest of this page — degrade to null rather than hard-failing the
-  // whole vendor console on a merqo hiccup.
+  // merqo.vendor_profile is the live source of truth for stall name —
+  // /dashboard/profile's save action and the phone-onboarding login flow
+  // both write here now (loopkit.vendors.name was dropped in migration
+  // 0028). It's cross-schema and can fail independently of the rest of this
+  // page — degrade to null rather than hard-failing the whole vendor
+  // console on a merqo hiccup.
   let vendorProfile: VendorProfile | null = null;
   try {
     vendorProfile = await getOrCreateVendorProfile(
       supabase,
       user.id,
-      localProfile.name ?? user.email ?? null,
+      user.email ?? null,
     );
   } catch (err) {
     console.error(
@@ -129,7 +121,7 @@ export default async function SetupPage({
         <div className="mb-8 text-center">
           <Wordmark className="text-3xl" />
           <p className="mt-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            {localProfile.name ?? vendorProfile?.stall_name}
+            {vendorProfile?.stall_name ?? user.email}
           </p>
           <h1 className="mt-3 font-display text-2xl font-bold tracking-tight">
             {migrating
