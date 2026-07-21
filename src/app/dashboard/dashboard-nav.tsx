@@ -99,9 +99,8 @@ export function DashboardNav({
         <button
           type="button"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((v) => !v)}
-          className="-ml-1.5 shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-secondary sm:hidden"
+          className="-ml-1.5 rounded-lg p-1.5 text-muted-foreground hover:bg-secondary sm:hidden"
         >
           {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
@@ -136,65 +135,63 @@ export function DashboardNav({
         </nav>
       </div>
 
-      <div className="flex items-center gap-1">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button
-              type="button"
-              aria-label="Account menu"
-              className="flex items-center gap-2 rounded-lg py-1 pr-1 pl-1 text-left transition-colors outline-none hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50"
-            >
-              <Avatar className="size-8 shrink-0 rounded-md ring-1 ring-inset ring-primary/25">
-                <AvatarImage src={avatarUrl ?? undefined} alt="" />
-                <AvatarFallback className="rounded-md bg-primary/12 font-mono text-xs font-semibold tracking-tight text-primary">
-                  {initials(label)}
-                </AvatarFallback>
-              </Avatar>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 rounded-xl">
-            <DropdownMenuLabel className="px-2 py-2">
-              <div className="flex items-center gap-2">
-                <p className="truncate text-sm font-semibold">
-                  {vendorName ?? email}
-                </p>
-                <TierBadge tier={tier} />
-              </div>
-              <p className="text-xs font-normal text-muted-foreground">
-                {vendorName ? email : "Vendor account"}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            aria-label="Account menu"
+            className="flex items-center gap-2 rounded-lg py-1 pr-1 pl-1 text-left transition-colors outline-none hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            <Avatar className="size-8 shrink-0 rounded-md ring-1 ring-inset ring-primary/25">
+              <AvatarImage src={avatarUrl ?? undefined} alt="" />
+              <AvatarFallback className="rounded-md bg-primary/12 font-mono text-xs font-semibold tracking-tight text-primary">
+                {initials(label)}
+              </AvatarFallback>
+            </Avatar>
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56 rounded-xl">
+          <DropdownMenuLabel className="px-2 py-2">
+            <div className="flex items-center gap-2">
+              <p className="truncate text-sm font-semibold">
+                {vendorName ?? email}
               </p>
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/profile" className="cursor-pointer">
-                <User className="size-4" />
-                Profile
-              </Link>
+              <TierBadge tier={tier} />
+            </div>
+            <p className="text-xs font-normal text-muted-foreground">
+              {vendorName ? email : "Vendor account"}
+            </p>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/profile" className="cursor-pointer">
+              <User className="size-4" />
+              Profile
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/settings" className="cursor-pointer">
+              <Settings className="size-4" />
+              Settings
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/plan" className="cursor-pointer">
+              <Wallet className="size-4" />
+              Plan
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <form action={signOut}>
+            <DropdownMenuItem asChild variant="destructive">
+              <button type="submit" className="w-full cursor-pointer">
+                <LogOut className="size-4" />
+                Sign out
+              </button>
             </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/settings" className="cursor-pointer">
-                <Settings className="size-4" />
-                Settings
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/dashboard/plan" className="cursor-pointer">
-                <Wallet className="size-4" />
-                Plan
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <form action={signOut}>
-              <DropdownMenuItem asChild variant="destructive">
-                <button type="submit" className="w-full cursor-pointer">
-                  <LogOut className="size-4" />
-                  Sign out
-                </button>
-              </DropdownMenuItem>
-            </form>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+          </form>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {mobileOpen && (
         <>

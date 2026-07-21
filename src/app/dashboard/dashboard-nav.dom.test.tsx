@@ -64,19 +64,23 @@ describe("DashboardNav", () => {
     ).toBeInTheDocument();
   });
 
-  it("places the burger toggle to the left of the wordmark, opposite the account menu", () => {
+  it("renders the burger toggle before the wordmark, and the account menu alone on the right", () => {
     render(<DashboardNav {...baseProps} />);
     const toggle = screen.getByRole("button", { name: /open menu/i });
-    const home = screen.getByRole("link", {
+    const wordmarkLink = screen.getByRole("link", {
       name: /loopkit dashboard home/i,
     });
-    const account = screen.getByRole("button", { name: /account menu/i });
-    // DOM order: burger, then the wordmark link, both left of the account menu.
+    const accountButton = screen.getByRole("button", {
+      name: /account menu/i,
+    });
+
     expect(
-      toggle.compareDocumentPosition(home) & Node.DOCUMENT_POSITION_FOLLOWING,
+      toggle.compareDocumentPosition(wordmarkLink) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(
-      home.compareDocumentPosition(account) & Node.DOCUMENT_POSITION_FOLLOWING,
+      wordmarkLink.compareDocumentPosition(accountButton) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
   });
 
@@ -88,7 +92,9 @@ describe("DashboardNav", () => {
       screen.getByRole("button", { name: /close menu/i }),
     ).toBeInTheDocument();
 
-    const scrim = document.querySelector('button[aria-hidden="true"]');
+    const scrim = document.querySelector(
+      'button[aria-hidden="true"].fixed.inset-0',
+    );
     expect(scrim).not.toBeNull();
     await user.click(scrim as HTMLButtonElement);
     expect(
