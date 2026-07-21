@@ -3,7 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, Menu, Settings, User, Wallet, X } from "lucide-react";
+import {
+  LifeBuoy,
+  LogOut,
+  Menu,
+  MessageSquarePlus,
+  Settings,
+  User,
+  Wallet,
+  X,
+} from "lucide-react";
 import { Wordmark } from "@/components/landing/wordmark";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -14,6 +23,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { FeedbackForm } from "@/components/feedback-form";
 import { cn } from "@/lib/utils";
 
 type Tier = "free" | "pro";
@@ -91,6 +108,7 @@ export function DashboardNav({
 }) {
   const path = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const label = vendorName?.trim() || email.trim().split("@")[0];
 
   return (
@@ -181,6 +199,19 @@ export function DashboardNav({
               Plan
             </Link>
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <a href="mailto:support@merqo.app?subject=loopkit%20support">
+              <LifeBuoy className="size-4" />
+              Get help
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="cursor-pointer"
+            onSelect={() => setFeedbackOpen(true)}
+          >
+            <MessageSquarePlus className="size-4" />
+            Feedback
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <form action={signOut}>
             <DropdownMenuItem asChild variant="destructive">
@@ -227,6 +258,20 @@ export function DashboardNav({
           </div>
         </>
       )}
+
+      <Sheet open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="text-2xl">Share feedback</SheetTitle>
+            <SheetDescription>
+              What&apos;s working, what&apos;s missing, what&apos;s broken?
+            </SheetDescription>
+          </SheetHeader>
+          <div className="px-4 pb-6">
+            <FeedbackForm />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

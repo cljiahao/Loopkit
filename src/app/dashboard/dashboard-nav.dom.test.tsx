@@ -8,6 +8,10 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/activity",
 }));
 
+vi.mock("@/app/actions/feedback", () => ({
+  submitFeedbackAction: vi.fn(async () => ({ success: true })),
+}));
+
 describe("DashboardNav", () => {
   const baseProps = {
     signOut: vi.fn(async () => {}),
@@ -125,5 +129,42 @@ describe("DashboardNav", () => {
     // role "link" above) — proving the account-dropdown item was removed,
     // not merely hidden.
     expect(screen.getAllByText("Customers")).toHaveLength(1);
+  });
+
+  it("account menu has Profile, Settings, Plan, Get help, Feedback, then Sign out, in order", async () => {
+    const user = userEvent.setup();
+    render(<DashboardNav {...baseProps} />);
+    await user.click(screen.getByRole("button", { name: /account menu/i }));
+    const menuItems = screen.getAllByRole("menuitem");
+    expect(menuItems.map((item) => item.textContent)).toEqual([
+      "Profile",
+      "Settings",
+      "Plan",
+      "Get help",
+      "Feedback",
+      "Sign out",
+    ]);
+  });
+
+  it("opens the feedback sheet with the FeedbackForm when Feedback is clicked", async () => {
+    const user = userEvent.setup();
+    render(<DashboardNav {...baseProps} />);
+    await user.click(screen.getByRole("button", { name: /account menu/i }));
+    await user.click(screen.getByRole("menuitem", { name: /feedback/i }));
+    expect(
+      screen.getByRole("heading", { name: /share feedback/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/how likely are you to recommend loopkit/i),
+    ).toBeInTheDocument();
+  });
+
+  it("links Get help to a mailto address", async () => {
+    const user = userEvent.setup();
+    render(<DashboardNav {...baseProps} />);
+    await user.click(screen.getByRole("button", { name: /account menu/i }));
+    const getHelp = screen.getByRole("menuitem", { name: /get help/i });
+    const link = getHelp.querySelector("a") ?? getHelp;
+    expect(link).toHaveAttribute("href", expect.stringMatching(/^mailto:/));
   });
 });
