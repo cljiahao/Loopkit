@@ -52,7 +52,14 @@ supabase/migrations/    — SQL schema + RLS
 Owns the `loopkit` schema in the shared Merqo Supabase project. All
 Supabase clients are scoped to `db: { schema: "loopkit" }` — loopkit never
 reads/writes another kit's schema (e.g. qkit's) directly. Cross-kit data
-goes over HTTP (the merqo metrics API).
+goes over HTTP (the merqo metrics API), except one deliberate exception: a
+vendor's stall name and social links live in the shared `merqo.vendor_profile`
+table (same Postgres instance, different schema), read/written only through
+two `SECURITY DEFINER` RPCs (`get_or_create_vendor_profile`/
+`upsert_vendor_profile`) — never a raw cross-schema query. See
+`src/lib/merqo-vendor-profile.ts` and
+`docs/business/2026-07-21-profile-settings-page-standard.md` (in the parent
+`Merqo Business/docs/` repo) for the locked cross-kit pattern.
 
 ## Docs
 

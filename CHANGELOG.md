@@ -6,8 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `/dashboard/profile`'s two-column layout used CSS `columns-2` (visual
+  order could drift from DOM/tab order) with the wrong section order;
+  rebuilt onto two independent flex-column stacks with the locked
+  cross-kit order (column 1: stall name, profile icon, change password;
+  column 2: display name, social links).
+- Vendor stall name now writes and reads through the shared
+  `merqo.vendor_profile` row (via `upsert_vendor_profile`/
+  `get_or_create_vendor_profile`), matching qkit and the locked
+  profile-settings-page standard — previously the stall-name save action
+  wrote to a local `loopkit.vendors.name` column that no other kit could
+  see, so an edit on loopkit's profile page never reflected anywhere else.
+  The phone-onboarding login flow (`vendorPhoneOnboardAction`) now writes
+  the vendor's typed name to the same shared row instead of the local
+  column.
+
 ### Changed
 
+- `loopkit.vendors.name` dropped (migration
+  `0028_loopkit_drop_vendor_name.sql`) now that both writers moved to the
+  shared row — `loopkit.vendors` itself (and its `phone` column) is
+  unchanged.
 - App-wide UI-UX consistency pass: dashboard sub-pages (stats, customers,
   activity, plan, settings), the admin console, and the auth forms now use
   the `ElevatedCard`/`Section` visual language introduced for
