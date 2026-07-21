@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { requireVendor } from "@/features/auth";
 import { listPrograms, currentProgram } from "@/lib/program";
 import { listActivity } from "@/lib/activity";
-import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
 import { ActivityTable } from "@/app/dashboard/activity/activity-table";
 import { ActivityFilters } from "@/app/dashboard/activity/activity-filters";
 
@@ -72,20 +71,15 @@ export default async function ActivityPage({
             Recent stamps, plays, and redemptions across every program.
           </p>
         </div>
-        <div className="flex flex-wrap items-start gap-3">
-          <ProgramSwitcher
-            programs={programs}
-            currentId=""
-            basePath={basePath}
-          />
-          <ActivityFilters
-            basePath={basePath}
-            currentP={undefined}
-            type={type}
-            from={from}
-            to={to}
-          />
-        </div>
+        <ActivityFilters
+          basePath={basePath}
+          programs={programs}
+          currentId=""
+          currentP={undefined}
+          type={type}
+          from={from}
+          to={to}
+        />
         <ActivityTable activity={rows} showProgram />
         <div className="flex items-center justify-between">
           {page > 1 ? (
@@ -131,20 +125,15 @@ export default async function ActivityPage({
           Recent stamps, plays, and redemptions for {program.name}.
         </p>
       </div>
-      <div className="flex flex-wrap items-start gap-3">
-        <ProgramSwitcher
-          programs={programs}
-          currentId={program.id}
-          basePath={basePath}
-        />
-        <ActivityFilters
-          basePath={basePath}
-          currentP={program.id}
-          type={type}
-          from={from}
-          to={to}
-        />
-      </div>
+      <ActivityFilters
+        basePath={basePath}
+        programs={programs}
+        currentId={program.id}
+        currentP={program.id}
+        type={type}
+        from={from}
+        to={to}
+      />
       <ActivityTable activity={rows} showProgram={false} />
       <div className="flex items-center justify-between">
         {page > 1 ? (

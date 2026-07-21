@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/select";
 
 const ALL_PROGRAMS = "all";
+const BARE_TRIGGER_CLASS =
+  "h-9 w-auto min-w-[10rem] shrink-0 rounded-lg border bg-card px-3 text-sm";
 
 // Same-page program switcher for every Stats/Activity/Customers view (merged
 // and filtered alike), mirroring qkit's StatsControls: one instant picker,
@@ -22,10 +24,18 @@ export function ProgramSwitcher({
   programs,
   currentId,
   basePath,
+  triggerId,
+  triggerClassName,
 }: {
   programs: { id: string; name: string }[];
   currentId: string;
   basePath: string;
+  // Set when composed as a field alongside others sharing one bordered card
+  // (e.g. ActivityFilters) — overrides the default bare/standalone styling
+  // (Customers, Stats) so the trigger matches its sibling fields instead of
+  // duplicating its own border/background on top of theirs.
+  triggerId?: string;
+  triggerClassName?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -46,8 +56,9 @@ export function ProgramSwitcher({
   return (
     <Select value={currentId || ALL_PROGRAMS} onValueChange={handleChange}>
       <SelectTrigger
+        id={triggerId}
         aria-label="Switch program"
-        className="h-9 w-auto min-w-[10rem] shrink-0 rounded-lg border bg-card px-3 text-sm"
+        className={triggerClassName ?? BARE_TRIGGER_CLASS}
       >
         <SelectValue />
       </SelectTrigger>

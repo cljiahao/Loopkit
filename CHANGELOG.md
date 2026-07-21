@@ -24,6 +24,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   shrink below its intrinsic width, pushing the Search button off-screen);
   now stacks the switcher above a full-width search form below the `sm`
   breakpoint, matching the activity filters' existing mobile pattern.
+- `/dashboard/activity`'s program switcher sat as a bare, unlabeled,
+  differently-styled control (no border/shadow, no shared card) next to
+  the bordered/shadowed `ActivityFilters` card, and didn't stack full-width
+  on mobile like the filter fields did. `ProgramSwitcher` now composes as
+  that card's first field (a "Program" label + trigger matching Type's
+  styling and mobile stacking) instead of a separate sibling — `ProgramSwitcher`
+  gained optional `triggerId`/`triggerClassName` props for this, defaulting
+  to its existing bare look on Customers/Stats.
 
 ### Changed
 

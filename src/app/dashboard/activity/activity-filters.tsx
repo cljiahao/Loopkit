@@ -8,17 +8,23 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
 
 const TYPE_ALL = "all";
+const FIELD_TRIGGER_CLASS = "h-9 w-full sm:w-40";
 
 export function ActivityFilters({
   basePath,
+  programs,
+  currentId,
   currentP,
   type,
   from,
   to,
 }: {
   basePath: string;
+  programs: { id: string; name: string }[];
+  currentId: string;
   currentP: string | undefined;
   type: string | undefined;
   from: string | undefined;
@@ -36,6 +42,23 @@ export function ActivityFilters({
       className="flex flex-wrap items-end gap-3 rounded-[20px] border bg-card p-4 shadow-[0_1px_0_0_var(--color-border),0_12px_28px_-20px_rgba(0,0,0,0.35)]"
     >
       {currentP && <input type="hidden" name="p" value={currentP} />}
+      {programs.length > 1 && (
+        <div className="w-full space-y-1.5 sm:w-auto">
+          <Label
+            htmlFor="activity-program"
+            className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          >
+            Program
+          </Label>
+          <ProgramSwitcher
+            programs={programs}
+            currentId={currentId}
+            basePath={basePath}
+            triggerId="activity-program"
+            triggerClassName={FIELD_TRIGGER_CLASS}
+          />
+        </div>
+      )}
       <div className="w-full space-y-1.5 sm:w-auto">
         <Label
           htmlFor="activity-type"
