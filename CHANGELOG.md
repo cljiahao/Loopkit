@@ -6,6 +6,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `/dashboard/profile`'s two-column layout used CSS `columns-2` (visual
+  order could drift from DOM/tab order) with the wrong section order;
+  rebuilt onto two independent flex-column stacks with the locked
+  cross-kit order (column 1: stall name, profile icon, change password;
+  column 2: display name, social links).
+- The dashboard's shared shop QR block overflowed its card on mobile: the
+  link-text container's parent used `items-start` in the mobile
+  (`flex-col`) layout, which sizes flex children to their own content
+  width rather than the container's width, so `min-w-0`/`truncate` on the
+  long URL never actually took effect. Fixed with a `self-stretch`
+  (mobile) / `self-auto` (`sm:` and up) override.
+- `/dashboard/customers`'s program-switcher + search row could overflow on
+  narrow phones (the search `<input>` had no `min-w-0`, so it refused to
+  shrink below its intrinsic width, pushing the Search button off-screen);
+  now stacks the switcher above a full-width search form below the `sm`
+  breakpoint, matching the activity filters' existing mobile pattern.
+- `/dashboard/activity`'s program switcher sat as a bare, unlabeled,
+  differently-styled control (no border/shadow, no shared card) next to
+  the bordered/shadowed `ActivityFilters` card, and didn't stack full-width
+  on mobile like the filter fields did. `ProgramSwitcher` now composes as
+  that card's first field (a "Program" label + trigger matching Type's
+  styling and mobile stacking) instead of a separate sibling — `ProgramSwitcher`
+  gained optional `triggerId`/`triggerClassName` props for this, defaulting
+  to its existing bare look on Customers/Stats.
+
+### Changed
+
+- Dark mode's background/card/secondary/muted/border/input lightness raised
+  a few oklch steps (previously read as a near-black moody canvas rather
+  than a loyalty-reward mood), and the ambient reward-glow gradient now has
+  its own dark-mode pass instead of reusing the light-mode oklch values,
+  which barely read against a dark canvas.
+- App-wide UI-UX consistency pass: dashboard sub-pages (stats, customers,
+  activity, plan, settings), the admin console, and the auth forms now use
+  the `ElevatedCard`/`Section` visual language introduced for
+  dashboard/setup/profile — presentational only, no behavior or copy
+  change. Fixed the activity filters wrapping awkwardly on narrow phones
+  (fields now stack full-width below the `sm` breakpoint). Rebuilt
+  `/earn`'s customer-facing form onto shadcn components (previously the
+  one hand-rolled, unstyled form in the app), with new test coverage.
+
 ### Added
 
 - Reward-voucher ledger (`loopkit.reward_vouchers`, migration

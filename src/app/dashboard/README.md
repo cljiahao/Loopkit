@@ -13,7 +13,7 @@ Vendor console root: program grid, shared shop QR, scan-to-serve entry point, an
 - `counter/`
 - `customers/`
 - `dashboard-nav.dom.test.tsx` — jsdom tests asserting `DashboardNav`'s inline nav links, mobile menu toggle, and account-dropdown item order (Profile/Settings/Plan/Sign out, no duplicate Customers item)
-- `dashboard-nav.tsx` — client `DashboardNav`: sticky header with brand, Dashboard/Customers/Activity/Stats nav links, mobile burger menu, and account dropdown (Profile/Settings/Plan/Sign out) with initials avatar and tier badge
+- `dashboard-nav.tsx` — client `DashboardNav`: sticky header with a left-hand group (mobile burger — left of the brand, opposite the account menu — brand, Dashboard/Customers/Activity/Stats nav links) and a right-hand account dropdown (Profile/Settings/Plan/Sign out) with initials avatar and tier badge; the mobile link panel closes on a tap-away scrim as well as the burger toggle
 - `dashboard-page.dom.test.tsx` — jsdom test asserting `DashboardPage` renders a "Your programs" heading above the program grid alongside the Shop QR block and scan entry
 - `dashboard-view.test.ts` — unit tests for `shouldShowQr` (hides QR block at zero active programs, shows it otherwise)
 - `dashboard-view.ts` — exports `shouldShowQr(activeProgramCount)`, a pure helper deciding whether the shop QR block should render
@@ -29,7 +29,7 @@ Vendor console root: program grid, shared shop QR, scan-to-serve entry point, an
 - `program-display.test.ts` — unit tests for `PROGRAM_TYPE_BADGE`, `describeProgram`, and `programDetails` across every program type
 - `program-display.ts` — exports `PROGRAM_TYPE_BADGE` map, `describeProgram()` (one-line reward-mechanic blurb per program type), and `programDetails()` (expiry/head-start detail lines)
 - `program-switcher.dom.test.tsx` — jsdom tests for `ProgramSwitcher`: renders "All programs" plus each program, preserves other URL params, hides itself with only one program
-- `program-switcher.tsx` — client `ProgramSwitcher`: same-page Select control that switches the `p` query param across Stats/Activity/Customers views, preserving other params
+- `program-switcher.tsx` — client `ProgramSwitcher`: same-page Select control that switches the `p` query param across Stats/Activity/Customers views, preserving other params; accepts optional `triggerId`/`triggerClassName` to render as a bare standalone control (Customers, Stats — the default) or as one field among others sharing a card's border/background (Activity, via `ActivityFilters`)
 - `qkit-earn-settings.dom.test.tsx` — jsdom tests for `QkitEarnSettings`: shows upgrade prompt when not Pro, lets a Pro vendor pick a program and toggle the switch
 - `qkit-earn-settings.tsx` — client `QkitEarnSettings` form: Pro-gated switch + program picker that calls `saveQkitEarnConfigAction`
 - `redeem-button.dom.test.tsx` — jsdom test asserting `RedeemButton`'s confirm dialog shows the exact stamp count and carryover wording
@@ -41,7 +41,7 @@ Vendor console root: program grid, shared shop QR, scan-to-serve entry point, an
 - `serve-customer.tsx` — client `ServeCustomer`: the full serve flow (stamp/lucky/plant/wheel/scratch) — scan-or-manual phone entry, primary action + lookup, per-type result rendering (stamp progress, lucky win, plant growth, wheel/scratch), redeem and regenerate-card dialogs, reward celebration
 - `settings/`
 - `shop-qr-block.dom.test.tsx` — jsdom tests for `ShopQrBlock`'s join copy (named programs vs. generic fallback) and rendered link
-- `shop-qr-block.tsx` — `ShopQrBlock`: an `ElevatedCard`-based shared shop-wide QR code panel with join copy naming active programs, the raw link, and `CardLinkActions`
+- `shop-qr-block.tsx` — `ShopQrBlock`: an `ElevatedCard`-based shared shop-wide QR code panel with join copy naming active programs, the raw link, and `CardLinkActions`; the link-text column uses `self-stretch sm:self-auto` so it's actually width-constrained (and its `truncate` takes effect) in the mobile `flex-col` layout, where the parent's `items-start` alone doesn't stretch flex children to the container width
 - `stats/`
 
 ## Connectivity

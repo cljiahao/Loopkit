@@ -10,7 +10,7 @@ export function ElevatedCard({
   children,
   ...props
 }: {
-  as?: "div" | "section";
+  as?: "div" | "section" | "li";
   className?: string;
   children: React.ReactNode;
 } & React.HTMLAttributes<HTMLElement>) {

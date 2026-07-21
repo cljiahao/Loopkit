@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { requireVendor } from "@/features/auth";
 import { listPrograms, currentProgram } from "@/lib/program";
 import { listActivity } from "@/lib/activity";
-import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
 import { ActivityTable } from "@/app/dashboard/activity/activity-table";
 import { ActivityFilters } from "@/app/dashboard/activity/activity-filters";
 
@@ -72,10 +71,10 @@ export default async function ActivityPage({
             Recent stamps, plays, and redemptions across every program.
           </p>
         </div>
-
-        <ProgramSwitcher programs={programs} currentId="" basePath={basePath} />
         <ActivityFilters
           basePath={basePath}
+          programs={programs}
+          currentId=""
           currentP={undefined}
           type={type}
           from={from}
@@ -126,14 +125,10 @@ export default async function ActivityPage({
           Recent stamps, plays, and redemptions for {program.name}.
         </p>
       </div>
-
-      <ProgramSwitcher
-        programs={programs}
-        currentId={program.id}
-        basePath={basePath}
-      />
       <ActivityFilters
         basePath={basePath}
+        programs={programs}
+        currentId={program.id}
         currentP={program.id}
         type={type}
         from={from}

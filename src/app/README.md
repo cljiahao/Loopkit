@@ -16,7 +16,7 @@ customer, and admin surfaces.
 - `earn/`
 - `error.tsx` — client root error boundary; replaces Next's error overlay in production with a retry UI, logs the error to the console
 - `global-error.tsx` — client root error boundary rendered only when the root layout itself throws; ships its own `<html>`/`<body>` with inline styles since the global stylesheet may not have loaded
-- `globals.css` — Tailwind v4 theme ("Mulberry & Gold"): light/dark CSS custom properties, `stamp-pop`/card-burst keyframe animations, reduced-motion overrides
+- `globals.css` — Tailwind v4 theme ("Mulberry & Gold"): light/dark CSS custom properties, `stamp-pop`/card-burst keyframe animations, reduced-motion overrides; dark mode's background/card/secondary/muted/border/input lightness was raised a few oklch steps (previously read as a near-black moody canvas rather than a loyalty-reward mood) and the body's ambient two-glow gradient now has its own dark-mode pass instead of reusing the light-mode oklch values, which barely read against a dark canvas
 - `icon.svg` — static favicon asset
 - `layout.tsx` — `RootLayout`: loads Google fonts (Bricolage Grotesque, Plus Jakarta Sans, IBM Plex Mono), sets page metadata, wraps children in `<Providers>`
 - `login/`

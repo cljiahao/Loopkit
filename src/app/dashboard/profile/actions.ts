@@ -10,6 +10,8 @@ import {
 } from "@/lib/merqo-vendor-profile";
 import type { SocialLinks } from "@/lib/types";
 
+// Thin wrapper — saveStallName (src/lib/vendor.ts) does the actual write to
+// the shared merqo.vendor_profile row.
 export async function updateStallNameAction(
   name: string,
 ): Promise<{ error?: string }> {

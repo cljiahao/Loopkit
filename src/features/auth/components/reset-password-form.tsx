@@ -7,6 +7,7 @@ import { Wordmark } from "@/components/landing/wordmark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ElevatedCard } from "@/components/elevated-card";
 
 // Reached from the password-reset email → /auth/callback establishes a recovery
 // session and forwards here. We update the password on that session, then land
@@ -43,7 +44,7 @@ export function ResetPasswordForm() {
         <div className="mb-8 text-center">
           <Wordmark className="text-3xl" />
         </div>
-        <div className="rounded-2xl border bg-card px-7 py-9 shadow-sm">
+        <ElevatedCard className="px-7 py-9">
           <h1 className="text-3xl font-bold tracking-tight">
             Choose a new password
           </h1>
@@ -101,7 +102,7 @@ export function ResetPasswordForm() {
               {busy ? "Saving…" : "Update password"}
             </Button>
           </form>
-        </div>
+        </ElevatedCard>
       </div>
     </main>
   );
