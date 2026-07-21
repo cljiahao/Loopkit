@@ -15,7 +15,7 @@ alter table loopkit.feedback enable row level security;
 create policy feedback_self_insert on loopkit.feedback
   for insert
   to authenticated
-  with check (vendor_id = auth.uid());
+  with check (vendor_id = (select auth.uid()));
 
 -- Explicit grants matching existing loopkit convention (see 0027_reward_vouchers, 0001_core).
 -- Schema-level usage already granted in 0001; only table-specific grants needed here.
