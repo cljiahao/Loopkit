@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { DashboardNav } from "@/app/dashboard/dashboard-nav";
@@ -68,6 +68,33 @@ describe("DashboardNav avatar trigger", () => {
     ).toHaveTextContent("JA");
   });
 
+  it("shows the stall name beside the avatar in the trigger, matching qkit", () => {
+    render(
+      <DashboardNav
+        {...baseProps}
+        email="jane.doe@example.com"
+        vendorName="Kopi Corner"
+        avatarUrl={null}
+      />,
+    );
+    const trigger = screen.getByRole("button", { name: "Account menu" });
+    expect(within(trigger).getByText("Kopi Corner")).toBeInTheDocument();
+  });
+
+  it("trigger falls back to 'Account' (not the email) when no stall name is set", () => {
+    render(
+      <DashboardNav
+        {...baseProps}
+        email="jane.doe@example.com"
+        vendorName={null}
+        avatarUrl={null}
+      />,
+    );
+    const trigger = screen.getByRole("button", { name: "Account menu" });
+    expect(within(trigger).getByText("Account")).toBeInTheDocument();
+    expect(trigger).not.toHaveTextContent("jane.doe@example.com");
+  });
+
   it("renders an avatar image instead of initials when avatarUrl is set", () => {
     render(
       <DashboardNav
@@ -97,8 +124,9 @@ describe("DashboardNav account dropdown label", () => {
     );
     await user.click(screen.getByRole("button", { name: "Account menu" }));
 
-    expect(screen.getByText("Kopi Corner")).toBeInTheDocument();
-    expect(screen.getByText("Vendor account")).toBeInTheDocument();
+    const menu = within(screen.getByRole("menu"));
+    expect(menu.getByText("Kopi Corner")).toBeInTheDocument();
+    expect(menu.getByText("Vendor account")).toBeInTheDocument();
     expect(screen.queryByText("jane.doe@example.com")).not.toBeInTheDocument();
   });
 

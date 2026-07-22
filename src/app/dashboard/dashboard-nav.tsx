@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ChevronDown,
   LifeBuoy,
   LogOut,
   Menu,
@@ -158,7 +159,7 @@ export function DashboardNav({
           <button
             type="button"
             aria-label="Account menu"
-            className="flex items-center gap-2 rounded-lg py-1 pr-1 pl-1 text-left transition-colors outline-none hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50"
+            className="flex items-center gap-2 rounded-lg py-1 pr-2 pl-1 text-left transition-colors outline-none hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >
             <Avatar className="size-8 shrink-0 rounded-md ring-1 ring-inset ring-primary/25">
               <AvatarImage src={avatarUrl ?? undefined} alt="" />
@@ -166,6 +167,10 @@ export function DashboardNav({
                 {initials(label)}
               </AvatarFallback>
             </Avatar>
+            <span className="hidden max-w-[9rem] truncate text-sm font-semibold md:inline">
+              {vendorName || "Account"}
+            </span>
+            <ChevronDown className="hidden size-4 text-muted-foreground md:inline" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56 rounded-xl">
