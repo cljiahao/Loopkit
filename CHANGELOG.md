@@ -156,10 +156,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   clean create/upsell page, and the list moved behind a new
   `/setup?manage=1` view reached via a new "Manage your programs" link.
 - `/setup`'s card-type picker now groups its 8 styles into 4 families
-  (Stamp Card, Sprout, Chance Card, Lucky Tap) with a style sub-step,
-  instead of one flat grid of 8 tiles. Purely a picker UI change — every
-  family/style combination still saves the exact same `type`/`variant`
-  pair as before (e.g. Stamp Card → Flame Club still saves
+  (Stamp Card, Growth, Points Club, Chance Card) with a style sub-step,
+  instead of one flat grid of 8 tiles. Flame Club moved from Stamp Card
+  into a new Growth family (alongside Sprout and Fill the Cup); Points Club
+  became its own single-style family (previously sharing Stamp Card); Lucky
+  Tap moved from a standalone family into Chance Card (grouping the three
+  random-draw-per-visit mechanics: Wheel, Scratch, Lucky Tap). Purely a
+  picker UI change — every family/style combination still saves the exact
+  same `type`/`variant` pair as before (e.g. Stamp Card → Dots still saves
+  `type=stamp, variant=dots`; Growth → Flame still saves
   `type=stamp, variant=flame`), so existing programs and the engine are
   unaffected.
 - New shared `Section`/`ElevatedCard` primitive (rounded corners, soft
