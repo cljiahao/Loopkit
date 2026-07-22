@@ -32,8 +32,8 @@ export function ScratchCard({
   className?: string;
 }) {
   const strokes = useMemo(
-    () => (scratching ? makeStrokes(5) : []),
-    [scratching],
+    () => (scratching && !revealed ? makeStrokes(5) : []),
+    [scratching, revealed],
   );
 
   return (
@@ -67,7 +67,7 @@ export function ScratchCard({
       >
         Scratch to reveal
       </div>
-      {scratching && (
+      {scratching && !revealed && (
         <div
           aria-hidden="true"
           data-testid="scratch-strokes"

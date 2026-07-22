@@ -39,4 +39,16 @@ describe("ScratchCard", () => {
     );
     expect(screen.queryByTestId("scratch-strokes")).not.toBeInTheDocument();
   });
+
+  it("does not render scratch strokes when both revealed and scratching are true", () => {
+    render(
+      <ScratchCard
+        revealed={true}
+        scratching={true}
+        label="Free kopi"
+        reward={true}
+      />,
+    );
+    expect(screen.queryByTestId("scratch-strokes")).not.toBeInTheDocument();
+  });
 });
