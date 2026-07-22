@@ -327,6 +327,9 @@ describe("SetupForm type picker", () => {
     await user.click(screen.getByRole("button", { name: "Spin the Wheel" }));
 
     expect(screen.getByText("Wheel segments")).toBeInTheDocument();
+    expect(screen.getByText("Overall win chance: 17%")).toBeInTheDocument();
+    expect(screen.getByText("≈83%")).toBeInTheDocument();
+    expect(screen.getByText("≈17%")).toBeInTheDocument();
     await user.click(
       screen.getByRole("button", {
         name: "What the number next to each prize means",

@@ -26,6 +26,7 @@ import {
   type FamilyKey,
   type StyleKey,
 } from "@/app/setup/card-type-picker";
+import { segmentWinPercent, overallWinPercent } from "@/lib/program-config";
 
 type SegmentInput = { label: string; weight: number; is_reward: boolean };
 
@@ -148,6 +149,8 @@ export function SetupForm({
       is_reward: !!s.reward_text,
     })) ?? DEFAULT_SEGMENTS,
   );
+  const segmentOddsPercent = segmentWinPercent(segments);
+  const overallOddsPercent = overallWinPercent(segments);
   const [headStart, setHeadStart] = useState(program?.head_start ?? false);
   const [headStartPercent, setHeadStartPercent] = useState(
     program?.head_start_percent ?? 20,
@@ -481,61 +484,71 @@ export function SetupForm({
                         often relative to the other prizes.
                       </InfoTooltip>
                     </div>
+                    <p className="text-sm font-semibold text-muted-foreground">
+                      Overall win chance: {overallOddsPercent}%
+                    </p>
                     <div className="space-y-2">
                       {segments.map((segment, i) => (
                         <div
                           key={i}
-                          className="flex flex-wrap items-center gap-2"
+                          className="space-y-1.5 rounded-xl border p-2"
                         >
-                          <Input
-                            type="text"
-                            required
-                            maxLength={40}
-                            value={segment.label}
-                            onChange={(e) =>
-                              updateSegment(i, { label: e.target.value })
-                            }
-                            placeholder="Label"
-                            className="h-11 flex-1 rounded-xl"
-                          />
-                          <Input
-                            type="number"
-                            required
-                            min={1}
-                            max={100}
-                            value={segment.weight}
-                            onChange={(e) =>
-                              updateSegment(i, {
-                                weight: Number(e.target.value),
-                              })
-                            }
-                            aria-label="Odds weight"
-                            className="h-11 w-20 rounded-xl"
-                          />
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateSegment(i, {
-                                is_reward: !segment.is_reward,
-                              })
-                            }
-                            className={cn(
-                              "h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold transition-colors",
-                              segment.is_reward
-                                ? "border-gold bg-gold/10 text-gold-accent"
-                                : "bg-card text-muted-foreground hover:bg-muted/50",
-                            )}
-                          >
-                            {segment.is_reward ? "Reward" : "No win"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeSegment(i)}
-                            disabled={segments.length <= 2}
-                            className="h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted/50 disabled:opacity-40"
-                          >
-                            Remove
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="text"
+                              required
+                              maxLength={40}
+                              value={segment.label}
+                              onChange={(e) =>
+                                updateSegment(i, { label: e.target.value })
+                              }
+                              placeholder="Label"
+                              className="h-11 flex-1 rounded-xl"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeSegment(i)}
+                              disabled={segments.length <= 2}
+                              className="h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted/50 disabled:opacity-40"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Input
+                              type="number"
+                              required
+                              min={1}
+                              max={100}
+                              value={segment.weight}
+                              onChange={(e) =>
+                                updateSegment(i, {
+                                  weight: Number(e.target.value),
+                                })
+                              }
+                              aria-label="Odds weight"
+                              className="h-11 w-20 rounded-xl"
+                            />
+                            <span className="text-xs font-medium text-muted-foreground">
+                              ≈{segmentOddsPercent[i]}%
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateSegment(i, {
+                                  is_reward: !segment.is_reward,
+                                })
+                              }
+                              className={cn(
+                                "h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold transition-colors",
+                                segment.is_reward
+                                  ? "border-gold bg-gold/10 text-gold-accent"
+                                  : "bg-card text-muted-foreground hover:bg-muted/50",
+                              )}
+                            >
+                              {segment.is_reward ? "Reward" : "No win"}
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
