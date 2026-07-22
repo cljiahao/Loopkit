@@ -87,12 +87,12 @@ describe("SetupForm type picker", () => {
     expect(
       screen.getByRole("button", { name: "Stamp Card" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sprout" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Growth" })).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Chance Card" }),
+      screen.getByRole("button", { name: "Points Club" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Lucky Tap" }),
+      screen.getByRole("button", { name: "Chance Card" }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Flame Club" }),
@@ -102,7 +102,7 @@ describe("SetupForm type picker", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("clicking a multi-style family shows its styles and a Back link", async () => {
+  it("clicking a multi-style family (Growth) shows its styles and a Back link", async () => {
     const user = userEvent.setup();
     render(
       <SetupForm
@@ -112,18 +112,18 @@ describe("SetupForm type picker", () => {
         replacingType={null}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Stamp Card" }));
+    await user.click(screen.getByRole("button", { name: "Growth" }));
 
     expect(
       screen.getByRole("button", { name: "Flame Club" }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sprout" })).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Points Club" }),
+      screen.getByRole("button", { name: "Fill the Cup" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Classic" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "← Back" })).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Stamp Card" }),
+      screen.queryByRole("button", { name: "Growth" }),
     ).not.toBeInTheDocument();
   });
 
@@ -137,16 +137,16 @@ describe("SetupForm type picker", () => {
         replacingType={null}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Stamp Card" }));
+    await user.click(screen.getByRole("button", { name: "Growth" }));
     await user.click(screen.getByRole("button", { name: "← Back" }));
 
     expect(
       screen.getByRole("button", { name: "Stamp Card" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Sprout" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Growth" })).toBeInTheDocument();
   });
 
-  it("clicking Lucky Tap completes selection immediately, with no Step 2", async () => {
+  it("clicking Points Club (single-style) completes selection immediately, with no Step 2", async () => {
     const user = userEvent.setup();
     render(
       <SetupForm
@@ -156,14 +156,35 @@ describe("SetupForm type picker", () => {
         replacingType={null}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Lucky Tap" }));
+    await user.click(screen.getByRole("button", { name: "Points Club" }));
 
     expect(
       screen.queryByRole("button", { name: "← Back" }),
     ).not.toBeInTheDocument();
+    expect(screen.getByText("Points required")).toBeInTheDocument();
+  });
+
+  it("clicking Chance Card shows Spin the Wheel, Scratch Card, and Lucky Tap styles", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Chance Card" }));
+
     expect(
-      screen.queryByLabelText(/reward expires after/i),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: "Spin the Wheel" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Scratch Card" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Lucky Tap" }),
+    ).toBeInTheDocument();
   });
 
   it("resets name and reward to blank when a new style is picked", async () => {
@@ -179,7 +200,7 @@ describe("SetupForm type picker", () => {
     await user.type(screen.getByLabelText("Card name"), "My card");
     await user.type(screen.getByLabelText("Reward"), "Free item");
 
-    await user.click(screen.getByRole("button", { name: "Stamp Card" }));
+    await user.click(screen.getByRole("button", { name: "Growth" }));
     await user.click(screen.getByRole("button", { name: "Flame Club" }));
 
     expect(screen.getByLabelText("Card name")).toHaveValue("");
@@ -196,7 +217,7 @@ describe("SetupForm type picker", () => {
         replacingType={null}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Stamp Card" }));
+    await user.click(screen.getByRole("button", { name: "Growth" }));
     await user.click(screen.getByRole("button", { name: "Flame Club" }));
     expect(screen.getByText("Visits for full blaze")).toBeInTheDocument();
 
@@ -220,7 +241,6 @@ describe("SetupForm type picker", () => {
         replacingType={null}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Stamp Card" }));
     await user.click(screen.getByRole("button", { name: "Points Club" }));
     expect(screen.getByText("Points required")).toBeInTheDocument();
     expect(screen.getByLabelText("Points per visit")).toBeInTheDocument();
@@ -255,7 +275,7 @@ describe("SetupForm type picker", () => {
         replacingType={null}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Sprout" }));
+    await user.click(screen.getByRole("button", { name: "Growth" }));
     await user.click(screen.getByRole("button", { name: "Fill the Cup" }));
     expect(screen.getByText("Visits to fill")).toBeInTheDocument();
 
@@ -269,7 +289,7 @@ describe("SetupForm type picker", () => {
     expect(submitted.get("variant")).toBe("cup");
   });
 
-  it("Sprout's Classic style still saves type=plant with variant=plant and the bloom-specific label", async () => {
+  it("Growth family's Sprout style still saves type=plant with variant=plant and the bloom-specific label", async () => {
     const user = userEvent.setup();
     render(
       <SetupForm
@@ -279,8 +299,8 @@ describe("SetupForm type picker", () => {
         replacingType={null}
       />,
     );
+    await user.click(screen.getByRole("button", { name: "Growth" }));
     await user.click(screen.getByRole("button", { name: "Sprout" }));
-    await user.click(screen.getByRole("button", { name: "Classic" }));
     expect(screen.getByText("Visits to bloom")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Card name"), "Grow-a-kopi");
@@ -439,6 +459,7 @@ describe("SetupForm reward expiry field", () => {
         replacingType={null}
       />,
     );
+    await user.click(screen.getByRole("button", { name: "Chance Card" }));
     await user.click(screen.getByRole("button", { name: "Lucky Tap" }));
     expect(
       screen.queryByLabelText(/reward expires after/i),
