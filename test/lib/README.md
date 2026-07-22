@@ -22,6 +22,7 @@ client instead.
 - `metrics.test.ts` — `computeLoopkitMetrics`: maps programs/cards/stamp events onto merqo's metrics shape
 - `phone.test.ts` — `normalizePhone`: SG mobile formats normalize to E.164 `+65…`
 - `program-access.test.ts` — `currentProgram`/`canCreateProgram`/`getEntitlement`: free/Pro program-count gating
+- `program-config.test.ts` — `segmentWinPercent`/`overallWinPercent`: each segment's rounded win-% share of total weight, the reward-only overall percentage, and the zero-total-weight edge case for both
 - `program-health.test.ts` — `programHealth`: "new"/"quiet"/"active" triage from customer count, age, last activity
 - `program.test.ts` — `programInputSchema`/`canPrepProgram`/`getEntitlement`: program validation and tier caps
 - `qr.test.ts` — `qrSvg`: renders a valid `<svg>…</svg>` string for a token
