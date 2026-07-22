@@ -10,7 +10,8 @@ cards from a phone-friendly `/c` flow via QR. Includes a scratch-card /
 wheel reward layer, tiered plans, and an admin console for vendor
 management. `/setup`'s type picker groups by mechanic, not raw DB type —
 Stamp Card, Growth (Flame Club/Sprout/Fill the Cup), Points Club, and
-Chance Card (Wheel/Scratch/Lucky Tap). The dashboard's account-menu trigger, order, and content
+Chance Card (Wheel/Scratch/Lucky Tap) — whose Basics editor shows odds as a
+live percentage, not a raw weight. The dashboard's account-menu trigger, order, and content
 deliberately mirror qkit's (see `src/app/dashboard/dashboard-nav.tsx`) — a
 cross-kit consistency goal, not a coincidence. Theme is "Raspberry-Rose Punch & Gold"
 (`src/app/globals.css`) — a bright, saturated raspberry-red primary plus a
