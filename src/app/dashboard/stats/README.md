@@ -6,7 +6,8 @@ Vendor stats page at `/dashboard/stats` — enrollment, retention, and visit met
 
 ## Contents
 
-- `page.tsx` — `StatsPage` server component; requires a vendor, redirects to the single program when there's exactly one, renders `ProgramSwitcher` below the page header, then stat tiles (enrolled, active/lapsed, redemption rate, repeat-visit rate, visits, rewards redeemed, avg days between visits) with day-over-day deltas and a 30-day visits bar chart, sourced from `getVendorStats`/`getProgramStats`.
+- `page.tsx` — `StatsPage` server component; requires a vendor, redirects to the single program when there's exactly one, renders `ProgramSwitcher` below the page header, then stat tiles (enrolled, active/lapsed, redemption rate, repeat-visit rate, visits, rewards redeemed, avg days between visits, expired unclaimed) with day-over-day deltas and a 30-day visits bar chart, sourced from `getVendorStats`/`getProgramStats` plus the separately-sourced `countExpiredVouchers`.
+- `stats-page.dom.test.tsx` — jsdom tests for `StatsPage`: renders vendor-wide stat tiles (including "Expired unclaimed (30d)") and the visits chart with no program selected, renders program-scoped tiles when `?p=` is set, and shows the empty state at zero enrolled customers.
 
 ## Parent
 

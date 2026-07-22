@@ -222,6 +222,29 @@ export const getProgramStats = cache(async function getProgramStats(
   };
 });
 
+// Impure shell: count of `reward_vouchers` that flipped to `expired` in the
+// last 30 days, across the given programs. Separately sourced from (and
+// added alongside, not replacing) rewards30d/redemptionRate above — those
+// stay on their existing stamp_events/chance-win source per
+// docs/superpowers/specs/2026-07-16-reward-voucher-ledger-design.md's
+// explicit decision not to risk a regression migrating them onto the newer
+// reward_vouchers ledger.
+export async function countExpiredVouchers(
+  programIds: string[],
+): Promise<number> {
+  if (programIds.length === 0) return 0;
+  const supabase = await createServerClient();
+  const cutoff = new Date(Date.now() - 30 * MS_PER_DAY).toISOString();
+  const { count, error } = await supabase
+    .from("reward_vouchers")
+    .select("id", { count: "exact", head: true })
+    .in("program_id", programIds)
+    .eq("status", "expired")
+    .gte("updated_at", cutoff);
+  if (error) throw new Error(`countExpiredVouchers: ${error.message}`);
+  return count ?? 0;
+}
+
 // Impure shell: fetch cards+events across every one of the vendor's
 // programs (not just one), then delegate to the same pure pipeline
 // getProgramStats uses. classifyActivity/computeCardStats/

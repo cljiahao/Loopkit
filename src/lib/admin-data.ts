@@ -1,4 +1,5 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import { listAllUsers } from "@/lib/list-all-users";
 import type { CardRow } from "@/lib/cards";
 
 type ServiceClient = Awaited<ReturnType<typeof createServiceClient>>;
@@ -70,7 +71,7 @@ export type ProgramDetail = {
 async function emailByUserId(
   supabase: ServiceClient,
 ): Promise<Map<string, string | null>> {
-  const { data } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+  const { data } = await listAllUsers(supabase);
   return new Map((data?.users ?? []).map((u) => [u.id, u.email ?? null]));
 }
 

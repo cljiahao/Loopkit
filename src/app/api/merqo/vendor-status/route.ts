@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { resolveVendorStatus } from "@/lib/merqo-vendor-status";
+import { listAllUsers } from "@/lib/list-all-users";
 
 export const revalidate = 0;
 
@@ -43,10 +44,7 @@ export async function GET(request: Request) {
   const supabase = await createServiceClient();
 
   const [usersRes, programsRes, proRes] = await Promise.all([
-    // Known limitation: listUsers paginates but we only fetch page 1 (1000 users max).
-    // Once loopkit has >1000 auth users, vendors past the first page silently resolve as
-    // inactive. TODO: implement pagination to fetch all pages.
-    supabase.auth.admin.listUsers({ perPage: 1000 }),
+    listAllUsers(supabase),
     supabase.from("programs").select("vendor_id"),
     supabase.from("vendor_pro").select("vendor_id"),
   ]);
@@ -64,18 +62,9 @@ export async function GET(request: Request) {
     );
   }
 
-  if (usersRes.data?.users.length === 1000) {
-    console.error(
-      "merqo vendor-status: listUsers returned a full page (1000) — pagination not implemented, some vendors past this page may resolve as inactive",
-    );
-  }
-
   const status = resolveVendorStatus(
     parsed.data.email,
-    (usersRes.data?.users ?? []).map((u) => ({
-      id: u.id,
-      email: u.email ?? null,
-    })),
+    usersRes.data?.users ?? [],
     (programsRes.data ?? []).map((p) => p.vendor_id as string),
     (proRes.data ?? []).map((p) => p.vendor_id as string),
   );

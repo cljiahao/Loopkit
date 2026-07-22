@@ -1,10 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+
+const { fromMock } = vi.hoisted(() => ({ fromMock: vi.fn() }));
+vi.mock("@/lib/supabase/server", () => ({
+  createServerClient: vi.fn(async () => ({ from: fromMock })),
+}));
+
 import {
   classifyActivity,
   bucketVisitsByDay,
   computeCardStats,
   pctChange,
   avgDaysBetweenVisits,
+  countExpiredVouchers,
 } from "@/lib/stats";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -247,5 +254,59 @@ describe("avgDaysBetweenVisits", () => {
       { card_id: "c1", kind: "stamp", created_at: iso(2) },
     ];
     expect(avgDaysBetweenVisits(events)).toBe(3);
+  });
+});
+
+describe("countExpiredVouchers", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(Date, "now").mockReturnValue(now);
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  it("returns 0 without querying when there are no programs", async () => {
+    const result = await countExpiredVouchers([]);
+    expect(result).toBe(0);
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("queries reward_vouchers scoped to the given programs, status expired, within 30 days", async () => {
+    const inMock = vi.fn(() => builder);
+    const eqMock = vi.fn(() => builder);
+    const gteMock = vi.fn(() => Promise.resolve({ count: 3, error: null }));
+    const builder = {
+      select: vi.fn(() => builder),
+      in: inMock,
+      eq: eqMock,
+      gte: gteMock,
+    };
+    fromMock.mockReturnValue(builder);
+
+    const result = await countExpiredVouchers(["p1", "p2"]);
+
+    expect(result).toBe(3);
+    expect(fromMock).toHaveBeenCalledWith("reward_vouchers");
+    expect(inMock).toHaveBeenCalledWith("program_id", ["p1", "p2"]);
+    expect(eqMock).toHaveBeenCalledWith("status", "expired");
+    expect(gteMock).toHaveBeenCalledWith(
+      "updated_at",
+      new Date(now - 30 * DAY).toISOString(),
+    );
+  });
+
+  it("throws when the query errors", async () => {
+    const builder = {
+      select: vi.fn(() => builder),
+      in: vi.fn(() => builder),
+      eq: vi.fn(() => builder),
+      gte: vi.fn(() =>
+        Promise.resolve({ count: null, error: { message: "boom" } }),
+      ),
+    };
+    fromMock.mockReturnValue(builder);
+
+    await expect(countExpiredVouchers(["p1"])).rejects.toThrow(
+      "countExpiredVouchers",
+    );
   });
 });

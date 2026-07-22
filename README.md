@@ -77,7 +77,7 @@ See `AGENTS.md` for full engineering rules, harness details, and skills.
 - `.github/` — CI workflows
 - `.lefthook/` — git commit-msg gate script
 - `docs/` — deploy runbook, superpowers specs/plans, CONSTITUTION
-- `e2e/` — Playwright end-to-end smoke tests
+- `e2e/` — Playwright end-to-end smoke + signed-out route-protection tests (both run without Supabase provisioning)
 - `src/` — application source (App Router pages, lib, components)
 - `supabase/` — SQL migrations and seed data
 - `test/` — Vitest unit/integration tests
