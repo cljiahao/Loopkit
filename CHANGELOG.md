@@ -17,6 +17,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- The dashboard account-menu trigger showed only the bare avatar — the
+  stall name was visible only once the dropdown was opened, unlike qkit's
+  trigger which shows the name (or an "Account" fallback) plus a chevron
+  beside the avatar at `md:` and up. Now matches.
 - The dashboard account-dropdown label leaked the vendor's email — as the
   primary line when no stall name was set, or as the subtitle when one
   was. Now matches qkit's dropdown exactly: stall name (or a "Your stall"
