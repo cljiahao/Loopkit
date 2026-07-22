@@ -8,28 +8,28 @@ import {
 } from "./card-type-picker";
 
 describe("FAMILIES", () => {
-  it("has exactly 4 families in order: stamp, plant, chance, lucky", () => {
+  it("has exactly 4 families in order: stamp, growth, points, chance", () => {
     expect(FAMILIES.map((f) => f.key)).toEqual([
       "stamp",
-      "plant",
+      "growth",
+      "points",
       "chance",
-      "lucky",
     ]);
   });
 
-  it("stamp has 3 styles, plant has 2, chance has 2, lucky has 1", () => {
-    expect(familyOf("stamp").styles).toHaveLength(3);
-    expect(familyOf("plant").styles).toHaveLength(2);
-    expect(familyOf("chance").styles).toHaveLength(2);
-    expect(familyOf("lucky").styles).toHaveLength(1);
+  it("stamp has 1 style, growth has 3, points has 1, chance has 3", () => {
+    expect(familyOf("stamp").styles).toHaveLength(1);
+    expect(familyOf("growth").styles).toHaveLength(3);
+    expect(familyOf("points").styles).toHaveLength(1);
+    expect(familyOf("chance").styles).toHaveLength(3);
   });
 });
 
 describe("isSingleStyleFamily", () => {
-  it("is true only for lucky", () => {
-    expect(isSingleStyleFamily("lucky")).toBe(true);
-    expect(isSingleStyleFamily("stamp")).toBe(false);
-    expect(isSingleStyleFamily("plant")).toBe(false);
+  it("is true only for stamp and points", () => {
+    expect(isSingleStyleFamily("stamp")).toBe(true);
+    expect(isSingleStyleFamily("points")).toBe(true);
+    expect(isSingleStyleFamily("growth")).toBe(false);
     expect(isSingleStyleFamily("chance")).toBe(false);
   });
 });
@@ -46,28 +46,31 @@ describe("resolveFamilyAndStyle", () => {
     });
   });
 
-  it("maps stamp/flame and stamp/points to the stamp family", () => {
+  it("maps stamp/flame to the growth family", () => {
     expect(resolveFamilyAndStyle("stamp", "flame")).toEqual({
-      family: "stamp",
+      family: "growth",
       style: "flame",
     });
+  });
+
+  it("maps stamp/points to the points family", () => {
     expect(resolveFamilyAndStyle("stamp", "points")).toEqual({
-      family: "stamp",
+      family: "points",
       style: "points",
     });
   });
 
-  it("maps plant with no/'plant' variant and 'cup' variant to the plant family", () => {
+  it("maps plant with no/'plant' variant and 'cup' variant to the growth family", () => {
     expect(resolveFamilyAndStyle("plant", undefined)).toEqual({
-      family: "plant",
+      family: "growth",
       style: "plant",
     });
     expect(resolveFamilyAndStyle("plant", "plant")).toEqual({
-      family: "plant",
+      family: "growth",
       style: "plant",
     });
     expect(resolveFamilyAndStyle("plant", "cup")).toEqual({
-      family: "plant",
+      family: "growth",
       style: "cup",
     });
   });
@@ -83,9 +86,9 @@ describe("resolveFamilyAndStyle", () => {
     });
   });
 
-  it("maps lucky to the lucky family", () => {
+  it("maps lucky to the chance family", () => {
     expect(resolveFamilyAndStyle("lucky", undefined)).toEqual({
-      family: "lucky",
+      family: "chance",
       style: "lucky",
     });
   });

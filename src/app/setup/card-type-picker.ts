@@ -7,7 +7,7 @@
 // this mapping gets fast, unmocked test coverage, same pattern as
 // setup-view.ts / dashboard-view.ts.
 
-export type FamilyKey = "stamp" | "plant" | "chance" | "lucky";
+export type FamilyKey = "stamp" | "growth" | "points" | "chance";
 
 export type StyleKey =
   "dots" | "flame" | "points" | "plant" | "cup" | "wheel" | "scratch" | "lucky";
@@ -33,35 +33,42 @@ export const FAMILIES: Family[] = [
     styles: [
       {
         key: "dots",
-        label: "Classic",
+        label: "Stamp Card",
         description: "Collect stamps toward a reward",
       },
+    ],
+  },
+  {
+    key: "growth",
+    label: "Growth",
+    description: "Visible progress that grows or fills with every visit",
+    styles: [
       {
         key: "flame",
         label: "Flame Club",
         description: "Build a flame with every visit",
       },
       {
-        key: "points",
-        label: "Points Club",
-        description: "Earn a set number of points every visit",
-      },
-    ],
-  },
-  {
-    key: "plant",
-    label: "Sprout",
-    description: "Grow a plant with every visit",
-    styles: [
-      {
         key: "plant",
-        label: "Classic",
+        label: "Sprout",
         description: "Grow a plant with every visit",
       },
       {
         key: "cup",
         label: "Fill the Cup",
         description: "Fill a cup with every visit",
+      },
+    ],
+  },
+  {
+    key: "points",
+    label: "Points Club",
+    description: "Earn points toward a reward",
+    styles: [
+      {
+        key: "points",
+        label: "Points Club",
+        description: "Earn a set number of points every visit",
       },
     ],
   },
@@ -80,13 +87,6 @@ export const FAMILIES: Family[] = [
         label: "Scratch Card",
         description: "Scratch for a prize on every visit",
       },
-    ],
-  },
-  {
-    key: "lucky",
-    label: "Lucky Tap",
-    description: "A chance to win on every visit",
-    styles: [
       {
         key: "lucky",
         label: "Lucky Tap",
@@ -113,17 +113,17 @@ export function resolveFamilyAndStyle(
   variant: string | undefined,
 ): { family: FamilyKey; style: StyleKey } {
   if (type === "stamp") {
-    if (variant === "flame") return { family: "stamp", style: "flame" };
-    if (variant === "points") return { family: "stamp", style: "points" };
+    if (variant === "flame") return { family: "growth", style: "flame" };
+    if (variant === "points") return { family: "points", style: "points" };
     return { family: "stamp", style: "dots" };
   }
   if (type === "plant") {
-    if (variant === "cup") return { family: "plant", style: "cup" };
-    return { family: "plant", style: "plant" };
+    if (variant === "cup") return { family: "growth", style: "cup" };
+    return { family: "growth", style: "plant" };
   }
   if (type === "wheel") return { family: "chance", style: "wheel" };
   if (type === "scratch") return { family: "chance", style: "scratch" };
-  return { family: "lucky", style: "lucky" };
+  return { family: "chance", style: "lucky" };
 }
 
 const STYLE_TO_TYPE_VARIANT: Record<
