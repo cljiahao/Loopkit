@@ -45,12 +45,12 @@ each independently shippable):
 
 ## A. Family/style taxonomy regroup
 
-| Family (tile) | Description | Styles inside |
-| --- | --- | --- |
-| **Stamp Card** | Collect stamps toward a reward | Classic dots only — single-style, no substep (same pattern Lucky Tap uses today) |
-| **Growth** *(renamed from "Sprout")* | Visible progress that grows or fills with every visit | Flame Club *(moved out of Stamp Card)* · Sprout *(renamed from "Classic")* · Fill the Cup |
-| **Points Club** | Earn points toward a reward | single-style, no substep |
-| **Chance Card** | A random prize on every visit | Spin the Wheel · Scratch Card · **Lucky Tap** *(moved in)* |
+| Family (tile)                        | Description                                           | Styles inside                                                                             |
+| ------------------------------------ | ----------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Stamp Card**                       | Collect stamps toward a reward                        | Classic dots only — single-style, no substep (same pattern Lucky Tap uses today)          |
+| **Growth** _(renamed from "Sprout")_ | Visible progress that grows or fills with every visit | Flame Club _(moved out of Stamp Card)_ · Sprout _(renamed from "Classic")_ · Fill the Cup |
+| **Points Club**                      | Earn points toward a reward                           | single-style, no substep                                                                  |
+| **Chance Card**                      | A random prize on every visit                         | Spin the Wheel · Scratch Card · **Lucky Tap** _(moved in)_                                |
 
 Zero DB `type`/`variant` values change — this is purely `card-type-picker.ts`'s
 `FAMILIES` data, `resolveFamilyAndStyle()`, and the `FamilyKey` union:
@@ -134,7 +134,7 @@ rolling and showing the result:
    existing `duration-[1400ms]` transition). During this phase the hook's
    returned `Progress.view` has `landedId` overridden to `null` (masking the
    previous result), and the hook's return shape grows a new `revealing:
-   boolean` field alongside `progress`/`celebrating`/`lastChanceResult`.
+boolean` field alongside `progress`/`celebrating`/`lastChanceResult`.
 3. `setup-form.tsx` forwards this new `revealing` value into a new
    `<PreviewCard revealing={revealing} .../>` prop. `PreviewCard` passes
    `spinning={revealing}` to `Wheel` (finally using the existing prop, only
