@@ -32,6 +32,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   styling and mobile stacking) instead of a separate sibling — `ProgramSwitcher`
   gained optional `triggerId`/`triggerClassName` props for this, defaulting
   to its existing bare look on Customers/Stats.
+- `GET /api/merqo/vendor-status` and the `/admin` console's vendor-email
+  lookup (`admin-data.ts`) both only ever read the first 1000 auth users
+  (`listUsers`' default page size) — past that, a vendor would silently
+  resolve as "inactive" to merqo, or go missing from the admin console.
+  Extracted a shared `listAllUsers()` (`src/lib/list-all-users.ts`) that
+  paginates to completion; both call sites now use it.
+
+### Added
+
+- `Stats` gains an "Expired unclaimed (30d)" tile, sourced from the
+  `reward_vouchers` ledger (`countExpiredVouchers`) — added alongside,
+  not replacing, the existing `stamp_events`-sourced `rewards30d`/
+  `redemptionRate` tiles, per
+  `docs/superpowers/specs/2026-07-16-reward-voucher-ledger-design.md`'s
+  explicit decision not to risk a regression migrating those.
+- Test coverage for the `/admin` console's data layer (`admin.ts`,
+  `admin-data.ts`) and `rate-limit.ts`, previously untested — the one
+  surface handling cross-vendor sensitive data had zero automated
+  coverage.
+- `e2e/route-protection.spec.ts`: signed-out redirects for
+  `/dashboard`/`/setup`, a signed-out 404 for `/admin`, and the
+  no-DB-call fallback copy for `/c`/`/earn` without their required query
+  param — the e2e suite's first coverage of anything beyond the public
+  landing/login smoke pages.
 
 ### Changed
 

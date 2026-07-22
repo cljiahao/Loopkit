@@ -7,7 +7,7 @@ up whether an email belongs to an active/Pro loopkit vendor.
 
 ## Contents
 
-- `route.ts` — `GET`: bearer-auth via `bearerOk()`, validates an `email` query param with Zod, reads up to 1000 auth users plus `programs`/`vendor_pro` via the service-role client, resolves status with `resolveVendorStatus()`, returns it as JSON (documented known limitation: no pagination past the first 1000 auth users).
+- `route.ts` — `GET`: bearer-auth via `bearerOk()`, validates an `email` query param with Zod, reads every auth user (via `listAllUsers()`, `src/lib/list-all-users.ts` — paginates past the first 1000, fixing a prior known limitation) plus `programs`/`vendor_pro` via the service-role client, resolves status with `resolveVendorStatus()`, returns it as JSON.
 
 ## Parent
 

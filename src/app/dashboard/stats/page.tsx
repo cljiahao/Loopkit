@@ -2,7 +2,11 @@ import { redirect } from "next/navigation";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { requireVendor } from "@/features/auth";
 import { listPrograms, currentProgram } from "@/lib/program";
-import { getProgramStats, getVendorStats } from "@/lib/stats";
+import {
+  getProgramStats,
+  getVendorStats,
+  countExpiredVouchers,
+} from "@/lib/stats";
 import { cn } from "@/lib/utils";
 import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
 import { ElevatedCard } from "@/components/elevated-card";
@@ -62,7 +66,11 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
   }
 
   if (!p) {
-    const stats = await getVendorStats(programs.map((prog) => prog.id));
+    const programIds = programs.map((prog) => prog.id);
+    const [stats, expiredUnclaimed] = await Promise.all([
+      getVendorStats(programIds),
+      countExpiredVouchers(programIds),
+    ]);
     const maxDay = Math.max(1, ...stats.visitsByDay.map((d) => d.count));
 
     return (
@@ -122,6 +130,10 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
                     : `${stats.avgDaysBetweenVisits.toFixed(1)}d`
                 }
               />
+              <Tile
+                label="Expired unclaimed (30d)"
+                value={String(expiredUnclaimed)}
+              />
             </div>
 
             <ElevatedCard className="p-6">
@@ -150,7 +162,10 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
   const program = currentProgram(programs, p);
   if (!program) redirect("/setup");
 
-  const stats = await getProgramStats(program.id);
+  const [stats, expiredUnclaimed] = await Promise.all([
+    getProgramStats(program.id),
+    countExpiredVouchers([program.id]),
+  ]);
   const maxDay = Math.max(1, ...stats.visitsByDay.map((d) => d.count));
 
   return (
@@ -209,6 +224,10 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
                   ? "—"
                   : `${stats.avgDaysBetweenVisits.toFixed(1)}d`
               }
+            />
+            <Tile
+              label="Expired unclaimed (30d)"
+              value={String(expiredUnclaimed)}
             />
           </div>
 

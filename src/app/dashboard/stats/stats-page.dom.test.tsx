@@ -37,6 +37,7 @@ const statsWithData = {
 vi.mock("@/lib/stats", () => ({
   getVendorStats: vi.fn(async () => statsWithData),
   getProgramStats: vi.fn(async () => statsWithData),
+  countExpiredVouchers: vi.fn(async () => 1),
 }));
 vi.mock("next/navigation", () => ({
   redirect: vi.fn((url: string) => {
@@ -54,6 +55,7 @@ describe("StatsPage", () => {
     expect(screen.getByText("Stats")).toBeInTheDocument();
     expect(screen.getByText("8")).toBeInTheDocument();
     expect(screen.getByText("Last 30 days")).toBeInTheDocument();
+    expect(screen.getByText("Expired unclaimed (30d)")).toBeInTheDocument();
   });
 
   it("renders program-scoped stats tiles when ?p= is set", async () => {
