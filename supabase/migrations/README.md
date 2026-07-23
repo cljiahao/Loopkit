@@ -37,6 +37,8 @@ exception.
 - `0025_loopkit_remove_streak_type.sql` — removes the Streak Club program type entirely, replaced by Flame Club (a Stamp visual variant); no live rows existed, so this is a full removal rather than the usual additive-only convention
 - `0026_loopkit_points_per_visit.sql` — Points Club: `points_per_visit` config field (default 1) instead of Stamp's implicit +1; widens the `stamps_required` range to 100,000
 - `0027_loopkit_reward_vouchers.sql` — `reward_vouchers` table (per-reward `active`/`redeemed`/`expired` ledger row, RLS via `owns_program`) and `programs.reward_expiry_days`; `grant_reward_voucher`/`redeem_oldest_voucher`/`expire_stale_vouchers` SECURITY DEFINER functions, and `create_program`/`update_program` gain a trailing `p_reward_expiry_days` parameter
+- `0029_feedback.sql` — `loopkit.feedback` table: vendor NPS + optional message, RLS self-insert only; superseded as the write path by 0030/`merqo.vendor_feedback` (`src/app/actions/feedback.ts` no longer inserts here), kept as the historical source the 0030 backfill reads from
+- `0030_vendor_feedback_backfill.sql` — one-time, guarded copy of existing `loopkit.feedback` rows into the shared cross-kit `merqo.vendor_feedback` table (merqo migration 0011); no-ops if `merqo.vendor_feedback` doesn't exist yet (e.g. loopkit-only local `supabase start`), same guard pattern as qkit's `0054_vendor_profile_backfill.sql`
 
 ## Parent
 
