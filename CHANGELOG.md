@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `SupportForm`'s category `ToggleGroup` was missing `spacing={1.5}`,
+  rendering the category buttons edge-to-edge instead of qkit's
+  separated-pill layout.
+
 ### Changed
 
 - `FeedbackForm`'s NPS score picker and comment field now use shadcn
