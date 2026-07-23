@@ -26,6 +26,7 @@ profile/status).
 - `loyalty.ts` — `rewardReady`: one-line pure check that a stamp count has met the program's requirement
 - `merqo-vendor-profile.test.ts` — vitest tests for `getOrCreateVendorProfile`: asserts the `.schema("merqo").rpc(...)` call shape and that a Postgres error is rethrown with context
 - `merqo-vendor-profile.ts` — `getOrCreateVendorProfile`/`upsertVendorProfile`: hand-written mirror of merqo's cross-schema RPC contract, generic over the caller's own `Database`/schema so `"loopkit"`-scoped clients type-check, casts to `merqo` schema only for the RPC calls; `upsertVendorProfile` is the write path used by the profile page's social-links save
+- `merqo-vendor-feedback.ts` — `submitVendorFeedback`: hand-written mirror of merqo's cross-schema `submit_vendor_feedback` RPC contract, generic over the caller's own `Database`/schema so `"loopkit"`-scoped clients type-check; the write path used by `actions/feedback.ts` in place of a local insert
 - `merqo-vendor-status.test.ts` — vitest tests for `resolveVendorStatus`: active/free, active/pro, case-insensitive email match, inactive-no-user, inactive-no-program cases
 - `merqo-vendor-status.ts` — `resolveVendorStatus`: pure lookup mapping an email + auth-user list + program/pro vendor-id lists to `{active, plan}`, since neither `programs` nor `vendor_pro` carries an email column
 - `metrics.ts` — `isWonVisit` (pure) and `computeLoopkitMetrics`: maps loopkit's stamp-card domain onto merqo's qkit-shaped metrics payload (programs→vendors, stamp/visit events→orders, no revenue/GMV in v1)
