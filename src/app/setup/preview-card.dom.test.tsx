@@ -293,6 +293,26 @@ describe("PreviewCard", () => {
     );
   });
 
+  it("renders LuckyBox for a lucky view, with the win/lose pill available", () => {
+    const progress: Progress = {
+      stage: "play",
+      label: "Tap to play — win by visit 8",
+      view: { kind: "lucky", visitsSinceWin: 3, pityCeiling: 8 },
+      rewardReady: false,
+    };
+    render(
+      <PreviewCard
+        progress={progress}
+        name="Lucky topping"
+        rewardText="Free item"
+        lastChanceResult={{ won: true }}
+      />,
+    );
+    expect(screen.getByText("Tap for a surprise")).toBeInTheDocument();
+    expect(screen.getByText("Guaranteed win by visit 3/8")).toBeInTheDocument();
+    expect(screen.getByText("🎉 You won!")).toBeInTheDocument();
+  });
+
   it("passes scratching to ScratchCard while revealing", () => {
     const progress: Progress = {
       stage: "play",

@@ -279,6 +279,24 @@ describe("usePreviewAnimation", () => {
     expect(result.current.lastChanceResult).toBeNull();
   });
 
+  it("sets lastChanceResult for lucky on a winning tick, same as wheel/scratch", () => {
+    const rollSpy = vi.spyOn(Math, "random").mockReturnValue(0.01);
+    const { result } = renderHook(() =>
+      usePreviewAnimation({
+        ...base,
+        type: "lucky",
+        winPercent: 50,
+        pityCeiling: 8,
+      }),
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(result.current.lastChanceResult).toEqual({ won: true });
+    rollSpy.mockRestore();
+  });
+
   it("resets lastChanceResult to null when the recipe changes", () => {
     const rollSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
     const { result, rerender } = renderHook(

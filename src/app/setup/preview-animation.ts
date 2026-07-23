@@ -165,6 +165,9 @@ export function usePreviewAnimation(input: PreviewInput): {
         return;
       }
       setCard(nextCard);
+      if (type === "lucky") {
+        setLastChanceResult({ won: rewardUnlocked });
+      }
       if (rewardUnlocked) setPhase("celebrating");
     }, delay);
     return () => clearTimeout(timer);

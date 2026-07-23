@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // src/features/card-check/components/program-card-status.dom.test.tsx
 import { describe, it, expect } from "vitest";
-import { render } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { ProgramCardStatus } from "./program-card-status";
 import type { CardStatus } from "../types";
 
@@ -53,6 +53,21 @@ describe("ProgramCardStatus points variant", () => {
     );
     expect(queryByText(/points$/)).not.toBeInTheDocument();
     expect(container.querySelectorAll("span[aria-hidden]").length).toBe(5);
+  });
+});
+
+describe("ProgramCardStatus lucky view", () => {
+  it("renders LuckyBox instead of stamp dots for a lucky view", () => {
+    render(
+      <ProgramCardStatus
+        card={baseCard({
+          view: { kind: "lucky", visitsSinceWin: 2, pityCeiling: 8 },
+        })}
+        phone="+6591234567"
+      />,
+    );
+    expect(screen.getByText("Tap for a surprise")).toBeInTheDocument();
+    expect(screen.getByText("Guaranteed win by visit 2/8")).toBeInTheDocument();
   });
 });
 
