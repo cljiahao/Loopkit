@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Vendor NPS feedback (the dashboard's "Share feedback" sheet) now submits
+  into the shared cross-kit `merqo.vendor_feedback` table via a new
+  `submit_vendor_feedback` RPC, instead of loopkit's own local
+  `loopkit.feedback` table. `loopkit.feedback` stops receiving new rows —
+  existing rows were one-time backfilled into `merqo.vendor_feedback`
+  (migration `0030`) so no historical feedback is lost. Implemented via
+  `src/lib/merqo-vendor-feedback.ts`'s `submitVendorFeedback`, mirroring
+  `merqo-vendor-profile.ts`'s existing generic-over-caller's-client RPC
+  pattern. No user-facing change to the feedback form itself; the
+  SECURITY DEFINER RPC (not app code) is the new authorization boundary,
+  writing `auth.uid()` as `vendor_id` itself rather than trusting a
+  passed-in value.
 - Lucky Tap now renders its own "tap for a surprise" mystery-box visual
   (`LuckyBox`) instead of sharing the generic stamp-dots counter with real
   stamp/plant cards. This changes the **live customer-facing card** (`/c`)

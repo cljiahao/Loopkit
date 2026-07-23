@@ -177,6 +177,29 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      thousands — Stamp/Flame Club stay capped at 20 by the application
      layer, not this constraint. Safe to re-run.
 
+   - apply `0027_loopkit_reward_vouchers.sql` — adds `loopkit.reward_vouchers`
+     (per-reward `active`/`redeemed`/`expired` ledger row, replacing a bare
+     `reward_count`/`blooms` increment with real history) and
+     `programs.reward_expiry_days`; recreates `create_program` (additive
+     `p_reward_expiry_days`) and `add_stamp`/`redeem`/`vendor_join` to grant,
+     sweep, and surface vouchers. Safe to re-run.
+
+   - apply `0029_feedback.sql` — adds `loopkit.feedback` (vendor NPS +
+     optional message, self-insert RLS only), backing the dashboard's
+     "Share feedback" sheet. Safe to re-run. (0028 was never used — no gap to
+     fill.)
+
+   - apply `0030_vendor_feedback_backfill.sql` — one-time, guarded copy of
+     existing `loopkit.feedback` rows into the shared cross-kit
+     `merqo.vendor_feedback` table (requires merqo's own `0011` migration to
+     already be live — same ordering dependency class as the 0019/0020
+     qkit-earn note below). No-ops harmlessly if `merqo.vendor_feedback`
+     doesn't exist yet, so it's also safe to apply against a loopkit-only
+     database. After this lands, `submitFeedbackAction` writes new feedback
+     straight to `merqo.vendor_feedback` via `submit_vendor_feedback` — the
+     local `loopkit.feedback` table stops receiving new rows and is kept
+     only as this migration's one-time historical source.
+
    - **Optional — rate limiting on the public `/c` surface.** The card-check
      action is throttled per-IP only if an Upstash Redis is configured. Create a
      free Upstash Redis and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
