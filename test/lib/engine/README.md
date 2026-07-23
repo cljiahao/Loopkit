@@ -10,7 +10,7 @@ strategies and their dispatch layer.
 - `apply-visit.test.ts` — `applyVisit` dispatch: routes lucky/plant/stamp programs to the matching strategy's `apply`
 - `chance.test.ts` — `pickSegment`/`makeChanceStrategy`: weighted segment selection and the pity/`forceReward` pool
 - `index.test.ts` — `getProgress` dispatch: computes stamp/plant/chance progress views from a program's `config`/`state` blob
-- `lucky.test.ts` — `luckyStrategy`: probability roll, cooldown, and pity-ceiling guaranteed win
+- `lucky.test.ts` — `luckyStrategy`: probability roll, cooldown, and pity-ceiling guaranteed win; `progress()` returns a `kind: "lucky"` view (`visitsSinceWin`/`pityCeiling`)
 - `plant-apply-visit.test.ts` — `applyVisit`/`getProgress` for `type: "plant"` programs end to end through the dispatch layer
 - `plant.test.ts` — `plantStrategy`: stage thresholds, growth, decay-after-grace-period, redeem carryover, and how many reward thresholds a visit crossed
 - `stamp.test.ts` — `stampStrategy`: stamp counting, `dots`/`flame`/`points` view variants, `points_per_visit` increment

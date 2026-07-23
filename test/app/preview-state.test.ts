@@ -83,7 +83,11 @@ describe("buildPreviewProgress", () => {
       type: "lucky",
       headStart: true,
     });
-    expect(fresh.view).toEqual({ kind: "dots", filled: 0, total: 8 });
+    expect(fresh.view).toEqual({
+      kind: "lucky",
+      visitsSinceWin: 0,
+      pityCeiling: 8,
+    });
     expect(withHeadStart.view).toEqual(fresh.view);
   });
 

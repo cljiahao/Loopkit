@@ -18,7 +18,8 @@ Client-side card-check UI.
   `FlameLayers`, `Wheel`/`ScratchCard`, `StampDots`/`PointsBar`), and owns
   its own dialog state for card regeneration (`regenerateCardAction`) and a
   one-time retired-card notice (auto-opens once per replaced card, tracked
-  in `localStorage`)
+  in `localStorage`); renders `LuckyBox` for a `kind: "lucky"` view instead
+  of falling through to the generic stamp-dots view.
 - `program-card-status.dom.test.tsx` — jsdom tests for `ProgramCardStatus`:
   verifies `PointsBar` vs `StampDots` renders per `view.variant` on a
   `"dots"` view, and `Cup` vs `Plant` renders per `view.variant` on a

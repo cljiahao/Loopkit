@@ -11,6 +11,7 @@ import { ScratchCard } from "@/components/scratch-card";
 import { FlameLayers } from "@/components/flame-layers";
 import { StampDots } from "@/components/stamp-dots";
 import { PointsBar } from "@/components/points-bar";
+import { LuckyBox } from "@/components/lucky-box";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -125,6 +126,13 @@ export function ProgramCardStatus({
               }
             />
           )}
+        </div>
+      ) : view?.kind === "lucky" ? (
+        <div className="flex flex-col items-center gap-2">
+          <LuckyBox
+            visitsSinceWin={view.visitsSinceWin}
+            pityCeiling={view.pityCeiling}
+          />
         </div>
       ) : view?.kind === "dots" ? (
         view.variant === "points" ? (

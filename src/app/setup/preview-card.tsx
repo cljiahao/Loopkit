@@ -10,6 +10,7 @@ import { FlameLayers } from "@/components/flame-layers";
 import { StampDots } from "@/components/stamp-dots";
 import { PointsBar } from "@/components/points-bar";
 import { CardBurst } from "@/components/card-burst";
+import { LuckyBox } from "@/components/lucky-box";
 import { cn } from "@/lib/utils";
 
 const CHANCE_RESULT_VISIBLE_MS = 1500;
@@ -105,6 +106,11 @@ export function PreviewCard({
               }
             />
           )
+        ) : view.kind === "lucky" ? (
+          <LuckyBox
+            visitsSinceWin={view.visitsSinceWin}
+            pityCeiling={view.pityCeiling}
+          />
         ) : view.kind === "dots" ? (
           view.variant === "points" ? (
             <PointsBar filled={view.filled} total={view.total} />
@@ -118,18 +124,20 @@ export function PreviewCard({
         Reward: {rewardText || "—"}
       </p>
       <CardBurst active={celebrating} />
-      {view.kind === "chance" && lastChanceResult && showChanceResult && (
-        <div
-          className={cn(
-            "absolute top-3 right-3 rounded-full px-3 py-1 text-xs font-semibold shadow-sm",
-            lastChanceResult.won
-              ? "bg-gold text-gold-foreground"
-              : "bg-muted text-muted-foreground",
-          )}
-        >
-          {lastChanceResult.won ? "🎉 You won!" : "Try again"}
-        </div>
-      )}
+      {(view.kind === "chance" || view.kind === "lucky") &&
+        lastChanceResult &&
+        showChanceResult && (
+          <div
+            className={cn(
+              "absolute top-3 right-3 rounded-full px-3 py-1 text-xs font-semibold shadow-sm",
+              lastChanceResult.won
+                ? "bg-gold text-gold-foreground"
+                : "bg-muted text-muted-foreground",
+            )}
+          >
+            {lastChanceResult.won ? "🎉 You won!" : "Try again"}
+          </div>
+        )}
     </div>
   );
 }
