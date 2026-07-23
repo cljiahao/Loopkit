@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- `FeedbackForm`'s NPS score picker and comment field now use shadcn
+  `ToggleGroup`/`Textarea` instead of hand-rolled radio buttons and a plain
+  `<textarea>`, matching `SupportForm` and qkit's equivalent component. No
+  behavior, copy, or schema change.
+
 - Vendor NPS feedback (the dashboard's "Share feedback" sheet) now submits
   into the shared cross-kit `merqo.vendor_feedback` table via a new
   `submit_vendor_feedback` RPC, instead of loopkit's own local
