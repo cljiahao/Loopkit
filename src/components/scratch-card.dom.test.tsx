@@ -10,12 +10,13 @@ describe("ScratchCard", () => {
     expect(screen.getByText("Free kopi")).toBeInTheDocument();
   });
 
-  it("renders no scratch strokes by default", () => {
+  it("renders the scratch reveal path fully undrawn by default", () => {
     render(<ScratchCard revealed={false} label="Try again" reward={false} />);
-    expect(screen.queryByTestId("scratch-strokes")).not.toBeInTheDocument();
+    const path = screen.getByTestId("scratch-path");
+    expect(path.getAttribute("class")).toContain("[stroke-dashoffset:100]");
   });
 
-  it("renders 5 scratch strokes while scratching", () => {
+  it("draws the scratch reveal path in while scratching", () => {
     render(
       <ScratchCard
         revealed={false}
@@ -24,11 +25,11 @@ describe("ScratchCard", () => {
         reward={false}
       />,
     );
-    const container = screen.getByTestId("scratch-strokes");
-    expect(container.querySelectorAll(".scratch-stroke")).toHaveLength(5);
+    const path = screen.getByTestId("scratch-path");
+    expect(path.getAttribute("class")).toContain("[stroke-dashoffset:0]");
   });
 
-  it("stops rendering scratch strokes once revealed", () => {
+  it("removes the scratch overlay once revealed", () => {
     render(
       <ScratchCard
         revealed={true}
@@ -37,10 +38,10 @@ describe("ScratchCard", () => {
         reward={true}
       />,
     );
-    expect(screen.queryByTestId("scratch-strokes")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("scratch-overlay")).not.toBeInTheDocument();
   });
 
-  it("does not render scratch strokes when both revealed and scratching are true", () => {
+  it("removes the scratch overlay when both revealed and scratching are true", () => {
     render(
       <ScratchCard
         revealed={true}
@@ -49,7 +50,7 @@ describe("ScratchCard", () => {
         reward={true}
       />,
     );
-    expect(screen.queryByTestId("scratch-strokes")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("scratch-overlay")).not.toBeInTheDocument();
   });
 
   it("plays a shine sweep once revealed", () => {

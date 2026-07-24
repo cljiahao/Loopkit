@@ -219,28 +219,6 @@ body {
   animation-fill-mode: forwards;
 }
 
-/* Scratch Card's reveal-in-progress strokes (ScratchCard, `scratching` prop)
-   — a handful of staggered diagonal marks sweeping across the cover before
-   the existing opacity-fade reveal plays; disabled under reduced-motion below. */
-@keyframes scratch-stroke-sweep {
-  0% {
-    transform: scaleX(0) rotate(var(--scratch-rotate, 0deg));
-    transform-origin: left center;
-    opacity: 0;
-  }
-  40% {
-    opacity: 1;
-  }
-  100% {
-    transform: scaleX(1) rotate(var(--scratch-rotate, 0deg));
-    transform-origin: left center;
-    opacity: 0.9;
-  }
-}
-.scratch-stroke {
-  animation: scratch-stroke-sweep 0.35s ease-out both;
-}
-
 /* CardShell's idle holographic sheen (src/components/card-shell.tsx) — a
    soft conic-gradient band that drifts slowly across the card, giving every
    card type (stamp/flame/points/plant/cup/wheel/scratch/lucky) a "premium
@@ -322,10 +300,6 @@ html {
     animation: none;
   }
   .card-burst-piece {
-    animation: none;
-    opacity: 0;
-  }
-  .scratch-stroke {
     animation: none;
     opacity: 0;
   }

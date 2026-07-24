@@ -50,7 +50,7 @@ describe("CardShell", () => {
     fireEvent.pointerMove(shell, { clientX: 200, clientY: 100 });
     expect(shell.style.transform).toContain("rotateX");
     expect(shell.style.transform).not.toBe(
-      "perspective(800px) rotateX(0deg) rotateY(0deg)",
+      "perspective(1000px) rotateX(0deg) rotateY(0deg)",
     );
   });
 
@@ -64,7 +64,7 @@ describe("CardShell", () => {
     const shell = screen.getByTestId("card-shell");
     fireEvent.pointerLeave(shell);
     expect(shell.style.transform).toBe(
-      "perspective(800px) rotateX(0deg) rotateY(0deg)",
+      "perspective(1000px) rotateX(0deg) rotateY(0deg)",
     );
   });
 

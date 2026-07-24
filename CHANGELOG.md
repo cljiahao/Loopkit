@@ -8,6 +8,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- User-reported, post-deploy follow-up on the card animation-polish pass
+  below: `CardShell`'s tilt set `transform-style: preserve-3d`, which
+  combined with the same element's `overflow-hidden` is a documented CSS
+  rendering conflict — the card visibly distorted/"expanded" whenever
+  `CardBurst`'s celebration was active while tilted. Removed (children now
+  correctly paint onto the tilted plane as a flat 2D surface, which is what
+  a card-tilt effect should do anyway).
+- The Wheel's spin read as choppy: the free-spin phase used a CSS
+  `animate-spin` keyframe handed off to a separate settle `transition` once
+  the result landed — a documented source of a visible jump, since the
+  browser doesn't reliably carry the animation's current computed angle
+  into the new transition. Replaced with one continuous,
+  monotonically-increasing rotation value driven by React state +
+  `transition-transform` throughout, so there is only ever one animation
+  mechanism, never a handoff.
+- The Wheel's landing also used an artificial "back-out" bounce (overshoot
+  past the target, then rock back) that didn't read as real physics — a
+  friction-decelerating wheel just slows smoothly to a stop, it doesn't
+  spring past and rebound. Replaced with a strong `cubic-bezier(0.16,1,0.3,1)`
+  ease-out (no overshoot), the curve real prize-wheel implementations use
+  for friction-based deceleration.
+- `ScratchCard`'s reveal ("a handful of diagonal capsule bars sweep in")
+  didn't read as an actual scratch card. Replaced with an SVG mask
+  revealed by a randomized, irregular "scratched by hand" path
+  (`stroke-dasharray`/`dashoffset`, punching real transparent holes in the
+  cover along the trail) instead of uniformly fading the whole cover's
+  opacity.
+- `CardBurst`'s reward celebration felt sparse. Bigger and more pieces (24
+  → 40), randomized size (was a fixed 8px) and a mix of square/circle
+  shapes, and a wider spread radius.
 - `SupportForm`'s category `ToggleGroup` was missing `spacing={1.5}`,
   rendering the category buttons edge-to-edge instead of qkit's
   separated-pill layout.

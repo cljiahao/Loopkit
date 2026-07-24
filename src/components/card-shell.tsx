@@ -76,9 +76,18 @@ export function CardShell({
         reducedMotion
           ? undefined
           : {
-              transform: `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
+              transform: `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
               transition: "transform 150ms ease-out",
-              transformStyle: "preserve-3d",
+              // Deliberately NOT transform-style: preserve-3d — combining
+              // preserve-3d with overflow-hidden on the same element is a
+              // documented rendering conflict (the 3D scene flattens/
+              // distorts unpredictably the moment overflow needs clipping,
+              // e.g. when CardBurst's celebration pieces are active), which
+              // is what caused the card to visibly "expand" on a win.
+              // Default `flat` paints children onto the tilted plane as a
+              // single 2D surface instead, which is exactly what a "tilt a
+              // flat card" effect should do anyway — no scene depth is
+              // wanted here, just one tilted plane.
             }
       }
       className={cn(
