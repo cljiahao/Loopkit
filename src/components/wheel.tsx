@@ -1,4 +1,27 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+
+// One continuous, monotonically-increasing rotation value drives both the
+// "still spinning, result unknown yet" phase and the final settle — never a
+// CSS `animation` (like `animate-spin`) handed off to a `transition` once
+// the result resolves. That handoff is a documented source of a visible
+// jump/stutter (the browser doesn't reliably capture the animation's
+// current computed value before the transition takes over), which is what
+// read as "choppy." Using one mechanism (React state + `transition-transform`)
+// throughout, always advancing forward and never resetting backward, avoids
+// that class of bug entirely and reads as one continuous spin instead of
+// two disconnected animations stitched together.
+//
+// The final settle uses a strong ease-out curve (`cubic-bezier(0.16,1,0.3,1)`,
+// an "ease-out-expo"-style curve real prize-wheel implementations use for
+// friction-based deceleration) with NO overshoot/bounce-back — a real wheel
+// slowing down from friction decelerates smoothly to a stop, it doesn't
+// spring past the target and rock back; that artificial bounce (the
+// previous "back-out" easing here) is what didn't read as real physics.
+const SPIN_TURN_DEG = 3 * 360;
+const SETTLE_EXTRA_TURNS = 2 * 360;
 
 export function Wheel({
   segments,
@@ -16,10 +39,36 @@ export function Wheel({
   const landedIndex = landedId
     ? segments.findIndex((s) => s.id === landedId)
     : -1;
-  const rotation =
-    landedIndex >= 0
-      ? 360 * 3 - (landedIndex * anglePerSegment + anglePerSegment / 2)
-      : 0;
+
+  const [rotation, setRotation] = useState(0);
+  const wasSpinning = useRef(false);
+  const wasLanded = useRef(false);
+
+  useEffect(() => {
+    if (spinning && landedIndex < 0) {
+      if (!wasSpinning.current) {
+        wasSpinning.current = true;
+        wasLanded.current = false;
+        setRotation((r) => r + SPIN_TURN_DEG);
+      }
+      return;
+    }
+    if (landedIndex >= 0 && !wasLanded.current) {
+      wasLanded.current = true;
+      wasSpinning.current = false;
+      setRotation((r) => {
+        const targetMod =
+          (((360 - (landedIndex * anglePerSegment + anglePerSegment / 2)) %
+            360) +
+            360) %
+          360;
+        const currentMod = ((r % 360) + 360) % 360;
+        let delta = targetMod - currentMod;
+        if (delta <= 0) delta += 360;
+        return r + delta + SETTLE_EXTRA_TURNS;
+      });
+    }
+  }, [spinning, landedIndex, anglePerSegment]);
 
   return (
     <div className={cn("relative inline-block size-32", className)}>
@@ -30,8 +79,10 @@ export function Wheel({
             transform: `rotate(${rotation}deg)`,
           }}
           className={cn(
-            "motion-safe:transition-transform motion-safe:duration-[1400ms] motion-safe:ease-out",
-            spinning && landedIndex < 0 && "motion-safe:animate-spin",
+            "motion-safe:transition-transform motion-safe:duration-[1400ms]",
+            spinning && landedIndex < 0
+              ? "motion-safe:ease-linear"
+              : "motion-safe:ease-[cubic-bezier(0.16,1,0.3,1)]",
           )}
         >
           {segments.map((segment, i) => {

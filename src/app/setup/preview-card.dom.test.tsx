@@ -288,9 +288,15 @@ describe("PreviewCard", () => {
       />,
     );
     const wheelGroup = container.querySelector("svg g");
+    // Wheel drives its own rotation via one continuous state-based
+    // transition (no CSS `animate-spin` keyframe — see wheel.tsx for why:
+    // handing off from a CSS animation to a transition once the result
+    // lands is a documented source of a visible jump). While spinning with
+    // no result yet, it applies the linear-speed "still spinning" easing.
     expect(wheelGroup?.getAttribute("class")).toContain(
-      "motion-safe:animate-spin",
+      "motion-safe:ease-linear",
     );
+    expect(wheelGroup?.getAttribute("style")).toContain("rotate(");
   });
 
   it("renders LuckyBox for a lucky view, with the win/lose pill available", () => {
@@ -336,6 +342,7 @@ describe("PreviewCard", () => {
         revealing
       />,
     );
-    expect(screen.getByTestId("scratch-strokes")).toBeInTheDocument();
+    const path = screen.getByTestId("scratch-path");
+    expect(path.getAttribute("class")).toContain("[stroke-dashoffset:0]");
   });
 });

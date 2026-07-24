@@ -12,6 +12,7 @@ import { FlameLayers } from "@/components/flame-layers";
 import { StampDots } from "@/components/stamp-dots";
 import { PointsBar } from "@/components/points-bar";
 import { LuckyBox } from "@/components/lucky-box";
+import { CardShell } from "@/components/card-shell";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -83,7 +84,7 @@ export function ProgramCardStatus({
   }
 
   return (
-    <div className="space-y-4 rounded-xl border bg-muted/40 p-4">
+    <CardShell>
       <p className="text-sm font-semibold">{card.name}</p>
       {view?.kind === "plant" ? (
         <div className="flex flex-col items-center gap-2">
@@ -236,6 +237,6 @@ export function ProgramCardStatus({
           </AlertDialogContent>
         </AlertDialog>
       )}
-    </div>
+    </CardShell>
   );
 }
