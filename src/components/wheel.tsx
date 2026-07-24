@@ -30,7 +30,13 @@ export function Wheel({
             transform: `rotate(${rotation}deg)`,
           }}
           className={cn(
-            "motion-safe:transition-transform motion-safe:duration-[1400ms] motion-safe:ease-out",
+            // "Back-out" cubic-bezier (overshoots past the target angle,
+            // then settles back) instead of a flat ease-out — a wheel that
+            // glides to an exact stop reads as CSS, one that slightly
+            // overshoots and rocks back reads as a physical object with
+            // momentum. Only applied on the final settle (landedIndex>=0);
+            // the free-spin phase below is unaffected.
+            "motion-safe:transition-transform motion-safe:duration-[1400ms] motion-safe:ease-[cubic-bezier(0.34,1.56,0.64,1)]",
             spinning && landedIndex < 0 && "motion-safe:animate-spin",
           )}
         >

@@ -21,13 +21,23 @@ export function LuckyBox({
   return (
     <div
       className={cn(
-        "flex h-28 w-28 flex-col items-center justify-center gap-2 rounded-2xl border bg-primary/10",
+        "relative flex h-28 w-28 flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl border bg-primary/10",
         className,
       )}
     >
-      <Sparkles className="size-8 text-primary" aria-hidden="true" />
-      <p className="text-xs font-semibold text-primary">Tap for a surprise</p>
-      <p className="text-center text-[0.65rem] text-muted-foreground">
+      {/* Idle shimmer inviting the tap — LuckyBox previously had no
+          animation at all; a soft light sweep gives it some life even
+          before a customer interacts with it. Skipped under
+          reduced-motion via the CSS override in globals.css. */}
+      <div
+        aria-hidden="true"
+        className="lucky-box-shimmer pointer-events-none absolute inset-y-0 left-1/2 w-1/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-primary/25 to-transparent"
+      />
+      <Sparkles className="relative size-8 text-primary" aria-hidden="true" />
+      <p className="relative text-xs font-semibold text-primary">
+        Tap for a surprise
+      </p>
+      <p className="relative text-center text-[0.65rem] text-muted-foreground">
         Guaranteed win by visit {progress}/{pityCeiling}
       </p>
     </div>

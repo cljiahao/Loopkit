@@ -58,6 +58,13 @@ export function ScratchCard({
           {label}
         </p>
       </div>
+      {revealed && (
+        <div
+          aria-hidden="true"
+          data-testid="scratch-reveal-shine"
+          className="scratch-reveal-shine pointer-events-none absolute inset-y-0 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+        />
+      )}
       <div
         aria-hidden="true"
         className={cn(

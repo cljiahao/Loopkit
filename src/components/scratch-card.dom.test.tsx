@@ -51,4 +51,16 @@ describe("ScratchCard", () => {
     );
     expect(screen.queryByTestId("scratch-strokes")).not.toBeInTheDocument();
   });
+
+  it("plays a shine sweep once revealed", () => {
+    render(<ScratchCard revealed={true} label="Free kopi" reward={true} />);
+    expect(screen.getByTestId("scratch-reveal-shine")).toBeInTheDocument();
+  });
+
+  it("renders no shine sweep before reveal", () => {
+    render(<ScratchCard revealed={false} label="Try again" reward={false} />);
+    expect(
+      screen.queryByTestId("scratch-reveal-shine"),
+    ).not.toBeInTheDocument();
+  });
 });

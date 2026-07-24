@@ -11,6 +11,7 @@ import { StampDots } from "@/components/stamp-dots";
 import { PointsBar } from "@/components/points-bar";
 import { CardBurst } from "@/components/card-burst";
 import { LuckyBox } from "@/components/lucky-box";
+import { CardShell } from "@/components/card-shell";
 import { cn } from "@/lib/utils";
 
 const CHANCE_RESULT_VISIBLE_MS = 1500;
@@ -59,7 +60,7 @@ export function PreviewCard({
   }, [lastChanceResult]);
 
   return (
-    <div className="relative space-y-4 rounded-xl border bg-muted/40 p-4">
+    <CardShell>
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Customer preview
       </p>
@@ -138,6 +139,6 @@ export function PreviewCard({
             {lastChanceResult.won ? "🎉 You won!" : "Try again"}
           </div>
         )}
-    </div>
+    </CardShell>
   );
 }
