@@ -98,6 +98,8 @@ console, with no loopkit-side table at all. See
 - Deploy runbook: `docs/DEPLOY.md`
 - Plans/specs: `docs/superpowers/`
 - Release history: `CHANGELOG.md`
+- Dependency security overrides (force-patched transitive CVEs, each
+  scoped/commented with its advisory ID): `pnpm-workspace.yaml`
 
 See `AGENTS.md` for full engineering rules, harness details, and skills.
 
