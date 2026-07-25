@@ -215,7 +215,62 @@ describe("PreviewCard", () => {
     expect(container.querySelectorAll(".card-burst-piece")).toHaveLength(0);
   });
 
-  it("shows a win popup for a chance result that won", () => {
+  it("shows a win popup for a non-wheel chance result that won", () => {
+    // Scratch (not wheel) deliberately — Wheel now renders its own win/lose
+    // overlay directly on itself (see wheel.tsx), derived from its own
+    // settle animation completing, not from this lastChanceResult prop
+    // directly; this corner-pill path is only reachable for scratch/lucky,
+    // which have no async settle animation to wait on. Wheel's own overlay
+    // is covered by wheel.dom.test.tsx.
+    const progress: Progress = {
+      stage: "play",
+      label: "Scratch to play",
+      view: {
+        kind: "chance",
+        variant: "scratch",
+        segments: [{ id: "a", label: "Free item", reward: true }],
+        landedId: "a",
+      },
+      rewardReady: false,
+    };
+    render(
+      <PreviewCard
+        progress={progress}
+        name="Scratch to win"
+        rewardText="Free item"
+        lastChanceResult={{ won: true }}
+      />,
+    );
+    expect(screen.getByText("🎉 You won!")).toBeInTheDocument();
+  });
+
+  it("shows a lose popup for a non-wheel chance result that lost", () => {
+    const progress: Progress = {
+      stage: "play",
+      label: "Scratch to play",
+      view: {
+        kind: "chance",
+        variant: "scratch",
+        segments: [{ id: "a", label: "No prize", reward: false }],
+        landedId: "a",
+      },
+      rewardReady: false,
+    };
+    render(
+      <PreviewCard
+        progress={progress}
+        name="Scratch to win"
+        rewardText="Free item"
+        lastChanceResult={{ won: false }}
+      />,
+    );
+    // Segment label is "No prize" (not "Try again") to avoid colliding with
+    // the popup's own literal "Try again" text — the scratch segment and
+    // the lose-popup badge would otherwise both render that exact string.
+    expect(screen.getByText("Try again")).toBeInTheDocument();
+  });
+
+  it("does NOT show the corner popup for a wheel result — Wheel renders its own overlay instead", () => {
     const progress: Progress = {
       stage: "play",
       label: "Spin to play",
@@ -235,33 +290,7 @@ describe("PreviewCard", () => {
         lastChanceResult={{ won: true }}
       />,
     );
-    expect(screen.getByText("🎉 You won!")).toBeInTheDocument();
-  });
-
-  it("shows a lose popup for a chance result that lost", () => {
-    const progress: Progress = {
-      stage: "play",
-      label: "Spin to play",
-      view: {
-        kind: "chance",
-        variant: "wheel",
-        segments: [{ id: "a", label: "No prize", reward: false }],
-        landedId: "a",
-      },
-      rewardReady: false,
-    };
-    render(
-      <PreviewCard
-        progress={progress}
-        name="Spin to win"
-        rewardText="Free item"
-        lastChanceResult={{ won: false }}
-      />,
-    );
-    // Segment label is "No prize" (not "Try again") to avoid colliding with
-    // the popup's own literal "Try again" text — the wheel segment and the
-    // lose-popup badge would otherwise both render that exact string.
-    expect(screen.getByText("Try again")).toBeInTheDocument();
+    expect(screen.queryByText("🎉 You won!")).not.toBeInTheDocument();
   });
 
   it("passes spinning to Wheel while revealing (before a result lands)", () => {

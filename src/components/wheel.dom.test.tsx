@@ -141,4 +141,90 @@ describe("Wheel", () => {
     // Segment b has no custom color — still falls back to the default.
     expect(paths[1].getAttribute("class")).toContain("fill-emerald");
   });
+
+  describe("self-owned result overlay", () => {
+    // This is the load-bearing coverage for a real bug: the win/lose result
+    // used to be threaded in from a caller-tracked value that had to stay
+    // in sync with this component's own async, variable-duration settle
+    // animation — two independently-updated sources of truth for the same
+    // fact, a real desync surface. Wheel now derives "won" itself, directly
+    // from the landed segment's own `reward` flag, at the exact instant it
+    // settles — there is no second value that can go stale or disagree.
+
+    it("renders a 'You won' overlay on the wheel itself once settled on a reward segment", () => {
+      const raf = mockRaf();
+      const { rerender } = render(
+        <Wheel segments={SEGMENTS} landedId={null} spinning />,
+      );
+      raf.advance(1400);
+      rerender(<Wheel segments={SEGMENTS} landedId="b" spinning={false} />);
+      for (let i = 0; i < 50; i++) raf.advance(200);
+
+      const overlay = screen.getByTestId("wheel-result");
+      expect(overlay).toHaveTextContent("🎉 You won!");
+    });
+
+    it("renders a 'Try again' overlay once settled on a non-reward segment", () => {
+      const raf = mockRaf();
+      const { rerender } = render(
+        <Wheel segments={SEGMENTS} landedId={null} spinning />,
+      );
+      raf.advance(1400);
+      rerender(<Wheel segments={SEGMENTS} landedId="a" spinning={false} />);
+      for (let i = 0; i < 50; i++) raf.advance(200);
+
+      const overlay = screen.getByTestId("wheel-result");
+      expect(overlay).toHaveTextContent("Try again");
+    });
+
+    it("calls onSettled with the true result derived from the landed segment, not a separately-passed value", () => {
+      const raf = mockRaf();
+      const onSettled = vi.fn();
+      const { rerender } = render(
+        <Wheel
+          segments={SEGMENTS}
+          landedId={null}
+          spinning
+          onSettled={onSettled}
+        />,
+      );
+      raf.advance(1400);
+      rerender(
+        <Wheel
+          segments={SEGMENTS}
+          landedId="b"
+          spinning={false}
+          onSettled={onSettled}
+        />,
+      );
+      for (let i = 0; i < 50; i++) raf.advance(200);
+
+      expect(onSettled).toHaveBeenCalledWith({ won: true });
+    });
+
+    it("clears the overlay the moment a new spin starts, not leaving a stale result showing", () => {
+      const raf = mockRaf();
+      const { rerender } = render(
+        <Wheel segments={SEGMENTS} landedId={null} spinning />,
+      );
+      raf.advance(1400);
+      rerender(<Wheel segments={SEGMENTS} landedId="b" spinning={false} />);
+      for (let i = 0; i < 50; i++) raf.advance(200);
+      expect(screen.getByTestId("wheel-result")).toHaveTextContent(
+        "🎉 You won!",
+      );
+
+      // A brand new spin begins (landedId masked back to null, spinning true).
+      rerender(<Wheel segments={SEGMENTS} landedId={null} spinning />);
+      expect(screen.queryByTestId("wheel-result")).not.toBeInTheDocument();
+    });
+
+    it("under reduced motion, the overlay still reflects the true landed segment", () => {
+      mockMatchMedia(true);
+      const raf = mockRaf();
+      render(<Wheel segments={SEGMENTS} landedId="a" />);
+      raf.advance(0);
+      expect(screen.getByTestId("wheel-result")).toHaveTextContent("Try again");
+    });
+  });
 });

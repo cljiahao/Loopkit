@@ -38,6 +38,8 @@ const STAGE2_EXTRA_TURNS = 1;
 // Velocity floor (deg/s) so a very late handoff never reads as "starting
 // from a stall."
 const MIN_HANDOFF_VELOCITY = 60;
+// How long the win/lose overlay stays up once the wheel settles.
+const RESULT_VISIBLE_MS = 1500;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
@@ -65,12 +67,17 @@ export function Wheel({
   landedId: string | null;
   spinning?: boolean;
   // Fires once, exactly when the settle physics simulation actually
-  // finishes (or, under reduced-motion, immediately). The wheel's settle
-  // duration is now a real physics computation, not a fixed number — a
-  // caller that reveals a result on its own fixed timer (e.g. a win/lose
-  // pill) needs this signal to stay in sync instead of appearing before
-  // the wheel has visually finished spinning.
-  onSettled?: () => void;
+  // finishes (or, under reduced-motion, immediately), with the TRUE
+  // win/lose result derived directly from the landed segment — not a
+  // separately-threaded value from the caller. Wheel previously took no
+  // result of its own and expected the caller to track a matching
+  // "is the wheel done yet" flag against its own separately-sourced
+  // win/lose value; keeping two independently-updated sources of truth in
+  // sync across an async multi-second animation was a real synchronization
+  // bug surface (and the caller's badge, disconnected from the wheel
+  // itself, didn't read as "on" the wheel the way CardBurst's overlay
+  // does). Wheel now owns both.
+  onSettled?: (result: { won: boolean }) => void;
   className?: string;
 }) {
   const count = segments.length;
@@ -91,6 +98,13 @@ export function Wheel({
   // spin effect on every parent render.
   const onSettledRef = useRef(onSettled);
 
+  // The wheel's own win/lose result, set the instant it actually settles —
+  // derived from the landed segment directly, the single source of truth
+  // for both this overlay and (via onSettled) the caller's celebration
+  // burst.
+  const [result, setResult] = useState<{ won: boolean } | null>(null);
+  const [showResult, setShowResult] = useState(false);
+
   useEffect(() => {
     angleRef.current = angle;
   }, [angle]);
@@ -100,6 +114,18 @@ export function Wheel({
   }, [onSettled]);
 
   useEffect(() => {
+    if (!result) return;
+    // result is set the instant the settle animation finishes (see the
+    // spin effect below) — external, not derivable from existing render
+    // state, same class of exception already established elsewhere in
+    // this codebase (e.g. preview-card.tsx's showChanceResult).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShowResult(true);
+    const timer = setTimeout(() => setShowResult(false), RESULT_VISIBLE_MS);
+    return () => clearTimeout(timer);
+  }, [result]);
+
+  useEffect(() => {
     function cancel() {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
       frameRef.current = null;
@@ -107,15 +133,15 @@ export function Wheel({
 
     if (reducedMotion) {
       if (landedIndex >= 0) {
+        const won = !!segments[landedIndex]?.reward;
         // Syncing to the now-known landed segment (external input from
         // props, via the parent's engine roll), not a value derivable from
         // existing render state — same external-input-driven case already
-        // established elsewhere in this codebase (e.g. preview-card.tsx's
-        // showChanceResult), so the render-time-derivation case
-        // react-hooks/set-state-in-effect guards against doesn't apply.
+        // established elsewhere in this codebase.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setAngle(targetAngleMod(landedIndex, anglePerSegment));
-        onSettledRef.current?.();
+        setResult({ won });
+        onSettledRef.current?.({ won });
       }
       return;
     }
@@ -124,6 +150,9 @@ export function Wheel({
       wasSpinning.current = true;
       wasLanded.current = false;
       cancel();
+      // Clear any previous spin's result immediately — a new spin means
+      // the old badge shouldn't linger while the wheel spins again.
+      setResult(null);
       const baseAngle = angleRef.current;
       const startTime = performance.now();
       stage1.current = { baseAngle, startTime };
@@ -174,6 +203,9 @@ export function Wheel({
 
       const baseAngle = currentAngle;
       const startTime = performance.now();
+      // Captured once per landing, not re-read at settle time — segments
+      // (and therefore the landed one's reward flag) don't change mid-spin.
+      const won = !!segments[landedIndex]?.reward;
 
       function stage2Frame(now: number) {
         const t = Math.min((now - startTime) / 1000, t2);
@@ -182,7 +214,8 @@ export function Wheel({
         if (t < t2) {
           frameRef.current = requestAnimationFrame(stage2Frame);
         } else {
-          onSettledRef.current?.();
+          setResult({ won });
+          onSettledRef.current?.({ won });
         }
       }
       frameRef.current = requestAnimationFrame(stage2Frame);
@@ -190,11 +223,13 @@ export function Wheel({
     }
 
     return undefined;
-    // `angle` is intentionally read via `angleRef` (a ref, not a
-    // dependency) rather than the `angle` state value itself — it's this
-    // effect's own animation OUTPUT, not an input that should retrigger
-    // it; including it would restart the physics solve on every frame
-    // instead of once per spin/landing.
+    // `angle`/`result` are this effect's own animation OUTPUT (read via
+    // angleRef / set imperatively), not inputs that should retrigger it —
+    // including them would restart the physics solve on every frame
+    // instead of once per spin/landing. `segments` is read fresh each
+    // landing via closure, not a dependency, since a segment edit mid-spin
+    // already fully resets the form's recipe (and this component) upstream.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spinning, landedIndex, anglePerSegment, reducedMotion]);
 
   return (
@@ -272,6 +307,23 @@ export function Wheel({
       <div className="absolute inset-x-0 -top-1 flex justify-center">
         <div className="size-0 border-x-8 border-t-8 border-x-transparent border-t-primary" />
       </div>
+      {/* The result overlay lives ON the wheel itself, not a corner badge
+          disconnected from the thing that just happened — same "overlay
+          the thing it's about" treatment CardBurst already uses. */}
+      {result && showResult && (
+        <div
+          aria-hidden="true"
+          data-testid="wheel-result"
+          className={cn(
+            "pointer-events-none absolute inset-0 flex items-center justify-center rounded-full text-sm font-bold shadow-lg",
+            result.won
+              ? "bg-gold/90 text-gold-foreground"
+              : "bg-background/85 text-muted-foreground",
+          )}
+        >
+          {result.won ? "🎉 You won!" : "Try again"}
+        </div>
+      )}
     </div>
   );
 }

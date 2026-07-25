@@ -8,6 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Fourth round of user-reported follow-up: the win/lose result shown for
+  Wheel could still be wrong/absent (no confetti even on a win), and the
+  popup sat in a corner disconnected from the wheel itself. Root cause: the
+  win/lose value was tracked as a _separate_ piece of state in `PreviewCard`
+  that had to stay in sync with `Wheel`'s own async, variable-duration
+  settle animation — two independently-updated sources of truth for the
+  same fact is a real desync surface. `Wheel` now derives "won" itself,
+  directly from the landed segment's `reward` flag, the instant it
+  settles, and renders its own win/lose overlay directly on the wheel
+  (matching how `CardBurst`'s confetti already overlays it) instead of a
+  caller-positioned corner badge. `onSettled({won})` still exists so
+  `PreviewCard` can gate the (shared, lives-at-that-level) celebration
+  burst on "has the wheel actually finished," but the result itself has
+  exactly one source now.
+- Wheel segments' color picker is now a shadcn-composed `ColorPicker`
+  (`ui/popover.tsx` + the `react-colorful` library, newly added) instead of
+  a native `<input type="color">`, matching the rest of the app's shadcn
+  styling rather than handing the picker UI to the OS/browser.
 - Third round of user-reported follow-up on the card animation pass:
   - Wheel: the win/lose pill and celebration burst could appear (and the
     burst fully finish) well before the wheel had visually stopped

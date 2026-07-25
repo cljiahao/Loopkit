@@ -43,28 +43,31 @@ export function PreviewCard({
   const view = progress.view;
   const isWheel = view.kind === "chance" && view.variant === "wheel";
 
-  // Wheel's settle duration is a real physics computation now, not a fixed
-  // number in step with the parent's reveal timer — the win/lose pill must
-  // wait for Wheel's own onSettled signal, not just "lastChanceResult
-  // exists," or it can appear well before the wheel has visually finished
-  // spinning. Non-wheel chance types (scratch/lucky) have no such lag, so
-  // this starts (and stays) `true` for them.
+  // Wheel now owns and renders its own win/lose result overlay directly on
+  // the wheel (see wheel.tsx) — deriving "won" from a separately-threaded
+  // lastChanceResult value that had to stay in sync with Wheel's own async,
+  // now-variable-duration settle animation was a real synchronization bug
+  // surface (two independently-updated sources of truth for the same
+  // fact). PreviewCard still needs to know when the wheel has visually
+  // settled, purely to gate the celebration burst below — CardBurst is a
+  // shared component that lives at this level for every card type, not
+  // something Wheel can render itself. Reset the moment a new spin starts
+  // (`revealing` flips true); Wheel's `onSettled` flips it back.
   const [wheelSettled, setWheelSettled] = useState(true);
   useEffect(() => {
-    if (isWheel && lastChanceResult) {
-      // Resetting "settled" tracking the moment a *new* wheel result comes
-      // in — external input (a fresh tick result from usePreviewAnimation),
-      // same class of exception react-hooks/set-state-in-effect already
-      // carves out elsewhere in this file.
+    if (isWheel && revealing) {
+      // `revealing` starting is external input (a fresh tick beginning in
+      // usePreviewAnimation), not derivable from existing render state —
+      // same external-input-driven case already established elsewhere in
+      // this file.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setWheelSettled(false);
     }
-  }, [lastChanceResult, isWheel]);
+  }, [revealing, isWheel]);
 
   const [showChanceResult, setShowChanceResult] = useState(false);
   useEffect(() => {
     if (!lastChanceResult) return;
-    if (isWheel && !wheelSettled) return;
     // lastChanceResult is external input (a new tick result from
     // usePreviewAnimation), not derivable from existing render state — same
     // external-input-driven case already established in preview-animation.ts
@@ -77,7 +80,7 @@ export function PreviewCard({
       CHANCE_RESULT_VISIBLE_MS,
     );
     return () => clearTimeout(timer);
-  }, [lastChanceResult, isWheel, wheelSettled]);
+  }, [lastChanceResult]);
 
   return (
     <CardShell>
@@ -150,7 +153,11 @@ export function PreviewCard({
           spinning, or the burst plays and fully finishes while the wheel is
           still visually spinning, making it look like it never happened. */}
       <CardBurst active={celebrating && (!isWheel || wheelSettled)} />
-      {(view.kind === "chance" || view.kind === "lucky") &&
+      {/* Wheel renders its own win/lose overlay directly on itself now
+          (see wheel.tsx) — this corner pill is only for the other chance
+          types that don't have an async settle animation to wait on. */}
+      {((view.kind === "chance" && view.variant !== "wheel") ||
+        view.kind === "lucky") &&
         lastChanceResult &&
         showChanceResult && (
           <div

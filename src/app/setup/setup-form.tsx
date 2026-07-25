@@ -16,6 +16,7 @@ import { usePreviewAnimation } from "@/app/setup/preview-animation";
 import { PreviewCard } from "@/app/setup/preview-card";
 import { Section } from "@/components/section";
 import { InfoTooltip } from "@/components/info-tooltip";
+import { ColorPicker } from "@/components/color-picker";
 import { Tag, SlidersHorizontal } from "lucide-react";
 import {
   FAMILIES,
@@ -531,19 +532,15 @@ export function SetupForm({
                           className="space-y-1.5 rounded-xl border p-2"
                         >
                           <div className="flex items-center gap-2">
-                            <input
-                              type="color"
-                              aria-label={`${segment.label || "Segment"} color`}
+                            <ColorPicker
+                              label={`${segment.label || "Segment"} color`}
                               value={
                                 segment.color ??
                                 (segment.is_reward
                                   ? DEFAULT_SEGMENT_COLOR.reward
                                   : DEFAULT_SEGMENT_COLOR.loss)
                               }
-                              onChange={(e) =>
-                                updateSegment(i, { color: e.target.value })
-                              }
-                              className="h-11 w-11 shrink-0 cursor-pointer rounded-xl border p-1"
+                              onChange={(color) => updateSegment(i, { color })}
                             />
                             <Input
                               type="text"

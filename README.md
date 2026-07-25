@@ -16,11 +16,15 @@ scratch reveal animation before the win/lose result lands. Lucky Tap renders
 its own "tap for a surprise" mystery-box visual (`LuckyBox`), on both the
 preview and the real `/c` card, instead of the generic stamp-dots counter
 real stamp/plant cards use. Every card type shares one `CardShell` wrapper
-(`src/components/card-shell.tsx`) giving it an idle holographic sheen and a
-capped pointer-tracking 3D tilt — pure CSS, deliberately no three.js/
-animation-library dependency (see
-`docs/superpowers/specs/2026-07-25-loyalty-card-animation-polish-design.md`).
-The dashboard's
+(`src/components/card-shell.tsx`) giving it a capped pointer-tracking 3D
+tilt — pure CSS, deliberately no three.js/animation-library dependency
+(see `docs/superpowers/specs/2026-07-25-loyalty-card-animation-polish-design.md`).
+The Wheel drives its spin via a real `requestAnimationFrame` physics
+simulation (not CSS), owns its own win/lose result overlay (derived
+directly from the landed segment, rendered on the wheel itself), and its
+segments can take a vendor-picked color via `src/components/color-picker.tsx`
+(a shadcn-composed picker using the `react-colorful` library — shadcn/ui
+has no official color-picker primitive). The dashboard's
 account-menu trigger, order, and content
 deliberately mirror qkit's (see `src/app/dashboard/dashboard-nav.tsx`) — a
 cross-kit consistency goal, not a coincidence. Theme is "Raspberry-Rose Punch & Gold"
