@@ -219,31 +219,6 @@ body {
   animation-fill-mode: forwards;
 }
 
-/* CardShell's idle holographic sheen (src/components/card-shell.tsx) — a
-   soft conic-gradient band that drifts slowly across the card, giving every
-   card type (stamp/flame/points/plant/cup/wheel/scratch/lucky) a "premium
-   trading card" surface with one shared change. Pure CSS, no JS driving the
-   motion; disabled under reduced-motion below (the component itself skips
-   even mounting this element in that case — the CSS override here is a
-   defense-in-depth backstop, not the primary guard). */
-@keyframes card-shell-sheen-drift {
-  0% {
-    transform: translateX(-30%) rotate(8deg);
-  }
-  100% {
-    transform: translateX(30%) rotate(8deg);
-  }
-}
-.card-shell-sheen {
-  background: conic-gradient(
-    from 200deg at 50% 50%,
-    transparent 0%,
-    oklch(1 0 0 / 0.12) 8%,
-    transparent 16%
-  );
-  animation: card-shell-sheen-drift 5s ease-in-out infinite alternate;
-}
-
 /* Lucky Tap's mystery-box idle shimmer (src/components/lucky-box.tsx) — a
    soft light sweep inviting a tap, since LuckyBox previously had no
    animation at all; disabled under reduced-motion below. */
@@ -324,10 +299,6 @@ html {
     animation: none;
   }
   .card-burst-piece {
-    animation: none;
-    opacity: 0;
-  }
-  .card-shell-sheen {
     animation: none;
     opacity: 0;
   }

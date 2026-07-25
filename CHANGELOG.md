@@ -8,6 +8,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Third round of user-reported follow-up on the card animation pass:
+  - Wheel: the win/lose pill and celebration burst could appear (and the
+    burst fully finish) well before the wheel had visually stopped
+    spinning — they fired on the parent's fixed reveal timer, while the
+    wheel's settle duration became a real, variable physics computation in
+    the prior fix round and no longer necessarily matched it. `Wheel` now
+    takes an `onSettled` callback, fired exactly when its own settle
+    simulation finishes; `PreviewCard` gates both the pill and the burst
+    on it for wheel views. (This was very likely also why confetti seemed
+    to not show at all on a win — it burst and fully finished while the
+    wheel was still visibly spinning, so by the time the wheel actually
+    stopped there was nothing left to see.)
+  - `CardShell`'s idle sheen (a drifting `conic-gradient` band) is removed
+    entirely — it read as an ugly artifact ("irritating arrow-like shadow
+    moving left and right"), not a holographic shine.
+  - Sprout/Fill the Cup's `visits_to_bloom` field never had the 5/10/15
+    quick-pick chips Stamp/Flame/Points Club's `stamps_required` field
+    already had — a plain feature-parity gap. Added the same chips (6/10/15,
+    within the field's 4-20 range).
+  - Wheel segments can now take a vendor-picked color from a new
+    `<input type="color">` swatch per segment in the setup editor —
+    threaded through `SegmentInput`/`segmentInputSchema`/`buildChanceConfig`/
+    `ChanceSegment`/`ProgressView` to `Wheel`'s rendering, with an
+    outlined-white-text treatment so labels stay legible against any
+    picked color. Falls back to the existing emerald/rose default when
+    unset, so existing programs are unaffected.
 - Second round of user-reported follow-up on the wheel/scratch-card fixes
   below — the first pass's fixes were real but insufficient:
   - Wheel: the free-spin phase and the settle phase were still two

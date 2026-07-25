@@ -17,7 +17,7 @@ describe("CardShell", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders children and a holographic sheen layer by default", () => {
+  it("renders children", () => {
     mockMatchMedia(false);
     render(
       <CardShell>
@@ -25,7 +25,6 @@ describe("CardShell", () => {
       </CardShell>,
     );
     expect(screen.getByText("Card content")).toBeInTheDocument();
-    expect(screen.getByTestId("card-shell-sheen")).toBeInTheDocument();
   });
 
   it("tilts toward the pointer position on pointer move", () => {
@@ -68,14 +67,13 @@ describe("CardShell", () => {
     );
   });
 
-  it("skips the sheen and tilt entirely under prefers-reduced-motion", () => {
+  it("skips the tilt entirely under prefers-reduced-motion", () => {
     mockMatchMedia(true);
     render(
       <CardShell>
         <p>Card content</p>
       </CardShell>,
     );
-    expect(screen.queryByTestId("card-shell-sheen")).not.toBeInTheDocument();
     const shell = screen.getByTestId("card-shell");
     expect(shell.style.transform).toBe("");
   });

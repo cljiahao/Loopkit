@@ -5,6 +5,10 @@ export type ChanceSegment = {
   label: string;
   weight: number;
   reward_text?: string;
+  // Vendor-picked hex color, `src/lib/program-config.ts`'s segmentInputSchema
+  // — optional, falls back to Wheel's default reward/non-reward coloring
+  // when absent (e.g. programs saved before this field existed).
+  color?: string;
 };
 export type ChanceConfig = {
   variant: "wheel" | "scratch";
@@ -57,6 +61,7 @@ export function makeChanceStrategy(
             id: s.id,
             label: s.label,
             reward: !!s.reward_text,
+            color: s.color,
           })),
           landedId: state.landed_segment_id,
         },

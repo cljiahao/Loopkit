@@ -41,10 +41,30 @@ export function PreviewCard({
   lastChanceResult?: { won: boolean } | null;
 }) {
   const view = progress.view;
+  const isWheel = view.kind === "chance" && view.variant === "wheel";
+
+  // Wheel's settle duration is a real physics computation now, not a fixed
+  // number in step with the parent's reveal timer — the win/lose pill must
+  // wait for Wheel's own onSettled signal, not just "lastChanceResult
+  // exists," or it can appear well before the wheel has visually finished
+  // spinning. Non-wheel chance types (scratch/lucky) have no such lag, so
+  // this starts (and stays) `true` for them.
+  const [wheelSettled, setWheelSettled] = useState(true);
+  useEffect(() => {
+    if (isWheel && lastChanceResult) {
+      // Resetting "settled" tracking the moment a *new* wheel result comes
+      // in — external input (a fresh tick result from usePreviewAnimation),
+      // same class of exception react-hooks/set-state-in-effect already
+      // carves out elsewhere in this file.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setWheelSettled(false);
+    }
+  }, [lastChanceResult, isWheel]);
 
   const [showChanceResult, setShowChanceResult] = useState(false);
   useEffect(() => {
     if (!lastChanceResult) return;
+    if (isWheel && !wheelSettled) return;
     // lastChanceResult is external input (a new tick result from
     // usePreviewAnimation), not derivable from existing render state — same
     // external-input-driven case already established in preview-animation.ts
@@ -57,7 +77,7 @@ export function PreviewCard({
       CHANCE_RESULT_VISIBLE_MS,
     );
     return () => clearTimeout(timer);
-  }, [lastChanceResult]);
+  }, [lastChanceResult, isWheel, wheelSettled]);
 
   return (
     <CardShell>
@@ -93,6 +113,7 @@ export function PreviewCard({
               segments={view.segments}
               landedId={view.landedId}
               spinning={revealing}
+              onSettled={() => setWheelSettled(true)}
             />
           ) : (
             <ScratchCard
@@ -124,7 +145,11 @@ export function PreviewCard({
       <p className="text-sm text-muted-foreground">
         Reward: {rewardText || "—"}
       </p>
-      <CardBurst active={celebrating} />
+      {/* Gated on wheelSettled for the same reason as the pill below — a
+          wheel win's celebration must wait for the wheel to actually stop
+          spinning, or the burst plays and fully finishes while the wheel is
+          still visually spinning, making it look like it never happened. */}
+      <CardBurst active={celebrating && (!isWheel || wheelSettled)} />
       {(view.kind === "chance" || view.kind === "lucky") &&
         lastChanceResult &&
         showChanceResult && (

@@ -28,7 +28,19 @@ import {
 } from "@/app/setup/card-type-picker";
 import { segmentWinPercent, overallWinPercent } from "@/lib/program-config";
 
-type SegmentInput = { label: string; weight: number; is_reward: boolean };
+type SegmentInput = {
+  label: string;
+  weight: number;
+  is_reward: boolean;
+  color?: string;
+};
+
+// Shown in the color picker swatch when a segment has no vendor-picked
+// color yet (matches Wheel's own emerald/rose default fallback in
+// src/components/wheel.tsx) — picking a color is optional, this is just
+// what the swatch displays before that, not a value silently written into
+// form state.
+const DEFAULT_SEGMENT_COLOR = { reward: "#10b981", loss: "#fb7185" };
 
 const labelClass =
   "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
@@ -94,7 +106,12 @@ export function SetupForm({
     pity_ceiling?: number;
     reward_text?: string;
     stages?: { threshold: number }[];
-    segments?: { label: string; weight: number; reward_text?: string }[];
+    segments?: {
+      label: string;
+      weight: number;
+      reward_text?: string;
+      color?: string;
+    }[];
     variant?: string;
   };
 
@@ -147,6 +164,7 @@ export function SetupForm({
       label: s.label,
       weight: s.weight,
       is_reward: !!s.reward_text,
+      color: s.color,
     })) ?? DEFAULT_SEGMENTS,
   );
   const segmentOddsPercent = segmentWinPercent(segments);
@@ -447,6 +465,23 @@ export function SetupForm({
                   onChange={(e) => setVisitsToBloom(Number(e.target.value))}
                   className="h-11 rounded-xl"
                 />
+                <div className="flex gap-1.5">
+                  {[6, 10, 15].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setVisitsToBloom(n)}
+                      className={cn(
+                        "h-7 rounded-lg border px-2.5 text-xs font-semibold transition-colors",
+                        visitsToBloom === n
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "bg-card text-muted-foreground hover:bg-muted/50",
+                      )}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           ) : (
@@ -496,6 +531,20 @@ export function SetupForm({
                           className="space-y-1.5 rounded-xl border p-2"
                         >
                           <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              aria-label={`${segment.label || "Segment"} color`}
+                              value={
+                                segment.color ??
+                                (segment.is_reward
+                                  ? DEFAULT_SEGMENT_COLOR.reward
+                                  : DEFAULT_SEGMENT_COLOR.loss)
+                              }
+                              onChange={(e) =>
+                                updateSegment(i, { color: e.target.value })
+                              }
+                              className="h-11 w-11 shrink-0 cursor-pointer rounded-xl border p-1"
+                            />
                             <Input
                               type="text"
                               required

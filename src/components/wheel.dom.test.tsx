@@ -125,4 +125,20 @@ describe("Wheel", () => {
     expect(paths[0].getAttribute("class")).toContain("fill-rose");
     expect(paths[1].getAttribute("class")).toContain("fill-emerald");
   });
+
+  it("uses a vendor-picked segment color when set, instead of the reward/non-reward default", () => {
+    mockRaf();
+    const customSegments = [
+      { id: "a", label: "Try again", reward: false, color: "#3b82f6" },
+      { id: "b", label: "Free item", reward: true },
+    ];
+    const { container } = render(
+      <Wheel segments={customSegments} landedId={null} />,
+    );
+    const paths = container.querySelectorAll("path");
+    expect(paths[0].getAttribute("fill")).toBe("#3b82f6");
+    expect(paths[0].getAttribute("class") ?? "").not.toContain("fill-rose");
+    // Segment b has no custom color — still falls back to the default.
+    expect(paths[1].getAttribute("class")).toContain("fill-emerald");
+  });
 });

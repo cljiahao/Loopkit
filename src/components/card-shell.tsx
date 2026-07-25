@@ -19,17 +19,22 @@ function prefersReducedMotion(): boolean {
  * Shared outer shell for loopkit's customer-facing progress card — wraps
  * every card-type view (stamp/flame/points/plant/cup/wheel/scratch/lucky) in
  * both the `/setup` live preview (`PreviewCard`) and the real `/c` card
- * (`ProgramCardStatus`), so the "premium trading card" treatment (an idle
- * holographic sheen + a capped pointer-tracking 3D tilt) applies uniformly
- * across every card type via one shared change instead of eight. Purely
- * presentational — no card-type awareness, no engine/Supabase imports.
+ * (`ProgramCardStatus`), so the "premium trading card" treatment (a capped
+ * pointer-tracking 3D tilt) applies uniformly across every card type via one
+ * shared change instead of eight. Purely presentational — no card-type
+ * awareness, no engine/Supabase imports.
  *
  * Deliberately pure CSS transforms + a light pointer handler, not a 3D
  * rendering library (three.js) or an animation library (Framer Motion) —
  * see docs/superpowers/specs/2026-07-25-loyalty-card-animation-polish-design.md
- * for why: the tilt/shine visual language is fully achievable with
- * GPU-accelerated CSS `transform`/`conic-gradient`, and loopkit's customers
- * hit this on phone browsers at a shop counter, not a controlled demo.
+ * for why: the tilt visual language is fully achievable with GPU-accelerated
+ * CSS `transform`, and loopkit's customers hit this on phone browsers at a
+ * shop counter, not a controlled demo.
+ *
+ * Previously also had an idle `conic-gradient` sheen drifting across the
+ * card — removed per user feedback ("that irritating arrow-like shadow
+ * moving left and right"); it read as an ugly artifact, not a holographic
+ * shine.
  *
  * The tilt is skipped entirely (no pointer listeners engaged, just a static
  * shell) under `prefers-reduced-motion` — this is a continuous, always-on
@@ -95,14 +100,7 @@ export function CardShell({
         className,
       )}
     >
-      {!reducedMotion && (
-        <div
-          aria-hidden="true"
-          data-testid="card-shell-sheen"
-          className="card-shell-sheen pointer-events-none absolute inset-0 z-0"
-        />
-      )}
-      <div className="relative z-[1] space-y-4">{children}</div>
+      {children}
     </div>
   );
 }

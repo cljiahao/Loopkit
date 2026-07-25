@@ -34,7 +34,7 @@ const STAGE1_V0 = 1400;
 // Angular deceleration (deg/s^2) — real, continuous deceleration while the
 // target segment is still unknown.
 const STAGE1_DECEL = 260;
-const STAGE2_EXTRA_TURNS = 2;
+const STAGE2_EXTRA_TURNS = 1;
 // Velocity floor (deg/s) so a very late handoff never reads as "starting
 // from a stall."
 const MIN_HANDOFF_VELOCITY = 60;
@@ -53,11 +53,24 @@ export function Wheel({
   segments,
   landedId,
   spinning,
+  onSettled,
   className,
 }: {
-  segments: { id: string; label: string; reward: boolean }[];
+  segments: {
+    id: string;
+    label: string;
+    reward: boolean;
+    color?: string;
+  }[];
   landedId: string | null;
   spinning?: boolean;
+  // Fires once, exactly when the settle physics simulation actually
+  // finishes (or, under reduced-motion, immediately). The wheel's settle
+  // duration is now a real physics computation, not a fixed number — a
+  // caller that reveals a result on its own fixed timer (e.g. a win/lose
+  // pill) needs this signal to stay in sync instead of appearing before
+  // the wheel has visually finished spinning.
+  onSettled?: () => void;
   className?: string;
 }) {
   const count = segments.length;
@@ -73,10 +86,18 @@ export function Wheel({
   const wasSpinning = useRef(false);
   const wasLanded = useRef(false);
   const [reducedMotion] = useState(prefersReducedMotion);
+  // Latest callback in a ref (not the effect's dependency list) so an
+  // inline arrow function passed by the caller doesn't retrigger the whole
+  // spin effect on every parent render.
+  const onSettledRef = useRef(onSettled);
 
   useEffect(() => {
     angleRef.current = angle;
   }, [angle]);
+
+  useEffect(() => {
+    onSettledRef.current = onSettled;
+  }, [onSettled]);
 
   useEffect(() => {
     function cancel() {
@@ -94,6 +115,7 @@ export function Wheel({
         // react-hooks/set-state-in-effect guards against doesn't apply.
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setAngle(targetAngleMod(landedIndex, anglePerSegment));
+        onSettledRef.current?.();
       }
       return;
     }
@@ -159,6 +181,8 @@ export function Wheel({
         setAngle(baseAngle + delta);
         if (t < t2) {
           frameRef.current = requestAnimationFrame(stage2Frame);
+        } else {
+          onSettledRef.current?.();
         }
       }
       frameRef.current = requestAnimationFrame(stage2Frame);
@@ -199,16 +223,20 @@ export function Wheel({
               <g key={segment.id}>
                 <path
                   d={`M50 50 L${x1} ${y1} A48 48 0 ${largeArc} 1 ${x2} ${y2} Z`}
-                  // Reward segments read as an unambiguous "win" color
+                  // A vendor-picked color (segment.color, the wheel color
+                  // picker in setup-form.tsx) wins when set. Otherwise:
+                  // reward segments read as an unambiguous "win" color
                   // (emerald, not the low-contrast muted-gold this used to
                   // be) against a clearly "not this one" muted-rose for
                   // non-reward segments — the two need to be tellable
                   // apart at a glance, not just on close inspection.
-                  className={
-                    segment.reward
-                      ? "fill-emerald-500 dark:fill-emerald-400"
-                      : "fill-rose-400/70 dark:fill-rose-500/60"
-                  }
+                  {...(segment.color
+                    ? { fill: segment.color }
+                    : {
+                        className: segment.reward
+                          ? "fill-emerald-500 dark:fill-emerald-400"
+                          : "fill-rose-400/70 dark:fill-rose-500/60",
+                      })}
                   stroke="var(--background)"
                   strokeWidth="0.6"
                 />
@@ -220,9 +248,17 @@ export function Wheel({
                   transform={`rotate(${midAngle + 90} ${tx} ${ty})`}
                   className={cn(
                     "text-[6px] font-semibold",
-                    segment.reward
-                      ? "fill-white"
-                      : "fill-rose-950/70 dark:fill-white/80",
+                    // A custom segment color can be anywhere on the
+                    // brightness spectrum, so a fixed light/dark text color
+                    // can't be guaranteed readable against it — white text
+                    // with a dark outline (paint-order+stroke, not a real
+                    // CSS text-shadow which SVG <text> doesn't support)
+                    // stays legible against any background color.
+                    segment.color
+                      ? "fill-white [paint-order:stroke] [stroke-linejoin:round] [stroke-width:2.5px] stroke-black/60"
+                      : segment.reward
+                        ? "fill-white"
+                        : "fill-rose-950/70 dark:fill-white/80",
                   )}
                 >
                   {segment.label}

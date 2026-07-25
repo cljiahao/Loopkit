@@ -217,4 +217,22 @@ describe("buildProgramFields", () => {
     expect(result.stampsRequired).toBe(10);
     expect(result.headStart).toBe(false);
   });
+
+  it("threads a vendor-picked segment color through to the built config, leaving it unset when not provided", () => {
+    const result = buildProgramFields({
+      type: "wheel",
+      name: "Spin to win",
+      reward_text: "Free item",
+      segments: [
+        { label: "Try again", weight: 5, is_reward: false, color: "#fb7185" },
+        { label: "Free item", weight: 1, is_reward: true },
+      ],
+      pity_ceiling: undefined,
+      expiry_days: undefined,
+    } as SaveProgramInput);
+
+    const config = result.config as { segments: { color?: string }[] };
+    expect(config.segments[0].color).toBe("#fb7185");
+    expect(config.segments[1].color).toBeUndefined();
+  });
 });
