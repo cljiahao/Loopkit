@@ -18,16 +18,27 @@ type Piece = {
   delay: number;
   duration: number;
   color: string;
+  size: number;
+  shape: "square" | "circle";
 };
+
+const PIECE_COUNT = 40;
 
 function makePieces(count: number): Piece[] {
   return Array.from({ length: count }, (_, i) => ({
     id: i,
     angle: Math.random() * 360,
-    distance: 40 + Math.random() * 50,
+    // Wider spread than before (was 40-90px) — with more/bigger pieces the
+    // burst needs more room to breathe, otherwise it reads as a dense blob
+    // instead of a fireworks-style radiate-outward burst.
+    distance: 50 + Math.random() * 80,
     delay: Math.random() * 0.15,
-    duration: 0.6 + Math.random() * 0.4,
+    duration: 0.7 + Math.random() * 0.5,
     color: COLORS[i % COLORS.length],
+    // Randomized size (was a fixed size-2/8px) and a mix of square/circle
+    // pieces for a punchier, less uniform "more confetti" look.
+    size: 6 + Math.random() * 8,
+    shape: Math.random() > 0.5 ? "circle" : "square",
   }));
 }
 
@@ -36,7 +47,10 @@ function makePieces(count: number): Piece[] {
 // `fixed inset-0` and covered the entire viewport regardless of where it
 // was mounted). Particles radiate outward from the container's center.
 export function CardBurst({ active }: { active: boolean }) {
-  const pieces = useMemo(() => (active ? makePieces(24) : []), [active]);
+  const pieces = useMemo(
+    () => (active ? makePieces(PIECE_COUNT) : []),
+    [active],
+  );
 
   if (!active) return null;
 
@@ -49,11 +63,14 @@ export function CardBurst({ active }: { active: boolean }) {
         <span
           key={p.id}
           className={cn(
-            "card-burst-piece absolute top-1/2 left-1/2 size-2 rounded-sm",
+            "card-burst-piece absolute top-1/2 left-1/2",
+            p.shape === "circle" ? "rounded-full" : "rounded-sm",
             p.color,
           )}
           style={
             {
+              width: `${p.size}px`,
+              height: `${p.size}px`,
               animationDelay: `${p.delay}s`,
               animationDuration: `${p.duration}s`,
               "--burst-angle": `${p.angle}deg`,

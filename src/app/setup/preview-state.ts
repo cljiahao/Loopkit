@@ -14,7 +14,12 @@ export type PreviewInput = {
   visitsToBloom: number;
   winPercent: number;
   pityCeiling: number | undefined;
-  segments: { label: string; weight: number; is_reward: boolean }[];
+  segments: {
+    label: string;
+    weight: number;
+    is_reward: boolean;
+    color?: string;
+  }[];
   headStart: boolean;
   headStartPercent: number;
   variant: "dots" | "flame" | "points" | "plant" | "cup";

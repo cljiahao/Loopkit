@@ -18,6 +18,15 @@ export const segmentInputSchema = z.object({
   label: z.string().trim().min(1).max(40),
   weight: z.coerce.number().int().min(1).max(100),
   is_reward: z.boolean(),
+  // Vendor-picked hex color for this Wheel/Scratch segment — optional, a
+  // fresh segment gets a sensible default from DEFAULT_SEGMENT_COLORS
+  // before the vendor ever touches the picker. `#rrggbb` only (no 3-digit
+  // shorthand, no alpha) — matches what an `<input type="color">` value
+  // always is.
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/)
+    .optional(),
 });
 export type SegmentInput = z.infer<typeof segmentInputSchema>;
 
@@ -73,6 +82,7 @@ export function buildChanceConfig(
       label: s.label,
       weight: s.weight,
       reward_text: s.is_reward ? rewardText : undefined,
+      color: s.color,
     })),
     pity_ceiling: pityCeiling,
     cooldown_visits: 0,

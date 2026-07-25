@@ -287,10 +287,16 @@ describe("PreviewCard", () => {
         revealing
       />,
     );
-    const wheelGroup = container.querySelector("svg g");
-    expect(wheelGroup?.getAttribute("class")).toContain(
-      "motion-safe:animate-spin",
-    );
+    // Wheel drives its own rotation via a requestAnimationFrame-computed
+    // physics simulation (see wheel.tsx for the full rationale — a CSS
+    // easing curve can't be told "you're moving at exactly this velocity
+    // right now, decelerate smoothly from there," which is what a
+    // real spin-then-land motion needs), not a CSS transition/animation.
+    // This asserts the wheel is present and rendering a rotation transform
+    // at all — the physics math itself is covered directly in
+    // wheel.dom.test.tsx.
+    const wheelRotor = screen.getByTestId("wheel-rotor");
+    expect(wheelRotor.getAttribute("style")).toContain("rotate(");
   });
 
   it("renders LuckyBox for a lucky view, with the win/lose pill available", () => {
@@ -336,6 +342,9 @@ describe("PreviewCard", () => {
         revealing
       />,
     );
-    expect(screen.getByTestId("scratch-strokes")).toBeInTheDocument();
+    const paths = screen.getAllByTestId("scratch-path");
+    paths.forEach((p) => {
+      expect(p.getAttribute("class")).toContain("scratch-draw-in");
+    });
   });
 });

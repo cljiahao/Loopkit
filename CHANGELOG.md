@@ -8,12 +8,117 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Third round of user-reported follow-up on the card animation pass:
+  - Wheel: the win/lose pill and celebration burst could appear (and the
+    burst fully finish) well before the wheel had visually stopped
+    spinning — they fired on the parent's fixed reveal timer, while the
+    wheel's settle duration became a real, variable physics computation in
+    the prior fix round and no longer necessarily matched it. `Wheel` now
+    takes an `onSettled` callback, fired exactly when its own settle
+    simulation finishes; `PreviewCard` gates both the pill and the burst
+    on it for wheel views. (This was very likely also why confetti seemed
+    to not show at all on a win — it burst and fully finished while the
+    wheel was still visibly spinning, so by the time the wheel actually
+    stopped there was nothing left to see.)
+  - `CardShell`'s idle sheen (a drifting `conic-gradient` band) is removed
+    entirely — it read as an ugly artifact ("irritating arrow-like shadow
+    moving left and right"), not a holographic shine.
+  - Sprout/Fill the Cup's `visits_to_bloom` field never had the 5/10/15
+    quick-pick chips Stamp/Flame/Points Club's `stamps_required` field
+    already had — a plain feature-parity gap. Added the same chips (6/10/15,
+    within the field's 4-20 range).
+  - Wheel segments can now take a vendor-picked color from a new
+    `<input type="color">` swatch per segment in the setup editor —
+    threaded through `SegmentInput`/`segmentInputSchema`/`buildChanceConfig`/
+    `ChanceSegment`/`ProgressView` to `Wheel`'s rendering, with an
+    outlined-white-text treatment so labels stay legible against any
+    picked color. Falls back to the existing emerald/rose default when
+    unset, so existing programs are unaffected.
+- Second round of user-reported follow-up on the wheel/scratch-card fixes
+  below — the first pass's fixes were real but insufficient:
+  - Wheel: the free-spin phase and the settle phase were still two
+    separately-eased CSS curves (just both via `transition` this time
+    instead of `animate-spin`+`transition`), so the spin still read as
+    "constant speed, then suddenly so fast" at the phase boundary — a
+    fixed easing curve chosen without knowing the actual handoff velocity
+    can't help but either restart slow or restart fast. Replaced with a
+    `requestAnimationFrame`-driven real constant-angular-deceleration
+    ("friction") physics simulation: the free-spin phase itself
+    continuously decelerates from the first frame (not a flat constant
+    speed), and the moment the target segment becomes known, a fresh
+    physics solve reads the _exact_ velocity the free-spin phase had
+    reached and computes a deceleration that brings the wheel to a dead
+    stop precisely on target — continuing the same velocity across the
+    boundary instead of restarting a new curve.
+  - Wheel: reward vs. non-reward segments were a low-contrast gold/muted
+    gray pairing that didn't read as an unambiguous win/lose signal.
+    Reward segments now render emerald, non-reward segments render muted
+    rose.
+  - `ScratchCard`: the reveal only animated on the very first cycle — this
+    component remounts fresh every scratch cycle, and it used a CSS
+    `transition` for the reveal, which needs an already-committed "before"
+    frame on the _same_ DOM node to interpolate from; a freshly mounted
+    node's very first paint has no such prior frame, so the transition
+    silently never played on cycle 2 onward. Replaced with a `@keyframes`
+    `animation` (`.scratch-draw-in` in `globals.css`), which always plays
+    its full declared timeline on a fresh element regardless of prior
+    state — reliably replays every cycle.
+  - `ScratchCard`: replaced the single clean zigzag reveal path with 3
+    overlapping, staggered, irregular strokes of varying width, run
+    through an SVG `feTurbulence`/`feDisplacementMap` filter that roughens
+    each stroke's edge into a torn/scratched texture instead of a smooth
+    round-capped line — closer to how an actual coin/fingernail scratch
+    looks (uneven coverage building up over a few passes) than one
+    uniform sweep.
+- User-reported, post-deploy follow-up on the card animation-polish pass
+  below: `CardShell`'s tilt set `transform-style: preserve-3d`, which
+  combined with the same element's `overflow-hidden` is a documented CSS
+  rendering conflict — the card visibly distorted/"expanded" whenever
+  `CardBurst`'s celebration was active while tilted. Removed (children now
+  correctly paint onto the tilted plane as a flat 2D surface, which is what
+  a card-tilt effect should do anyway).
+- The Wheel's spin read as choppy: the free-spin phase used a CSS
+  `animate-spin` keyframe handed off to a separate settle `transition` once
+  the result landed — a documented source of a visible jump, since the
+  browser doesn't reliably carry the animation's current computed angle
+  into the new transition. Replaced with one continuous,
+  monotonically-increasing rotation value driven by React state +
+  `transition-transform` throughout, so there is only ever one animation
+  mechanism, never a handoff.
+- The Wheel's landing also used an artificial "back-out" bounce (overshoot
+  past the target, then rock back) that didn't read as real physics — a
+  friction-decelerating wheel just slows smoothly to a stop, it doesn't
+  spring past and rebound. Replaced with a strong `cubic-bezier(0.16,1,0.3,1)`
+  ease-out (no overshoot), the curve real prize-wheel implementations use
+  for friction-based deceleration.
+- `ScratchCard`'s reveal ("a handful of diagonal capsule bars sweep in")
+  didn't read as an actual scratch card. Replaced with an SVG mask
+  revealed by a randomized, irregular "scratched by hand" path
+  (`stroke-dasharray`/`dashoffset`, punching real transparent holes in the
+  cover along the trail) instead of uniformly fading the whole cover's
+  opacity.
+- `CardBurst`'s reward celebration felt sparse. Bigger and more pieces (24
+  → 40), randomized size (was a fixed 8px) and a mix of square/circle
+  shapes, and a wider spread radius.
 - `SupportForm`'s category `ToggleGroup` was missing `spacing={1.5}`,
   rendering the category buttons edge-to-edge instead of qkit's
   separated-pill layout.
 
 ### Changed
 
+- Loyalty card visuals get their first animation-polish pass (see
+  `docs/superpowers/specs/2026-07-25-loyalty-card-animation-polish-design.md`
+  for the full design + research rationale — pure CSS, deliberately no new
+  dependency, no three.js): a new shared `CardShell` wrapper
+  (`src/components/card-shell.tsx`) gives every card type (stamp, flame,
+  points, plant, cup, wheel, scratch, lucky) an idle holographic sheen and a
+  capped pointer-tracking 3D tilt via one shared change in both `PreviewCard`
+  (`/setup`) and `ProgramCardStatus` (real `/c` card); `LuckyBox` gets an
+  idle shimmer (previously had no animation at all); `Wheel`'s settle
+  transition now uses a "back-out" easing curve (slight overshoot, then
+  rocks back) instead of a flat `ease-out`; `ScratchCard` plays a one-shot
+  shine sweep across the revealed prize. All of the above are fully skipped
+  under `prefers-reduced-motion`, matching the codebase's existing pattern.
 - The dashboard account-menu's "Get help" item is no longer a plain
   `mailto:` link — it now opens a Sheet with `SupportForm`, letting a
   vendor pick a category (Program/cards, Customers, Pro plan, Something

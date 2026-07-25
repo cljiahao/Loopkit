@@ -19,7 +19,9 @@ Client-side card-check UI.
   its own dialog state for card regeneration (`regenerateCardAction`) and a
   one-time retired-card notice (auto-opens once per replaced card, tracked
   in `localStorage`); renders `LuckyBox` for a `kind: "lucky"` view instead
-  of falling through to the generic stamp-dots view.
+  of falling through to the generic stamp-dots view; its outer container is
+  now `@/components/card-shell.tsx`'s `CardShell` (idle holographic sheen +
+  pointer-tilt), replacing a plain `<div>`.
 - `program-card-status.dom.test.tsx` — jsdom tests for `ProgramCardStatus`:
   verifies `PointsBar` vs `StampDots` renders per `view.variant` on a
   `"dots"` view, and `Cup` vs `Plant` renders per `view.variant` on a

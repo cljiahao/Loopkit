@@ -8,7 +8,7 @@ plant/cup, wheel/scratch), dispatched by program `type`.
 
 ## Contents
 
-- `chance.ts` — `pickSegment`/`makeChanceStrategy`: weighted-random segment picker for wheel/scratch programs, with a `forceReward`/pity pool that restricts selection to reward-bearing segments; exports `wheelStrategy` and `scratchStrategy`
+- `chance.ts` — `pickSegment`/`makeChanceStrategy`: weighted-random segment picker for wheel/scratch programs, with a `forceReward`/pity pool that restricts selection to reward-bearing segments; exports `wheelStrategy` and `scratchStrategy`; `ChanceSegment` carries an optional vendor-picked `color` through unchanged from config to the `ProgressView`, for `Wheel`'s rendering
 - `index.ts` — `resolve*Config`/`resolve*State` helpers plus `applyVisit`/`getProgress`, the dispatch layer that maps a `ProgramLike.type` ("lucky"/"plant"/"wheel"/"scratch"/"stamp") to the matching strategy's `apply`/`progress`
 - `lucky.ts` — `luckyStrategy`: probability-roll-per-visit reward with a cooldown and a pity ceiling that guarantees a win by a configured visit count; `progress()` returns a `kind: "lucky"` view (`visitsSinceWin`/`pityCeiling`), not the generic `dots` counter view stamp/plant use — rendered by `src/components/lucky-box.tsx`, not `StampDots`
 - `plant.ts` — `plantStrategy`: growth-with-decay state machine (grows per visit, decays after a grace period, stages by threshold), `redeem` carries over excess growth into the next bloom cycle

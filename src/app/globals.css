@@ -219,26 +219,66 @@ body {
   animation-fill-mode: forwards;
 }
 
-/* Scratch Card's reveal-in-progress strokes (ScratchCard, `scratching` prop)
-   — a handful of staggered diagonal marks sweeping across the cover before
-   the existing opacity-fade reveal plays; disabled under reduced-motion below. */
-@keyframes scratch-stroke-sweep {
+/* Lucky Tap's mystery-box idle shimmer (src/components/lucky-box.tsx) — a
+   soft light sweep inviting a tap, since LuckyBox previously had no
+   animation at all; disabled under reduced-motion below. */
+@keyframes lucky-box-shimmer {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translateX(-60%);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(60%);
+  }
+}
+.lucky-box-shimmer {
+  animation: lucky-box-shimmer 2.2s ease-in-out infinite;
+}
+
+/* Scratch Card's reveal strokes (src/components/scratch-card.tsx) — a
+   keyframe `animation`, deliberately NOT a `transition`. This component
+   remounts a fresh cover+mask every scratch cycle (mounted only while
+   `!revealed`); a `transition` needs an already-committed "before" frame on
+   the SAME element to interpolate from, which a freshly mounted node never
+   has on its very first paint (browsers apply the initial computed style
+   immediately, no transition plays) — that's what caused the reveal to
+   silently stop animating after the first cycle. A `@keyframes` animation
+   has no such requirement: it always plays its declared 0%->100% timeline
+   in full on a fresh element, every single cycle. Disabled under
+   reduced-motion below (jumps straight to the fully-drawn end state). */
+@keyframes scratch-draw-in {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.scratch-draw-in {
+  stroke-dasharray: 100;
+  animation: scratch-draw-in 900ms ease-out both;
+}
+
+/* Scratch Card's post-reveal shine sweep (src/components/scratch-card.tsx)
+   — a single light pass across the revealed prize, playing once when
+   `revealed` flips true; disabled under reduced-motion below. */
+@keyframes scratch-reveal-shine {
   0% {
-    transform: scaleX(0) rotate(var(--scratch-rotate, 0deg));
-    transform-origin: left center;
+    transform: translateX(-120%) skewX(-20deg);
     opacity: 0;
   }
-  40% {
+  15% {
     opacity: 1;
   }
   100% {
-    transform: scaleX(1) rotate(var(--scratch-rotate, 0deg));
-    transform-origin: left center;
-    opacity: 0.9;
+    transform: translateX(220%) skewX(-20deg);
+    opacity: 0;
   }
 }
-.scratch-stroke {
-  animation: scratch-stroke-sweep 0.35s ease-out both;
+.scratch-reveal-shine {
+  animation: scratch-reveal-shine 0.9s ease-out both;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -262,9 +302,17 @@ html {
     animation: none;
     opacity: 0;
   }
-  .scratch-stroke {
+  .lucky-box-shimmer {
     animation: none;
     opacity: 0;
+  }
+  .scratch-reveal-shine {
+    animation: none;
+    opacity: 0;
+  }
+  .scratch-draw-in {
+    animation: none;
+    stroke-dashoffset: 0;
   }
   /* Tailwind's always-on animation utilities don't self-respect the preference. */
   .animate-ping,

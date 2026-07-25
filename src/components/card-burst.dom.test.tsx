@@ -15,6 +15,6 @@ describe("CardBurst", () => {
     expect(wrapper).toBeInTheDocument();
     expect(wrapper).toHaveClass("absolute");
     expect(wrapper).not.toHaveClass("fixed");
-    expect(container.querySelectorAll(".card-burst-piece")).toHaveLength(24);
+    expect(container.querySelectorAll(".card-burst-piece")).toHaveLength(40);
   });
 });
