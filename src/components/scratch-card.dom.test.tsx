@@ -10,13 +10,17 @@ describe("ScratchCard", () => {
     expect(screen.getByText("Free kopi")).toBeInTheDocument();
   });
 
-  it("renders the scratch reveal path fully undrawn by default", () => {
+  it("renders 3 overlapping scratch strokes, fully undrawn by default", () => {
     render(<ScratchCard revealed={false} label="Try again" reward={false} />);
-    const path = screen.getByTestId("scratch-path");
-    expect(path.getAttribute("class")).toContain("[stroke-dashoffset:100]");
+    const paths = screen.getAllByTestId("scratch-path");
+    expect(paths).toHaveLength(3);
+    paths.forEach((p) => {
+      expect(p.getAttribute("class")).toContain("[stroke-dashoffset:100]");
+      expect(p.getAttribute("class")).not.toContain("scratch-draw-in");
+    });
   });
 
-  it("draws the scratch reveal path in while scratching", () => {
+  it("draws all 3 strokes in (via a replayable keyframe animation, not a transition) while scratching", () => {
     render(
       <ScratchCard
         revealed={false}
@@ -25,8 +29,29 @@ describe("ScratchCard", () => {
         reward={false}
       />,
     );
-    const path = screen.getByTestId("scratch-path");
-    expect(path.getAttribute("class")).toContain("[stroke-dashoffset:0]");
+    const paths = screen.getAllByTestId("scratch-path");
+    expect(paths).toHaveLength(3);
+    // A CSS `animation` (not `transition`) is what makes this reliably
+    // replay every cycle on a freshly mounted node — see scratch-card.tsx
+    // and globals.css's `.scratch-draw-in` comment for why a `transition`
+    // silently stopped animating after the first cycle.
+    paths.forEach((p) => {
+      expect(p.getAttribute("class")).toContain("scratch-draw-in");
+    });
+  });
+
+  it("staggers each stroke's draw-in so they don't all animate in lockstep", () => {
+    render(
+      <ScratchCard
+        revealed={false}
+        scratching
+        label="Try again"
+        reward={false}
+      />,
+    );
+    const paths = screen.getAllByTestId("scratch-path");
+    const delays = paths.map((p) => p.style.animationDelay);
+    expect(new Set(delays).size).toBeGreaterThan(1);
   });
 
   it("removes the scratch overlay once revealed", () => {

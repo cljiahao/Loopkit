@@ -8,6 +8,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Second round of user-reported follow-up on the wheel/scratch-card fixes
+  below — the first pass's fixes were real but insufficient:
+  - Wheel: the free-spin phase and the settle phase were still two
+    separately-eased CSS curves (just both via `transition` this time
+    instead of `animate-spin`+`transition`), so the spin still read as
+    "constant speed, then suddenly so fast" at the phase boundary — a
+    fixed easing curve chosen without knowing the actual handoff velocity
+    can't help but either restart slow or restart fast. Replaced with a
+    `requestAnimationFrame`-driven real constant-angular-deceleration
+    ("friction") physics simulation: the free-spin phase itself
+    continuously decelerates from the first frame (not a flat constant
+    speed), and the moment the target segment becomes known, a fresh
+    physics solve reads the _exact_ velocity the free-spin phase had
+    reached and computes a deceleration that brings the wheel to a dead
+    stop precisely on target — continuing the same velocity across the
+    boundary instead of restarting a new curve.
+  - Wheel: reward vs. non-reward segments were a low-contrast gold/muted
+    gray pairing that didn't read as an unambiguous win/lose signal.
+    Reward segments now render emerald, non-reward segments render muted
+    rose.
+  - `ScratchCard`: the reveal only animated on the very first cycle — this
+    component remounts fresh every scratch cycle, and it used a CSS
+    `transition` for the reveal, which needs an already-committed "before"
+    frame on the _same_ DOM node to interpolate from; a freshly mounted
+    node's very first paint has no such prior frame, so the transition
+    silently never played on cycle 2 onward. Replaced with a `@keyframes`
+    `animation` (`.scratch-draw-in` in `globals.css`), which always plays
+    its full declared timeline on a fresh element regardless of prior
+    state — reliably replays every cycle.
+  - `ScratchCard`: replaced the single clean zigzag reveal path with 3
+    overlapping, staggered, irregular strokes of varying width, run
+    through an SVG `feTurbulence`/`feDisplacementMap` filter that roughens
+    each stroke's edge into a torn/scratched texture instead of a smooth
+    round-capped line — closer to how an actual coin/fingernail scratch
+    looks (uneven coverage building up over a few passes) than one
+    uniform sweep.
 - User-reported, post-deploy follow-up on the card animation-polish pass
   below: `CardShell`'s tilt set `transform-style: preserve-3d`, which
   combined with the same element's `overflow-hidden` is a documented CSS

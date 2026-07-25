@@ -3,34 +3,46 @@
 import { useId, useMemo } from "react";
 import { cn } from "@/lib/utils";
 
-const SCRATCH_ROWS = 5;
-const SCRATCH_STEPS_PER_ROW = 6;
+type Stroke = { id: number; d: string; delayMs: number; width: number };
 
-// A believable "scratched back and forth by hand" reveal path — an
-// irregular zigzag with per-point jitter, not a clean geometric shape —
-// generated once per mount (same randomize-once convention as CardBurst's
-// makePieces). Declared in a fixed 100x60 coordinate space with
-// `pathLength={100}` on the consuming <path> so the stroke-dasharray/
-// dashoffset reveal below is expressed as plain percentages — no runtime
-// path-length measurement (`getTotalLength()`) needed, which also means
-// this is pure SVG/CSS, not canvas (jsdom has no real canvas 2D context,
-// and this repo's other reward-mechanic visuals — Wheel/Plant/Cup — are
-// already SVG, not canvas, for the same testability reason).
-function makeScratchPathD(): string {
-  const parts: string[] = [];
-  for (let row = 0; row < SCRATCH_ROWS; row++) {
-    const y = 8 + (row * (60 - 16)) / (SCRATCH_ROWS - 1);
-    const dir = row % 2 === 0 ? 1 : -1;
-    for (let i = 0; i <= SCRATCH_STEPS_PER_ROW; i++) {
-      const t = i / SCRATCH_STEPS_PER_ROW;
+const STROKE_BANDS: [number, number][] = [
+  [6, 22],
+  [22, 40],
+  [38, 54],
+];
+const STEPS_PER_STROKE = 5;
+
+// Three separate, overlapping, irregular strokes — not one continuous
+// zigzag — each covering its own rough vertical band with per-point
+// jitter, staggered draw-in delays, and slightly different widths. A
+// single clean line reads as "a wiggly line drew itself in"; three
+// overlapping irregular passes, worked over slightly out of sync, is much
+// closer to how an actual coin/fingernail scratch looks — uneven coverage
+// building up over a few strokes, not one uniform sweep. Randomized once
+// per mount (same convention as CardBurst's makePieces), in a fixed 100x60
+// coordinate space with `pathLength={100}` on each consuming <path> so the
+// stroke-dasharray/dashoffset reveal is plain percentages — no runtime
+// path-length measurement needed, which also means this is pure SVG/CSS,
+// not canvas (jsdom has no real canvas 2D context, and this repo's other
+// reward-mechanic visuals — Wheel/Plant/Cup — are already SVG for the same
+// testability reason).
+function makeStrokes(): Stroke[] {
+  return STROKE_BANDS.map(([yMin, yMax], i) => {
+    const dir = i % 2 === 0 ? 1 : -1;
+    const parts: string[] = [];
+    for (let step = 0; step <= STEPS_PER_STROKE; step++) {
+      const t = step / STEPS_PER_STROKE;
       const x = dir === 1 ? t * 100 : (1 - t) * 100;
-      const jitter = (Math.random() - 0.5) * 7;
-      parts.push(
-        `${row === 0 && i === 0 ? "M" : "L"} ${x.toFixed(1)} ${(y + jitter).toFixed(1)}`,
-      );
+      const y = yMin + Math.random() * (yMax - yMin);
+      parts.push(`${step === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`);
     }
-  }
-  return parts.join(" ");
+    return {
+      id: i,
+      d: parts.join(" "),
+      delayMs: i * 120,
+      width: 11 + Math.random() * 5,
+    };
+  });
 }
 
 export function ScratchCard({
@@ -47,7 +59,8 @@ export function ScratchCard({
   className?: string;
 }) {
   const maskId = useId();
-  const pathD = useMemo(() => makeScratchPathD(), []);
+  const filterId = useId();
+  const strokes = useMemo(() => makeStrokes(), []);
 
   return (
     <div
@@ -71,11 +84,12 @@ export function ScratchCard({
           {label}
         </p>
       </div>
-      {/* Cover + "Scratch to reveal" text, masked by an irregular scratch
-          trail instead of the plain opacity-fade this used to be. Punching
-          real transparent holes along the trail (rather than fading the
-          whole cover's opacity uniformly) is what actually reads as
-          "scratched off" instead of a generic wipe/dissolve. */}
+      {/* Cover + "Scratch to reveal" text, masked by 3 overlapping,
+          rough-edged scratch strokes instead of the plain opacity-fade
+          this used to be. Punching real transparent holes along the
+          strokes (rather than fading the whole cover's opacity uniformly)
+          is what actually reads as "scratched off" instead of a generic
+          wipe/dissolve. */}
       {!revealed && (
         <svg
           aria-hidden="true"
@@ -93,6 +107,25 @@ export function ScratchCard({
                 stopOpacity="0.7"
               />
             </linearGradient>
+            {/* Roughens each stroke's edge into a torn/scratched texture
+                instead of a perfectly smooth round-capped line — a clean
+                line reads as "drawn," a jagged one reads as "scratched." */}
+            <filter id={filterId} x="-20%" y="-20%" width="140%" height="140%">
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.9"
+                numOctaves="2"
+                seed="7"
+                result="noise"
+              />
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="noise"
+                scale="4"
+                xChannelSelector="R"
+                yChannelSelector="G"
+              />
+            </filter>
             <mask
               id={maskId}
               maskUnits="userSpaceOnUse"
@@ -102,22 +135,31 @@ export function ScratchCard({
               height="60"
             >
               <rect x="0" y="0" width="100" height="60" fill="white" />
-              <path
-                data-testid="scratch-path"
-                d={pathD}
-                pathLength={100}
-                fill="none"
-                stroke="black"
-                strokeWidth="14"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={cn(
-                  "[stroke-dasharray:100] motion-safe:transition-[stroke-dashoffset] motion-safe:duration-[900ms] motion-safe:ease-out",
-                  scratching
-                    ? "[stroke-dashoffset:0]"
-                    : "[stroke-dashoffset:100]",
-                )}
-              />
+              <g data-testid="scratch-strokes" filter={`url(#${filterId})`}>
+                {strokes.map((s) => (
+                  <path
+                    key={s.id}
+                    data-testid="scratch-path"
+                    d={s.d}
+                    pathLength={100}
+                    fill="none"
+                    stroke="black"
+                    strokeWidth={s.width}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={cn(
+                      scratching
+                        ? "scratch-draw-in"
+                        : "[stroke-dashoffset:100]",
+                    )}
+                    style={
+                      scratching
+                        ? { animationDelay: `${s.delayMs}ms` }
+                        : undefined
+                    }
+                  />
+                ))}
+              </g>
             </mask>
           </defs>
           <rect

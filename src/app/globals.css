@@ -262,6 +262,30 @@ body {
   animation: lucky-box-shimmer 2.2s ease-in-out infinite;
 }
 
+/* Scratch Card's reveal strokes (src/components/scratch-card.tsx) — a
+   keyframe `animation`, deliberately NOT a `transition`. This component
+   remounts a fresh cover+mask every scratch cycle (mounted only while
+   `!revealed`); a `transition` needs an already-committed "before" frame on
+   the SAME element to interpolate from, which a freshly mounted node never
+   has on its very first paint (browsers apply the initial computed style
+   immediately, no transition plays) — that's what caused the reveal to
+   silently stop animating after the first cycle. A `@keyframes` animation
+   has no such requirement: it always plays its declared 0%->100% timeline
+   in full on a fresh element, every single cycle. Disabled under
+   reduced-motion below (jumps straight to the fully-drawn end state). */
+@keyframes scratch-draw-in {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.scratch-draw-in {
+  stroke-dasharray: 100;
+  animation: scratch-draw-in 900ms ease-out both;
+}
+
 /* Scratch Card's post-reveal shine sweep (src/components/scratch-card.tsx)
    — a single light pass across the revealed prize, playing once when
    `revealed` flips true; disabled under reduced-motion below. */
@@ -314,6 +338,10 @@ html {
   .scratch-reveal-shine {
     animation: none;
     opacity: 0;
+  }
+  .scratch-draw-in {
+    animation: none;
+    stroke-dashoffset: 0;
   }
   /* Tailwind's always-on animation utilities don't self-respect the preference. */
   .animate-ping,

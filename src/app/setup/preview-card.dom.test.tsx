@@ -287,16 +287,16 @@ describe("PreviewCard", () => {
         revealing
       />,
     );
-    const wheelGroup = container.querySelector("svg g");
-    // Wheel drives its own rotation via one continuous state-based
-    // transition (no CSS `animate-spin` keyframe — see wheel.tsx for why:
-    // handing off from a CSS animation to a transition once the result
-    // lands is a documented source of a visible jump). While spinning with
-    // no result yet, it applies the linear-speed "still spinning" easing.
-    expect(wheelGroup?.getAttribute("class")).toContain(
-      "motion-safe:ease-linear",
-    );
-    expect(wheelGroup?.getAttribute("style")).toContain("rotate(");
+    // Wheel drives its own rotation via a requestAnimationFrame-computed
+    // physics simulation (see wheel.tsx for the full rationale — a CSS
+    // easing curve can't be told "you're moving at exactly this velocity
+    // right now, decelerate smoothly from there," which is what a
+    // real spin-then-land motion needs), not a CSS transition/animation.
+    // This asserts the wheel is present and rendering a rotation transform
+    // at all — the physics math itself is covered directly in
+    // wheel.dom.test.tsx.
+    const wheelRotor = screen.getByTestId("wheel-rotor");
+    expect(wheelRotor.getAttribute("style")).toContain("rotate(");
   });
 
   it("renders LuckyBox for a lucky view, with the win/lose pill available", () => {
@@ -342,7 +342,9 @@ describe("PreviewCard", () => {
         revealing
       />,
     );
-    const path = screen.getByTestId("scratch-path");
-    expect(path.getAttribute("class")).toContain("[stroke-dashoffset:0]");
+    const paths = screen.getAllByTestId("scratch-path");
+    paths.forEach((p) => {
+      expect(p.getAttribute("class")).toContain("scratch-draw-in");
+    });
   });
 });
