@@ -6,6 +6,11 @@ const LEAF_PAIRS = 2;
 // The stem shoots up through Seed -> Sprout -> Leafing and then holds —
 // Budding/Bloom add a bud/flower at its tip, they don't grow it further.
 const STEM_FULL_HEIGHT_STAGE = 2;
+// Must match GROWTH_TRANSITION's duration-[1600ms] below — the tip nub's
+// fade-in is deliberately delayed by this same amount so it doesn't appear
+// before the stem has visually finished growing to meet it ("sprouting in
+// thin air" was a real bug in an earlier design iteration).
+const STEM_GROWTH_MS = 1600;
 const GROWTH_TRANSITION =
   "motion-safe:transition-all motion-safe:duration-[1600ms] motion-safe:ease-out";
 
@@ -88,7 +93,7 @@ export function Plant({
             cx="50"
             cy={stemTopY}
             r="3"
-            style={{ transitionDelay: "1600ms" }}
+            style={{ transitionDelay: `${STEM_GROWTH_MS}ms` }}
             className={cn(
               "motion-safe:transition-opacity motion-safe:duration-300",
               "opacity-100 starting:opacity-0",

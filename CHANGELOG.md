@@ -37,6 +37,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   already derive their 5 stages, and `FlameLayers` is redrawn with a
   woodpile base, a dim ember coal at the start, and a layered/colored
   flame cluster that grows through the later stages.
+- Sprout now restages so each of its 5 stages introduces exactly one new
+  visual element instead of several overlapping across stages: the stem
+  alone shoots up at Sprout (with a closed tip nub, no leaves yet), both
+  leaf pairs arrive together at Leafing (stem height holds from here on),
+  a small bud appears at Budding, and the bud opens into the full bloom at
+  the final stage — fixing "Budding" being visually indistinguishable from
+  "Leafing" before this change.
 
 ### Fixed
 
