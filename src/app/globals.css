@@ -118,6 +118,7 @@
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 
   --animate-stamp-pop: stamp-pop 0.4s ease-out;
+  --animate-flame-flicker: flame-flicker 1.8s ease-in-out infinite;
 }
 
 @keyframes stamp-pop {
@@ -129,6 +130,22 @@
   }
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes flame-flicker {
+  0%,
+  100% {
+    transform: scale(1) skewX(0deg);
+  }
+  25% {
+    transform: scale(1.04) skewX(-1.5deg);
+  }
+  50% {
+    transform: scale(0.97) skewX(1deg);
+  }
+  75% {
+    transform: scale(1.02) skewX(-0.5deg);
   }
 }
 
