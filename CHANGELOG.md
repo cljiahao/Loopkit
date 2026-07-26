@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+
+- Upgraded `next` `16.2.10` → `16.2.11`, resolving all 7 Next.js advisories
+  (cache-confusion of response bodies x2, unbounded Server Action payload
+  in Edge runtime, image-optimization SVG DoS, unauthenticated Server
+  Function endpoint disclosure, and 2 more) that CI's `dependency audit
+(pnpm)` job had been flagging on every PR this cycle — this was the one
+  actually in the production dependency graph (`--prod` scope), everything
+  else audit had flagged was dev-tooling-only.
+- Force-patched (via `pnpm-workspace.yaml`'s existing `overrides:`
+  convention) `postcss` (path traversal via `sourceMappingURL`,
+  GHSA-r28c-9q8g-f849 — supersedes an earlier, narrower postcss entry),
+  `fast-uri` (host confusion via a literal backslash authority delimiter,
+  GHSA-v2hh-gcrm-f6hx, dev-only via stryker), and `brace-expansion`
+  (exponential-time expansion DoS, GHSA-3jxr-9vmj-r5cp, dev-only via
+  eslint/vitest-coverage/stryker's respective internal `minimatch`
+  chains) — see the workspace file's own comment for the one residual,
+  intentionally-unfixed `brace-expansion` advisory (a second, unrelated
+  bug with no patched release on the old `minimatch@3.1.5` chain's 1.x
+  line; forcing it past 1.x breaks eslint outright). All residual findings
+  are devDependency-only, which CI's audit step already treats as
+  informational, not a hard gate.
+
 ### Fixed
 
 - Fourth round of user-reported follow-up: the win/lose result shown for
