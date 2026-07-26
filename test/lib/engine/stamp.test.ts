@@ -133,6 +133,28 @@ describe("stampStrategy flame variant", () => {
     expect(at.view).toMatchObject({ stage: 2 });
   });
 
+  it("still starts at Ember (stage 0) at filled=0 and never skips backward, even at the schema-enforced minimum stamps_required (2)", () => {
+    const tinyCfg = { ...flameCfg, stamps_required: 2 };
+    const at0 = stampStrategy.progress(
+      { stamp_count: 0, reward_count: 0 },
+      tinyCfg,
+      now,
+    );
+    expect(at0.view).toMatchObject({ stage: 0, stageName: "Ember" });
+    const at1 = stampStrategy.progress(
+      { stamp_count: 1, reward_count: 0 },
+      tinyCfg,
+      now,
+    );
+    expect((at1.view as { stage: number }).stage).toBeGreaterThan(0);
+    const at2 = stampStrategy.progress(
+      { stamp_count: 2, reward_count: 0 },
+      tinyCfg,
+      now,
+    );
+    expect(at2.view).toMatchObject({ stage: 4, stageName: "Full Campfire" });
+  });
+
   it("dots variant (default, no variant field) is unaffected", () => {
     const p = stampStrategy.progress(
       { stamp_count: 3, reward_count: 0 },
