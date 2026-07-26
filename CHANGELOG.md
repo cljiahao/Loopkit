@@ -29,6 +29,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   are devDependency-only, which CI's audit step already treats as
   informational, not a hard gate.
 
+### Changed
+
+- Flame Club now has 5 growth stages (Ember, Spark, Small Fire, Medium
+  Fire, Full Campfire) instead of 3 — `flameStageFor` buckets progress
+  evenly at 0/20/40/60/80% of the stamps required, mirroring how Plant/Cup
+  already derive their 5 stages, and `FlameLayers` is redrawn with a
+  woodpile base, a dim ember coal at the start, and a layered/colored
+  flame cluster that grows through the later stages.
+
 ### Fixed
 
 - Fourth round of user-reported follow-up: the win/lose result shown for
