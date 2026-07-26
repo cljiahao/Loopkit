@@ -8,12 +8,23 @@ export type StampConfig = {
 };
 export type StampState = { stamp_count: number; reward_count: number };
 
-const FLAME_STAGE_NAMES = ["Spark", "Inner Flame", "Full Blaze"] as const;
+const FLAME_STAGE_NAMES = [
+  "Ember",
+  "Spark",
+  "Small Fire",
+  "Medium Fire",
+  "Full Campfire",
+] as const;
 
+// Mirrors Plant's stageIndexFor (src/lib/engine/plant.ts) — 5 even buckets
+// at 0/20/40/60/80% of `total`; the highest threshold met wins.
 function flameStageFor(filled: number, total: number): number {
-  if (filled >= total) return 2;
-  if (filled >= Math.round(total * 0.5)) return 1;
-  return 0;
+  let idx = 0;
+  for (let i = 0; i < FLAME_STAGE_NAMES.length; i++) {
+    const threshold = Math.round((total * i) / FLAME_STAGE_NAMES.length);
+    if (filled >= threshold) idx = i;
+  }
+  return idx;
 }
 
 export const stampStrategy: Strategy<StampConfig, StampState> = {
@@ -36,7 +47,7 @@ export const stampStrategy: Strategy<StampConfig, StampState> = {
           total,
           stage,
           stageName,
-          totalStages: 3,
+          totalStages: FLAME_STAGE_NAMES.length,
         },
         rewardReady,
       };
