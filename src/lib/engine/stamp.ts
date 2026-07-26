@@ -19,7 +19,9 @@ const FLAME_STAGE_NAMES = [
 // Mirrors Plant's stageIndexFor (src/lib/engine/plant.ts) — 5 even buckets
 // at 0/20/40/60/80% of `total`; the highest threshold met wins.
 // Dedupe collided thresholds so stages are reachable only once threshold strictly increases.
+// Guarantee stage 4 at 100% completion regardless of threshold collisions.
 function flameStageFor(filled: number, total: number): number {
+  if (filled >= total) return FLAME_STAGE_NAMES.length - 1;
   let idx = 0;
   let lastThreshold = -1;
   for (let i = 0; i < FLAME_STAGE_NAMES.length; i++) {

@@ -155,6 +155,19 @@ describe("stampStrategy flame variant", () => {
     expect(at2.view).toMatchObject({ stage: 4, stageName: "Full Campfire" });
   });
 
+  it("still reaches Full Campfire (stage 4) at 100% completion even when stamps_required=3 (a threshold-collision case)", () => {
+    const smallCfg = { ...flameCfg, stamps_required: 3 };
+    const complete = stampStrategy.progress(
+      { stamp_count: 3, reward_count: 0 },
+      smallCfg,
+      now,
+    );
+    expect(complete.view).toMatchObject({
+      stage: 4,
+      stageName: "Full Campfire",
+    });
+  });
+
   it("dots variant (default, no variant field) is unaffected", () => {
     const p = stampStrategy.progress(
       { stamp_count: 3, reward_count: 0 },
