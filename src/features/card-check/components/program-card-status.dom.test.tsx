@@ -76,8 +76,10 @@ describe("ProgramCardStatus cup variant", () => {
     const { container } = render(
       <ProgramCardStatus card={baseCard({})} phone="+6591234567" />,
     );
-    // Cup draws exactly one clipPath (defs > clipPath#cup-body-clip); Plant never does.
-    expect(container.querySelector("#cup-body-clip")).toBeInTheDocument();
+    // Cup renders an SVG with viewBox="0 0 100 100"; Plant never does.
+    expect(
+      container.querySelector('svg[viewBox="0 0 100 100"]'),
+    ).toBeInTheDocument();
   });
 
   it("renders the Plant visual (not Cup) when view.variant is plant", () => {

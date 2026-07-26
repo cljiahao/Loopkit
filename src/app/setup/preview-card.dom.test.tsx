@@ -122,7 +122,9 @@ describe("PreviewCard", () => {
         rewardText="Free kopi"
       />,
     );
-    expect(container.querySelector("#cup-body-clip")).toBeInTheDocument();
+    expect(
+      container.querySelector('svg[viewBox="0 0 100 100"]'),
+    ).toBeInTheDocument();
   });
 
   it("renders PointsBar when view.variant is points", () => {
