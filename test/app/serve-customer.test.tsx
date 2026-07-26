@@ -348,7 +348,7 @@ describe("ServeCustomer", () => {
     await user.click(screen.getByRole("button", { name: "Look up" }));
     await waitFor(() =>
       expect(
-        container.querySelector('svg[viewBox="0 0 100 100"]'),
+        container.querySelector('path[fill="none"][stroke="currentColor"]'),
       ).toBeInTheDocument(),
     );
   });

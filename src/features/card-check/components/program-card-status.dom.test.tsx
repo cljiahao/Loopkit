@@ -76,9 +76,9 @@ describe("ProgramCardStatus cup variant", () => {
     const { container } = render(
       <ProgramCardStatus card={baseCard({})} phone="+6591234567" />,
     );
-    // Cup renders an SVG with viewBox="0 0 100 100"; Plant never does.
+    // Cup renders a stroked, unfilled outline path; Plant's shapes are always filled.
     expect(
-      container.querySelector('svg[viewBox="0 0 100 100"]'),
+      container.querySelector('path[fill="none"][stroke="currentColor"]'),
     ).toBeInTheDocument();
   });
 
@@ -98,6 +98,8 @@ describe("ProgramCardStatus cup variant", () => {
         phone="+6591234567"
       />,
     );
-    expect(container.querySelector("#cup-body-clip")).not.toBeInTheDocument();
+    expect(
+      container.querySelector('path[fill="none"][stroke="currentColor"]'),
+    ).not.toBeInTheDocument();
   });
 });
