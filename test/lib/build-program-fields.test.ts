@@ -22,6 +22,7 @@ describe("buildProgramFields", () => {
         reward_text: "Free kopi",
         variant: "dots",
         points_per_visit: 1,
+        stamp_mark: { mode: "dot", preset: undefined },
       },
     });
   });

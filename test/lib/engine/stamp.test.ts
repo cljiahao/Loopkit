@@ -248,3 +248,41 @@ describe("stampStrategy points variant", () => {
     ).toEqual({ stamp_count: 0, reward_count: 2 });
   });
 });
+
+describe("stampStrategy stamp_mark passthrough", () => {
+  it("carries mode/preset from config into the dots view", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 2, reward_count: 0 },
+      {
+        stamps_required: 5,
+        reward_text: "free kopi",
+        stamp_mark: { mode: "preset", preset: "coffee" },
+      },
+      now,
+    );
+    expect(p.view).toEqual({
+      kind: "dots",
+      filled: 2,
+      total: 5,
+      variant: "dots",
+      markMode: "preset",
+      markPreset: "coffee",
+    });
+  });
+
+  it("leaves markMode/markPreset undefined when stamp_mark is absent", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 2, reward_count: 0 },
+      cfg,
+      now,
+    );
+    expect(p.view).toEqual({
+      kind: "dots",
+      filled: 2,
+      total: 5,
+      variant: "dots",
+      markMode: undefined,
+      markPreset: undefined,
+    });
+  });
+});

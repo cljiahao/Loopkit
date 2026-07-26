@@ -5,6 +5,10 @@ export type StampConfig = {
   reward_text: string;
   variant?: "dots" | "flame" | "points";
   points_per_visit?: number;
+  stamp_mark?: {
+    mode: "dot" | "preset" | "photo";
+    preset?: "gift" | "coffee" | "star" | "heart";
+  };
 };
 export type StampState = { stamp_count: number; reward_count: number };
 
@@ -68,6 +72,8 @@ export const stampStrategy: Strategy<StampConfig, StampState> = {
         filled,
         total,
         variant: isPoints ? "points" : "dots",
+        markMode: config.stamp_mark?.mode,
+        markPreset: config.stamp_mark?.preset,
       },
       rewardReady,
     };
