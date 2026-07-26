@@ -2,7 +2,10 @@ import { cn } from "@/lib/utils";
 
 const SOIL_Y = 74;
 const STEM_MAX_Y = 18;
-const MAX_LEAF_PAIRS = 3;
+const LEAF_PAIRS = 2;
+// The stem shoots up through Seed -> Sprout -> Leafing and then holds —
+// Budding/Bloom add a bud/flower at its tip, they don't grow it further.
+const STEM_FULL_HEIGHT_STAGE = 2;
 const GROWTH_TRANSITION =
   "motion-safe:transition-all motion-safe:duration-[1600ms] motion-safe:ease-out";
 
@@ -17,10 +20,13 @@ export function Plant({
   wilting: boolean;
   className?: string;
 }) {
-  const span = Math.max(totalStages - 1, 1);
-  const frac = Math.min(Math.max(stage / span, 0), 1);
   const isBloom = stage >= totalStages - 1 && totalStages > 1;
-  const leafPairs = Math.min(stage, MAX_LEAF_PAIRS);
+  const stemFrac =
+    Math.min(stage, STEM_FULL_HEIGHT_STAGE) / STEM_FULL_HEIGHT_STAGE;
+  const stemTopY = SOIL_Y - (SOIL_Y - STEM_MAX_Y) * stemFrac;
+  const leavesVisible = stage >= STEM_FULL_HEIGHT_STAGE;
+  const showTipNub = stage === 1;
+  const showBud = stage === 3;
 
   return (
     <svg
@@ -69,27 +75,38 @@ export function Plant({
           strokeLinecap="round"
           style={{
             transformOrigin: `50px ${SOIL_Y}px`,
-            transform: `scaleY(${frac})`,
+            transform: `scaleY(${stemFrac})`,
           }}
           className={GROWTH_TRANSITION}
         />
-        {frac === 0 && (
+        {stage === 0 && (
           <circle cx="50" cy="70" r="3.5" className="fill-primary/60" />
         )}
-        {Array.from({ length: MAX_LEAF_PAIRS }, (_, i) => {
-          const t = (i + 1) / (MAX_LEAF_PAIRS + 1);
+        {showTipNub && (
+          <circle
+            data-plant-tip-nub="true"
+            cx="50"
+            cy={stemTopY}
+            r="3"
+            style={{ transitionDelay: "1600ms" }}
+            className={cn(
+              "motion-safe:transition-opacity motion-safe:duration-300",
+              "opacity-100 starting:opacity-0",
+              wilting ? "fill-muted-foreground/60" : "fill-primary/40",
+            )}
+          />
+        )}
+        {Array.from({ length: LEAF_PAIRS }, (_, i) => {
+          const t = (i + 1) / (LEAF_PAIRS + 1);
           const y = SOIL_Y - (SOIL_Y - STEM_MAX_Y) * t;
-          const visible = i < leafPairs;
           return (
             <g
               key={i}
-              style={{
-                transformOrigin: `50px ${y}px`,
-                transitionDelay: `${i * 200}ms`,
-              }}
+              data-plant-leaf="true"
+              style={{ transformOrigin: `50px ${y}px` }}
               className={cn(
                 GROWTH_TRANSITION,
-                visible ? "opacity-100 scale-100" : "opacity-0 scale-0",
+                leavesVisible ? "opacity-100 scale-100" : "opacity-0 scale-0",
               )}
             >
               <path
@@ -103,6 +120,20 @@ export function Plant({
             </g>
           );
         })}
+        {showBud && (
+          <circle
+            data-plant-bud="true"
+            cx="50"
+            cy={STEM_MAX_Y}
+            r="3.5"
+            fill="currentColor"
+            style={{ transformOrigin: `50px ${STEM_MAX_Y}px` }}
+            className={cn(
+              GROWTH_TRANSITION,
+              "opacity-100 scale-100 starting:opacity-0 starting:scale-0",
+            )}
+          />
+        )}
         {isBloom && (
           <g
             style={{ transformOrigin: `50px ${STEM_MAX_Y}px` }}
