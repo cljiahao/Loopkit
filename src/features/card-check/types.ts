@@ -22,6 +22,7 @@ export type StatusState = {
   cards?: CardStatus[];
   message?: string;
   phone?: string;
+  vendorAvatarUrl?: string | null;
 };
 
 export const STATUS_IDLE: StatusState = { status: "idle" };

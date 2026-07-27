@@ -54,6 +54,36 @@ describe("ProgramCardStatus points variant", () => {
     expect(queryByText(/points$/)).not.toBeInTheDocument();
     expect(container.querySelectorAll("span[aria-hidden]").length).toBe(5);
   });
+
+  it("renders a photo stamp mark when the card's view carries markMode photo and a vendor avatar is provided", () => {
+    const card: CardStatus = {
+      programId: "p1",
+      name: "Kaya Toast Co.",
+      label: "2/5 stamps",
+      view: {
+        kind: "dots",
+        filled: 2,
+        total: 5,
+        variant: "dots",
+        markMode: "photo",
+      },
+      rewardReady: false,
+      reward_text: "Free kopi",
+      qr: "",
+      expired: false,
+      active: true,
+      replacedByName: null,
+      carriedOverCount: null,
+    };
+    const { container } = render(
+      <ProgramCardStatus
+        card={card}
+        phone="+6591234567"
+        vendorAvatarUrl="https://example.test/vendor.webp"
+      />,
+    );
+    expect(container.querySelectorAll("img")).toHaveLength(4);
+  });
 });
 
 describe("ProgramCardStatus lucky view", () => {

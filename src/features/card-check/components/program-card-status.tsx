@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { regenerateCardAction } from "../api/actions";
 import type { CardStatus } from "../types";
+import { resolveStampMark } from "@/lib/stamp-mark";
 import { Plant } from "@/components/plant";
 import { Cup } from "@/components/cup";
 import { Wheel } from "@/components/wheel";
@@ -32,9 +33,11 @@ import {
 export function ProgramCardStatus({
   card,
   phone,
+  vendorAvatarUrl = null,
 }: {
   card: CardStatus;
   phone: string;
+  vendorAvatarUrl?: string | null;
 }) {
   const [regenOpen, setRegenOpen] = useState(false);
   const [regenerating, startRegenerate] = useTransition();
@@ -139,7 +142,11 @@ export function ProgramCardStatus({
         view.variant === "points" ? (
           <PointsBar filled={view.filled} total={view.total} />
         ) : (
-          <StampDots filled={view.filled} total={view.total} />
+          <StampDots
+            filled={view.filled}
+            total={view.total}
+            mark={resolveStampMark(view, vendorAvatarUrl)}
+          />
         )
       ) : null}
       <p className="font-mono text-sm font-medium">{card.label}</p>
