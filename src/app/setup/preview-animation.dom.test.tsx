@@ -18,6 +18,8 @@ const base: Omit<PreviewInput, "type"> = {
   headStart: false,
   headStartPercent: 20,
   variant: "dots",
+  stampMarkMode: "dot",
+  stampMarkPreset: "gift",
 };
 
 function mockMatchMedia(matches: boolean) {

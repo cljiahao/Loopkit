@@ -19,6 +19,8 @@ const base = {
   headStart: false,
   headStartPercent: 20,
   variant: "dots" as const,
+  stampMarkMode: "dot" as const,
+  stampMarkPreset: "gift" as const,
 };
 
 describe("buildPreviewProgress", () => {
@@ -30,6 +32,8 @@ describe("buildPreviewProgress", () => {
       filled: 0,
       total: 10,
       variant: "dots",
+      markMode: "dot",
+      markPreset: "gift",
     });
   });
 
@@ -45,6 +49,8 @@ describe("buildPreviewProgress", () => {
       filled: 2,
       total: 10,
       variant: "dots",
+      markMode: "dot",
+      markPreset: "gift",
     });
   });
 
@@ -195,6 +201,7 @@ describe("buildPreviewProgram", () => {
         stamps_required: 10,
         reward_text: "Free kopi",
         variant: "dots",
+        stamp_mark: { mode: "dot", preset: "gift" },
       },
     });
   });
@@ -221,6 +228,8 @@ describe("buildPreviewProgram", () => {
       headStartPercent: 20,
       variant: "points",
       pointsPerVisit: 25,
+      stampMarkMode: "dot",
+      stampMarkPreset: "gift",
     });
     expect(program.config).toMatchObject({
       points_per_visit: 25,

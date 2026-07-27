@@ -44,6 +44,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a small bud appears at Budding, and the bud opens into the full bloom at
   the final stage — fixing "Budding" being visually indistinguishable from
   "Leafing" before this change.
+- Vendors can now choose a preset icon (gift, coffee, star, or heart) or
+  their own profile photo to appear on each stamp instead of a plain dot,
+  for plain-dot stamp cards. Picked from a new "Stamp mark" section on
+  `/setup`, reflected immediately in its live preview, and shown the same
+  way on the customer-facing `/c` card.
 
 ### Fixed
 

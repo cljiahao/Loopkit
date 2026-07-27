@@ -127,6 +127,30 @@ describe("PreviewCard", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders a preset stamp mark when the view carries markMode preset", () => {
+    const { container } = render(
+      <PreviewCard
+        progress={{
+          stage: "collecting",
+          label: "2/5 stamps",
+          rewardReady: false,
+          view: {
+            kind: "dots",
+            filled: 2,
+            total: 5,
+            variant: "dots",
+            markMode: "preset",
+            markPreset: "star",
+          },
+        }}
+        name="Coffee card"
+        rewardText="Free kopi"
+      />,
+    );
+    const spans = container.querySelectorAll("div > span");
+    expect(spans[0].querySelector("svg")).toBeInTheDocument();
+  });
+
   it("renders PointsBar when view.variant is points", () => {
     render(
       <PreviewCard
