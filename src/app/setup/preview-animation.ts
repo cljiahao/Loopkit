@@ -48,6 +48,8 @@ export function usePreviewAnimation(input: PreviewInput): {
     headStartPercent,
     variant,
     pointsPerVisit,
+    stampMarkMode,
+    stampMarkPreset,
   } = input;
 
   // Every field is part of the "recipe" — any edit (including name, which
@@ -66,6 +68,8 @@ export function usePreviewAnimation(input: PreviewInput): {
     headStartPercent,
     variant,
     pointsPerVisit,
+    stampMarkMode,
+    stampMarkPreset,
   ]);
 
   const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion);

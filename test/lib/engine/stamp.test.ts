@@ -52,74 +52,120 @@ describe("stampStrategy", () => {
 
 describe("stampStrategy flame variant", () => {
   const flameCfg = {
-    stamps_required: 8,
+    stamps_required: 10,
     reward_text: "free kopi",
     variant: "flame" as const,
   };
 
-  it("stage 0 (Spark) below the 50% threshold", () => {
+  it("stage 0 (Ember) at 0%", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 0, reward_count: 0 },
+      flameCfg,
+      now,
+    );
+    expect(p.view).toEqual({
+      kind: "flame",
+      filled: 0,
+      total: 10,
+      stage: 0,
+      stageName: "Ember",
+      totalStages: 5,
+    });
+  });
+
+  it("stage 1 (Spark) at exactly the 20% threshold", () => {
     const p = stampStrategy.progress(
       { stamp_count: 2, reward_count: 0 },
       flameCfg,
       now,
     );
-    expect(p.view).toEqual({
-      kind: "flame",
-      filled: 2,
-      total: 8,
-      stage: 0,
-      stageName: "Spark",
-      totalStages: 3,
-    });
+    expect(p.view).toMatchObject({ stage: 1, stageName: "Spark" });
   });
 
-  it("stage 1 (Inner Flame) at exactly the 50% threshold", () => {
+  it("stage 2 (Small Fire) at exactly the 40% threshold", () => {
     const p = stampStrategy.progress(
       { stamp_count: 4, reward_count: 0 },
       flameCfg,
       now,
     );
-    expect(p.view).toEqual({
-      kind: "flame",
-      filled: 4,
-      total: 8,
-      stage: 1,
-      stageName: "Inner Flame",
-      totalStages: 3,
-    });
+    expect(p.view).toMatchObject({ stage: 2, stageName: "Small Fire" });
   });
 
-  it("stage 2 (Full Blaze) at 100%", () => {
+  it("stage 3 (Medium Fire) at exactly the 60% threshold", () => {
     const p = stampStrategy.progress(
+      { stamp_count: 6, reward_count: 0 },
+      flameCfg,
+      now,
+    );
+    expect(p.view).toMatchObject({ stage: 3, stageName: "Medium Fire" });
+  });
+
+  it("stage 4 (Full Campfire) at exactly the 80% threshold and at 100%", () => {
+    const at80 = stampStrategy.progress(
       { stamp_count: 8, reward_count: 0 },
       flameCfg,
       now,
     );
-    expect(p.view).toEqual({
-      kind: "flame",
-      filled: 8,
-      total: 8,
-      stage: 2,
-      stageName: "Full Blaze",
-      totalStages: 3,
-    });
+    expect(at80.view).toMatchObject({ stage: 4, stageName: "Full Campfire" });
+
+    const at100 = stampStrategy.progress(
+      { stamp_count: 10, reward_count: 0 },
+      flameCfg,
+      now,
+    );
+    expect(at100.view).toMatchObject({ stage: 4, stageName: "Full Campfire" });
   });
 
-  it("rounds the 50% threshold sensibly for an odd stamps_required", () => {
+  it("rounds thresholds sensibly for an odd stamps_required", () => {
     const oddCfg = { ...flameCfg, stamps_required: 7 };
-    // round(7 * 0.5) = 4
+    // round(7*0.4) = 3 -- below it is still stage 1, at it is stage 2.
     const below = stampStrategy.progress(
+      { stamp_count: 2, reward_count: 0 },
+      oddCfg,
+      now,
+    );
+    expect(below.view).toMatchObject({ stage: 1 });
+    const at = stampStrategy.progress(
       { stamp_count: 3, reward_count: 0 },
       oddCfg,
       now,
     );
-    expect(below.view).toMatchObject({ stage: 0 });
-    const at = stampStrategy.progress(
-      { stamp_count: 4, reward_count: 0 },
-      oddCfg,
+    expect(at.view).toMatchObject({ stage: 2 });
+  });
+
+  it("still starts at Ember (stage 0) at filled=0 and never skips backward, even at the schema-enforced minimum stamps_required (2)", () => {
+    const tinyCfg = { ...flameCfg, stamps_required: 2 };
+    const at0 = stampStrategy.progress(
+      { stamp_count: 0, reward_count: 0 },
+      tinyCfg,
       now,
     );
-    expect(at.view).toMatchObject({ stage: 1 });
+    expect(at0.view).toMatchObject({ stage: 0, stageName: "Ember" });
+    const at1 = stampStrategy.progress(
+      { stamp_count: 1, reward_count: 0 },
+      tinyCfg,
+      now,
+    );
+    expect((at1.view as { stage: number }).stage).toBeGreaterThan(0);
+    const at2 = stampStrategy.progress(
+      { stamp_count: 2, reward_count: 0 },
+      tinyCfg,
+      now,
+    );
+    expect(at2.view).toMatchObject({ stage: 4, stageName: "Full Campfire" });
+  });
+
+  it("still reaches Full Campfire (stage 4) at 100% completion even when stamps_required=3 (a threshold-collision case)", () => {
+    const smallCfg = { ...flameCfg, stamps_required: 3 };
+    const complete = stampStrategy.progress(
+      { stamp_count: 3, reward_count: 0 },
+      smallCfg,
+      now,
+    );
+    expect(complete.view).toMatchObject({
+      stage: 4,
+      stageName: "Full Campfire",
+    });
   });
 
   it("dots variant (default, no variant field) is unaffected", () => {
@@ -200,5 +246,43 @@ describe("stampStrategy points variant", () => {
     expect(
       stampStrategy.redeem({ stamp_count: 100, reward_count: 1 }, pointsCfg),
     ).toEqual({ stamp_count: 0, reward_count: 2 });
+  });
+});
+
+describe("stampStrategy stamp_mark passthrough", () => {
+  it("carries mode/preset from config into the dots view", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 2, reward_count: 0 },
+      {
+        stamps_required: 5,
+        reward_text: "free kopi",
+        stamp_mark: { mode: "preset", preset: "coffee" },
+      },
+      now,
+    );
+    expect(p.view).toEqual({
+      kind: "dots",
+      filled: 2,
+      total: 5,
+      variant: "dots",
+      markMode: "preset",
+      markPreset: "coffee",
+    });
+  });
+
+  it("leaves markMode/markPreset undefined when stamp_mark is absent", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 2, reward_count: 0 },
+      cfg,
+      now,
+    );
+    expect(p.view).toEqual({
+      kind: "dots",
+      filled: 2,
+      total: 5,
+      variant: "dots",
+      markMode: undefined,
+      markPreset: undefined,
+    });
   });
 });

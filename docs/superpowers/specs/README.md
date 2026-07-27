@@ -59,6 +59,7 @@ below.
 - `2026-07-20-app-wide-uiux-consistency-design.md`
 - `2026-07-22-card-type-regroup-and-chance-revamp-design.md`
 - `2026-07-25-loyalty-card-animation-polish-design.md`
+- `2026-07-27-card-visuals-phase2-design.md`
 
 ## Parent
 

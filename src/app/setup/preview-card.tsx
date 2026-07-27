@@ -13,6 +13,7 @@ import { CardBurst } from "@/components/card-burst";
 import { LuckyBox } from "@/components/lucky-box";
 import { CardShell } from "@/components/card-shell";
 import { cn } from "@/lib/utils";
+import { resolveStampMark } from "@/lib/stamp-mark";
 
 const CHANCE_RESULT_VISIBLE_MS = 1500;
 
@@ -32,6 +33,7 @@ export function PreviewCard({
   celebrating = false,
   revealing = false,
   lastChanceResult = null,
+  vendorAvatarUrl = null,
 }: {
   progress: Progress;
   name: string;
@@ -39,6 +41,7 @@ export function PreviewCard({
   celebrating?: boolean;
   revealing?: boolean;
   lastChanceResult?: { won: boolean } | null;
+  vendorAvatarUrl?: string | null;
 }) {
   const view = progress.view;
   const isWheel = view.kind === "chance" && view.variant === "wheel";
@@ -140,7 +143,11 @@ export function PreviewCard({
           view.variant === "points" ? (
             <PointsBar filled={view.filled} total={view.total} />
           ) : (
-            <StampDots filled={view.filled} total={view.total} />
+            <StampDots
+              filled={view.filled}
+              total={view.total}
+              mark={resolveStampMark(view, vendorAvatarUrl)}
+            />
           )
         ) : null}
       </div>

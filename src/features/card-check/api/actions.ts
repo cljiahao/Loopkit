@@ -24,6 +24,7 @@ type VendorJoinRow = {
   active: boolean;
   replaced_by_name: string | null;
   replaced_by_stamp_count: number | null;
+  vendor_avatar_url: string | null;
 };
 
 // Public card-check action — no auth. The vendor shares /c?v=<vendorId>; the
@@ -110,7 +111,12 @@ export async function checkStatusAction(
     }),
   );
 
-  return { status: "found", cards, phone: normalized.phone };
+  return {
+    status: "found",
+    cards,
+    phone: normalized.phone,
+    vendorAvatarUrl: rows[0]?.vendor_avatar_url ?? null,
+  };
 }
 
 // Customer self-service card regeneration — for a lost QR or an expired card.

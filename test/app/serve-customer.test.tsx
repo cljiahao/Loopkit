@@ -347,7 +347,9 @@ describe("ServeCustomer", () => {
     await user.type(screen.getByLabelText("Customer phone"), "91234567");
     await user.click(screen.getByRole("button", { name: "Look up" }));
     await waitFor(() =>
-      expect(container.querySelector("#cup-body-clip")).toBeInTheDocument(),
+      expect(
+        container.querySelector('path[fill="none"][stroke="currentColor"]'),
+      ).toBeInTheDocument(),
     );
   });
 });

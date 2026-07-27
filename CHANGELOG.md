@@ -29,6 +29,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   are devDependency-only, which CI's audit step already treats as
   informational, not a hard gate.
 
+### Changed
+
+- Flame Club now has 5 growth stages (Ember, Spark, Small Fire, Medium
+  Fire, Full Campfire) instead of 3 — `flameStageFor` buckets progress
+  evenly at 0/20/40/60/80% of the stamps required, mirroring how Plant/Cup
+  already derive their 5 stages, and `FlameLayers` is redrawn with a
+  woodpile base, a dim ember coal at the start, and a layered/colored
+  flame cluster that grows through the later stages.
+- Fill the Cup is redrawn: a single continuous rim outline instead of a
+  floating ellipse, a saucer + pedestal foot for depth, a fixed (not
+  brand-themed) coffee-color liquid palette that warms from dark espresso
+  to caramel-tan latte as it fills, and a tulip-pour "done" flourish
+  replacing the old two-circles-and-triangle shape.
+- Sprout now restages so each of its 5 stages introduces exactly one new
+  visual element instead of several overlapping across stages: the stem
+  alone shoots up at Sprout (with a closed tip nub, no leaves yet), both
+  leaf pairs arrive together at Leafing (stem height holds from here on),
+  a small bud appears at Budding, and the bud opens into the full bloom at
+  the final stage — fixing "Budding" being visually indistinguishable from
+  "Leafing" before this change.
+- Vendors can now choose a preset icon (gift, coffee, star, or heart) or
+  their own profile photo to appear on each stamp instead of a plain dot,
+  for plain-dot stamp cards. Picked from a new "Stamp mark" section on
+  `/setup`, reflected immediately in its live preview, and shown the same
+  way on the customer-facing `/c` card.
+
 ### Fixed
 
 - Fourth round of user-reported follow-up: the win/lose result shown for

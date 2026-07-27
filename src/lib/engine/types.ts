@@ -9,6 +9,8 @@ export type ProgressView =
       filled: number;
       total: number;
       variant?: "dots" | "points";
+      markMode?: "dot" | "preset" | "photo";
+      markPreset?: "gift" | "coffee" | "star" | "heart";
     }
   | {
       kind: "flame";

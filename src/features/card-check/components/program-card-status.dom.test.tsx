@@ -54,6 +54,36 @@ describe("ProgramCardStatus points variant", () => {
     expect(queryByText(/points$/)).not.toBeInTheDocument();
     expect(container.querySelectorAll("span[aria-hidden]").length).toBe(5);
   });
+
+  it("renders a photo stamp mark when the card's view carries markMode photo and a vendor avatar is provided", () => {
+    const card: CardStatus = {
+      programId: "p1",
+      name: "Kaya Toast Co.",
+      label: "2/5 stamps",
+      view: {
+        kind: "dots",
+        filled: 2,
+        total: 5,
+        variant: "dots",
+        markMode: "photo",
+      },
+      rewardReady: false,
+      reward_text: "Free kopi",
+      qr: "",
+      expired: false,
+      active: true,
+      replacedByName: null,
+      carriedOverCount: null,
+    };
+    const { container } = render(
+      <ProgramCardStatus
+        card={card}
+        phone="+6591234567"
+        vendorAvatarUrl="https://example.test/vendor.webp"
+      />,
+    );
+    expect(container.querySelectorAll("img")).toHaveLength(4);
+  });
 });
 
 describe("ProgramCardStatus lucky view", () => {
@@ -76,8 +106,10 @@ describe("ProgramCardStatus cup variant", () => {
     const { container } = render(
       <ProgramCardStatus card={baseCard({})} phone="+6591234567" />,
     );
-    // Cup draws exactly one clipPath (defs > clipPath#cup-body-clip); Plant never does.
-    expect(container.querySelector("#cup-body-clip")).toBeInTheDocument();
+    // Cup renders a stroked, unfilled outline path; Plant's shapes are always filled.
+    expect(
+      container.querySelector('path[fill="none"][stroke="currentColor"]'),
+    ).toBeInTheDocument();
   });
 
   it("renders the Plant visual (not Cup) when view.variant is plant", () => {
@@ -96,6 +128,8 @@ describe("ProgramCardStatus cup variant", () => {
         phone="+6591234567"
       />,
     );
-    expect(container.querySelector("#cup-body-clip")).not.toBeInTheDocument();
+    expect(
+      container.querySelector('path[fill="none"][stroke="currentColor"]'),
+    ).not.toBeInTheDocument();
   });
 });

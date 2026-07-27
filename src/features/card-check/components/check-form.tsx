@@ -56,6 +56,7 @@ export function CheckForm({ vendorId }: { vendorId: string }) {
               key={card.programId}
               card={card}
               phone={state.phone!}
+              vendorAvatarUrl={state.vendorAvatarUrl ?? null}
             />
           ))}
         </div>

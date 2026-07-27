@@ -24,6 +24,8 @@ export type PreviewInput = {
   headStartPercent: number;
   variant: "dots" | "flame" | "points" | "plant" | "cup";
   pointsPerVisit?: number;
+  stampMarkMode: "dot" | "preset" | "photo";
+  stampMarkPreset: "gift" | "coffee" | "star" | "heart";
 };
 
 // Mirrors enroll_card's seed math (supabase/migrations/0014_loopkit_head_start.sql)
@@ -61,6 +63,10 @@ export function buildPreviewProgram(
         variant: input.variant,
         points_per_visit:
           input.variant === "points" ? input.pointsPerVisit : undefined,
+        stamp_mark: {
+          mode: input.stampMarkMode,
+          preset: input.stampMarkPreset,
+        },
       },
     };
   }

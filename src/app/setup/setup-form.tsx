@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
 import {
   saveProgramAction,
@@ -17,7 +18,17 @@ import { PreviewCard } from "@/app/setup/preview-card";
 import { Section } from "@/components/section";
 import { InfoTooltip } from "@/components/info-tooltip";
 import { ColorPicker } from "@/components/color-picker";
-import { Tag, SlidersHorizontal } from "lucide-react";
+import {
+  Tag,
+  SlidersHorizontal,
+  Image as ImageIcon,
+  Gift,
+  Coffee,
+  Star,
+  Heart,
+} from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import type { StampMarkPreset } from "@/components/stamp-dots";
 import {
   FAMILIES,
   familyOf,
@@ -78,12 +89,14 @@ export function SetupForm({
   replacingId,
   replacingType,
   prepping = false,
+  vendorAvatarUrl = null,
 }: {
   program: Program | null;
   isEdit: boolean;
   replacingId: string | null;
   replacingType: string | null;
   prepping?: boolean;
+  vendorAvatarUrl?: string | null;
 }) {
   const [state, formAction, pending] = useActionState(
     replacingId
@@ -114,6 +127,7 @@ export function SetupForm({
       color?: string;
     }[];
     variant?: string;
+    stamp_mark?: { mode?: string; preset?: string };
   };
 
   const [variant, setVariant] = useState<
@@ -149,6 +163,15 @@ export function SetupForm({
   );
   const [pointsPerVisit, setPointsPerVisit] = useState(
     (config as { points_per_visit?: number }).points_per_visit ?? 10,
+  );
+  const [stampMarkMode, setStampMarkMode] = useState<
+    "dot" | "preset" | "photo"
+  >(
+    (config.stamp_mark?.mode as "dot" | "preset" | "photo" | undefined) ??
+      "dot",
+  );
+  const [stampMarkPreset, setStampMarkPreset] = useState<StampMarkPreset>(
+    (config.stamp_mark?.preset as StampMarkPreset | undefined) ?? "gift",
   );
   const [visitsToBloom, setVisitsToBloom] = useState(
     config.stages?.[config.stages.length - 1]?.threshold ?? 6,
@@ -196,6 +219,8 @@ export function SetupForm({
     headStartPercent,
     variant,
     pointsPerVisit,
+    stampMarkMode,
+    stampMarkPreset,
   });
 
   // Sets the type plus its sensible numeric defaults, and always resets
@@ -259,6 +284,7 @@ export function SetupForm({
       celebrating={celebrating}
       revealing={revealing}
       lastChanceResult={lastChanceResult}
+      vendorAvatarUrl={vendorAvatarUrl}
     />
   );
 
@@ -695,6 +721,75 @@ export function SetupForm({
             />
           </div>
         </Section>
+
+        {type === "stamp" && variant === "dots" && (
+          <Section
+            icon={<ImageIcon className="size-4" />}
+            eyebrow="Optional"
+            title="Stamp mark"
+            description="What appears on each stamp instead of a plain dot."
+          >
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              value={stampMarkMode}
+              onValueChange={(v) =>
+                v && setStampMarkMode(v as "dot" | "preset" | "photo")
+              }
+              className="justify-start"
+            >
+              <ToggleGroupItem value="dot">Plain dot</ToggleGroupItem>
+              <ToggleGroupItem value="preset">Preset icon</ToggleGroupItem>
+              <ToggleGroupItem value="photo" disabled={!vendorAvatarUrl}>
+                My photo
+              </ToggleGroupItem>
+            </ToggleGroup>
+            {stampMarkMode === "photo" && !vendorAvatarUrl && (
+              <p className="text-xs text-muted-foreground">
+                Add a profile photo first, from your{" "}
+                <Link href="/dashboard/profile" className="underline">
+                  profile page
+                </Link>
+                .
+              </p>
+            )}
+            {stampMarkMode === "preset" && (
+              <div className="flex gap-2">
+                {(
+                  [
+                    ["gift", Gift],
+                    ["coffee", Coffee],
+                    ["star", Star],
+                    ["heart", Heart],
+                  ] as const
+                ).map(([key, Icon]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setStampMarkPreset(key)}
+                    aria-label={key}
+                    className={cn(
+                      "flex size-11 items-center justify-center rounded-xl border transition-colors",
+                      stampMarkPreset === key
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "bg-card text-muted-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    <Icon className="size-4" />
+                  </button>
+                ))}
+              </div>
+            )}
+            <input type="hidden" name="stamp_mark_mode" value={stampMarkMode} />
+            {stampMarkMode === "preset" && (
+              <input
+                type="hidden"
+                name="stamp_mark_preset"
+                value={stampMarkPreset}
+              />
+            )}
+          </Section>
+        )}
 
         <Section
           icon={<SlidersHorizontal className="size-4" />}

@@ -5,15 +5,36 @@ export type StampConfig = {
   reward_text: string;
   variant?: "dots" | "flame" | "points";
   points_per_visit?: number;
+  stamp_mark?: {
+    mode: "dot" | "preset" | "photo";
+    preset?: "gift" | "coffee" | "star" | "heart";
+  };
 };
 export type StampState = { stamp_count: number; reward_count: number };
 
-const FLAME_STAGE_NAMES = ["Spark", "Inner Flame", "Full Blaze"] as const;
+const FLAME_STAGE_NAMES = [
+  "Ember",
+  "Spark",
+  "Small Fire",
+  "Medium Fire",
+  "Full Campfire",
+] as const;
 
+// Mirrors Plant's stageIndexFor (src/lib/engine/plant.ts) — 5 even buckets
+// at 0/20/40/60/80% of `total`; the highest threshold met wins.
+// Dedupe collided thresholds so stages are reachable only once threshold strictly increases.
+// Guarantee stage 4 at 100% completion regardless of threshold collisions.
 function flameStageFor(filled: number, total: number): number {
-  if (filled >= total) return 2;
-  if (filled >= Math.round(total * 0.5)) return 1;
-  return 0;
+  if (filled >= total) return FLAME_STAGE_NAMES.length - 1;
+  let idx = 0;
+  let lastThreshold = -1;
+  for (let i = 0; i < FLAME_STAGE_NAMES.length; i++) {
+    const threshold = Math.round((total * i) / FLAME_STAGE_NAMES.length);
+    if (threshold <= lastThreshold) continue;
+    if (filled >= threshold) idx = i;
+    lastThreshold = threshold;
+  }
+  return idx;
 }
 
 export const stampStrategy: Strategy<StampConfig, StampState> = {
@@ -36,7 +57,7 @@ export const stampStrategy: Strategy<StampConfig, StampState> = {
           total,
           stage,
           stageName,
-          totalStages: 3,
+          totalStages: FLAME_STAGE_NAMES.length,
         },
         rewardReady,
       };
@@ -51,6 +72,8 @@ export const stampStrategy: Strategy<StampConfig, StampState> = {
         filled,
         total,
         variant: isPoints ? "points" : "dots",
+        markMode: config.stamp_mark?.mode,
+        markPreset: config.stamp_mark?.preset,
       },
       rewardReady,
     };

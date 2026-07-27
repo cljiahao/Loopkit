@@ -88,6 +88,14 @@ export const saveProgramSchema = z
         emptyToUndefined,
         z.coerce.number().int().min(1).max(1000).optional(),
       ),
+      stamp_mark_mode: z.preprocess(
+        emptyToUndefined,
+        z.enum(["dot", "preset", "photo"]).optional(),
+      ),
+      stamp_mark_preset: z.preprocess(
+        emptyToUndefined,
+        z.enum(["gift", "coffee", "star", "heart"]).optional(),
+      ),
       expiry_days: expiryDaysSchema,
       reward_expiry_days: rewardExpiryDaysSchema,
     }),
@@ -189,6 +197,10 @@ export function buildProgramFields(data: SaveProgramInput): {
         reward_text: data.reward_text,
         variant: data.variant ?? "dots",
         points_per_visit: data.points_per_visit ?? 1,
+        stamp_mark: {
+          mode: data.stamp_mark_mode ?? "dot",
+          preset: data.stamp_mark_preset,
+        },
       },
     };
   }

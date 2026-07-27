@@ -103,6 +103,7 @@ describe("checkStatusAction", () => {
         expiry_days: null,
         cycle_started_at: null,
         active: true,
+        vendor_avatar_url: null,
       },
     ]);
 
@@ -132,6 +133,7 @@ describe("checkStatusAction", () => {
         expiry_days: null,
         cycle_started_at: null,
         active: true,
+        vendor_avatar_url: null,
       },
     ]);
 
@@ -143,12 +145,20 @@ describe("checkStatusAction", () => {
     expect(result).toEqual({
       status: "found",
       phone: "+6591234567",
+      vendorAvatarUrl: null,
       cards: [
         {
           programId: "p1",
           name: "Kaya Toast Co.",
           label: "3/10 stamps",
-          view: { kind: "dots", filled: 3, total: 10, variant: "dots" },
+          view: {
+            kind: "dots",
+            filled: 3,
+            total: 10,
+            variant: "dots",
+            markMode: undefined,
+            markPreset: undefined,
+          },
           rewardReady: false,
           reward_text: "Free kopi",
           qr: '<svg data-token="tok_abc"></svg>',
@@ -159,6 +169,33 @@ describe("checkStatusAction", () => {
         },
       ],
     });
+  });
+
+  it("surfaces the vendor's avatar_url when vendor_join returns one", async () => {
+    mockJoin([
+      {
+        program_id: "p1",
+        name: "Kaya Toast Co.",
+        type: "stamp",
+        config: {},
+        state: {},
+        stamp_count: 3,
+        card_token: "tok_abc",
+        reward_text: "Free kopi",
+        stamps_required: 10,
+        expiry_days: null,
+        cycle_started_at: null,
+        active: true,
+        vendor_avatar_url: "https://example.test/vendor.webp",
+      },
+    ]);
+
+    const result = await checkStatusAction(
+      STATUS_IDLE,
+      form({ vendor: "v1", phone: "91234567" }),
+    );
+
+    expect(result.vendorAvatarUrl).toBe("https://example.test/vendor.webp");
   });
 
   it("returns multiple cards when the phone has more than one program at this vendor", async () => {
@@ -176,6 +213,7 @@ describe("checkStatusAction", () => {
         expiry_days: null,
         cycle_started_at: null,
         active: true,
+        vendor_avatar_url: null,
       },
       {
         program_id: "p2",
@@ -208,6 +246,7 @@ describe("checkStatusAction", () => {
         expiry_days: null,
         cycle_started_at: null,
         active: true,
+        vendor_avatar_url: null,
       },
     ]);
 
@@ -236,6 +275,7 @@ describe("checkStatusAction", () => {
         expiry_days: null,
         cycle_started_at: null,
         active: false,
+        vendor_avatar_url: null,
       },
     ]);
 
@@ -263,6 +303,7 @@ describe("checkStatusAction", () => {
         cycle_started_at: null,
         active: false,
         replaced_by_name: "Weekly Regular",
+        vendor_avatar_url: null,
       },
     ]);
 
@@ -291,6 +332,7 @@ describe("checkStatusAction", () => {
         active: false,
         replaced_by_name: "Weekly Regular",
         replaced_by_stamp_count: 6,
+        vendor_avatar_url: null,
       },
     ]);
 
@@ -319,6 +361,7 @@ describe("checkStatusAction", () => {
         active: false,
         replaced_by_name: "Weekly Regular",
         replaced_by_stamp_count: 0,
+        vendor_avatar_url: null,
       },
     ]);
 
@@ -345,6 +388,7 @@ describe("checkStatusAction", () => {
         expiry_days: 30,
         cycle_started_at: "2020-01-01T00:00:00Z",
         active: true,
+        vendor_avatar_url: null,
       },
     ]);
 

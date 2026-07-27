@@ -39,6 +39,7 @@ exception.
 - `0027_loopkit_reward_vouchers.sql` — `reward_vouchers` table (per-reward `active`/`redeemed`/`expired` ledger row, RLS via `owns_program`) and `programs.reward_expiry_days`; `grant_reward_voucher`/`redeem_oldest_voucher`/`expire_stale_vouchers` SECURITY DEFINER functions, and `create_program`/`update_program` gain a trailing `p_reward_expiry_days` parameter
 - `0029_feedback.sql` — `loopkit.feedback` table: vendor NPS + optional message, RLS self-insert only; superseded as the write path by 0030/`merqo.vendor_feedback` (`src/app/actions/feedback.ts` no longer inserts here), kept as the historical source the 0030 backfill reads from
 - `0030_vendor_feedback_backfill.sql` — one-time, guarded copy of existing `loopkit.feedback` rows into the shared cross-kit `merqo.vendor_feedback` table (merqo migration 0011); no-ops if `merqo.vendor_feedback` doesn't exist yet (e.g. loopkit-only local `supabase start`), same guard pattern as qkit's `0054_vendor_profile_backfill.sql`
+- `0031_loopkit_vendor_join_avatar.sql` — appends `vendor_avatar_url` (read from `auth.users.raw_user_meta_data`) to `vendor_join`'s return columns, so the public `/c` page can render a vendor's chosen stamp-mark photo
 
 ## Parent
 

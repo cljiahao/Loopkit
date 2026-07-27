@@ -39,6 +39,8 @@ export default async function SetupPage({
   }>;
 }) {
   const { user } = await requireVendor();
+  const vendorAvatarUrl =
+    (user.user_metadata?.avatar_url as string | undefined) ?? null;
   await applyDueCutovers();
   // getVendorProfile() now reads straight from the shared
   // merqo.vendor_profile row (src/lib/vendor.ts) — no separate cross-schema
@@ -266,6 +268,7 @@ export default async function SetupPage({
               isEdit={isEdit}
               replacingId={migrating ? migrating.id : null}
               replacingType={migrating ? migrating.type : null}
+              vendorAvatarUrl={vendorAvatarUrl}
             />
           </div>
         ) : view === "prep" ? (
@@ -283,6 +286,7 @@ export default async function SetupPage({
               replacingId={null}
               replacingType={null}
               prepping
+              vendorAvatarUrl={vendorAvatarUrl}
             />
           </div>
         ) : view === "schedule" ? (

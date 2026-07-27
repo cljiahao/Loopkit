@@ -52,14 +52,14 @@ describe("PreviewCard", () => {
   it("renders the flame layers for a flame view", () => {
     const progress: Progress = {
       stage: "collecting",
-      label: "Inner Flame — 4/8",
+      label: "Medium Fire — 7/10",
       view: {
         kind: "flame",
-        filled: 4,
-        total: 8,
-        stage: 1,
-        stageName: "Inner Flame",
-        totalStages: 3,
+        filled: 7,
+        total: 10,
+        stage: 3,
+        stageName: "Medium Fire",
+        totalStages: 5,
       },
       rewardReady: false,
     };
@@ -73,7 +73,7 @@ describe("PreviewCard", () => {
     // FlameLayers renders its own "{stageName} — {filled}/{total}" text
     // alongside the identical progress.label below it, so both instances
     // are expected here.
-    expect(screen.getAllByText("Inner Flame — 4/8")).toHaveLength(2);
+    expect(screen.getAllByText("Medium Fire — 7/10")).toHaveLength(2);
   });
 
   it("renders the wheel for a chance view with variant wheel", () => {
@@ -122,7 +122,33 @@ describe("PreviewCard", () => {
         rewardText="Free kopi"
       />,
     );
-    expect(container.querySelector("#cup-body-clip")).toBeInTheDocument();
+    expect(
+      container.querySelector('path[fill="none"][stroke="currentColor"]'),
+    ).toBeInTheDocument();
+  });
+
+  it("renders a preset stamp mark when the view carries markMode preset", () => {
+    const { container } = render(
+      <PreviewCard
+        progress={{
+          stage: "collecting",
+          label: "2/5 stamps",
+          rewardReady: false,
+          view: {
+            kind: "dots",
+            filled: 2,
+            total: 5,
+            variant: "dots",
+            markMode: "preset",
+            markPreset: "star",
+          },
+        }}
+        name="Coffee card"
+        rewardText="Free kopi"
+      />,
+    );
+    const spans = container.querySelectorAll("div > span");
+    expect(spans[0].querySelector("svg")).toBeInTheDocument();
   });
 
   it("renders PointsBar when view.variant is points", () => {

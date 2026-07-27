@@ -4,6 +4,7 @@ import {
   saveProgramSchema,
   canPrepProgram,
   getEntitlement,
+  buildProgramFields,
 } from "@/lib/program";
 
 describe("programInputSchema", () => {
@@ -136,5 +137,100 @@ describe("saveProgramSchema reward_expiry_days", () => {
     if (result.success && result.data.type === "lucky") {
       expect("reward_expiry_days" in result.data).toBe(false);
     }
+  });
+});
+
+describe("saveProgramSchema stamp_mark", () => {
+  it("accepts a stamp program with a preset mark", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+      stamp_mark_mode: "preset",
+      stamp_mark_preset: "coffee",
+    });
+    expect(result.success).toBe(true);
+    if (result.success && result.data.type === "stamp") {
+      expect(result.data.stamp_mark_mode).toBe("preset");
+      expect(result.data.stamp_mark_preset).toBe("coffee");
+    }
+  });
+
+  it("defaults both to undefined when left blank", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+      stamp_mark_mode: "",
+      stamp_mark_preset: "",
+    });
+    expect(result.success).toBe(true);
+    if (result.success && result.data.type === "stamp") {
+      expect(result.data.stamp_mark_mode).toBeUndefined();
+      expect(result.data.stamp_mark_preset).toBeUndefined();
+    }
+  });
+
+  it("rejects an unknown mode", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+      stamp_mark_mode: "logo",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an unknown preset", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+      stamp_mark_mode: "preset",
+      stamp_mark_preset: "mascot",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("buildProgramFields stamp_mark", () => {
+  it("defaults config.stamp_mark to mode 'dot' when unset", () => {
+    const parsed = saveProgramSchema.parse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+    });
+    const { config } = buildProgramFields(parsed);
+    expect((config as { stamp_mark?: unknown }).stamp_mark).toEqual({
+      mode: "dot",
+      preset: undefined,
+    });
+  });
+
+  it("carries the chosen mode/preset into config.stamp_mark", () => {
+    const parsed = saveProgramSchema.parse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+      stamp_mark_mode: "preset",
+      stamp_mark_preset: "gift",
+    });
+    const { config } = buildProgramFields(parsed);
+    expect((config as { stamp_mark?: unknown }).stamp_mark).toEqual({
+      mode: "preset",
+      preset: "gift",
+    });
   });
 });

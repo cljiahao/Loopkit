@@ -12,7 +12,7 @@ describe("Plant", () => {
     expect(container.querySelector("svg")).toBeInTheDocument();
   });
 
-  it("collapses the stem to zero height and shows the seed dot at stage 0", () => {
+  it("collapses the stem to zero height and shows the seed dot at Seed (stage 0)", () => {
     const { container } = render(
       <Plant stage={0} totalStages={5} wilting={false} />,
     );
@@ -24,54 +24,94 @@ describe("Plant", () => {
     expect(seed).toBeInTheDocument();
   });
 
-  it("scales the stem toward full height as stage increases", () => {
+  it("shoots the stem to half height and shows a pale closed tip nub at Sprout (stage 1), no leaves yet", () => {
+    const { container } = render(
+      <Plant stage={1} totalStages={5} wilting={false} />,
+    );
+    const line = container.querySelector("line");
+    expect(line).toHaveStyle({ transform: "scaleY(0.5)" });
+    expect(container.querySelector("[data-plant-tip-nub]")).toBeInTheDocument();
+    const leaves = container.querySelectorAll("[data-plant-leaf]");
+    expect(leaves).toHaveLength(2);
+    expect(
+      Array.from(leaves).every((l) =>
+        l.getAttribute("class")?.includes("opacity-0"),
+      ),
+    ).toBe(true);
+  });
+
+  it("delays the tip nub's fade-in to match the stem's own grow duration", () => {
+    const { container } = render(
+      <Plant stage={1} totalStages={5} wilting={false} />,
+    );
+    const nub = container.querySelector("[data-plant-tip-nub]");
+    expect(nub).toHaveStyle({ transitionDelay: "1600ms" });
+  });
+
+  it("brings both leaf pairs in together and reaches full stem height at Leafing (stage 2)", () => {
     const { container } = render(
       <Plant stage={2} totalStages={5} wilting={false} />,
     );
     const line = container.querySelector("line");
-    expect(line).toHaveStyle({ transform: "scaleY(0.5)" });
+    expect(line).toHaveStyle({ transform: "scaleY(1)" });
+    expect(
+      container.querySelector("[data-plant-tip-nub]"),
+    ).not.toBeInTheDocument();
+    const leaves = container.querySelectorAll("[data-plant-leaf]");
+    expect(leaves).toHaveLength(2);
+    expect(
+      Array.from(leaves).every((l) =>
+        l.getAttribute("class")?.includes("opacity-100"),
+      ),
+    ).toBe(true);
   });
 
-  it("shows leafPairs = min(stage, 3) leaf slots as visible, the rest hidden", () => {
-    const { container } = render(
-      <Plant stage={1} totalStages={5} wilting={false} />,
-    );
-    const leafSlots = container.querySelectorAll("g > g");
-    expect(leafSlots).toHaveLength(3);
-    const classes = Array.from(leafSlots).map((g) => g.getAttribute("class"));
-    expect(classes[0]).toContain("opacity-100");
-    expect(classes[0]).toContain("scale-100");
-    expect(classes[1]).toContain("opacity-0");
-    expect(classes[1]).toContain("scale-0");
-    expect(classes[2]).toContain("opacity-0");
-  });
+  it("keeps stem height and leaf position stable from Leafing into Budding, and adds only a bud", () => {
+    const leafing = render(<Plant stage={2} totalStages={5} wilting={false} />);
+    const budding = render(<Plant stage={3} totalStages={5} wilting={false} />);
 
-  it("keeps an already-placed leaf pair's position stable when a new pair appears", () => {
-    const first = render(<Plant stage={1} totalStages={5} wilting={false} />);
-    const dAtStage1 = first.container
-      .querySelectorAll("g > g")[0]
+    expect(leafing.container.querySelector("line")).toHaveStyle({
+      transform: "scaleY(1)",
+    });
+    expect(budding.container.querySelector("line")).toHaveStyle({
+      transform: "scaleY(1)",
+    });
+
+    const leafingLeafD = leafing.container
+      .querySelectorAll("[data-plant-leaf]")[0]
       .querySelector("path")
       ?.getAttribute("d");
-
-    const second = render(<Plant stage={2} totalStages={5} wilting={false} />);
-    const dAtStage2 = second.container
-      .querySelectorAll("g > g")[0]
+    const buddingLeafD = budding.container
+      .querySelectorAll("[data-plant-leaf]")[0]
       .querySelector("path")
       ?.getAttribute("d");
+    expect(leafingLeafD).toBe(buddingLeafD);
 
-    expect(dAtStage1).toBe(dAtStage2);
+    expect(
+      leafing.container.querySelector("[data-plant-bud]"),
+    ).not.toBeInTheDocument();
+    expect(
+      budding.container.querySelector("[data-plant-bud]"),
+    ).toBeInTheDocument();
   });
 
-  it("renders the bloom only at the final stage", () => {
+  it("renders the bloom only at the final stage, with leaves still visible", () => {
     const notBloom = render(
       <Plant stage={3} totalStages={5} wilting={false} />,
     );
-    // Just the base shadow ellipse — no bloom petals yet.
+    // Shadow ellipse only — no bloom petals yet (bud is a <circle>, not an
+    // <ellipse>, so it doesn't add to this count).
     expect(notBloom.container.querySelectorAll("ellipse")).toHaveLength(1);
 
     const bloom = render(<Plant stage={4} totalStages={5} wilting={false} />);
     // Shadow ellipse + 6 petal ellipses.
     expect(bloom.container.querySelectorAll("ellipse")).toHaveLength(7);
+    const leaves = bloom.container.querySelectorAll("[data-plant-leaf]");
+    expect(
+      Array.from(leaves).every((l) =>
+        l.getAttribute("class")?.includes("opacity-100"),
+      ),
+    ).toBe(true);
   });
 
   it("dims the plant color when wilting", () => {
