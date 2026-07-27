@@ -24,10 +24,12 @@
 ### Task 1: Migration — `vendor_join` returns the vendor's avatar URL
 
 **Files:**
+
 - Create: `supabase/migrations/0031_loopkit_vendor_join_avatar.sql`
 - Modify: `src/lib/types.ts`
 
 **Interfaces:**
+
 - Produces: `loopkit.vendor_join(uuid, text)` RPC now returns an additional `vendor_avatar_url: text` column (nullable), on every row, alongside its existing columns. Task 4 consumes this.
 
 - [ ] **Step 1: Write the migration**
@@ -104,44 +106,46 @@ grant execute on function loopkit.vendor_join(uuid, text) to anon, authenticated
 In `src/lib/types.ts`, find the `vendor_join` entry under `Functions` (around line 467) and change its `Returns` array element from:
 
 ```ts
-        Returns: {
-          program_id: string;
-          name: string;
-          type: string;
-          config: Json;
-          state: Json;
-          stamp_count: number;
-          card_token: string;
-          reward_text: string;
-          stamps_required: number;
-          expiry_days: number | null;
-          cycle_started_at: string | null;
-          active: boolean;
-          replaced_by_name: string | null;
-          replaced_by_stamp_count: number | null;
-        }[];
+Returns: {
+  program_id: string;
+  name: string;
+  type: string;
+  config: Json;
+  state: Json;
+  stamp_count: number;
+  card_token: string;
+  reward_text: string;
+  stamps_required: number;
+  expiry_days: number | null;
+  cycle_started_at: string | null;
+  active: boolean;
+  replaced_by_name: string | null;
+  replaced_by_stamp_count: number | null;
+}
+[];
 ```
 
 to:
 
 ```ts
-        Returns: {
-          program_id: string;
-          name: string;
-          type: string;
-          config: Json;
-          state: Json;
-          stamp_count: number;
-          card_token: string;
-          reward_text: string;
-          stamps_required: number;
-          expiry_days: number | null;
-          cycle_started_at: string | null;
-          active: boolean;
-          replaced_by_name: string | null;
-          replaced_by_stamp_count: number | null;
-          vendor_avatar_url: string | null;
-        }[];
+Returns: {
+  program_id: string;
+  name: string;
+  type: string;
+  config: Json;
+  state: Json;
+  stamp_count: number;
+  card_token: string;
+  reward_text: string;
+  stamps_required: number;
+  expiry_days: number | null;
+  cycle_started_at: string | null;
+  active: boolean;
+  replaced_by_name: string | null;
+  replaced_by_stamp_count: number | null;
+  vendor_avatar_url: string | null;
+}
+[];
 ```
 
 (This file was already missing the `voucher_expires_at` column added by migration `0027` — that's a pre-existing gap outside this task's scope; only add `vendor_avatar_url`, matching this task's own migration.)
@@ -158,6 +162,7 @@ git commit -m "feat(db): vendor_join returns the vendor's avatar_url for stamp-m
 ### Task 2: Engine + config schema
 
 **Files:**
+
 - Modify: `src/lib/engine/types.ts`
 - Modify: `src/lib/engine/stamp.ts`
 - Modify: `test/lib/engine/stamp.test.ts`
@@ -165,6 +170,7 @@ git commit -m "feat(db): vendor_join returns the vendor's avatar_url for stamp-m
 - Modify: `test/lib/program.test.ts`
 
 **Interfaces:**
+
 - Produces: `StampConfig.stamp_mark?: { mode: "dot" | "preset" | "photo"; preset?: "gift" | "coffee" | "star" | "heart" }`. `ProgressView`'s `dots` kind gains `markMode?` / `markPreset?` (same union types). `saveProgramSchema`'s `stamp` branch gains `stamp_mark_mode?` / `stamp_mark_preset?`. `buildProgramFields`'s stamp branch writes `config.stamp_mark`.
 
 - [ ] **Step 1: Write the failing engine tests**
@@ -494,11 +500,13 @@ git commit -m "feat(stamp-mark): thread mode/preset config through the engine an
 ### Task 3: `StampDots` mark rendering + a shared resolver
 
 **Files:**
+
 - Modify: `src/components/stamp-dots.tsx`
 - Create: `src/components/stamp-dots.dom.test.tsx`
 - Create: `src/lib/stamp-mark.ts`
 
 **Interfaces:**
+
 - Consumes: `ProgressView`'s `dots` kind (Task 2) via `resolveStampMark`.
 - Produces: `StampDots`'s new optional `mark?: StampMark` prop; exports `type StampMark`, `type StampMarkPreset` from `stamp-dots.tsx`; exports `resolveStampMark(view, vendorAvatarUrl)` from `src/lib/stamp-mark.ts`, consumed by Tasks 4 and 5.
 
@@ -562,11 +570,7 @@ describe("StampDots", () => {
 
   it("always renders the reward slot's own Gift icon regardless of mark", () => {
     const { container } = render(
-      <StampDots
-        filled={5}
-        total={5}
-        mark={{ kind: "preset", key: "star" }}
-      />,
+      <StampDots filled={5} total={5} mark={{ kind: "preset", key: "star" }} />,
     );
     const spans = container.querySelectorAll("div > span");
     const rewardIcon = spans[spans.length - 1].querySelector("svg");
@@ -590,8 +594,7 @@ import { cn } from "@/lib/utils";
 
 export type StampMarkPreset = "gift" | "coffee" | "star" | "heart";
 export type StampMark =
-  | { kind: "preset"; key: StampMarkPreset }
-  | { kind: "photo"; url: string };
+  { kind: "preset"; key: StampMarkPreset } | { kind: "photo"; url: string };
 
 const PRESET_ICONS: Record<StampMarkPreset, typeof Gift> = {
   gift: Gift,
@@ -710,6 +713,7 @@ git commit -m "feat(stamp-mark): StampDots renders a preset/photo mark, add reso
 ### Task 4: `/c` page wiring
 
 **Files:**
+
 - Modify: `src/features/card-check/types.ts`
 - Modify: `src/features/card-check/api/actions.ts`
 - Modify: `test/features/card-check/actions.test.ts`
@@ -718,6 +722,7 @@ git commit -m "feat(stamp-mark): StampDots renders a preset/photo mark, add reso
 - Modify: `src/features/card-check/components/program-card-status.dom.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `resolveStampMark` (Task 3), `row.vendor_avatar_url` from the `vendor_join` RPC (Task 1).
 - Produces: `StatusState.vendorAvatarUrl?: string | null`; `ProgramCardStatus`'s new optional prop `vendorAvatarUrl?: string | null` (default `null`, so every existing test call site keeps working unchanged).
 
@@ -751,88 +756,88 @@ export type StatusState = {
 In `test/features/card-check/actions.test.ts`, every object literal passed to `mockJoin([...])` is missing `vendor_avatar_url` — add `vendor_avatar_url: null,` to each row object in the file's existing `mockJoin` calls (8 occurrences). Then update the one test that asserts the full return shape — `"returns one card per row, reading stamp_count not the (empty) state blob"` — changing its expected object from:
 
 ```ts
-    expect(result).toEqual({
-      status: "found",
-      phone: "+6591234567",
-      cards: [
-        {
-          programId: "p1",
-          name: "Kaya Toast Co.",
-          label: "3/10 stamps",
-          view: { kind: "dots", filled: 3, total: 10, variant: "dots" },
-          rewardReady: false,
-          reward_text: "Free kopi",
-          qr: '<svg data-token="tok_abc"></svg>',
-          expired: false,
-          active: true,
-          replacedByName: null,
-          carriedOverCount: null,
-        },
-      ],
-    });
+expect(result).toEqual({
+  status: "found",
+  phone: "+6591234567",
+  cards: [
+    {
+      programId: "p1",
+      name: "Kaya Toast Co.",
+      label: "3/10 stamps",
+      view: { kind: "dots", filled: 3, total: 10, variant: "dots" },
+      rewardReady: false,
+      reward_text: "Free kopi",
+      qr: '<svg data-token="tok_abc"></svg>',
+      expired: false,
+      active: true,
+      replacedByName: null,
+      carriedOverCount: null,
+    },
+  ],
+});
 ```
 
 to:
 
 ```ts
-    expect(result).toEqual({
-      status: "found",
-      phone: "+6591234567",
-      vendorAvatarUrl: null,
-      cards: [
-        {
-          programId: "p1",
-          name: "Kaya Toast Co.",
-          label: "3/10 stamps",
-          view: {
-            kind: "dots",
-            filled: 3,
-            total: 10,
-            variant: "dots",
-            markMode: undefined,
-            markPreset: undefined,
-          },
-          rewardReady: false,
-          reward_text: "Free kopi",
-          qr: '<svg data-token="tok_abc"></svg>',
-          expired: false,
-          active: true,
-          replacedByName: null,
-          carriedOverCount: null,
-        },
-      ],
-    });
+expect(result).toEqual({
+  status: "found",
+  phone: "+6591234567",
+  vendorAvatarUrl: null,
+  cards: [
+    {
+      programId: "p1",
+      name: "Kaya Toast Co.",
+      label: "3/10 stamps",
+      view: {
+        kind: "dots",
+        filled: 3,
+        total: 10,
+        variant: "dots",
+        markMode: undefined,
+        markPreset: undefined,
+      },
+      rewardReady: false,
+      reward_text: "Free kopi",
+      qr: '<svg data-token="tok_abc"></svg>',
+      expired: false,
+      active: true,
+      replacedByName: null,
+      carriedOverCount: null,
+    },
+  ],
+});
 ```
 
 Then add one new test in the same `describe("checkStatusAction", ...)` block:
 
 ```ts
-  it("surfaces the vendor's avatar_url when vendor_join returns one", async () => {
-    mockJoin([
-      {
-        program_id: "p1",
-        name: "Kaya Toast Co.",
-        type: "stamp",
-        config: {},
-        state: {},
-        stamp_count: 3,
-        card_token: "tok_abc",
-        reward_text: "Free kopi",
-        stamps_required: 10,
-        expiry_days: null,
-        cycle_started_at: null,
-        active: true,
-        vendor_avatar_url: "https://example.test/vendor.webp",
-      },
-    ]);
+it("surfaces the vendor's avatar_url when vendor_join returns one", async () => {
+  mockJoin([
+    {
+      program_id: "p1",
+      name: "Kaya Toast Co.",
+      type: "stamp",
+      config: {},
+      state: {},
+      stamp_count: 3,
+      card_token: "tok_abc",
+      reward_text: "Free kopi",
+      stamps_required: 10,
+      expiry_days: null,
+      cycle_started_at: null,
+      active: true,
+      vendor_avatar_url: "https://example.test/vendor.webp",
+    },
+  ]);
 
-    const result = await checkStatusAction(
-      STATUS_IDLE,
-      form({ vendor: "v1", phone: "91234567" }),
-    );
+  const result = await checkStatusAction(
+    STATUS_IDLE,
+    form({ vendor: "v1", phone: "91234567" }),
+  );
 
-    expect(result.vendorAvatarUrl).toBe("https://example.test/vendor.webp");
-  });
+  expect(result.vendorAvatarUrl).toBe("https://example.test/vendor.webp");
+});
 ```
 
 - [ ] **Step 3: Run to verify it fails**
@@ -867,12 +872,12 @@ type VendorJoinRow = {
 Then in `checkStatusAction`, change the `return { status: "found", cards, phone: normalized.phone };` line to:
 
 ```ts
-  return {
-    status: "found",
-    cards,
-    phone: normalized.phone,
-    vendorAvatarUrl: rows[0]?.vendor_avatar_url ?? null,
-  };
+return {
+  status: "found",
+  cards,
+  phone: normalized.phone,
+  vendorAvatarUrl: rows[0]?.vendor_avatar_url ?? null,
+};
 ```
 
 (Every row carries the same vendor-level `vendor_avatar_url`, so reading it off `rows[0]` is exactly as correct as reading it off any other row.)
@@ -887,34 +892,38 @@ Expected: PASS
 In `src/features/card-check/components/check-form.tsx`, change:
 
 ```tsx
-      {state.status === "found" && state.cards && (
-        <div className="space-y-4">
-          {state.cards.map((card) => (
-            <ProgramCardStatus
-              key={card.programId}
-              card={card}
-              phone={state.phone!}
-            />
-          ))}
-        </div>
-      )}
+{
+  state.status === "found" && state.cards && (
+    <div className="space-y-4">
+      {state.cards.map((card) => (
+        <ProgramCardStatus
+          key={card.programId}
+          card={card}
+          phone={state.phone!}
+        />
+      ))}
+    </div>
+  );
+}
 ```
 
 to:
 
 ```tsx
-      {state.status === "found" && state.cards && (
-        <div className="space-y-4">
-          {state.cards.map((card) => (
-            <ProgramCardStatus
-              key={card.programId}
-              card={card}
-              phone={state.phone!}
-              vendorAvatarUrl={state.vendorAvatarUrl ?? null}
-            />
-          ))}
-        </div>
-      )}
+{
+  state.status === "found" && state.cards && (
+    <div className="space-y-4">
+      {state.cards.map((card) => (
+        <ProgramCardStatus
+          key={card.programId}
+          card={card}
+          phone={state.phone!}
+          vendorAvatarUrl={state.vendorAvatarUrl ?? null}
+        />
+      ))}
+    </div>
+  );
+}
 ```
 
 In `src/features/card-check/components/program-card-status.tsx`, add the import:
@@ -1032,6 +1041,7 @@ git commit -m "feat(stamp-mark): /c resolves and renders the vendor's stamp mark
 ### Task 5: `/setup` wiring (form UI + live preview)
 
 **Files:**
+
 - Modify: `src/app/setup/page.tsx`
 - Modify: `src/app/setup/setup-form.tsx`
 - Modify: `src/app/setup/setup-form.dom.test.tsx`
@@ -1041,6 +1051,7 @@ git commit -m "feat(stamp-mark): /c resolves and renders the vendor's stamp mark
 - Modify: `src/app/setup/preview-card.dom.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `resolveStampMark` (Task 3); `StampMarkPreset` type (Task 3).
 - Produces: `PreviewInput` gains `stampMarkMode`/`stampMarkPreset`; `PreviewCard`'s new optional prop `vendorAvatarUrl?: string | null` (default `null`).
 
@@ -1049,7 +1060,8 @@ git commit -m "feat(stamp-mark): /c resolves and renders the vendor's stamp mark
 In `src/app/setup/page.tsx`, `user` (from `requireVendor()`) already carries `user_metadata` — no new fetch needed. Add, right after `const { user } = await requireVendor();`:
 
 ```ts
-  const vendorAvatarUrl = (user.user_metadata?.avatar_url as string | undefined) ?? null;
+const vendorAvatarUrl =
+  (user.user_metadata?.avatar_url as string | undefined) ?? null;
 ```
 
 Then pass it to both `<SetupForm ... />` call sites in this file (one for the normal create/edit view, one for the `prep` view — both currently end with a closing `/>` a few lines below their own props), adding `vendorAvatarUrl={vendorAvatarUrl}` alongside their existing props.
@@ -1085,43 +1097,43 @@ export type PreviewInput = {
 Then in `buildPreviewProgram`'s `stamp` branch, change:
 
 ```ts
-  if (input.type === "stamp") {
-    return {
-      type: "stamp",
+if (input.type === "stamp") {
+  return {
+    type: "stamp",
+    stamps_required: input.stampsRequired,
+    reward_text: input.rewardText,
+    config: {
       stamps_required: input.stampsRequired,
       reward_text: input.rewardText,
-      config: {
-        stamps_required: input.stampsRequired,
-        reward_text: input.rewardText,
-        variant: input.variant,
-        points_per_visit:
-          input.variant === "points" ? input.pointsPerVisit : undefined,
-      },
-    };
-  }
+      variant: input.variant,
+      points_per_visit:
+        input.variant === "points" ? input.pointsPerVisit : undefined,
+    },
+  };
+}
 ```
 
 to:
 
 ```ts
-  if (input.type === "stamp") {
-    return {
-      type: "stamp",
+if (input.type === "stamp") {
+  return {
+    type: "stamp",
+    stamps_required: input.stampsRequired,
+    reward_text: input.rewardText,
+    config: {
       stamps_required: input.stampsRequired,
       reward_text: input.rewardText,
-      config: {
-        stamps_required: input.stampsRequired,
-        reward_text: input.rewardText,
-        variant: input.variant,
-        points_per_visit:
-          input.variant === "points" ? input.pointsPerVisit : undefined,
-        stamp_mark: {
-          mode: input.stampMarkMode,
-          preset: input.stampMarkPreset,
-        },
+      variant: input.variant,
+      points_per_visit:
+        input.variant === "points" ? input.pointsPerVisit : undefined,
+      stamp_mark: {
+        mode: input.stampMarkMode,
+        preset: input.stampMarkPreset,
       },
-    };
-  }
+    },
+  };
+}
 ```
 
 - [ ] **Step 3: Thread the fields through `usePreviewAnimation`**
@@ -1129,43 +1141,43 @@ to:
 In `src/app/setup/preview-animation.ts`, add `stampMarkMode` and `stampMarkPreset` to the destructure:
 
 ```ts
-  const {
-    type,
-    name,
-    rewardText,
-    stampsRequired,
-    visitsToBloom,
-    winPercent,
-    pityCeiling,
-    segments,
-    headStart,
-    headStartPercent,
-    variant,
-    pointsPerVisit,
-    stampMarkMode,
-    stampMarkPreset,
-  } = input;
+const {
+  type,
+  name,
+  rewardText,
+  stampsRequired,
+  visitsToBloom,
+  winPercent,
+  pityCeiling,
+  segments,
+  headStart,
+  headStartPercent,
+  variant,
+  pointsPerVisit,
+  stampMarkMode,
+  stampMarkPreset,
+} = input;
 ```
 
 and to the `recipeKey` array (right after `pointsPerVisit`):
 
 ```ts
-  const recipeKey = JSON.stringify([
-    type,
-    name,
-    rewardText,
-    stampsRequired,
-    visitsToBloom,
-    winPercent,
-    pityCeiling,
-    segments,
-    headStart,
-    headStartPercent,
-    variant,
-    pointsPerVisit,
-    stampMarkMode,
-    stampMarkPreset,
-  ]);
+const recipeKey = JSON.stringify([
+  type,
+  name,
+  rewardText,
+  stampsRequired,
+  visitsToBloom,
+  winPercent,
+  pityCeiling,
+  segments,
+  headStart,
+  headStartPercent,
+  variant,
+  pointsPerVisit,
+  stampMarkMode,
+  stampMarkPreset,
+]);
 ```
 
 (`input` itself is already passed wholesale to `buildPreviewProgram`/`buildInitialCard`/`buildPreviewProgress`, so no further changes are needed in this file — the new fields flow through automatically once `PreviewInput` includes them.)
@@ -1213,147 +1225,144 @@ export function SetupForm({
 Add `stamp_mark?: { mode?: string; preset?: string }` to the `config` cast:
 
 ```ts
-  const config = (program?.config ?? {}) as {
-    win_probability?: number;
-    pity_ceiling?: number;
+const config = (program?.config ?? {}) as {
+  win_probability?: number;
+  pity_ceiling?: number;
+  reward_text?: string;
+  stages?: { threshold: number }[];
+  segments?: {
+    label: string;
+    weight: number;
     reward_text?: string;
-    stages?: { threshold: number }[];
-    segments?: {
-      label: string;
-      weight: number;
-      reward_text?: string;
-      color?: string;
-    }[];
-    variant?: string;
-    stamp_mark?: { mode?: string; preset?: string };
-  };
+    color?: string;
+  }[];
+  variant?: string;
+  stamp_mark?: { mode?: string; preset?: string };
+};
 ```
 
 Add new state, right after the existing `pointsPerVisit` state:
 
 ```tsx
-  const [stampMarkMode, setStampMarkMode] = useState<
-    "dot" | "preset" | "photo"
-  >((config.stamp_mark?.mode as "dot" | "preset" | "photo" | undefined) ?? "dot");
-  const [stampMarkPreset, setStampMarkPreset] = useState<StampMarkPreset>(
-    (config.stamp_mark?.preset as StampMarkPreset | undefined) ?? "gift",
-  );
+const [stampMarkMode, setStampMarkMode] = useState<"dot" | "preset" | "photo">(
+  (config.stamp_mark?.mode as "dot" | "preset" | "photo" | undefined) ?? "dot",
+);
+const [stampMarkPreset, setStampMarkPreset] = useState<StampMarkPreset>(
+  (config.stamp_mark?.preset as StampMarkPreset | undefined) ?? "gift",
+);
 ```
 
 Add `stampMarkMode` and `stampMarkPreset` to the `usePreviewAnimation` call:
 
 ```tsx
-  const {
-    progress: previewProgress,
-    celebrating,
-    revealing,
-    lastChanceResult,
-  } = usePreviewAnimation({
-    type,
-    name,
-    rewardText,
-    stampsRequired,
-    visitsToBloom,
-    winPercent,
-    pityCeiling,
-    segments,
-    headStart,
-    headStartPercent,
-    variant,
-    pointsPerVisit,
-    stampMarkMode,
-    stampMarkPreset,
-  });
+const {
+  progress: previewProgress,
+  celebrating,
+  revealing,
+  lastChanceResult,
+} = usePreviewAnimation({
+  type,
+  name,
+  rewardText,
+  stampsRequired,
+  visitsToBloom,
+  winPercent,
+  pityCeiling,
+  segments,
+  headStart,
+  headStartPercent,
+  variant,
+  pointsPerVisit,
+  stampMarkMode,
+  stampMarkPreset,
+});
 ```
 
 Add `vendorAvatarUrl` to the `PreviewCard` element:
 
 ```tsx
-  const preview = (
-    <PreviewCard
-      progress={previewProgress}
-      name={name}
-      rewardText={rewardText}
-      celebrating={celebrating}
-      revealing={revealing}
-      lastChanceResult={lastChanceResult}
-      vendorAvatarUrl={vendorAvatarUrl}
-    />
-  );
+const preview = (
+  <PreviewCard
+    progress={previewProgress}
+    name={name}
+    rewardText={rewardText}
+    celebrating={celebrating}
+    revealing={revealing}
+    lastChanceResult={lastChanceResult}
+    vendorAvatarUrl={vendorAvatarUrl}
+  />
+);
 ```
 
 Add a new `Section` (only rendered for plain-dot stamp cards) right after the closing `</Section>` of the "Basics" section and before the "Rules" `<Section>`:
 
 ```tsx
-        {type === "stamp" && variant === "dots" && (
-          <Section
-            icon={<ImageIcon className="size-4" />}
-            eyebrow="Optional"
-            title="Stamp mark"
-            description="What appears on each stamp instead of a plain dot."
-          >
-            <ToggleGroup
-              type="single"
-              variant="outline"
-              value={stampMarkMode}
-              onValueChange={(v) =>
-                v && setStampMarkMode(v as "dot" | "preset" | "photo")
-              }
-              className="justify-start"
+{
+  type === "stamp" && variant === "dots" && (
+    <Section
+      icon={<ImageIcon className="size-4" />}
+      eyebrow="Optional"
+      title="Stamp mark"
+      description="What appears on each stamp instead of a plain dot."
+    >
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        value={stampMarkMode}
+        onValueChange={(v) =>
+          v && setStampMarkMode(v as "dot" | "preset" | "photo")
+        }
+        className="justify-start"
+      >
+        <ToggleGroupItem value="dot">Plain dot</ToggleGroupItem>
+        <ToggleGroupItem value="preset">Preset icon</ToggleGroupItem>
+        <ToggleGroupItem value="photo" disabled={!vendorAvatarUrl}>
+          My photo
+        </ToggleGroupItem>
+      </ToggleGroup>
+      {stampMarkMode === "photo" && !vendorAvatarUrl && (
+        <p className="text-xs text-muted-foreground">
+          Add a profile photo first, from your{" "}
+          <Link href="/dashboard/profile" className="underline">
+            profile page
+          </Link>
+          .
+        </p>
+      )}
+      {stampMarkMode === "preset" && (
+        <div className="flex gap-2">
+          {(
+            [
+              ["gift", Gift],
+              ["coffee", Coffee],
+              ["star", Star],
+              ["heart", Heart],
+            ] as const
+          ).map(([key, Icon]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setStampMarkPreset(key)}
+              aria-label={key}
+              className={cn(
+                "flex size-11 items-center justify-center rounded-xl border transition-colors",
+                stampMarkPreset === key
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "bg-card text-muted-foreground hover:bg-muted/50",
+              )}
             >
-              <ToggleGroupItem value="dot">Plain dot</ToggleGroupItem>
-              <ToggleGroupItem value="preset">Preset icon</ToggleGroupItem>
-              <ToggleGroupItem value="photo" disabled={!vendorAvatarUrl}>
-                My photo
-              </ToggleGroupItem>
-            </ToggleGroup>
-            {stampMarkMode === "photo" && !vendorAvatarUrl && (
-              <p className="text-xs text-muted-foreground">
-                Add a profile photo first, from your{" "}
-                <Link href="/dashboard/profile" className="underline">
-                  profile page
-                </Link>
-                .
-              </p>
-            )}
-            {stampMarkMode === "preset" && (
-              <div className="flex gap-2">
-                {(
-                  [
-                    ["gift", Gift],
-                    ["coffee", Coffee],
-                    ["star", Star],
-                    ["heart", Heart],
-                  ] as const
-                ).map(([key, Icon]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setStampMarkPreset(key)}
-                    aria-label={key}
-                    className={cn(
-                      "flex size-11 items-center justify-center rounded-xl border transition-colors",
-                      stampMarkPreset === key
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "bg-card text-muted-foreground hover:bg-muted/50",
-                    )}
-                  >
-                    <Icon className="size-4" />
-                  </button>
-                ))}
-              </div>
-            )}
-            <input type="hidden" name="stamp_mark_mode" value={stampMarkMode} />
-            {stampMarkMode === "preset" && (
-              <input
-                type="hidden"
-                name="stamp_mark_preset"
-                value={stampMarkPreset}
-              />
-            )}
-          </Section>
-        )}
-
+              <Icon className="size-4" />
+            </button>
+          ))}
+        </div>
+      )}
+      <input type="hidden" name="stamp_mark_mode" value={stampMarkMode} />
+      {stampMarkMode === "preset" && (
+        <input type="hidden" name="stamp_mark_preset" value={stampMarkPreset} />
+      )}
+    </Section>
+  );
+}
 ```
 
 This requires a `Link` import from `next/link` — add `import Link from "next/link";` at the top of the file if it isn't already imported (check first; this file doesn't currently import it).

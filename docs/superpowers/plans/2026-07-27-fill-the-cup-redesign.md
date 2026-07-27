@@ -22,10 +22,12 @@
 ### Task 1: Rebuild `Cup`'s SVG
 
 **Files:**
+
 - Modify: `src/components/cup.tsx`
 - Modify: `src/components/cup.dom.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `Cup`'s existing prop contract — `{ stage: number; totalStages: number; wilting: boolean; className?: string }` — unchanged. No call-site changes needed in `src/features/card-check/components/program-card-status.tsx`, `src/app/setup/preview-card.tsx`, or `src/app/dashboard/serve-customer.tsx`.
 - Produces: internal `data-cup-liquid="body" | "surface"` and `data-cup-tulip="true"` attributes, used by this task's own tests — no other file reads them.
 
@@ -80,9 +82,7 @@ describe("Cup", () => {
     const { container } = render(
       <Cup stage={2} totalStages={5} wilting={false} />,
     );
-    const strokedPaths = Array.from(
-      container.querySelectorAll("path"),
-    ).filter(
+    const strokedPaths = Array.from(container.querySelectorAll("path")).filter(
       (p) =>
         p.getAttribute("stroke") === "currentColor" &&
         p.getAttribute("fill") === "none",
@@ -101,15 +101,15 @@ describe("Cup", () => {
   });
 
   it("shows the tulip-pour flourish only at the Full stage", () => {
-    const notFull = render(
-      <Cup stage={3} totalStages={5} wilting={false} />,
-    );
+    const notFull = render(<Cup stage={3} totalStages={5} wilting={false} />);
     expect(
       notFull.container.querySelector("[data-cup-tulip]"),
     ).not.toBeInTheDocument();
 
     const full = render(<Cup stage={4} totalStages={5} wilting={false} />);
-    expect(full.container.querySelector("[data-cup-tulip]")).toBeInTheDocument();
+    expect(
+      full.container.querySelector("[data-cup-tulip]"),
+    ).toBeInTheDocument();
   });
 
   it("uses the slow shared growth duration on the liquid body", () => {

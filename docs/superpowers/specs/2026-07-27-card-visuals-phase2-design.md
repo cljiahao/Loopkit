@@ -37,6 +37,7 @@ opacity/color swapped between them. `progress()`'s `flame` view kind hardcodes
 `totalStages: 3`.
 
 **Engine change** (`src/lib/engine/stamp.ts`):
+
 - `flameStageFor(filled, total)` moves from 2 hardcoded ratio comparisons to 5
   even buckets, mirroring Plant's `stageIndexFor` pattern: thresholds at 0%,
   20%, 40%, 60%, 80% of `total`, returning index 0–4.
@@ -48,6 +49,7 @@ opacity/color swapped between them. `progress()`'s `flame` view kind hardcodes
 
 **Visual** (`flame-layers.tsx`): 3 layered `<Flame>` icons (not 2), with
 per-stage size/opacity/color:
+
 - Stage 1 (Ember): no flame icon shown — a small dim glow/coal dot instead.
 - Stage 2 (Spark): one small icon, low opacity, flickering.
 - Stage 3 (Small Fire): yellow.
@@ -69,6 +71,7 @@ liquid fill uses the vendor's brand color (`fill-primary/60`); the "done"
 flourish is 2 gold circles + a triangle.
 
 **Visual, rebuilt in 3 iterations against artifact feedback — final shape:**
+
 - Trapezoid mug body, cappuccino proportions (shorter/wider than a tall
   glass): top width ~52 units, bottom width ~34, roughly 44 units tall in a
   100×100 viewBox.
@@ -121,6 +124,7 @@ indistinguishable from "Leafing" (stage index 2) — it just shows one more
 leaf pair, nothing that reads as "a bud is forming."
 
 **Fix, iterated through several rounds of feedback:**
+
 - Each stage now introduces exactly **one** new visual thing, rather than
   leaves/stem/bud all partially overlapping across multiple stages:
   - **Seed**: seed dot in the soil, no stem.
@@ -160,6 +164,7 @@ on `/profile`), and `avatar_url` already settable via Supabase Auth user
 metadata on the profile page. **No new bucket, no new RLS.**
 
 **Decisions:**
+
 - **Three choices, not a binary toggle**: Plain dot (today's default) /
   Preset icon (a small built-in gallery — gift box, coffee cup, star, heart)
   / My photo.
@@ -185,6 +190,7 @@ metadata on the profile page. **No new bucket, no new RLS.**
 
 Same convention as the rest of the repo: `*.dom.test.tsx` assertions on
 class names/rendered content, not pixel-level visual testing.
+
 - `test/lib/engine/stamp.test.ts` (or equivalent): cover the new 5-bucket
   `flameStageFor` boundaries and the renamed `FLAME_STAGE_NAMES`.
 - New/updated `dom.test.tsx` coverage for `flame-layers.tsx`, `cup.tsx`,

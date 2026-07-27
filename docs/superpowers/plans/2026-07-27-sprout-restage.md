@@ -22,10 +22,12 @@
 ### Task 1: Restage `Plant`'s stem/leaf/bud/bloom sequence
 
 **Files:**
+
 - Modify: `src/components/plant.tsx`
 - Modify: `src/components/plant.dom.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `Plant`'s existing prop contract — `{ stage: number; totalStages: number; wilting: boolean; className?: string }` — unchanged. No call-site changes needed in `src/features/card-check/components/program-card-status.tsx`, `src/app/setup/preview-card.tsx`, or `src/app/dashboard/serve-customer.tsx`.
 - Produces: internal `data-plant-tip-nub`, `data-plant-leaf`, `data-plant-bud` attributes, used by this task's own tests.
 
@@ -66,9 +68,7 @@ describe("Plant", () => {
     );
     const line = container.querySelector("line");
     expect(line).toHaveStyle({ transform: "scaleY(0.5)" });
-    expect(
-      container.querySelector("[data-plant-tip-nub]"),
-    ).toBeInTheDocument();
+    expect(container.querySelector("[data-plant-tip-nub]")).toBeInTheDocument();
     const leaves = container.querySelectorAll("[data-plant-leaf]");
     expect(leaves).toHaveLength(2);
     expect(
@@ -105,12 +105,8 @@ describe("Plant", () => {
   });
 
   it("keeps stem height and leaf position stable from Leafing into Budding, and adds only a bud", () => {
-    const leafing = render(
-      <Plant stage={2} totalStages={5} wilting={false} />,
-    );
-    const budding = render(
-      <Plant stage={3} totalStages={5} wilting={false} />,
-    );
+    const leafing = render(<Plant stage={2} totalStages={5} wilting={false} />);
+    const budding = render(<Plant stage={3} totalStages={5} wilting={false} />);
 
     expect(leafing.container.querySelector("line")).toHaveStyle({
       transform: "scaleY(1)",

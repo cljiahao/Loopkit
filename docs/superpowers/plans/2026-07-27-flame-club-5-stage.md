@@ -20,10 +20,12 @@
 ### Task 1: Engine — 5-bucket `flameStageFor`
 
 **Files:**
+
 - Modify: `src/lib/engine/stamp.ts`
 - Test: `test/lib/engine/stamp.test.ts`
 
 **Interfaces:**
+
 - Produces: `stampStrategy.progress()`'s `flame` view now returns `totalStages: 5` and `stageName` from the 5-entry `FLAME_STAGE_NAMES` table. No change to `StampConfig`/`StampState`/other branches.
 
 - [ ] **Step 1: Write the failing tests**
@@ -191,11 +193,13 @@ git commit -m "feat(flame): 5-stage flameStageFor, mirrors Plant's bucket patter
 ### Task 2: Visual — rebuild `FlameLayers` for 5 stages
 
 **Files:**
+
 - Modify: `src/components/flame-layers.tsx`
 - Modify: `src/components/flame-layers.dom.test.tsx`
 - Modify: `src/app/globals.css`
 
 **Interfaces:**
+
 - Consumes: `stampStrategy.progress()`'s `flame` view (Task 1) — `filled`, `total`, `stage` (0-4), `stageName`.
 - Produces: `FlameLayers`'s prop signature is unchanged (`filled`, `total`, `stage`, `stageName`, `className?`) — no call-site changes needed in `src/features/card-check/components/program-card-status.tsx` or `src/app/setup/preview-card.tsx`, since both already pass exactly these four props and the component derives everything else from `stage`.
 
@@ -204,7 +208,7 @@ git commit -m "feat(flame): 5-stage flameStageFor, mirrors Plant's bucket patter
 In `src/app/globals.css`, inside the `@theme inline { ... }` block, right after the existing `--animate-stamp-pop: stamp-pop 0.4s ease-out;` line, add:
 
 ```css
-  --animate-flame-flicker: flame-flicker 1.8s ease-in-out infinite;
+--animate-flame-flicker: flame-flicker 1.8s ease-in-out infinite;
 ```
 
 Then, right after the existing `@keyframes stamp-pop { ... }` block, add:
@@ -273,12 +277,7 @@ describe("FlameLayers", () => {
 
   it("renders the Medium Fire stage label and count", () => {
     render(
-      <FlameLayers
-        filled={7}
-        total={10}
-        stage={3}
-        stageName="Medium Fire"
-      />,
+      <FlameLayers filled={7} total={10} stage={3} stageName="Medium Fire" />,
     );
     expect(screen.getByText("Medium Fire — 7/10")).toBeInTheDocument();
   });
@@ -319,9 +318,9 @@ describe("FlameLayers", () => {
     expect(
       small.container.querySelector("svg")?.getAttribute("class"),
     ).toContain("size-8");
-    expect(
-      big.container.querySelector("svg")?.getAttribute("class"),
-    ).toContain("size-14");
+    expect(big.container.querySelector("svg")?.getAttribute("class")).toContain(
+      "size-14",
+    );
   });
 
   it("gates the flicker animation on motion-safe and only while a flame is lit", () => {
@@ -329,9 +328,9 @@ describe("FlameLayers", () => {
       <FlameLayers filled={0} total={10} stage={0} stageName="Ember" />,
     );
     expect(
-      ember.container.querySelector("[data-flame-stage]")?.querySelector(
-        ".motion-safe\\:animate-flame-flicker",
-      ),
+      ember.container
+        .querySelector("[data-flame-stage]")
+        ?.querySelector(".motion-safe\\:animate-flame-flicker"),
     ).not.toBeInTheDocument();
 
     const spark = render(
