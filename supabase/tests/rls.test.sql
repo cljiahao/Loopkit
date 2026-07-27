@@ -9,7 +9,7 @@
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(19);
+select plan(21);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -151,6 +151,17 @@ select throws_ok(
   '42501',
   null,
   'anon cannot read upgrade_requests (no SELECT grant)');
+
+-- provision_default_program: service_role-only, never authenticated —
+-- this function bypasses create_program's own auth.uid()-based ownership
+-- check by design (explicit p_vendor_id param), so its grant must be
+-- exactly as narrow as intended.
+select ok(
+  has_function_privilege('service_role', 'loopkit.provision_default_program(uuid)', 'EXECUTE'),
+  'service_role can execute provision_default_program');
+select ok(
+  not has_function_privilege('authenticated', 'loopkit.provision_default_program(uuid)', 'EXECUTE'),
+  'authenticated cannot execute provision_default_program');
 
 select * from finish();
 rollback;
