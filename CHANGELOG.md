@@ -37,6 +37,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   already derive their 5 stages, and `FlameLayers` is redrawn with a
   woodpile base, a dim ember coal at the start, and a layered/colored
   flame cluster that grows through the later stages.
+- Fill the Cup is redrawn: a single continuous rim outline instead of a
+  floating ellipse, a saucer + pedestal foot for depth, a fixed (not
+  brand-themed) coffee-color liquid palette that warms from dark espresso
+  to caramel-tan latte as it fills, and a tulip-pour "done" flourish
+  replacing the old two-circles-and-triangle shape.
 - Sprout now restages so each of its 5 stages introduces exactly one new
   visual element instead of several overlapping across stages: the stem
   alone shoots up at Sprout (with a closed tip nub, no leaves yet), both

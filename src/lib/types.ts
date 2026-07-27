@@ -484,6 +484,7 @@ export interface Database {
           active: boolean;
           replaced_by_name: string | null;
           replaced_by_stamp_count: number | null;
+          voucher_expires_at: string | null;
           vendor_avatar_url: string | null;
         }[];
       };

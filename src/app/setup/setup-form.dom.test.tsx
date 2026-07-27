@@ -70,6 +70,31 @@ describe("SetupForm live preview", () => {
     expect(submitted.get("reward_text")).toBe("Free kopi");
     expect(submitted.get("stamps_required")).toBe("10");
   });
+
+  it("picking a preset stamp mark submits stamp_mark_mode and stamp_mark_preset", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    // Default type/variant is already stamp/dots, so the "Stamp mark"
+    // Section is visible without picking a family/style first.
+    await user.click(screen.getByRole("radio", { name: "Preset icon" }));
+    await user.click(screen.getByRole("button", { name: "star" }));
+
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await user.click(screen.getByRole("button", { name: "Create card" }));
+
+    expect(saveMock).toHaveBeenCalled();
+    const submitted = saveMock.mock.calls[0][1] as FormData;
+    expect(submitted.get("stamp_mark_mode")).toBe("preset");
+    expect(submitted.get("stamp_mark_preset")).toBe("star");
+  });
 });
 
 describe("SetupForm type picker", () => {

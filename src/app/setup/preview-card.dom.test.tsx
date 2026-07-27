@@ -52,14 +52,14 @@ describe("PreviewCard", () => {
   it("renders the flame layers for a flame view", () => {
     const progress: Progress = {
       stage: "collecting",
-      label: "Inner Flame — 4/8",
+      label: "Medium Fire — 7/10",
       view: {
         kind: "flame",
-        filled: 4,
-        total: 8,
-        stage: 1,
-        stageName: "Inner Flame",
-        totalStages: 3,
+        filled: 7,
+        total: 10,
+        stage: 3,
+        stageName: "Medium Fire",
+        totalStages: 5,
       },
       rewardReady: false,
     };
@@ -73,7 +73,7 @@ describe("PreviewCard", () => {
     // FlameLayers renders its own "{stageName} — {filled}/{total}" text
     // alongside the identical progress.label below it, so both instances
     // are expected here.
-    expect(screen.getAllByText("Inner Flame — 4/8")).toHaveLength(2);
+    expect(screen.getAllByText("Medium Fire — 7/10")).toHaveLength(2);
   });
 
   it("renders the wheel for a chance view with variant wheel", () => {
