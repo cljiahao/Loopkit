@@ -64,6 +64,10 @@ self-describing dated slugs; no separate description column below.
 - `2026-07-19-setup-create-manage-split.md`
 - `2026-07-20-app-wide-uiux-consistency.md`
 - `2026-07-22-card-type-regroup-and-chance-revamp.md`
+- `2026-07-27-flame-club-5-stage.md`
+- `2026-07-27-fill-the-cup-redesign.md`
+- `2026-07-27-sprout-restage.md`
+- `2026-07-27-stamp-mark-logo-preset.md`
 
 ## Parent
 
