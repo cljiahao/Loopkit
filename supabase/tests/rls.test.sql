@@ -9,7 +9,7 @@
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(26);
+select plan(27);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -200,6 +200,15 @@ select is(
   (select count(*)::int from loopkit.programs where vendor_id = '00000000-0000-0000-0000-00000000000b'),
   1,
   'vendor B still has exactly one program (no second Starter program added)');
+
+-- provision_default_program TOCTOU fix (migration 0032): a transaction-scoped
+-- advisory lock keyed on p_vendor_id closes the read-then-write race between
+-- the `where not exists` check and the insert. A true concurrency test isn't
+-- practical in pgTAP (single connection, one transaction), so this asserts
+-- the lock call is actually present in the function body.
+select ok(
+  position('pg_advisory_xact_lock' in pg_get_functiondef('loopkit.provision_default_program(uuid)'::regprocedure)) > 0,
+  'provision_default_program takes an advisory lock before its idempotency check');
 
 select * from finish();
 rollback;

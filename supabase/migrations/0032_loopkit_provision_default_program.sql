@@ -13,6 +13,14 @@ returns uuid
 language plpgsql security definer set search_path = '' as $$
 declare v_id uuid;
 begin
+  -- Transaction-scoped advisory lock keyed on the vendor id: closes a TOCTOU
+  -- race where two concurrent calls for the same vendor (e.g. two browser
+  -- tabs double-clicking "Activate") both pass the `where not exists` check
+  -- below under READ COMMITTED and both insert, creating two active Starter
+  -- programs. Released automatically at transaction end (pg_advisory_xact_lock);
+  -- does not change this function's signature or return behavior.
+  perform pg_advisory_xact_lock(hashtextextended(p_vendor_id::text, 0));
+
   -- config must duplicate stamps_required/reward_text (matching what
   -- buildProgramFields in src/lib/program.ts produces for a stamp card):
   -- resolveStampConfig (src/lib/engine/index.ts) reads programs.config as-is
