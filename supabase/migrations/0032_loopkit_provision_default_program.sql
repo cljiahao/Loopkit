@@ -13,11 +13,17 @@ returns uuid
 language plpgsql security definer set search_path = '' as $$
 declare v_id uuid;
 begin
+  -- config must duplicate stamps_required/reward_text (matching what
+  -- buildProgramFields in src/lib/program.ts produces for a stamp card):
+  -- resolveStampConfig (src/lib/engine/index.ts) reads programs.config as-is
+  -- whenever it has any keys at all, with no fallback to the table columns —
+  -- a config that sets only points_per_visit/variant would leave
+  -- stamps_required/reward_text undefined for every engine computation.
   insert into loopkit.programs
     (vendor_id, type, name, stamps_required, reward_text, config, active)
   values (
     p_vendor_id, 'stamp', 'Starter', 10, '1 free item',
-    '{"points_per_visit": 1, "variant": "dots"}'::jsonb, true
+    '{"stamps_required": 10, "reward_text": "1 free item", "points_per_visit": 1, "variant": "dots"}'::jsonb, true
   )
   returning id into v_id;
   return v_id;
