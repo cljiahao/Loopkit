@@ -66,6 +66,27 @@ describe("POST /api/merqo/vendor-provision (loopkit)", () => {
     expect(res.status).toBe(401);
   });
 
+  it("400 on a malformed JSON body", async () => {
+    const res = await POST(
+      new Request("http://localhost/api/merqo/vendor-provision", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer test-secret",
+        },
+        body: "{not valid json",
+      }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("400 when user_id fails schema validation", async () => {
+    const res = await POST(
+      req({ user_id: "not-a-uuid" }, "Bearer test-secret"),
+    );
+    expect(res.status).toBe(400);
+  });
+
   it("creates the vendor row AND calls provision_default_program on first provision", async () => {
     fromMock.mockImplementation(tables({ insertError: null, isPro: false }));
     const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
@@ -145,5 +166,27 @@ describe("POST /api/merqo/vendor-provision (loopkit)", () => {
     );
     const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
     expect(res.status).toBe(400);
+  });
+
+  it("500 on a generic insert error (not a FK or unique violation)", async () => {
+    fromMock.mockImplementation(
+      tables({
+        insertError: { code: "23514", message: "check constraint violated" },
+      }),
+    );
+    const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
+    expect(res.status).toBe(500);
+  });
+
+  it("500 when the vendor_pro read-back errors", async () => {
+    fromMock.mockImplementation(
+      tables({
+        insertError: null,
+        isPro: false,
+        proReadError: { message: "read-back boom" },
+      }),
+    );
+    const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
+    expect(res.status).toBe(500);
   });
 });
