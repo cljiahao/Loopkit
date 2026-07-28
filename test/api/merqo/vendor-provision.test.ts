@@ -80,13 +80,19 @@ describe("POST /api/merqo/vendor-provision (loopkit)", () => {
     });
   });
 
-  it("re-provision (already exists) does NOT call provision_default_program again", async () => {
+  it("re-provision (already exists) still calls provision_default_program, which is a no-op (null id, not an error)", async () => {
+    // A vendors-row conflict doesn't imply a program already exists (see
+    // migration 0032's comment) — the RPC is idempotent on loopkit.programs
+    // itself and must be called unconditionally. A null returned id (no
+    // program was inserted because one already existed) is success, not
+    // an error.
     fromMock.mockImplementation(
       tables({
         insertError: { code: "23505", message: "duplicate key" },
         isPro: false,
       }),
     );
+    rpcMock.mockResolvedValue({ data: null, error: null });
     const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({
@@ -94,7 +100,9 @@ describe("POST /api/merqo/vendor-provision (loopkit)", () => {
       already_existed: true,
       plan: "free",
     });
-    expect(rpcMock).not.toHaveBeenCalled();
+    expect(rpcMock).toHaveBeenCalledWith("provision_default_program", {
+      p_vendor_id: USER_ID,
+    });
   });
 
   it("reports plan pro when the vendor already has a vendor_pro row", async () => {
@@ -114,6 +122,18 @@ describe("POST /api/merqo/vendor-provision (loopkit)", () => {
 
   it("500 when provision_default_program errors", async () => {
     fromMock.mockImplementation(tables({ insertError: null, isPro: false }));
+    rpcMock.mockResolvedValue({ data: null, error: { message: "boom" } });
+    const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
+    expect(res.status).toBe(500);
+  });
+
+  it("500 when provision_default_program errors on a re-provision (already_existed true)", async () => {
+    fromMock.mockImplementation(
+      tables({
+        insertError: { code: "23505", message: "duplicate key" },
+        isPro: false,
+      }),
+    );
     rpcMock.mockResolvedValue({ data: null, error: { message: "boom" } });
     const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
     expect(res.status).toBe(500);

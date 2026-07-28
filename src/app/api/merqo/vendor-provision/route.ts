@@ -41,21 +41,24 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!alreadyExisted) {
-    const { error: rpcError } = await supabase.rpc(
-      "provision_default_program",
-      { p_vendor_id: user_id },
+  // Called unconditionally (not gated on alreadyExisted): a vendors-row
+  // conflict doesn't correlate with whether a program already exists (e.g.
+  // an email/password vendor with no prior vendors row, or one with a real
+  // program from /setup's create_program path). provision_default_program
+  // is idempotent on loopkit.programs itself (migration 0032) — a null
+  // returned id means the vendor already had a program, not an error.
+  const { error: rpcError } = await supabase.rpc("provision_default_program", {
+    p_vendor_id: user_id,
+  });
+  if (rpcError) {
+    console.error(
+      "vendor-provision: default program creation failed",
+      rpcError.message,
     );
-    if (rpcError) {
-      console.error(
-        "vendor-provision: default program creation failed",
-        rpcError.message,
-      );
-      return NextResponse.json(
-        { error: "Could not provision vendor" },
-        { status: 500 },
-      );
-    }
+    return NextResponse.json(
+      { error: "Could not provision vendor" },
+      { status: 500 },
+    );
   }
 
   // loopkit has no vendors.plan column — plan is derived from vendor_pro row

@@ -19,12 +19,21 @@ begin
   -- whenever it has any keys at all, with no fallback to the table columns —
   -- a config that sets only points_per_visit/variant would leave
   -- stamps_required/reward_text undefined for every engine computation.
+  --
+  -- Idempotent keyed on loopkit.programs, NOT on loopkit.vendors: the route
+  -- caller's own vendors-row insert can no-op (23505) for reasons unrelated
+  -- to program state (e.g. a vendor who signed up email/password-first, or
+  -- who already has a real, customized program from /setup's create_program
+  -- path) — a vendors-row conflict must never imply "already provisioned".
+  -- `where not exists` makes this call safe to run unconditionally on every
+  -- provision attempt; a null return means the vendor already had a program
+  -- and nothing was created, not an error.
   insert into loopkit.programs
     (vendor_id, type, name, stamps_required, reward_text, config, active)
-  values (
-    p_vendor_id, 'stamp', 'Starter', 10, '1 free item',
-    '{"stamps_required": 10, "reward_text": "1 free item", "points_per_visit": 1, "variant": "dots"}'::jsonb, true
-  )
+  select p_vendor_id, 'stamp', 'Starter', 10, '1 free item',
+         '{"stamps_required": 10, "reward_text": "1 free item", "points_per_visit": 1, "variant": "dots"}'::jsonb,
+         true
+  where not exists (select 1 from loopkit.programs where vendor_id = p_vendor_id)
   returning id into v_id;
   return v_id;
 end;

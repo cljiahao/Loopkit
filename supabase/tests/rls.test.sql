@@ -9,7 +9,7 @@
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(21);
+select plan(26);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -162,6 +162,44 @@ select ok(
 select ok(
   not has_function_privilege('authenticated', 'loopkit.provision_default_program(uuid)', 'EXECUTE'),
   'authenticated cannot execute provision_default_program');
+
+-- provision_default_program idempotency (migration 0032 fix): keyed on
+-- loopkit.programs existence, not loopkit.vendors, so a vendor who already
+-- has ANY program (e.g. from /setup's create_program path, unrelated to
+-- this RPC) never gets a second "Starter" program silently added.
+reset role;
+set local role service_role;
+
+select is(
+  (select count(*)::int from loopkit.programs where vendor_id = '00000000-0000-0000-0000-00000000000a'),
+  0,
+  'vendor A has no program yet (pre-condition)');
+
+select isnt(
+  loopkit.provision_default_program('00000000-0000-0000-0000-00000000000a'),
+  null,
+  'first provision for a vendor with no program returns a new id');
+
+select is(
+  (select count(*)::int from loopkit.programs where vendor_id = '00000000-0000-0000-0000-00000000000a'),
+  1,
+  'vendor A now has exactly one program');
+
+-- Vendor B: simulate an existing program created directly (NOT via this
+-- RPC — standing in for /setup's create_program path), then re-provision.
+insert into loopkit.programs (vendor_id, type, name, stamps_required, reward_text, config, active)
+values ('00000000-0000-0000-0000-00000000000b', 'stamp', 'Custom Program', 20, 'Free coffee',
+        '{"stamps_required": 20, "reward_text": "Free coffee", "points_per_visit": 1, "variant": "dots"}'::jsonb, true);
+
+select is(
+  loopkit.provision_default_program('00000000-0000-0000-0000-00000000000b'),
+  null,
+  'provisioning a vendor who already has a program returns null (no-op)');
+
+select is(
+  (select count(*)::int from loopkit.programs where vendor_id = '00000000-0000-0000-0000-00000000000b'),
+  1,
+  'vendor B still has exactly one program (no second Starter program added)');
 
 select * from finish();
 rollback;
