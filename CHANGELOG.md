@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- New `POST /api/merqo/vendor-provision` endpoint and
+  `loopkit.provision_default_program` Postgres function, letting the Merqo
+  hub one-click-activate a vendor onto loopkit: creates the vendor's
+  `vendors` row and a default free-tier "Starter" stamp program, bearer-
+  gated by a dedicated `MERQO_PROVISION_SECRET` (`provisionBearerOk`,
+  separate from the existing `MERQO_METRICS_SECRET` used by the read-only
+  merqo routes). `provision_default_program` is idempotent on whether the
+  vendor already has any program row, not on the `vendors` table, so
+  re-provisioning a vendor who already has a program (default or
+  custom) never adds a second one.
+
 ### Security
 
 - Upgraded `next` `16.2.10` → `16.2.11`, resolving all 7 Next.js advisories

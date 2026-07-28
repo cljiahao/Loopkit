@@ -9,7 +9,7 @@
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(19);
+select plan(27);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -151,6 +151,64 @@ select throws_ok(
   '42501',
   null,
   'anon cannot read upgrade_requests (no SELECT grant)');
+
+-- provision_default_program: service_role-only, never authenticated —
+-- this function bypasses create_program's own auth.uid()-based ownership
+-- check by design (explicit p_vendor_id param), so its grant must be
+-- exactly as narrow as intended.
+select ok(
+  has_function_privilege('service_role', 'loopkit.provision_default_program(uuid)', 'EXECUTE'),
+  'service_role can execute provision_default_program');
+select ok(
+  not has_function_privilege('authenticated', 'loopkit.provision_default_program(uuid)', 'EXECUTE'),
+  'authenticated cannot execute provision_default_program');
+
+-- provision_default_program idempotency (migration 0032 fix): keyed on
+-- loopkit.programs existence, not loopkit.vendors, so a vendor who already
+-- has ANY program (e.g. from /setup's create_program path, unrelated to
+-- this RPC) never gets a second "Starter" program silently added.
+reset role;
+set local role service_role;
+
+select is(
+  (select count(*)::int from loopkit.programs where vendor_id = '00000000-0000-0000-0000-00000000000a'),
+  0,
+  'vendor A has no program yet (pre-condition)');
+
+select isnt(
+  loopkit.provision_default_program('00000000-0000-0000-0000-00000000000a'),
+  null,
+  'first provision for a vendor with no program returns a new id');
+
+select is(
+  (select count(*)::int from loopkit.programs where vendor_id = '00000000-0000-0000-0000-00000000000a'),
+  1,
+  'vendor A now has exactly one program');
+
+-- Vendor B: simulate an existing program created directly (NOT via this
+-- RPC — standing in for /setup's create_program path), then re-provision.
+insert into loopkit.programs (vendor_id, type, name, stamps_required, reward_text, config, active)
+values ('00000000-0000-0000-0000-00000000000b', 'stamp', 'Custom Program', 20, 'Free coffee',
+        '{"stamps_required": 20, "reward_text": "Free coffee", "points_per_visit": 1, "variant": "dots"}'::jsonb, true);
+
+select is(
+  loopkit.provision_default_program('00000000-0000-0000-0000-00000000000b'),
+  null,
+  'provisioning a vendor who already has a program returns null (no-op)');
+
+select is(
+  (select count(*)::int from loopkit.programs where vendor_id = '00000000-0000-0000-0000-00000000000b'),
+  1,
+  'vendor B still has exactly one program (no second Starter program added)');
+
+-- provision_default_program TOCTOU fix (migration 0032): a transaction-scoped
+-- advisory lock keyed on p_vendor_id closes the read-then-write race between
+-- the `where not exists` check and the insert. A true concurrency test isn't
+-- practical in pgTAP (single connection, one transaction), so this asserts
+-- the lock call is actually present in the function body.
+select ok(
+  position('pg_advisory_xact_lock' in pg_get_functiondef('loopkit.provision_default_program(uuid)'::regprocedure)) > 0,
+  'provision_default_program takes an advisory lock before its idempotency check');
 
 select * from finish();
 rollback;
