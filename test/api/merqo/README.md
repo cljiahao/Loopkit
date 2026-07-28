@@ -9,6 +9,7 @@ merqo calls into loopkit over.
 
 - `metrics.test.ts` — `GET /api/merqo/metrics`: bearer-secret auth (missing/wrong → 401) and the happy-path metrics payload
 - `qkit-earn-config.test.ts` — `GET /api/merqo/qkit-earn-config`: bearer-secret auth, missing `vendor_id` → 400, config lookup by vendor
+- `vendor-provision.test.ts` — `POST /api/merqo/vendor-provision`: bearer auth (missing → 401), first-provision creates the vendor row and calls `provision_default_program`, re-provision (vendor row `23505` conflict) still calls `provision_default_program` unconditionally — which is a no-op returning a null id when the vendor already has a program, not an error — reports `plan: "pro"` when a `vendor_pro` row exists, 500 when `provision_default_program` errors (both on first provision and on a re-provision), and 400 on a foreign-key violation (unknown `user_id`)
 - `vendor-status.test.ts` — `GET /api/merqo/vendor-status`: 401/400 auth and validation, resolves a vendor found on `listUsers`' first page, paginates past a full first page to find one on page 2 (asserting the exact `{page, perPage}` args per call), stops once a partial page comes back, and 503s on a `listUsers` or table-read error
 
 ## Parent
