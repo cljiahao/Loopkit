@@ -422,6 +422,10 @@ export interface Database {
         };
         Returns: string;
       };
+      provision_default_program: {
+        Args: { p_vendor_id: string };
+        Returns: string;
+      };
       activate_program: {
         Args: { p_program: string };
         Returns: Database["loopkit"]["Tables"]["programs"]["Row"];
