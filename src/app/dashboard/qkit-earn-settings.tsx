@@ -30,8 +30,9 @@ export function QkitEarnSettings({
   if (!isPro) {
     return (
       <ElevatedCard className="p-4 text-sm text-muted-foreground">
-        Upgrade to Pro to award a stamp automatically when a customer completes
-        a qkit order.
+        Upgrade to Pro to let customers claim a stamp after completing a qkit
+        order — they get a link on their order page and enter their phone number
+        to collect it.
       </ElevatedCard>
     );
   }

@@ -20,6 +20,19 @@ describe("QkitEarnSettings", () => {
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
   });
 
+  it("does not oversell the qkit stamp as fully automatic", () => {
+    render(
+      <QkitEarnSettings
+        programs={[{ id: "p1", name: "Coffee Stamps" }]}
+        current={null}
+        isPro={false}
+      />,
+    );
+    // The real flow needs the customer to visit /earn and enter their phone
+    // number (see earn-form.tsx) — it's a claim link, not push automation.
+    expect(screen.queryByText(/automatically/i)).not.toBeInTheDocument();
+  });
+
   it("lets a Pro vendor pick a program and enable it", () => {
     render(
       <QkitEarnSettings
