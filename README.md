@@ -93,6 +93,13 @@ console, with no loopkit-side table at all. See
 `docs/business/2026-07-21-profile-settings-page-standard.md` (in the parent
 `Merqo Business/docs/` repo) for the locked cross-kit pattern.
 
+Separately, a Pro vendor can let customers earn a stamp from a completed
+qkit order (`src/app/dashboard/qkit-earn-settings.tsx`) — this is a pull-model
+claim link, not push automation: qkit shows an "Earn a stamp" link on the
+customer's order page, which sends them to loopkit's own `/earn?order=...`
+page to enter their phone number and claim it (`src/app/earn/`), rather than
+the stamp being awarded automatically the moment the qkit order completes.
+
 ## Docs
 
 - Deploy runbook: `docs/DEPLOY.md`
