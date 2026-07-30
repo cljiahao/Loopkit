@@ -30,8 +30,8 @@ Vendor console root: program grid, shared shop QR, scan-to-serve entry point, an
 - `program-display.ts` — exports `PROGRAM_TYPE_BADGE` map, `describeProgram()` (one-line reward-mechanic blurb per program type), and `programDetails()` (expiry/head-start detail lines)
 - `program-switcher.dom.test.tsx` — jsdom tests for `ProgramSwitcher`: renders "All programs" plus each program, preserves other URL params, hides itself with only one program
 - `program-switcher.tsx` — client `ProgramSwitcher`: same-page Select control that switches the `p` query param across Stats/Activity/Customers views, preserving other params; accepts optional `triggerId`/`triggerClassName` to render as a bare standalone control (Customers, Stats — the default) or as one field among others sharing a card's border/background (Activity, via `ActivityFilters`)
-- `qkit-earn-settings.dom.test.tsx` — jsdom tests for `QkitEarnSettings`: shows upgrade prompt when not Pro, lets a Pro vendor pick a program and toggle the switch
-- `qkit-earn-settings.tsx` — client `QkitEarnSettings` form: Pro-gated switch + program picker that calls `saveQkitEarnConfigAction`
+- `qkit-earn-settings.dom.test.tsx` — jsdom tests for `QkitEarnSettings`: shows upgrade prompt when not Pro (and that its copy never claims the stamp is awarded automatically), lets a Pro vendor pick a program and toggle the switch
+- `qkit-earn-settings.tsx` — client `QkitEarnSettings` form: Pro-gated switch + program picker that calls `saveQkitEarnConfigAction`; the non-Pro upsell copy describes the real claim-link flow (customer taps a link on their qkit order, enters their phone number on `/earn`) rather than overselling it as automatic
 - `redeem-button.dom.test.tsx` — jsdom test asserting `RedeemButton`'s confirm dialog shows the exact stamp count and carryover wording
 - `redeem-button.tsx` — client `RedeemButton`: AlertDialog-confirmed redeem control that calls `redeemAction` and reports the reset card back to the caller
 - `scan-and-route.dom.test.tsx` — jsdom tests for `ScanAndRoute`: passes the "Scan a customer" label through and routes to the resolved card's Counter page with phone pre-filled

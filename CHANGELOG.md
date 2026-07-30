@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **qkit-earn upsell copy overstated the stamp award as automatic.** The
+  Pro upgrade prompt for earning stamps from qkit orders said a stamp is
+  awarded "automatically" — the real flow is a claim link (the customer
+  gets a link on their qkit order page and enters their phone number on
+  loopkit's `/earn` page to collect it). Copy now describes the actual
+  behavior.
+
 ### Added
 
 - New `POST /api/merqo/vendor-provision` endpoint and
