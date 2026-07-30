@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Wordmark } from "@/components/landing/wordmark";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -117,14 +118,16 @@ export function DashboardNav({
   return (
     <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-1 sm:gap-3">
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="-ml-1.5 rounded-lg sm:hidden"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
+          aria-expanded={mobileOpen}
           onClick={() => setMobileOpen((v) => !v)}
-          className="-ml-1.5 rounded-lg p-1.5 text-muted-foreground hover:bg-secondary sm:hidden"
         >
           {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        </Button>
 
         <Link
           href="/dashboard"
@@ -141,16 +144,18 @@ export function DashboardNav({
                 ? path === "/dashboard"
                 : isActive(path, link.href);
             return (
-              <Link
+              <Button
                 key={link.href}
-                href={link.href}
+                asChild
+                variant="ghost"
+                size="sm"
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary",
+                  "rounded-lg",
                   active && "bg-primary/10 text-primary hover:bg-primary/10",
                 )}
               >
-                {link.label}
-              </Link>
+                <Link href={link.href}>{link.label}</Link>
+              </Button>
             );
           })}
         </nav>
