@@ -12,7 +12,7 @@ landing page.
 - `footer.tsx` — `Footer`: site footer with `Wordmark`, tagline, login link, copyright line
 - `hero.tsx` — `Hero`: above-the-fold headline/subhead/CTA buttons/trust bullets plus the `StampCard` illustration, links to `/dashboard` when `authed` else `/login?mode=signup`
 - `how-it-works.tsx` — `HowItWorks`: numbered 3-step explainer (set up card → stamp by phone → they come back), anchored `id="how"`
-- `nav.tsx` — `Nav`: sticky header with `Wordmark`, and either a Dashboard button (authed) or Log in link + Get started button (signed out)
+- `nav.tsx` — `Nav`: sticky header with `Wordmark`, an FAQ button (`#faq` same-page anchor, hidden below `sm`), and either a Dashboard button (authed) or Log in link + Get started button (signed out)
 - `stamp-card.tsx` — `StampCard`: static illustrative 8-slot stamp card (6 stamped, 1 reward slot) used in the hero, pure markup with no image
 - `wordmark.tsx` — `Wordmark`: "LoopKit" text logo with the "oo" rendered in gold as the brand's stamp-dot motif
 
