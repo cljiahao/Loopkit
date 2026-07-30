@@ -2,13 +2,18 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { vendorPhoneOnboardAction } from "../api/actions";
 import { Wordmark } from "@/components/landing/wordmark";
 import { ElevatedCard } from "@/components/elevated-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
+import { useAsyncAction } from "@/hooks/use-async-action";
+import { loginSchema, type LoginInput } from "@/lib/schemas";
 
 type Mode = "signin" | "signup";
 
@@ -41,13 +46,17 @@ export function LoginForm() {
   const [mode, setMode] = useState<Mode>(
     searchParams.get("mode") === "signup" ? "signup" : "signin",
   );
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const { pending: busy, run } = useAsyncAction();
   const [showPhoneOnboard, setShowPhoneOnboard] = useState(false);
   const [vendorName, setVendorName] = useState("");
   const [vendorPhone, setVendorPhone] = useState("");
+  // The name+phone onboarding sub-flow (spec:
+  // 2026-07-11-vendor-phone-onboarding-design.md) keeps its own hand-rolled
+  // submit/error state rather than moving onto react-hook-form: it isn't a
+  // validated email/password form, and folding it into the same resolver
+  // risks changing its (deliberately unverified) behavior.
+  const [phoneBusy, setPhoneBusy] = useState(false);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   // Set once we've emailed the user and are waiting on their click:
   // "signup" = confirm the new account, "reset" = choose a new password.
   const [sent, setSent] = useState<{
@@ -55,114 +64,117 @@ export function LoginForm() {
     kind: "signup" | "reset";
   } | null>(null);
 
-  const isSignin = mode === "signin";
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors },
+  } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
 
-  async function signInWithGoogle() {
-    setBusy(true);
-    setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+  const isSignin = mode === "signin";
+  // Every submit surface (Google, phone-onboard toggle/submit, email form,
+  // forgot-password) shares one disabled state, same as before the refactor —
+  // only one of these flows can be in flight at a time.
+  const anyBusy = busy || phoneBusy;
+
+  function signInWithGoogle() {
+    return run(async () => {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` },
+      });
+      // On success the browser navigates to Google; only an early error lands here.
+      if (error) toast.error(error.message);
     });
-    // On success the browser navigates to Google; only an early error lands here.
-    if (error) {
-      setError(error.message);
-      setBusy(false);
-    }
   }
 
   async function submitPhoneOnboard(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true);
-    setError(null);
+    setPhoneBusy(true);
+    setPhoneError(null);
     const supabase = createClient();
     const { error: anonError } = await supabase.auth.signInAnonymously();
     if (anonError) {
-      setError(anonError.message);
-      setBusy(false);
+      setPhoneError(anonError.message);
+      setPhoneBusy(false);
       return;
     }
     try {
       const result = await vendorPhoneOnboardAction(vendorName, vendorPhone);
       if (result.error) {
-        setError(result.error);
+        setPhoneError(result.error);
         return;
       }
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("Something went wrong. Try again.");
+      setPhoneError("Something went wrong. Try again.");
     } finally {
-      setBusy(false);
+      setPhoneBusy(false);
     }
   }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    const supabase = createClient();
+  function onSubmit(data: LoginInput) {
+    return run(async () => {
+      const supabase = createClient();
 
-    if (mode === "signup") {
-      // Land the confirmation-email link back on loopkit — the project's Site URL
-      // points at another kit (shared Supabase), so without this the confirm
-      // link would bounce the vendor to the wrong app.
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      setBusy(false);
-      if (error) {
-        setError(error.message);
+      if (mode === "signup") {
+        // Land the confirmation-email link back on loopkit — the project's Site URL
+        // points at another kit (shared Supabase), so without this the confirm
+        // link would bounce the vendor to the wrong app.
+        const { data: result, error } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) {
+          toast.error(error.message);
+          return;
+        }
+        // Email confirmation on → no session yet. Show a "check your email" state
+        // instead of bouncing to a dashboard the user can't reach.
+        if (!result.session) {
+          setSent({ email: data.email, kind: "signup" });
+          return;
+        }
+        router.push("/dashboard");
+        router.refresh();
         return;
       }
-      // Email confirmation on → no session yet. Show a "check your email" state
-      // instead of bouncing to a dashboard the user can't reach.
-      if (!data.session) {
-        setSent({ email, kind: "signup" });
+
+      const { error } = await supabase.auth.signInWithPassword(data);
+      if (error) {
+        toast.error(error.message);
         return;
       }
       router.push("/dashboard");
       router.refresh();
-      return;
-    }
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
     });
-    setBusy(false);
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    router.push("/dashboard");
-    router.refresh();
   }
 
   // Email a password-reset link. The link lands on /auth/callback, which
   // establishes a recovery session and forwards to /reset-password.
-  async function sendReset() {
-    if (!email) {
-      setError("Enter your email first.");
+  function sendReset() {
+    const email = getValues("email");
+    const parsed = loginSchema.shape.email.safeParse(email);
+    if (!parsed.success) {
+      toast.error("Enter your email first.");
       return;
     }
-    setBusy(true);
-    setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+    return run(async () => {
+      const supabase = createClient();
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
+      });
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+      setSent({ email, kind: "reset" });
     });
-    setBusy(false);
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    setSent({ email, kind: "reset" });
   }
 
   if (sent) {
@@ -236,7 +248,7 @@ export function LoginForm() {
               type="button"
               variant="outline"
               onClick={signInWithGoogle}
-              disabled={busy}
+              disabled={anyBusy}
               className="mt-7 h-12 w-full gap-2.5 rounded-xl text-[0.95rem] font-medium"
             >
               <GoogleMark />
@@ -247,7 +259,7 @@ export function LoginForm() {
               type="button"
               variant="outline"
               onClick={() => setShowPhoneOnboard((v) => !v)}
-              disabled={busy}
+              disabled={anyBusy}
               className="mt-2.5 h-12 w-full gap-2.5 rounded-xl text-[0.95rem] font-medium"
             >
               Continue with name & phone
@@ -288,13 +300,21 @@ export function LoginForm() {
                     onChange={(e) => setVendorPhone(e.target.value)}
                   />
                 </div>
+                {phoneError && (
+                  <p
+                    role="alert"
+                    className="text-sm font-medium text-destructive"
+                  >
+                    {phoneError}
+                  </p>
+                )}
                 <Button
                   type="submit"
                   size="lg"
                   className="h-12 w-full rounded-xl text-base font-semibold"
-                  disabled={busy}
+                  disabled={anyBusy}
                 >
-                  {busy ? "Please wait…" : "Continue"}
+                  {phoneBusy ? "Please wait…" : "Continue"}
                 </Button>
               </form>
             )}
@@ -307,7 +327,7 @@ export function LoginForm() {
               <span className="h-px flex-1 bg-border" />
             </div>
 
-            <form onSubmit={submit} className="space-y-5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-2">
                 <Label
                   htmlFor="email"
@@ -318,13 +338,21 @@ export function LoginForm() {
                 <Input
                   id="email"
                   type="email"
-                  required
                   autoComplete="email"
                   placeholder="you@business.sg"
                   className="h-11 rounded-xl"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? "email-error" : undefined}
+                  {...register("email")}
                 />
+                {errors.email && (
+                  <p
+                    id="email-error"
+                    className="text-sm font-medium text-destructive"
+                  >
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
@@ -338,7 +366,7 @@ export function LoginForm() {
                     <button
                       type="button"
                       onClick={sendReset}
-                      disabled={busy}
+                      disabled={anyBusy}
                       className="text-xs font-semibold text-primary underline-offset-4 hover:underline disabled:opacity-50"
                     >
                       Forgot password?
@@ -348,27 +376,29 @@ export function LoginForm() {
                 <Input
                   id="password"
                   type="password"
-                  required
                   autoComplete={isSignin ? "current-password" : "new-password"}
                   placeholder="••••••••"
                   className="h-11 rounded-xl"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={!!errors.password}
+                  aria-describedby={
+                    errors.password ? "password-error" : undefined
+                  }
+                  {...register("password")}
                 />
+                {errors.password && (
+                  <p
+                    id="password-error"
+                    className="text-sm font-medium text-destructive"
+                  >
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
-              {error && (
-                <p
-                  role="alert"
-                  className="text-sm font-medium text-destructive"
-                >
-                  {error}
-                </p>
-              )}
               <Button
                 type="submit"
                 size="lg"
                 className="h-12 w-full rounded-xl text-base font-semibold"
-                disabled={busy}
+                disabled={anyBusy}
               >
                 {busy
                   ? "Please wait…"
@@ -385,10 +415,7 @@ export function LoginForm() {
             <button
               type="button"
               className="font-semibold text-primary underline-offset-4 hover:underline"
-              onClick={() => {
-                setMode(isSignin ? "signup" : "signin");
-                setError(null);
-              }}
+              onClick={() => setMode(isSignin ? "signup" : "signin")}
             >
               {isSignin ? "Create an account" : "Sign in"}
             </button>
