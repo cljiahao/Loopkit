@@ -6,7 +6,7 @@ Vendor integrations page at `/dashboard/settings` — currently a single section
 
 ## Contents
 
-- `page.tsx` — `SettingsPage` server component; requires a vendor, loads stamp-type programs plus the vendor's existing `qkit_earn_config` row, and renders `QkitEarnSettings`.
+- `page.tsx` — `SettingsPage` server component; requires a vendor, loads stamp-type programs plus the vendor's existing `qkit_earn_config` row, and renders a `BackButton` ("Back to dashboard") above `QkitEarnSettings`.
 
 ## Parent
 

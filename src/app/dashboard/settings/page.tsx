@@ -2,6 +2,7 @@ import { requireVendor } from "@/features/auth";
 import { listPrograms, isPro } from "@/lib/program";
 import { createServerClient } from "@/lib/supabase/server";
 import { QkitEarnSettings } from "@/app/dashboard/qkit-earn-settings";
+import { BackButton } from "@/components/back-button";
 
 export default async function SettingsPage() {
   const { user } = await requireVendor();
@@ -19,6 +20,7 @@ export default async function SettingsPage() {
 
   return (
     <main className="mx-auto max-w-2xl space-y-8 p-5 py-10">
+      <BackButton href="/dashboard" label="Back to dashboard" />
       <div>
         <h1 className="font-display text-2xl font-bold">Settings</h1>
         <p className="mt-1 text-sm text-muted-foreground">
