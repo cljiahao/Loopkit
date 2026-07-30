@@ -20,6 +20,9 @@ repo's AGENTS.md these should not be hand-edited outside the shadcn CLI.
 - `sheet.tsx` — Radix `Dialog`-backed slide-in panel: `Sheet`/`SheetTrigger`/`SheetClose`/`SheetPortal`/`SheetOverlay`/`SheetContent` (side `top`/`right`/`bottom`/`left`)/`SheetHeader`/`SheetFooter`/`SheetTitle`/`SheetDescription`; used by `dashboard-nav.tsx`'s Feedback drawer
 - `switch.tsx` — Radix `Switch` wrapper: `Switch` with `sm`/`default` size variants
 - `table.tsx` — plain-HTML `Table` composition: `Table`/`TableHeader`/`TableBody`/`TableFooter`/`TableRow`/`TableHead`/`TableCell`/`TableCaption`, wrapped in an overflow-x container
+- `textarea.tsx` — `Textarea`: styled native `<textarea>` with the same focus-ring/`aria-invalid` treatment as `input.tsx`, `field-sizing-content` sized; used by `feedback-form.tsx`'s comment field and `support-form.tsx`'s message body
+- `toggle.tsx` — Radix `Toggle` wrapper: `Toggle`/`toggleVariants` (cva: default/outline × default/sm/lg), the single-button primitive `toggle-group.tsx` composes into a segmented control
+- `toggle-group.tsx` — Radix `ToggleGroup` wrapper: `ToggleGroup`/`ToggleGroupItem`, a connected segmented-button row (optional `spacing` prop switches between a joined outline group and gapped standalone toggles) built on `toggle.tsx`'s variants; used by `feedback-form.tsx`'s NPS score picker and `support-form.tsx`'s category picker
 
 ## Parent
 
