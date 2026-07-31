@@ -108,8 +108,8 @@ PreToolUse: blocks secrets and CI pipeline files only (exit 2): `.env*`
 (except `.env.example`), CI/CD definitions (`.github/workflows/`,
 `.github/actions/`), cert files (`.pem`/`.key`/`.p12`/`.pfx`/`.secret`),
 `credentials.json`/`.netrc`/`.secrets`; a second Bash guard blocks
-`--no-verify`, hook-layer bypasses (`LEFTHOOK=0`, `git -c
-core.hooksPath=…`), and force-pushes to `main`. Skills, specs, and all app
+`--no-verify`, hook-layer bypasses (`git -c core.hooksPath=…`), and
+force-pushes to `main`. Skills, specs, and all app
 code are unrestricted. SessionStart (startup/resume/clear/compact):
 re-injects AGENTS.md routing context + `docs/CONSTITUTION.md` +
 universal invariants so they survive compaction (PostCompact is
@@ -122,11 +122,13 @@ Stop hook: runs full test suite (`pnpm test --run`); exit 2 feeds failures
 to Claude via stderr; exit 0 on pass.
 SubagentStop: type-gates a subagent's uncommitted TS changes before it can
 hand back control.
-Git hooks (lefthook): pre-commit runs format/lint/typecheck + gitleaks
+Git hooks (husky): pre-commit runs format/lint/typecheck + gitleaks
 secret-scan on staged files, plus a readme-coupling staleness warning;
 commit-msg enforces Conventional Commits; pre-push runs the harness
 integrity check + quality gate. Hard-local; coverage/changed-line gates
-run in CI.
+run in CI. Migrated 2026-08-01 off lefthook, whose unsigned `lefthook.exe`
+Windows Smart App Control blocks unconditionally — see
+`docs/superpowers/specs/2026-08-01-lefthook-to-husky-migration-design.md`.
 CI (GitHub Actions): hard gate on changed-line coverage (`diff-cover`
 ≥80%), lockfile-in-sync (`--frozen-lockfile`), a changelog-touched check, a
 readme-freshness check, harness integrity, and (via `security.yml`) a

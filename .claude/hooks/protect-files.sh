@@ -39,8 +39,7 @@ case "$rel" in
   .claude/harness.json|*/.claude/harness.json|.claude/verify-harness.sh|*/.claude/verify-harness.sh|.claude/regen-harness.sh|*/.claude/regen-harness.sh) reason="harness integrity baseline/verifier — editing it can defeat drift detection" ;;
   .claude/.harness-base/*|*/.claude/.harness-base/*) reason="merge base snapshot — editing it can poison harness re-sync merges" ;;
   Dockerfile|*/Dockerfile) reason="container image definition" ;;
-  lefthook.yml|*/lefthook.yml|.gitleaks.toml|*/.gitleaks.toml) reason="git-hook enforcement config — editing it can weaken commit-time guards" ;;
-  .lefthook/*|*/.lefthook/*) reason="git-hook script — editing it can weaken commit-time guards" ;;
+  .husky/*|*/.husky/*|.gitleaks.toml|*/.gitleaks.toml) reason="git-hook enforcement config — editing it can weaken commit-time guards" ;;
 esac
 if [ -n "$reason" ]; then
   printf '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":"PROTECTED FILE: %s — %s. Confirm human approval and note it in the PR."}}\n' "$rel" "$reason"

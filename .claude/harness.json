@@ -59,14 +59,11 @@
       "origin_hash": "5405cf6e00bfee4c2f0bf7f90285215825f9671376383154b2a7aff2dd6db74f",
       "path": ".claude/hooks/skill-usage-log.sh"
     },
-    "lefthook.yml": {
-      "origin_hash": "39ef8152b95f14d8b000c1e16a584e0cfb8193794157a5d488f5c5134a571e9d",
-      "path": "lefthook.yml"
-    },
-    ".lefthook/commit-msg.sh": {
-      "origin_hash": "65d9b8f755a4103b466f4ac3c0291af7a0ddd30721c1913afac0cffefc4384e3",
-      "path": ".lefthook/commit-msg.sh"
-    },
+    ".husky/pre-commit": { "origin_hash": "<pending>", "path": ".husky/pre-commit" },
+    ".husky/commit-msg": { "origin_hash": "<pending>", "path": ".husky/commit-msg" },
+    ".husky/pre-push": { "origin_hash": "<pending>", "path": ".husky/pre-push" },
+    ".husky/lib/readme-coupling.sh": { "origin_hash": "<pending>", "path": ".husky/lib/readme-coupling.sh" },
+    ".husky/lib/commit-msg-check.sh": { "origin_hash": "<pending>", "path": ".husky/lib/commit-msg-check.sh" },
     ".gitleaks.toml": {
       "origin_hash": "f9cd4aac35f474f9a48c691b4fd46642388389fa650481342fc4d5ad6216de4e",
       "path": ".gitleaks.toml"

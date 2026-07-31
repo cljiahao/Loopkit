@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- `prepare` script (`lefthook install`) now tolerates a missing `.git`
+  directory (`|| true`) so `pnpm install --frozen-lockfile` no longer
+  hard-fails in Docker build stages that exclude `.git` via
+  `.dockerignore` (templateCentral 5.11.1/5.12.0 harness convention).
 - Dashboard nav's mobile burger and inline Dashboard/Customers/Activity/Stats
   links now use the shadcn `Button` component instead of hand-rolled
   `<button>`/`<Link>` markup, matching qkit's pattern; the burger also gained
@@ -30,6 +34,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   unmounts once the new route lands, so `pending` correctly never resets.
 
 ### Changed
+
+- Migrated git hooks from lefthook to husky — lefthook's unsigned
+  `lefthook.exe` is unconditionally blocked by Windows Smart App Control on
+  this machine; husky has no native binary. Same checks, same rigor.
 
 - Login form migrated off raw `useState` + manual submit handlers with
   inline error text onto React Hook Form + Zod (a new `loginSchema` in
