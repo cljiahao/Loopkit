@@ -28,7 +28,7 @@
       "path": ".claude/hooks/protect-files.sh"
     },
     ".claude/hooks/block-no-verify.sh": {
-      "origin_hash": "984c63715dabfe655094aa8b8f1ed60e82d67992833f3078382d958dc172e65d",
+      "origin_hash": "9848cf024fde5e6046c67523ac0162f0ccd57ad39ac1802dd6b413e71232c14a",
       "path": ".claude/hooks/block-no-verify.sh"
     },
     ".claude/hooks/user-prompt-guard.cjs": {
@@ -60,7 +60,7 @@
       "path": ".claude/hooks/skill-usage-log.sh"
     },
     ".husky/pre-commit": {
-      "origin_hash": "2ee3bb97fe9072fc6a505161220e79204bfedeca91dcc391d5bb21aced234212",
+      "origin_hash": "d2e7fc67c52c52b92b59483cb2ff7192622327df7eede66fcc1b2606ea5f239c",
       "path": ".husky/pre-commit"
     },
     ".husky/commit-msg": {
@@ -68,7 +68,7 @@
       "path": ".husky/commit-msg"
     },
     ".husky/pre-push": {
-      "origin_hash": "1ee90873ba3267e772fb22b9739ae4521e6f4c4627b49fef9c4e7a3a16983917",
+      "origin_hash": "6a188b7cbbb034423607cd91ce20c78e62823775d24ce0c13ebdab9606f2b68c",
       "path": ".husky/pre-push"
     },
     ".husky/lib/readme-coupling.sh": {
@@ -79,8 +79,14 @@
       "origin_hash": "f5347b89ef6d530b5ae388cc4dea3bfce10898c89e5218dcfd908876ccc0659e",
       "path": ".husky/lib/commit-msg-check.sh"
     },
-    ".husky/lib/pre-commit.sh": { "origin_hash": "<pending>", "path": ".husky/lib/pre-commit.sh" },
-    ".husky/lib/pre-push.sh": { "origin_hash": "<pending>", "path": ".husky/lib/pre-push.sh" },
+    ".husky/lib/pre-commit.sh": {
+      "origin_hash": "67a9ffde090470b6397e13e23b16e5bf165b8d6eb3808de36ad4a1c50368390d",
+      "path": ".husky/lib/pre-commit.sh"
+    },
+    ".husky/lib/pre-push.sh": {
+      "origin_hash": "5876e89ed8ead807cf3a1e9b0c97b95926d68f068b4ed0ebc5114965a9f4e6de",
+      "path": ".husky/lib/pre-push.sh"
+    },
     ".gitleaks.toml": {
       "origin_hash": "f9cd4aac35f474f9a48c691b4fd46642388389fa650481342fc4d5ad6216de4e",
       "path": ".gitleaks.toml"
