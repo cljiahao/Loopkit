@@ -108,8 +108,8 @@ PreToolUse: blocks secrets and CI pipeline files only (exit 2): `.env*`
 (except `.env.example`), CI/CD definitions (`.github/workflows/`,
 `.github/actions/`), cert files (`.pem`/`.key`/`.p12`/`.pfx`/`.secret`),
 `credentials.json`/`.netrc`/`.secrets`; a second Bash guard blocks
-`--no-verify`, hook-layer bypasses (`git -c core.hooksPath=…`), and
-force-pushes to `main`. Skills, specs, and all app
+`--no-verify`, hook-layer bypasses (`HUSKY=0`, `HUSKY_SKIP_HOOKS`, `git -c
+core.hooksPath=…`), and force-pushes to `main`. Skills, specs, and all app
 code are unrestricted. SessionStart (startup/resume/clear/compact):
 re-injects AGENTS.md routing context + `docs/CONSTITUTION.md` +
 universal invariants so they survive compaction (PostCompact is
