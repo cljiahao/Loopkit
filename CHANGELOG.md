@@ -31,6 +31,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Migrated git hooks from lefthook to husky — lefthook's unsigned
+  `lefthook.exe` is unconditionally blocked by Windows Smart App Control on
+  this machine; husky has no native binary. Same checks, same rigor.
+
 - Login form migrated off raw `useState` + manual submit handlers with
   inline error text onto React Hook Form + Zod (a new `loginSchema` in
   `src/lib/schemas.ts`) with a `zodResolver`, matching qkit's login page

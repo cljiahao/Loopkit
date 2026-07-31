@@ -8,7 +8,7 @@
   "richReadme": true,
   "seeded_files": {
     "AGENTS.md": {
-      "origin_hash": "e0c5b36198b687f76d0bc3592162294a2cf0fa3780c39a4d31048a4ba7c1fe43",
+      "origin_hash": "6d68cd4e3b4ef5c25ccfeb81e9d9d9d054ea682b06aa460450259a9f84345281",
       "path": "AGENTS.md"
     },
     ".claude/settings.json": {
@@ -24,11 +24,11 @@
       "path": ".claude/skills/skill-audit/SKILL.md"
     },
     ".claude/hooks/protect-files.sh": {
-      "origin_hash": "2ba25f7c278bbd4c803b283b91fcb1ef4836af2429b8ae9847a9e64a4a0e3b76",
+      "origin_hash": "cedefb778eee8a3b8c79bb1a4eb7b7680a0a5e1ef3c9b1a08d3cac6c8793d6b1",
       "path": ".claude/hooks/protect-files.sh"
     },
     ".claude/hooks/block-no-verify.sh": {
-      "origin_hash": "f0f147dcf4bd5df66bd723a7b5c3bde69df758f232b1403e9eb02ab7500d35ea",
+      "origin_hash": "9848cf024fde5e6046c67523ac0162f0ccd57ad39ac1802dd6b413e71232c14a",
       "path": ".claude/hooks/block-no-verify.sh"
     },
     ".claude/hooks/user-prompt-guard.cjs": {
@@ -59,13 +59,33 @@
       "origin_hash": "5405cf6e00bfee4c2f0bf7f90285215825f9671376383154b2a7aff2dd6db74f",
       "path": ".claude/hooks/skill-usage-log.sh"
     },
-    "lefthook.yml": {
-      "origin_hash": "39ef8152b95f14d8b000c1e16a584e0cfb8193794157a5d488f5c5134a571e9d",
-      "path": "lefthook.yml"
+    ".husky/pre-commit": {
+      "origin_hash": "d2e7fc67c52c52b92b59483cb2ff7192622327df7eede66fcc1b2606ea5f239c",
+      "path": ".husky/pre-commit"
     },
-    ".lefthook/commit-msg.sh": {
-      "origin_hash": "65d9b8f755a4103b466f4ac3c0291af7a0ddd30721c1913afac0cffefc4384e3",
-      "path": ".lefthook/commit-msg.sh"
+    ".husky/commit-msg": {
+      "origin_hash": "542e5d3b30c42e64b3234d23d2e385ce4b1a3671231aa406b5ba2a80560dd35b",
+      "path": ".husky/commit-msg"
+    },
+    ".husky/pre-push": {
+      "origin_hash": "6a188b7cbbb034423607cd91ce20c78e62823775d24ce0c13ebdab9606f2b68c",
+      "path": ".husky/pre-push"
+    },
+    ".husky/lib/readme-coupling.sh": {
+      "origin_hash": "368a87cf51dbc4b5bfacafd80e44b8033cb926e2e2c09daa76eaac69a15756bd",
+      "path": ".husky/lib/readme-coupling.sh"
+    },
+    ".husky/lib/commit-msg-check.sh": {
+      "origin_hash": "f5347b89ef6d530b5ae388cc4dea3bfce10898c89e5218dcfd908876ccc0659e",
+      "path": ".husky/lib/commit-msg-check.sh"
+    },
+    ".husky/lib/pre-commit.sh": {
+      "origin_hash": "67a9ffde090470b6397e13e23b16e5bf165b8d6eb3808de36ad4a1c50368390d",
+      "path": ".husky/lib/pre-commit.sh"
+    },
+    ".husky/lib/pre-push.sh": {
+      "origin_hash": "5876e89ed8ead807cf3a1e9b0c97b95926d68f068b4ed0ebc5114965a9f4e6de",
+      "path": ".husky/lib/pre-push.sh"
     },
     ".gitleaks.toml": {
       "origin_hash": "f9cd4aac35f474f9a48c691b4fd46642388389fa650481342fc4d5ad6216de4e",
@@ -76,7 +96,7 @@
       "path": ".github/workflows/ci.yml"
     },
     ".claude/verify-harness.sh": {
-      "origin_hash": "8c50cc319c80fb1b6e4129f149b69a7341803dc078f388fe0e3127e64d7f08bd",
+      "origin_hash": "2955c12d45b7c6d70dc9722dee4d3ab5de44b5518ab3da48eb5ccc00f0c9665b",
       "path": ".claude/verify-harness.sh"
     },
     ".claude/regen-harness.sh": {

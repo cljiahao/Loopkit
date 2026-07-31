@@ -15,7 +15,7 @@ against.
 - `regen-harness.sh` — human-run-only: rewrites every `origin_hash` in `harness.json` to match current on-disk content, blessing an intentional harness edit; `protect-files.sh` requires human approval before an agent can even edit it
 - `settings.json` — wires each script in `hooks/` to a Claude Code lifecycle event (PreToolUse, PostToolUse, PostToolUseFailure, Stop, SubagentStop, SessionStart, UserPromptSubmit) and sets tool `permissions` (allow/deny) and skill overrides
 - `skills/`
-- `verify-harness.sh` — harness integrity sensor: recomputes sha256 for every seeded file matched by a path guard (`hooks/`, `settings.json`, harness verifier/regen scripts, `lefthook.yml`, `.lefthook/`, `.gitleaks.toml`, `.github/workflows/`) and compares to `harness.json`'s `origin_hash` baseline; read-only, exits non-zero on drift; run by `.github/workflows/ci.yml` and lefthook's `pre-push` hook
+- `verify-harness.sh` — harness integrity sensor: recomputes sha256 for every seeded file matched by a path guard (`hooks/`, `settings.json`, harness verifier/regen scripts, `.husky/`, `.gitleaks.toml`, `.github/workflows/`) and compares to `harness.json`'s `origin_hash` baseline; read-only, exits non-zero on drift; run by `.github/workflows/ci.yml` and husky's `pre-push` hook
 
 ## Connectivity
 
@@ -24,7 +24,7 @@ event to a script in `hooks/` (e.g. `PreToolUse` → `protect-files.sh` and
 `block-no-verify.sh`, `Stop` → `stop-checks.sh`), so a hook script does
 nothing until `settings.json` references it. `harness.json`'s `seeded_files`
 list is the source of truth for which of those hook scripts (plus
-`settings.json` itself, the lefthook/gitleaks/CI config) count as
+`settings.json` itself, the husky/gitleaks/CI config) count as
 "enforcement layer" — `verify-harness.sh` hashes each listed path and fails
 if it drifts from the recorded `origin_hash`, catching silent edits or
 accidental reverts. `.harness-base/` is a full-content mirror of the same 19
