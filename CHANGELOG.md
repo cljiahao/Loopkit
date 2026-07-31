@@ -8,6 +8,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Dashboard nav's mobile burger and inline Dashboard/Customers/Activity/Stats
+  links now use the shadcn `Button` component instead of hand-rolled
+  `<button>`/`<Link>` markup, matching qkit's pattern; the burger also gained
+  an `aria-expanded` attribute reflecting its open/closed state.
+- Landing nav rendered a Faq (`id="faq"`) section with no way to reach it —
+  added an FAQ button (hidden below `sm`, anchored to `#faq` via a plain
+  `<a>` for a reliable same-page hash jump), matching qkit's header
+  placement before the auth CTAs.
+- `/dashboard/profile` and `/dashboard/settings` were both missing the "Back
+  to dashboard" `BackButton` that qkit renders on its equivalent profile
+  page — wired the existing `BackButton` component (already used on
+  `/setup` and `/dashboard/counter`) into both.
+- Login form's submit button could visibly re-enable mid-transition right
+  after a successful sign-in: `router.push`/`router.refresh` return before
+  the navigation lands, so `useAsyncAction`'s `finally` flipped `pending`
+  back to `false` while the old page was still showing. Ported qkit's
+  `navigatingAway()` helper into `use-async-action.ts` (a promise that
+  never resolves) and `await` it at the end of the login form's
+  email/password and phone-onboarding success branches — the component
+  unmounts once the new route lands, so `pending` correctly never resets.
+
+### Changed
+
+- Login form migrated off raw `useState` + manual submit handlers with
+  inline error text onto React Hook Form + Zod (a new `loginSchema` in
+  `src/lib/schemas.ts`) with a `zodResolver`, matching qkit's login page
+  pattern and the stack AGENTS.md already documents. Auth/server errors now
+  surface via sonner toasts instead of an inline alert paragraph. The
+  name+phone onboarding sub-flow keeps its own hand-rolled busy/error state
+  rather than moving onto the same resolver, since it isn't a validated
+  email/password form; all buttons still share one disabled state across
+  both flows.
+
 - **qkit-earn upsell copy overstated the stamp award as automatic.** The
   Pro upgrade prompt for earning stamps from qkit orders said a stamp is
   awarded "automatically" — the real flow is a claim link (the customer
