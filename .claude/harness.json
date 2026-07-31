@@ -8,7 +8,7 @@
   "richReadme": true,
   "seeded_files": {
     "AGENTS.md": {
-      "origin_hash": "27c54dd9a94f5a9d3966828bc9e0826406f1225c5f001af25cbcbe5dc9ad74df",
+      "origin_hash": "6d68cd4e3b4ef5c25ccfeb81e9d9d9d054ea682b06aa460450259a9f84345281",
       "path": "AGENTS.md"
     },
     ".claude/settings.json": {
@@ -28,7 +28,7 @@
       "path": ".claude/hooks/protect-files.sh"
     },
     ".claude/hooks/block-no-verify.sh": {
-      "origin_hash": "f0f147dcf4bd5df66bd723a7b5c3bde69df758f232b1403e9eb02ab7500d35ea",
+      "origin_hash": "984c63715dabfe655094aa8b8f1ed60e82d67992833f3078382d958dc172e65d",
       "path": ".claude/hooks/block-no-verify.sh"
     },
     ".claude/hooks/user-prompt-guard.cjs": {
