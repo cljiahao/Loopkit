@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { toast } from "sonner";
 
 const {
   routerPush,
@@ -35,6 +36,8 @@ vi.mock("@/lib/supabase/client", () => ({
 vi.mock("../api/actions", () => ({
   vendorPhoneOnboardAction: vendorPhoneOnboardActionMock,
 }));
+
+vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 import { LoginForm } from "./login-form";
 
@@ -81,7 +84,7 @@ describe("LoginForm", () => {
     });
   });
 
-  it("shows an error when Google sign-in fails to start", async () => {
+  it("shows a toast when Google sign-in fails to start", async () => {
     authMock.signInWithOAuth.mockResolvedValue({
       error: { message: "OAuth unavailable" },
     });
@@ -90,8 +93,8 @@ describe("LoginForm", () => {
     await user.click(
       screen.getByRole("button", { name: /Continue with Google/ }),
     );
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "OAuth unavailable",
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("OAuth unavailable"),
     );
   });
 
@@ -112,7 +115,7 @@ describe("LoginForm", () => {
     expect(routerRefresh).toHaveBeenCalled();
   });
 
-  it("shows an error message when sign-in fails", async () => {
+  it("shows a toast when sign-in fails", async () => {
     authMock.signInWithPassword.mockResolvedValue({
       error: { message: "Invalid credentials" },
     });
@@ -122,10 +125,26 @@ describe("LoginForm", () => {
     await user.type(screen.getByLabelText("Password"), "wrong");
     await user.click(screen.getByRole("button", { name: "Sign in" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Invalid credentials",
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Invalid credentials"),
     );
     expect(routerPush).not.toHaveBeenCalled();
+  });
+
+  it("blocks submit and shows an inline error for a blank email", async () => {
+    // A malformed-but-non-empty value (e.g. "not-an-email") in a native
+    // type="email" input triggers the browser's own implicit constraint
+    // validation, which cancels the submit event before react-hook-form's
+    // handler ever runs — not what this test is after. Leaving the field
+    // blank sidesteps that (empty + not "required" is natively valid) and
+    // still exercises the zodResolver's own "Invalid email" rejection.
+    const user = userEvent.setup();
+    render(<LoginForm />);
+    await user.type(screen.getByLabelText("Password"), "hunter2");
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(await screen.findByText("Invalid email")).toBeInTheDocument();
+    expect(authMock.signInWithPassword).not.toHaveBeenCalled();
   });
 
   it("switches to signup mode and shows the check-your-email state when signUp returns no session", async () => {
@@ -165,7 +184,7 @@ describe("LoginForm", () => {
     await waitFor(() => expect(routerPush).toHaveBeenCalledWith("/dashboard"));
   });
 
-  it("shows an error when signup fails", async () => {
+  it("shows a toast when signup fails", async () => {
     authMock.signUp.mockResolvedValue({
       data: { session: null },
       error: { message: "Email already registered" },
@@ -177,8 +196,8 @@ describe("LoginForm", () => {
     await user.type(screen.getByLabelText("Password"), "hunter2");
     await user.click(screen.getByRole("button", { name: "Create account" }));
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Email already registered",
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Email already registered"),
     );
   });
 
@@ -285,12 +304,12 @@ describe("LoginForm", () => {
     expect(screen.getByText(/password reset link/)).toBeInTheDocument();
   });
 
-  it("shows an error and does not send when Forgot password is clicked with no email", async () => {
+  it("shows a toast and does not send when Forgot password is clicked with no email", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
     await user.click(screen.getByRole("button", { name: "Forgot password?" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Enter your email first.",
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Enter your email first."),
     );
     expect(authMock.resetPasswordForEmail).not.toHaveBeenCalled();
   });

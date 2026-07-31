@@ -200,6 +200,20 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      local `loopkit.feedback` table stops receiving new rows and is kept
      only as this migration's one-time historical source.
 
+   - apply `0031_loopkit_vendor_join_avatar.sql` — appends `vendor_avatar_url`
+     (read from `auth.users.raw_user_meta_data`) to `vendor_join`'s return
+     columns, so the public `/c` page can render a vendor's chosen stamp-mark
+     photo. Safe to re-run.
+
+   - apply `0032_loopkit_provision_default_program.sql` — adds
+     `provision_default_program(p_vendor_id)`, a service-role-only SECURITY
+     DEFINER function (never granted to `authenticated`) that seeds a default
+     "Starter" stamp program for a push-provisioned vendor, since
+     `create_program` is keyed on the calling session's `auth.uid()` and can't
+     run on a vendor's behalf. Advisory-lock-guarded against a double-provision
+     race, idempotent on `loopkit.programs`. Backs
+     `POST /api/merqo/vendor-provision`. Safe to re-run.
+
    - **Optional — rate limiting on the public `/c` surface.** The card-check
      action is throttled per-IP only if an Upstash Redis is configured. Create a
      free Upstash Redis and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`

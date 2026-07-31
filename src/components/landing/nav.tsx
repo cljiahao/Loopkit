@@ -14,6 +14,18 @@ export function Nav({ authed = false }: { authed?: boolean }) {
           <span className="sr-only">loopkit home</span>
         </Link>
         <div className="flex items-center gap-3">
+          {/* Plain <a>, not next/link's Link: this is a same-page hash jump
+              (Nav is only ever rendered on "/"), and Link doesn't reliably
+              update the URL bar's hash when only the fragment changes — it
+              scrolls but leaves the old hash showing. */}
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="hidden sm:inline-flex"
+          >
+            <a href="#faq">FAQ</a>
+          </Button>
           {authed ? (
             <Button asChild size="sm">
               <Link href="/dashboard">Dashboard</Link>

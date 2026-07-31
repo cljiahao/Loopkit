@@ -33,6 +33,12 @@ gold reward accent, chosen (over the earlier, dimmer "Mulberry & Gold") to
 read as celebratory rather than moody-fintech. Form fields keep their
 primary copy to one short line, pushing rationale/edge-case detail into a
 shared tap-to-open `(i)` info tooltip (`src/components/info-tooltip.tsx`).
+The login form (`src/features/auth/components/login-form.tsx`) runs on
+React Hook Form + Zod (a `loginSchema` in `src/lib/schemas.ts`) with a
+`zodResolver`, surfacing auth/server errors via sonner toasts rather than
+an inline alert paragraph; its post-navigation success branches `await`
+`navigatingAway()` (`src/hooks/use-async-action.ts`) so the submit button
+doesn't visibly re-enable mid-transition to `/dashboard`.
 
 ## Stack
 
