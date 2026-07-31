@@ -10,7 +10,7 @@ Smart App Control to block, unlike lefthook's unsigned `lefthook.exe`).
 ## Contents
 
 - `pre-commit`, `commit-msg`, `pre-push` — thin `exec bash
-  .husky/lib/<name>.sh "$@"` wrappers. Husky v9's dispatcher runs hook
+.husky/lib/<name>.sh "$@"` wrappers. Husky v9's dispatcher runs hook
   files via `sh -e`, ignoring the `#!/usr/bin/env bash` shebang, so any
   bash-specific syntax (`set -o pipefail`, etc.) has to live in a script
   that's explicitly invoked with `bash`, not in the file git/husky execute
