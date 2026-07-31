@@ -79,6 +79,8 @@
       "origin_hash": "f5347b89ef6d530b5ae388cc4dea3bfce10898c89e5218dcfd908876ccc0659e",
       "path": ".husky/lib/commit-msg-check.sh"
     },
+    ".husky/lib/pre-commit.sh": { "origin_hash": "<pending>", "path": ".husky/lib/pre-commit.sh" },
+    ".husky/lib/pre-push.sh": { "origin_hash": "<pending>", "path": ".husky/lib/pre-push.sh" },
     ".gitleaks.toml": {
       "origin_hash": "f9cd4aac35f474f9a48c691b4fd46642388389fa650481342fc4d5ad6216de4e",
       "path": ".gitleaks.toml"

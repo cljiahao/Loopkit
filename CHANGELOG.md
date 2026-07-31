@@ -8,10 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- `prepare` script (`lefthook install`) now tolerates a missing `.git`
-  directory (`|| true`) so `pnpm install --frozen-lockfile` no longer
-  hard-fails in Docker build stages that exclude `.git` via
-  `.dockerignore` (templateCentral 5.11.1/5.12.0 harness convention).
 - Dashboard nav's mobile burger and inline Dashboard/Customers/Activity/Stats
   links now use the shadcn `Button` component instead of hand-rolled
   `<button>`/`<Link>` markup, matching qkit's pattern; the burger also gained

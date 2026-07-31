@@ -68,7 +68,7 @@ The following files require explicit human approval noted in the PR under
 - `.claude/hooks/*` — enforcement hooks
 - `.claude/harness.json`, `.claude/verify-harness.sh`,
   `.claude/regen-harness.sh` — harness integrity baseline/verifier
-- `lefthook.yml`, `.lefthook/*`, `.gitleaks.toml` — git-hook enforcement
+- `.husky/*`, `.gitleaks.toml` — git-hook enforcement
 - `.github/workflows/*` — CI pipeline definitions
 - `Dockerfile` (none yet — reserved if one is added)
 

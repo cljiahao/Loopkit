@@ -122,7 +122,7 @@ See `AGENTS.md` for full engineering rules, harness details, and skills.
 
 - `.claude/` — Claude Code harness: hooks, project skills, harness manifest
 - `.github/` — CI workflows
-- `.lefthook/` — git commit-msg gate script
+- `.husky/` — git hook scripts (pre-commit/commit-msg/pre-push)
 - `docs/` — deploy runbook, superpowers specs/plans, CONSTITUTION
 - `e2e/` — Playwright end-to-end smoke + signed-out route-protection tests (both run without Supabase provisioning)
 - `src/` — application source (App Router pages, lib, components)

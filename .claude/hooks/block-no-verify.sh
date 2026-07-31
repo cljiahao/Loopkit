@@ -9,7 +9,7 @@ if echo "$scan" | grep -qE 'git[[:space:]]+commit' && echo "$scan" | grep -qE '\
   echo "BLOCKED: --no-verify (or -n) on git commit bypasses the pre-commit hooks. Fix the failure instead." >&2
   exit 2
 fi
-if echo "$scan" | grep -qE '\bgit\b' && echo "$scan" | grep -qE '\bcommit\b' && echo "$scan" | grep -qE '(^|[[:space:]])HUSKY=0|(^|[[:space:]])HUSKY_SKIP_HOOKS=|core\.hooksPath[[:space:]]*='; then
+if echo "$scan" | grep -qE '\bgit\b' && echo "$scan" | grep -qE '\b(commit|push|config)\b' && echo "$scan" | grep -qE '(^|[[:space:]])HUSKY=0|(^|[[:space:]])HUSKY_SKIP_HOOKS=|core\.hooksPath[[:space:]]*='; then
   echo "BLOCKED: HUSKY=0 / HUSKY_SKIP_HOOKS / 'git -c core.hooksPath=...' disables the pre-commit hook layer — the same bypass as --no-verify. Fix the failure instead." >&2
   exit 2
 fi
