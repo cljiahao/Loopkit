@@ -6,9 +6,9 @@ staged=$(git diff --cached --name-only --diff-filter=ACM)
 
 ts_files=$(printf '%s\n' "$staged" | grep -E '\.(ts|tsx|js|mjs|cjs)$' | grep -vE '(^|/)\.claude/hooks/|(^|/)\.claude/\.harness-base/' || true)
 if [ -n "$ts_files" ]; then
-  printf '%s\n' "$ts_files" | xargs -d '\n' pnpm exec prettier --write
-  printf '%s\n' "$ts_files" | xargs -d '\n' pnpm exec eslint --fix --max-warnings=0 --no-warn-ignored
-  printf '%s\n' "$ts_files" | xargs -d '\n' git add
+  printf '%s\n' "$ts_files" | tr '\n' '\0' | xargs -0 pnpm exec prettier --write
+  printf '%s\n' "$ts_files" | tr '\n' '\0' | xargs -0 pnpm exec eslint --fix --max-warnings=0 --no-warn-ignored
+  printf '%s\n' "$ts_files" | tr '\n' '\0' | xargs -0 git add
 fi
 
 pnpm exec tsc --noEmit
