@@ -5,7 +5,9 @@ Digital stamp-card loyalty for SG small vendors. A Merqo kit — owns the
 merqo over HTTP. Browser-tab title follows the cross-kit "Name | Tagline"
 Title Case convention: "Loopkit | Loyalty Cards". The landing page's
 "Sign in" link and `BackToTop` button match the cross-kit landing-page
-parity pass.
+parity pass. In production, the Supabase auth cookie is scoped to
+`.merqo.io` (`NEXT_PUBLIC_AUTH_COOKIE_DOMAIN`, `src/lib/supabase/`), so
+signing in on one Merqo kit signs you in on the rest.
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
