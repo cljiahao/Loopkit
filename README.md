@@ -2,7 +2,8 @@
 
 Digital stamp-card loyalty for SG small vendors. A Merqo kit — owns the
 `loopkit` schema in the shared Merqo Supabase project, reports metrics to
-merqo over HTTP.
+merqo over HTTP. Browser-tab title follows the cross-kit "Name | Tagline"
+Title Case convention: "Loopkit | Loyalty Cards".
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
