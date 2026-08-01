@@ -134,7 +134,7 @@ export function DashboardNav({
           aria-label="loopkit dashboard home"
           className="shrink-0 rounded-sm outline-none transition-opacity hover:opacity-80 focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
-          <Wordmark className="text-xl" />
+          <Wordmark className="text-3xl" />
         </Link>
 
         <nav className="hidden items-center gap-1 sm:flex">

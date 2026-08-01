@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Browser-tab title lowercased to match the kit naming convention (was
   "LoopKit: stamp cards", PascalCase reserved for the logo mark only) and
   tightened to "loopkit: loyalty cards".
+- Dashboard and landing navbar height, padding, and logo size now match
+  qkit's spec (`px-5 py-3.5`/`py-4`, `text-3xl` logo, `font-semibold` not
+  `font-extrabold`).
 
 - Dashboard nav's mobile burger and inline Dashboard/Customers/Activity/Stats
   links now use the shadcn `Button` component instead of hand-rolled
