@@ -6,6 +6,9 @@ Client-side auth UI.
 
 ## Contents
 
+- `google-mark.tsx` — `GoogleMark`: the Google "G" icon SVG, extracted out
+  of `login-form.tsx` so it matches the shared component used across every
+  kit's login page.
 - `login-form.tsx` — `LoginForm`: `ElevatedCard`-wrapped Google OAuth
   sign-in, a name+phone onboarding form (own hand-rolled busy/error state —
   establishes an anonymous Supabase session then calls
