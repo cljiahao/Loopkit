@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Browser-tab title now uses the cross-kit "Name | Tagline" Title Case
+  format: "Loopkit | Loyalty Cards" (was "loopkit: loyalty cards").
+- `.husky/lib/pre-commit.sh` used `xargs -d '\n'`, a GNU-only flag not
+  supported by BSD xargs (macOS default) — broke every local commit
+  touching a staged .ts/.tsx/.js/.mjs/.cjs file. Swapped for portable
+  `tr '\n' '\0' | xargs -0`.
+
 - Browser-tab title lowercased to match the kit naming convention (was
   "LoopKit: stamp cards", PascalCase reserved for the logo mark only) and
   tightened to "loopkit: loyalty cards".
