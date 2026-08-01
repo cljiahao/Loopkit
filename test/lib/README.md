@@ -4,8 +4,7 @@
 
 Vitest unit tests for `src/lib/` domain logic — mostly pure-function tests;
 several (`admin-data.test.ts`, `admin.test.ts`, `cards.test.ts`,
-`rate-limit.test.ts`, `vendor.test.ts`) mock the Supabase server/service
-client instead.
+`vendor.test.ts`) mock the Supabase server/service client instead.
 
 ## Contents
 
@@ -27,7 +26,6 @@ client instead.
 - `program-health.test.ts` — `programHealth`: "new"/"quiet"/"active" triage from customer count, age, last activity
 - `program.test.ts` — `programInputSchema`/`canPrepProgram`/`getEntitlement`: program validation and tier caps
 - `qr.test.ts` — `qrSvg`: renders a valid `<svg>…</svg>` string for a token
-- `rate-limit.test.ts` — `allowRequest`: fail-open when Upstash env vars are absent, uses the configured limiter keyed `bucket:ip` when set, falls back to `bucket:unknown` when `x-forwarded-for` is missing — each case re-imports the module after `vi.resetModules()` since the limiter is memoized at module scope
 - `save-program-schema.test.ts` — `saveProgramSchema`: discriminated-union Zod validation per program type
 - `stats.test.ts` — `classifyActivity`/`bucketVisitsByDay`/`computeCardStats`/`pctChange`/`avgDaysBetweenVisits`: stats aggregation pipeline; `countExpiredVouchers`: queries `reward_vouchers` scoped to the given programs/status/30-day window, returns 0 without querying when there are no programs, throws on a query error
 - `vendor.test.ts` — `stallNameSchema` validation; `saveStallName`/`getVendorProfile`: both mock `@/lib/merqo-vendor-profile`, asserting the shared `merqo.vendor_profile` row (not local `vendors.name`) is the source of truth, the seed/fallback precedence between a local row, a passed-in `fallbackName`, and a merqo read failure

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- Per-IP rate limiting (`src/lib/rate-limit.ts`, `@upstash/ratelimit`,
+  `@upstash/redis`) on the public `/c` card-check and `/earn` claim actions —
+  never provisioned in production (fail-open, so it was a no-op), decided
+  not worth the added dependency + config surface.
+
 ### Added
 
 - `BackToTop` scroll-to-top button on the landing page (ported from qkit).

@@ -2,7 +2,6 @@
 
 import { createServerClient } from "@/lib/supabase/server";
 import { normalizePhone } from "@/lib/phone";
-import { allowRequest } from "@/lib/rate-limit";
 
 export type EarnState = {
   status: "idle" | "error" | "success";
@@ -29,13 +28,6 @@ export async function claimEarnAction(
   _prev: EarnState,
   formData: FormData,
 ): Promise<EarnState> {
-  if (!(await allowRequest("earn-claim"))) {
-    return {
-      status: "error",
-      message: "Too many attempts — try again in a minute.",
-    };
-  }
-
   const orderId = String(formData.get("order") ?? "");
   if (!orderId) {
     return { status: "error", message: "Missing order." };
