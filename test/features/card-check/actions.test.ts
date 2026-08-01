@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { rpcMock, allowRequestMock } = vi.hoisted(() => ({
+const { rpcMock } = vi.hoisted(() => ({
   rpcMock: vi.fn(),
-  allowRequestMock: vi.fn(async () => true),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -11,10 +10,6 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/qr", () => ({
   qrSvg: vi.fn(async (text: string) => `<svg data-token="${text}"></svg>`),
-}));
-
-vi.mock("@/lib/rate-limit", () => ({
-  allowRequest: allowRequestMock,
 }));
 
 import {
@@ -48,7 +43,6 @@ function mockRegenerate(card: unknown) {
 describe("checkStatusAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    allowRequestMock.mockResolvedValue(true);
   });
 
   it("rejects an invalid phone without calling the RPC", async () => {
@@ -71,20 +65,6 @@ describe("checkStatusAction", () => {
     );
 
     expect(result).toEqual({ status: "error", message: "Missing shop." });
-    expect(rpcMock).not.toHaveBeenCalled();
-  });
-
-  it("returns a rate-limit error without calling the RPC when too many attempts have been made", async () => {
-    allowRequestMock.mockResolvedValue(false);
-    const result = await checkStatusAction(
-      STATUS_IDLE,
-      form({ vendor: "v1", phone: "91234567" }),
-    );
-
-    expect(result).toEqual({
-      status: "error",
-      message: "Too many attempts — try again in a minute.",
-    });
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
@@ -434,7 +414,6 @@ describe("checkStatusAction", () => {
 describe("regenerateCardAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    allowRequestMock.mockResolvedValue(true);
   });
 
   it("rejects an invalid phone without calling the RPC", async () => {
@@ -455,19 +434,6 @@ describe("regenerateCardAction", () => {
     );
 
     expect(result).toEqual({ success: false, error: "Missing program." });
-    expect(rpcMock).not.toHaveBeenCalled();
-  });
-
-  it("returns a rate-limit error without calling the RPC when too many attempts have been made", async () => {
-    allowRequestMock.mockResolvedValue(false);
-    const result = await regenerateCardAction(
-      form({ phone: "91234567", program: "p1" }),
-    );
-
-    expect(result).toEqual({
-      success: false,
-      error: "Too many attempts — try again in a minute.",
-    });
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
