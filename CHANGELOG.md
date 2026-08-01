@@ -6,8 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `BackToTop` scroll-to-top button on the landing page (ported from qkit).
+
 ### Fixed
 
+- Landing nav's "Log in" link renamed to "Sign in" for cross-kit label
+  parity.
 - Browser-tab title lowercased to match the kit naming convention (was
   "LoopKit: stamp cards", PascalCase reserved for the logo mark only) and
   tightened to "loopkit: loyalty cards".
