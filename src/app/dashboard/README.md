@@ -17,7 +17,8 @@ Vendor console root: program grid, shared shop QR, scan-to-serve entry point, an
 - `dashboard-page.dom.test.tsx` — jsdom test asserting `DashboardPage` renders a "Your programs" heading above the program grid alongside the Shop QR block and scan entry
 - `dashboard-view.test.ts` — unit tests for `shouldShowQr` (hides QR block at zero active programs, shows it otherwise)
 - `dashboard-view.ts` — exports `shouldShowQr(activeProgramCount)`, a pure helper deciding whether the shop QR block should render
-- `layout.tsx` — async `DashboardLayout` server component: requires vendor auth, redirects admins to `/admin`, renders the sticky header with `DashboardNav`, and defines an inline sign-out server action
+- `layout.tsx` — async `DashboardLayout` server component: requires vendor auth, redirects admins to `/admin`, renders the sticky header (`px-5 py-3.5`, matching qkit's dashboard-header sizing exactly) with `DashboardNav`, and defines an inline sign-out server action
+- `layout.test.tsx` — asserts the sticky header carries qkit's `px-5 py-3.5 backdrop-blur-md` classes
 - `loading.tsx` — `DashboardLoading` skeleton fallback (pulse placeholders for header and cards) shown while the dashboard route segment streams
 - `new-program-tile.dom.test.tsx` — jsdom tests for `NewProgramTile` linking to `/setup` when allowed, showing an upgrade prompt at the free-tier cap
 - `new-program-tile.tsx` — `NewProgramTile`: trailing grid tile linking to `/setup` to add a program, or a Pro upgrade prompt when at the free-plan cap
