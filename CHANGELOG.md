@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Dashboard onboarding tour (ported from qkit/stockkit): a `driver.js`
+  overlay auto-runs once on first login, spotlighting the shop QR block,
+  Customers, and the account menu, replayable via a floating "?" button.
+  Tracked server-side via a new `vendors.tour_seen_at` column, not
+  localStorage, so it's consistent across devices.
 - `BackToTop` scroll-to-top button on the landing page (ported from qkit).
 - Shared-session SSO across `*.merqo.io` kits: `NEXT_PUBLIC_AUTH_COOKIE_DOMAIN`
   scopes the Supabase auth cookie to `.merqo.io` in production, so signing
