@@ -49,6 +49,11 @@ function isActive(path: string, href: string): boolean {
   return path === href || path.startsWith(`${href}/`);
 }
 
+/** Stable anchor id for the onboarding tour, e.g. "/dashboard/customers" → "nav-customers". */
+function tourAnchor(href: string): string {
+  return `nav-${href === "/dashboard" ? "dashboard" : href.split("/").pop()}`;
+}
+
 const TIER_BADGE: Record<Tier, { label: string; className: string }> = {
   free: {
     label: "Free",
@@ -121,6 +126,7 @@ export function DashboardNav({
         <Button
           variant="ghost"
           size="icon"
+          data-tour="nav-menu"
           className="-ml-1.5 rounded-lg sm:hidden"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileOpen}
@@ -154,7 +160,9 @@ export function DashboardNav({
                   active && "bg-primary/10 text-primary hover:bg-primary/10",
                 )}
               >
-                <Link href={link.href}>{link.label}</Link>
+                <Link href={link.href} data-tour={tourAnchor(link.href)}>
+                  {link.label}
+                </Link>
               </Button>
             );
           })}
@@ -165,6 +173,7 @@ export function DashboardNav({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
+            data-tour="nav-account"
             aria-label="Account menu"
             className="flex items-center gap-2 rounded-lg py-1 pr-2 pl-1 text-left transition-colors outline-none hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50"
           >

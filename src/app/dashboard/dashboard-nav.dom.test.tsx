@@ -62,6 +62,33 @@ describe("DashboardNav", () => {
     ).toBeInTheDocument();
   });
 
+  it("carries data-tour anchors for the onboarding tour", () => {
+    render(<DashboardNav {...baseProps} />);
+    expect(screen.getByRole("button", { name: /open menu/i })).toHaveAttribute(
+      "data-tour",
+      "nav-menu",
+    );
+    expect(
+      screen.getByRole("button", { name: /account menu/i }),
+    ).toHaveAttribute("data-tour", "nav-account");
+    expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+      "data-tour",
+      "nav-dashboard",
+    );
+    expect(screen.getByRole("link", { name: "Customers" })).toHaveAttribute(
+      "data-tour",
+      "nav-customers",
+    );
+    expect(screen.getByRole("link", { name: "Activity" })).toHaveAttribute(
+      "data-tour",
+      "nav-activity",
+    );
+    expect(screen.getByRole("link", { name: "Stats" })).toHaveAttribute(
+      "data-tour",
+      "nav-stats",
+    );
+  });
+
   it("toggles the mobile link panel open and closed", async () => {
     const user = userEvent.setup();
     render(<DashboardNav {...baseProps} />);
