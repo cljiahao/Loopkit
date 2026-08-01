@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Browser-tab title lowercased to match the kit naming convention (was
+  "LoopKit: stamp cards", PascalCase reserved for the logo mark only) and
+  tightened to "loopkit: loyalty cards".
+
 - Dashboard nav's mobile burger and inline Dashboard/Customers/Activity/Stats
   links now use the shadcn `Button` component instead of hand-rolled
   `<button>`/`<Link>` markup, matching qkit's pattern; the burger also gained
