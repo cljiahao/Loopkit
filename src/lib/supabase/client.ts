@@ -5,6 +5,11 @@ export function createClient() {
   return createBrowserClient<Database, "loopkit">(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    { db: { schema: "loopkit" } },
+    {
+      db: { schema: "loopkit" },
+      cookieOptions: process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN
+        ? { domain: process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN }
+        : undefined,
+    },
   );
 }
