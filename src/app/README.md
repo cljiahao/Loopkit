@@ -24,7 +24,7 @@ customer, and admin surfaces.
 - `layout.tsx` — `RootLayout`: loads Google fonts (Bricolage Grotesque, Plus Jakarta Sans, IBM Plex Mono), sets page metadata (browser-tab title "Loopkit | Loyalty Cards", the cross-kit "Name | Tagline" Title Case convention), wraps children in `<Providers>`
 - `login/`
 - `not-found.tsx` — branded 404 page, e.g. for a stale or mistyped customer card link
-- `page.tsx` — `Home`: landing page composing Nav/Hero/HowItWorks/Benefits/Cta/Footer, checks the Supabase session to toggle authed CTAs
+- `page.tsx` — `Home`: landing page composing Nav/Hero/HowItWorks/Benefits/Cta/Footer/BackToTop, checks the Supabase session to toggle authed CTAs
 - `reset-password/`
 - `setup/`
 

@@ -36,7 +36,7 @@ export function Nav({ authed = false }: { authed?: boolean }) {
                 href="/login"
                 className="rounded-sm px-1 text-sm text-muted-foreground outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
               >
-                Log in
+                Sign in
               </Link>
               <Button asChild size="sm">
                 <Link href="/login?mode=signup">Get started</Link>
