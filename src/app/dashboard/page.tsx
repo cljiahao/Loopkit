@@ -47,7 +47,10 @@ export default async function DashboardPage() {
   return (
     <main className="mx-auto max-w-7xl space-y-6 p-5 py-10">
       {!shouldShowQr(activePrograms.length) ? (
-        <div className="rounded-2xl border border-dashed bg-card p-6 text-center text-sm text-muted-foreground">
+        <div
+          className="rounded-2xl border border-dashed bg-card p-6 text-center text-sm text-muted-foreground"
+          data-tour="shop-qr"
+        >
           None of your programs are active right now.{" "}
           <a href="/setup" className="font-medium text-primary hover:underline">
             Manage them in Setup
@@ -57,7 +60,7 @@ export default async function DashboardPage() {
       ) : (
         <>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
-            <div className="min-w-0 sm:flex-[1.4]">
+            <div className="min-w-0 sm:flex-[1.4]" data-tour="shop-qr">
               <ShopQrBlock
                 qrSvgMarkup={cardQr}
                 link={cardLink}

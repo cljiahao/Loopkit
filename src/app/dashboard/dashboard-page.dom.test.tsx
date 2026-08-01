@@ -50,7 +50,7 @@ import DashboardPage from "./page";
 
 describe("DashboardPage", () => {
   it("shows a 'Your programs' heading above the program grid", async () => {
-    render(await DashboardPage());
+    const { container } = render(await DashboardPage());
 
     expect(
       screen.getByRole("heading", { name: "Your programs" }),
@@ -58,5 +58,6 @@ describe("DashboardPage", () => {
     expect(screen.getByText("Coffee Stamps")).toBeInTheDocument();
     expect(screen.getByText("Shop QR block")).toBeInTheDocument();
     expect(screen.getByText("Scan and route")).toBeInTheDocument();
+    expect(container.querySelector('[data-tour="shop-qr"]')).not.toBeNull();
   });
 });
