@@ -112,4 +112,44 @@ describe("updateSession — legacy host-only cookie cleanup", () => {
     );
     expect(marker).toBeUndefined();
   });
+
+  it("clears the legacy cookie on the public /c early-return path too", async () => {
+    process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN = ".merqo.io";
+    const request = new NextRequest("https://loopkit.merqo.io/c/some-card", {
+      headers: { cookie: "sb-project-auth-token=stale-value" },
+    });
+
+    const response = await updateSession(request);
+
+    const setCookies = response.cookies.getAll();
+    const cleared = setCookies.find((c) => c.name === "sb-project-auth-token");
+    expect(cleared?.value).toBe("");
+    const marker = setCookies.find(
+      (c) => c.name === "sb-auth-cookie-domain-migrated",
+    );
+    expect(marker?.value).toBe("1");
+  });
+
+  it("clears the legacy cookie on the unauthenticated-redirect path too", async () => {
+    process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN = ".merqo.io";
+    createServerClient.mockImplementation(() => ({
+      auth: {
+        getUser: vi.fn().mockResolvedValue({ data: { user: null } }),
+      },
+    }));
+    const request = new NextRequest("https://loopkit.merqo.io/dashboard", {
+      headers: { cookie: "sb-project-auth-token=stale-value" },
+    });
+
+    const response = await updateSession(request);
+
+    expect(response.status).toBe(307);
+    const setCookies = response.cookies.getAll();
+    const cleared = setCookies.find((c) => c.name === "sb-project-auth-token");
+    expect(cleared?.value).toBe("");
+    const marker = setCookies.find(
+      (c) => c.name === "sb-auth-cookie-domain-migrated",
+    );
+    expect(marker?.value).toBe("1");
+  });
 });

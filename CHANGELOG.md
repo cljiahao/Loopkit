@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Shared-session SSO across `*.merqo.io` kits: `NEXT_PUBLIC_AUTH_COOKIE_DOMAIN`
+  scopes the Supabase auth cookie to `.merqo.io` in production, so signing
+  in on one kit signs you in on the rest. A one-time cleanup in
+  `src/lib/supabase/middleware.ts` clears each already-signed-in vendor's
+  pre-existing host-only cookie (forcing a single re-login) without
+  clobbering a same-request token refresh.
+
 ### Fixed
 
 - Login page's Google icon now lives in its own `google-mark.tsx`
