@@ -8,8 +8,8 @@ landing page.
 ## Contents
 
 - `benefits.tsx` — `Benefits`: 3-column value-prop grid ("Regulars, not one-offs" / "Zero friction" / "Built for a stall"), icon + title + body per item
-- `cta.tsx` — `Cta`: bottom call-to-action band, links to `/dashboard` when `authed` else `/login?mode=signup`
-- `footer.tsx` — `Footer`: site footer with `Wordmark`, tagline, sign-in link, copyright line
+- `footer.tsx` — `Footer`: single-row site footer matching qkit's landing footer exactly — `Wordmark`, tagline, copyright line, `Vendor sign in →` link. No bottom call-to-action band above it (removed to match qkit, which never had one).
+- `footer.test.tsx` — asserts the wordmark link, tagline, copyright line, and sign-in link all render.
 - `back-to-top.tsx` — `BackToTop`: fixed-position scroll-to-top button (ported from qkit), shown past a scroll threshold
 - `hero.tsx` — `Hero`: above-the-fold headline/subhead/CTA buttons/trust bullets plus the `StampCard` illustration, links to `/dashboard` when `authed` else `/login?mode=signup`
 - `how-it-works.tsx` — `HowItWorks`: numbered 3-step explainer (set up card → stamp by phone → they come back), anchored `id="how"`

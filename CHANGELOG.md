@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Landing footer rebuilt to match qkit's exact single-row layout
+  (wordmark, tagline, copyright, sign-in link as flex siblings), and the
+  bottom call-to-action band above it removed — qkit's landing page never
+  had one.
+
 ### Fixed
 
 - Dashboard onboarding tour now stamps `tour_seen_at` as soon as it
