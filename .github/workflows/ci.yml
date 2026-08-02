@@ -166,7 +166,7 @@ jobs:
       - name: Mutation-test changed src/lib files
         run: |
           git fetch origin "$GITHUB_BASE_REF" --depth=1
-          FILES=$(git diff --name-only "origin/$GITHUB_BASE_REF...HEAD" \
+          FILES=$(git diff --name-only --diff-filter=d "origin/$GITHUB_BASE_REF...HEAD" \
             | grep -E '^src/lib/.*\.ts$' \
             | grep -vE '\.test\.ts$|/types\.ts$|/action-result\.ts$|^src/lib/supabase/' \
             | paste -sd, -)

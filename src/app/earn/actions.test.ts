@@ -4,9 +4,6 @@ const { rpcMock } = vi.hoisted(() => ({ rpcMock: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({ rpc: rpcMock })),
 }));
-vi.mock("@/lib/rate-limit", () => ({
-  allowRequest: vi.fn().mockResolvedValue(true),
-}));
 
 import { claimEarnAction } from "./actions";
 

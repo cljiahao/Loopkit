@@ -4,7 +4,6 @@ import { createServerClient } from "@/lib/supabase/server";
 import { normalizePhone } from "@/lib/phone";
 import { getProgress } from "@/lib/engine";
 import { qrSvg } from "@/lib/qr";
-import { allowRequest } from "@/lib/rate-limit";
 import { isCardExpired } from "@/lib/expiry";
 import type { ActionResult } from "@/lib/action-result";
 import type { CardStatus, StatusState } from "../types";
@@ -37,13 +36,6 @@ export async function checkStatusAction(
   _prev: StatusState,
   formData: FormData,
 ): Promise<StatusState> {
-  if (!(await allowRequest("c-check"))) {
-    return {
-      status: "error",
-      message: "Too many attempts — try again in a minute.",
-    };
-  }
-
   const normalized = normalizePhone(String(formData.get("phone") ?? ""));
   if (!normalized.ok) {
     return {
@@ -121,20 +113,12 @@ export async function checkStatusAction(
 
 // Customer self-service card regeneration — for a lost QR or an expired card.
 // Same trust model as enroll_card/checkStatusAction: identity is the phone
-// number typed into /c, no separate customer auth exists in this app. Rate-
-// limited like the rest of the public /c surface. Unchanged by the
-// vendor-level join redesign — still acts on one program's card at a time,
-// invoked per-card from the check-form's card list.
+// number typed into /c, no separate customer auth exists in this app.
+// Unchanged by the vendor-level join redesign — still acts on one program's
+// card at a time, invoked per-card from the check-form's card list.
 export async function regenerateCardAction(
   formData: FormData,
 ): Promise<ActionResult<{ phone: string }>> {
-  if (!(await allowRequest("c-check"))) {
-    return {
-      success: false,
-      error: "Too many attempts — try again in a minute.",
-    };
-  }
-
   const normalized = normalizePhone(String(formData.get("phone") ?? ""));
   if (!normalized.ok) {
     return { success: false, error: "Enter a valid Singapore phone number." };

@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- Per-IP rate limiting (`src/lib/rate-limit.ts`, `@upstash/ratelimit`,
+  `@upstash/redis`) on the public `/c` card-check and `/earn` claim actions —
+  never provisioned in production (fail-open, so it was a no-op), decided
+  not worth the added dependency + config surface.
+
 ### Added
 
 - Dashboard onboarding tour (ported from qkit/stockkit): a `driver.js`
@@ -13,6 +20,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Customers, and the account menu, replayable via a floating "?" button.
   Tracked server-side via a new `vendors.tour_seen_at` column, not
   localStorage, so it's consistent across devices.
+- `supabase/config.toml` — loopkit was the only one of the 5 Merqo repos
+  without a local-dev Supabase CLI config. Added to match the format
+  merqo/qkit/paykit/stockkit already share (same local ports, Google OAuth
+  external provider, `auto_expose_new_tables = false` with explicit
+  Data-API grants), plus the matching `SUPABASE_AUTH_EXTERNAL_GOOGLE_*`
+  entries in `.env.example`.
 - `BackToTop` scroll-to-top button on the landing page (ported from qkit).
 - Shared-session SSO across `*.merqo.io` kits: `NEXT_PUBLIC_AUTH_COOKIE_DOMAIN`
   scopes the Supabase auth cookie to `.merqo.io` in production, so signing
