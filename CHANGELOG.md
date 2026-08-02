@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Dashboard onboarding tour now stamps `tour_seen_at` as soon as it
+  auto-runs, not when it finishes — a refresh mid-tour no longer makes
+  it re-run on every dashboard load.
+
 ### Removed
 
 - Per-IP rate limiting (`src/lib/rate-limit.ts`, `@upstash/ratelimit`,
