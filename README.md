@@ -7,7 +7,10 @@ Title Case convention: "Loopkit | Loyalty Cards". The landing page's
 "Sign in" link and `BackToTop` button match the cross-kit landing-page
 parity pass. In production, the Supabase auth cookie is scoped to
 `.merqo.io` (`NEXT_PUBLIC_AUTH_COOKIE_DOMAIN`, `src/lib/supabase/`), so
-signing in on one Merqo kit signs you in on the rest.
+signing in on one Merqo kit signs you in on the rest. No per-IP rate
+limiting on public actions (never provisioned in production, so it was a
+fail-open no-op) — `supabase/config.toml` matches the local-dev CLI
+config the other 4 Merqo kits already share.
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
