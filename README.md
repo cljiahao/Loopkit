@@ -10,7 +10,10 @@ parity pass. In production, the Supabase auth cookie is scoped to
 signing in on one Merqo kit signs you in on the rest. No per-IP rate
 limiting on public actions (never provisioned in production, so it was a
 fail-open no-op) — `supabase/config.toml` matches the local-dev CLI
-config the other 4 Merqo kits already share.
+config the other 4 Merqo kits already share. The dashboard's onboarding
+tour (`src/components/dashboard-tour.tsx`) stamps its "seen" state as
+soon as it auto-runs rather than when it finishes, so a refresh mid-tour
+can't make it re-trigger on the next load.
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
