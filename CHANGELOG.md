@@ -23,6 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Google OAuth sign-in now forces the consent screen to English
+  (`hl=en`), matching the fix already shipped in paykit/merqo.
 - Landing nav's "Log in" link renamed to "Sign in" for cross-kit label
   parity.
 - Login page's Google icon now lives in its own `google-mark.tsx`

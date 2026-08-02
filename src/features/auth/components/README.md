@@ -10,7 +10,8 @@ Client-side auth UI.
   of `login-form.tsx` so it matches the shared component used across every
   kit's login page.
 - `login-form.tsx` — `LoginForm`: `ElevatedCard`-wrapped Google OAuth
-  sign-in, a name+phone onboarding form (own hand-rolled busy/error state —
+  sign-in (forces `hl=en` on the consent screen, cross-kit parity), a
+  name+phone onboarding form (own hand-rolled busy/error state —
   establishes an anonymous Supabase session then calls
   `vendorPhoneOnboardAction`), and email/password sign-in/sign-up on
   react-hook-form + `loginSchema` (`@/lib/schemas`) with a "check your email"
