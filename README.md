@@ -43,7 +43,9 @@ React Hook Form + Zod (a `loginSchema` in `src/lib/schemas.ts`) with a
 `zodResolver`, surfacing auth/server errors via sonner toasts rather than
 an inline alert paragraph; its post-navigation success branches `await`
 `navigatingAway()` (`src/hooks/use-async-action.ts`) so the submit button
-doesn't visibly re-enable mid-transition to `/dashboard`.
+doesn't visibly re-enable mid-transition to `/dashboard`. Google OAuth
+sign-in forces the consent screen to English (`hl=en`), matching the
+same fix in paykit/merqo.
 
 ## Stack
 
