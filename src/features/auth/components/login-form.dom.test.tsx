@@ -80,7 +80,10 @@ describe("LoginForm", () => {
     );
     expect(authMock.signInWithOAuth).toHaveBeenCalledWith({
       provider: "google",
-      options: { redirectTo: expect.stringContaining("/auth/callback") },
+      options: {
+        redirectTo: expect.stringContaining("/auth/callback"),
+        queryParams: { hl: "en" },
+      },
     });
   });
 
