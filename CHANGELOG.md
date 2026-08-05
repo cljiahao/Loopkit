@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Migrated onto the shared `@merqo/ui` component package (v0.8.1): the
+  dashboard nav/account dropdown now composes `@merqo/ui`'s `DashboardNav`
+  and `AccountMenu` (with loopkit's own Feedback/Get-help server actions
+  wired through throw-adapters); `useAsyncAction`, `InfoTooltip`,
+  `ImageUploader` (via a new `uploadLoopkitImage` adapter,
+  `src/lib/image-upload-adapter.ts`), `DashboardTour`, and the profile
+  page's two-column layout (`TwoColumnSections`) all now delegate to the
+  shared package instead of hand-rolled local copies. `Section` keeps
+  loopkit's own `ElevatedCard` shell via the shared component's `wrapper`
+  render-prop, so the polished-card visual is unchanged. No user-visible
+  behavior change; removes `FeedbackForm`/`SupportForm`/local
+  `ImageUploader`/`InfoTooltip`/`tour.css` and the direct `driver.js`
+  dependency (now only reached transitively through `@merqo/ui`).
 - Landing footer rebuilt to match qkit's exact single-row layout
   (wordmark, tagline, copyright, sign-in link as flex siblings), and the
   bottom call-to-action band above it removed — qkit's landing page never
