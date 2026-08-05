@@ -7,7 +7,7 @@ enabled, and for which program.
 
 ## Contents
 
-- `route.ts` — `GET`: bearer-auth via `bearerOk()`, requires a `vendor_id` query param, reads `qkit_earn_config` (joined to `programs.name`) via the service-role client, returns `{ enabled: false }` or `{ enabled: true, program_name }`.
+- `route.ts` — `GET`: bearer-auth via `bearerOk()` (shared helper in `src/lib/merqo-auth.ts`, previously duplicated per-route), requires a `vendor_id` query param, reads `qkit_earn_config` (joined to `programs.name`) via the service-role client, returns `{ enabled: false }` or `{ enabled: true, program_name }`.
 
 ## Parent
 

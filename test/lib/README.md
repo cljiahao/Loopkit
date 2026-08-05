@@ -18,7 +18,7 @@ several (`admin-data.test.ts`, `admin.test.ts`, `cards.test.ts`,
 - `engine/`
 - `expiry.test.ts` — `isCardExpired`: day-elapsed check against a card's cycle start and the program's `expiry_days`
 - `loyalty.test.ts` — `rewardReady`: stamp count vs. requirement check
-- `merqo-auth.test.ts` — `provisionBearerOk`: true on the correct `MERQO_PROVISION_SECRET` bearer, false when missing/unset, false when the `MERQO_METRICS_SECRET` value is sent instead — the two secrets must not be interchangeable
+- `merqo-auth.test.ts` — `provisionBearerOk`: true on the correct `MERQO_PROVISION_SECRET` bearer, false when missing/unset, false when the `MERQO_METRICS_SECRET` value is sent instead — the two secrets must not be interchangeable; plus `bearerOk(request, envVarName)`, the shared helper the 3 `src/app/api/merqo/*` routes now call instead of each defining their own copy
 - `metrics.test.ts` — `computeLoopkitMetrics`: maps programs/cards/stamp events onto merqo's metrics shape
 - `phone.test.ts` — `normalizePhone`: SG mobile formats normalize to E.164 `+65…`
 - `program-access.test.ts` — `currentProgram`/`canCreateProgram`/`getEntitlement`: free/Pro program-count gating
