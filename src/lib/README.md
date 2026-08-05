@@ -23,11 +23,12 @@ profile/status).
 - `image-resize.ts` — `resizeToWebp`: browser-only Canvas resize + WebP re-encode before upload, falls back to the original file on decode/encode failure
 - `list-all-users.ts` — `listAllUsers`: paginates `supabase.auth.admin.listUsers()` (1000/page) to completion, mirroring a single call's `{data, error}` shape; shared by `admin-data.ts` and the `vendor-status` route, both of which independently made the same page-1-only mistake before this was extracted
 - `loyalty.ts` — `rewardReady`: one-line pure check that a stamp count has met the program's requirement
-- `merqo-auth.ts` — `provisionBearerOk`: constant-time bearer check for the `vendor-provision` route against `MERQO_PROVISION_SECRET` — a separate secret from `MERQO_METRICS_SECRET` since this guards a write endpoint; mirrors qkit's `provisionBearerOk` verbatim (test: `test/lib/merqo-auth.test.ts`)
+- `merqo-auth.ts` — `bearerOk(request, envVarName)`: shared constant-time Bearer-token check against a named env var, used by every `/api/merqo/*` route handler (`MERQO_METRICS_SECRET` for the read/reporting routes, `MERQO_PROVISION_SECRET` for the write route); `provisionBearerOk` is a thin wrapper pinned to `MERQO_PROVISION_SECRET` (test: `test/lib/merqo-auth.test.ts`)
+- `merqo-rpc.ts` — `callMerqoRpc<TArgs, TReturn, Db, SchemaName>`: shared `.schema("merqo").rpc(...)` call plumbing (cast the caller's typed client across schemas, call, throw with RPC name + Postgres error message on failure) used by `merqo-support.ts`, `merqo-vendor-feedback.ts`, and `merqo-vendor-profile.ts` — each still owns its own Args/Return type mirror and public function signature, only the RPC-call mechanics are shared
 - `merqo-vendor-profile.test.ts` — vitest tests for `getOrCreateVendorProfile`: asserts the `.schema("merqo").rpc(...)` call shape and that a Postgres error is rethrown with context
-- `merqo-vendor-profile.ts` — `getOrCreateVendorProfile`/`upsertVendorProfile`: hand-written mirror of merqo's cross-schema RPC contract, generic over the caller's own `Database`/schema so `"loopkit"`-scoped clients type-check, casts to `merqo` schema only for the RPC calls; `upsertVendorProfile` is the write path used by the profile page's social-links save
-- `merqo-vendor-feedback.ts` — `submitVendorFeedback`: hand-written mirror of merqo's cross-schema `submit_vendor_feedback` RPC contract, generic over the caller's own `Database`/schema so `"loopkit"`-scoped clients type-check; the write path used by `actions/feedback.ts` in place of a local insert
-- `merqo-support.ts` — `submitSupportMessage`: hand-written mirror of merqo's cross-schema `submit_support_message` RPC contract, generic over the caller's own `Database`/schema; the write path used by `actions/support.ts` for the Get-help Sheet.
+- `merqo-vendor-profile.ts` — `getOrCreateVendorProfile`/`upsertVendorProfile`: hand-written mirror of merqo's cross-schema RPC contract, generic over the caller's own `Database`/schema so `"loopkit"`-scoped clients type-check, calls through `merqo-rpc.ts`'s `callMerqoRpc` for the cross-schema RPC; `upsertVendorProfile` is the write path used by the profile page's social-links save
+- `merqo-vendor-feedback.ts` — `submitVendorFeedback`: hand-written mirror of merqo's cross-schema `submit_vendor_feedback` RPC contract, generic over the caller's own `Database`/schema so `"loopkit"`-scoped clients type-check; calls through `merqo-rpc.ts`'s `callMerqoRpc`; the write path used by `actions/feedback.ts` in place of a local insert
+- `merqo-support.ts` — `submitSupportMessage`: hand-written mirror of merqo's cross-schema `submit_support_message` RPC contract, generic over the caller's own `Database`/schema; calls through `merqo-rpc.ts`'s `callMerqoRpc`; the write path used by `actions/support.ts` for the Get-help Sheet.
 - `merqo-vendor-status.test.ts` — vitest tests for `resolveVendorStatus`: active/free, active/pro, case-insensitive email match, inactive-no-user, inactive-no-program cases
 - `merqo-vendor-status.ts` — `resolveVendorStatus`: pure lookup mapping an email + auth-user list + program/pro vendor-id lists to `{active, plan}`, since neither `programs` nor `vendor_pro` carries an email column
 - `metrics.ts` — `isWonVisit` (pure) and `computeLoopkitMetrics`: maps loopkit's stamp-card domain onto merqo's qkit-shaped metrics payload (programs→vendors, stamp/visit events→orders, no revenue/GMV in v1)
@@ -62,7 +63,11 @@ service-role client for the cross-vendor `/admin` console.
 route handler, the two service-role callers of `auth.admin.listUsers()`.
 `merqo-vendor-profile.ts`/`merqo-vendor-status.ts`/`metrics.ts` form the HTTP
 contract with the merqo parent app, reusing the same Supabase client
-generically across schemas.
+generically across schemas. `merqo-vendor-profile.ts`, `merqo-vendor-feedback.ts`,
+and `merqo-support.ts` share their `.schema("merqo").rpc(...)` call plumbing
+via `merqo-rpc.ts`'s `callMerqoRpc`; the three `/api/merqo/*` GET routes
+(`metrics`, `vendor-status`, `qkit-earn-config`) and the `vendor-provision`
+write route share their Bearer-token check via `merqo-auth.ts`'s `bearerOk`.
 
 ## Parent
 
