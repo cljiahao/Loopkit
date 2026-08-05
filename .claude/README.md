@@ -10,9 +10,10 @@ against.
 ## Contents
 
 - `.harness-base/`
+- `comment-hygiene-patterns.txt` — the canonical change-narration/ticket-reference pattern list, read at runtime by `hooks/post-edit-comment-check.sh`, `.husky/lib/comment-hygiene.sh`, and `.github/workflows/ci.yml`'s `comment-hygiene` job instead of each hardcoding its own copy; first 10 lines are anchored keyword patterns (feed all three surfaces), last 3 (date/ticket/issue reference) are lower-precision and feed only the two warn-only surfaces, not the CI hard gate
 - `harness.json` — harness manifest: templateCentral version/stack/adaptation metadata, plus `seeded_files` — the enforcement-layer file list (path + sha256 `origin_hash`) that `verify-harness.sh` diffs against
 - `hooks/`
-- `regen-harness.sh` — human-run-only: rewrites every `origin_hash` in `harness.json` to match current on-disk content, blessing an intentional harness edit; `protect-files.sh` requires human approval before an agent can even edit it (most recently re-run 2026-08-02 after `ci.yml`'s mutation-job `--diff-filter=d` fix)
+- `regen-harness.sh` — human-run-only: rewrites every `origin_hash` in `harness.json` to match current on-disk content, blessing an intentional harness edit; `protect-files.sh` requires human approval before an agent can even edit it (most recently re-run 2026-08-05 after adding the comment-hygiene enforcement layer)
 - `settings.json` — wires each script in `hooks/` to a Claude Code lifecycle event (PreToolUse, PostToolUse, PostToolUseFailure, Stop, SubagentStop, SessionStart, UserPromptSubmit) and sets tool `permissions` (allow/deny) and skill overrides
 - `skills/`
 - `verify-harness.sh` — harness integrity sensor: recomputes sha256 for every seeded file matched by a path guard (`hooks/`, `settings.json`, harness verifier/regen scripts, `.husky/`, `.gitleaks.toml`, `.github/workflows/`) and compares to `harness.json`'s `origin_hash` baseline; read-only, exits non-zero on drift; run by `.github/workflows/ci.yml` and husky's `pre-push` hook
