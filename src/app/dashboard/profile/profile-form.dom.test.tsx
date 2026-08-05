@@ -20,9 +20,6 @@ vi.mock("@/lib/supabase/client", () => ({
   }),
 }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-vi.mock("@/components/image-uploader", () => ({
-  ImageUploader: () => <div data-testid="image-uploader" />,
-}));
 
 import { ProfileForm } from "./profile-form";
 

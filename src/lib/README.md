@@ -21,6 +21,8 @@ profile/status).
 - `expiry.ts` — `isCardExpired`: pure day-elapsed check against a card's cycle start and the program's `expiry_days`
 - `format.ts` — `formatSgtDateTime`/`formatSgtDate`/`sgtDateKey`: Asia/Singapore-pinned timestamp formatters and a calendar-day grouping key
 - `image-resize.ts` — `resizeToWebp`: browser-only Canvas resize + WebP re-encode before upload, falls back to the original file on decode/encode failure
+- `image-upload-adapter.test.ts` — vitest tests: `uploadLoopkitImage` uploads to the given bucket/path and returns the public URL, throws when the storage upload fails
+- `image-upload-adapter.ts` — `uploadLoopkitImage`: `@merqo/ui`'s `ImageUploader.onUpload` implementation, wrapping the app's own Supabase Storage upload call (a plain function, not a factory — `@merqo/ui` builds the object path internally from `pathPrefix`, so there's nothing vendor-scoped left to bind at creation time)
 - `list-all-users.ts` — `listAllUsers`: paginates `supabase.auth.admin.listUsers()` (1000/page) to completion, mirroring a single call's `{data, error}` shape; shared by `admin-data.ts` and the `vendor-status` route, both of which independently made the same page-1-only mistake before this was extracted
 - `loyalty.ts` — `rewardReady`: one-line pure check that a stamp count has met the program's requirement
 - `merqo-auth.ts` — `provisionBearerOk`: constant-time bearer check for the `vendor-provision` route against `MERQO_PROVISION_SECRET` — a separate secret from `MERQO_METRICS_SECRET` since this guards a write endpoint; mirrors qkit's `provisionBearerOk` verbatim (test: `test/lib/merqo-auth.test.ts`)

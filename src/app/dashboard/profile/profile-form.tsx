@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Section } from "@/components/section";
 import { SocialLinksFields } from "@/components/social-links-fields";
-import { ImageUploader } from "@/components/image-uploader";
+import { ImageUploader } from "@merqo/ui";
+import { uploadLoopkitImage } from "@/lib/image-upload-adapter";
+import { resizeToWebp } from "@/lib/image-resize";
 import { createClient } from "@/lib/supabase/client";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import type { SocialLinks } from "@/lib/types";
@@ -195,6 +197,9 @@ export function ProfileForm({
             pathPrefix={vendorId}
             value={avatar}
             onChange={handleAvatarChange}
+            onUpload={uploadLoopkitImage}
+            resizeImage={resizeToWebp}
+            variant="thumb"
           />
         </Section>
 
