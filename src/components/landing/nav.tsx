@@ -1,11 +1,12 @@
+import { LandingNav } from "@merqo/ui";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Wordmark } from "./wordmark";
 
 export function Nav({ authed = false }: { authed?: boolean }) {
   return (
-    <header className="sticky top-0 z-20 border-b border-border bg-background/85 px-5 py-4 backdrop-blur-md">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between">
+    <LandingNav
+      wordmark={
         <Link
           href="/"
           className="rounded-sm outline-none transition-opacity hover:opacity-80 focus-visible:ring-[3px] focus-visible:ring-ring/50"
@@ -13,7 +14,9 @@ export function Nav({ authed = false }: { authed?: boolean }) {
           <Wordmark className="text-3xl" />
           <span className="sr-only">loopkit home</span>
         </Link>
-        <div className="flex items-center gap-3">
+      }
+      end={
+        <>
           {/* Plain <a>, not next/link's Link: this is a same-page hash jump
               (Nav is only ever rendered on "/"), and Link doesn't reliably
               update the URL bar's hash when only the fragment changes — it
@@ -43,8 +46,8 @@ export function Nav({ authed = false }: { authed?: boolean }) {
               </Button>
             </>
           )}
-        </div>
-      </nav>
-    </header>
+        </>
+      }
+    />
   );
 }
