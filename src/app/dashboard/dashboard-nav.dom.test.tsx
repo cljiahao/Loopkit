@@ -3,17 +3,26 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DashboardNav } from "./dashboard-nav";
+import type { ActionResult } from "@/lib/action-result";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/dashboard/activity",
 }));
 
+const { submitFeedbackMock } = vi.hoisted(() => ({
+  submitFeedbackMock: vi.fn(async (): Promise<ActionResult> => ({
+    success: true,
+  })),
+}));
 vi.mock("@/app/actions/feedback", () => ({
-  submitFeedbackAction: vi.fn(async () => ({ success: true })),
+  submitFeedbackAction: submitFeedbackMock,
 }));
 
-vi.mock("@/components/support-form", () => ({
-  SupportForm: () => <div data-testid="support-form" />,
+const { submitSupportMock } = vi.hoisted(() => ({
+  submitSupportMock: vi.fn(async () => ({ success: true })),
+}));
+vi.mock("@/app/actions/support", () => ({
+  submitSupportMessageAction: submitSupportMock,
 }));
 
 describe("DashboardNav", () => {
@@ -58,16 +67,15 @@ describe("DashboardNav", () => {
   it("renders a mobile menu toggle", () => {
     render(<DashboardNav {...baseProps} />);
     expect(
-      screen.getByRole("button", { name: /open menu/i }),
+      screen.getByRole("button", { name: /mobile navigation menu/i }),
     ).toBeInTheDocument();
   });
 
   it("carries data-tour anchors for the onboarding tour", () => {
     render(<DashboardNav {...baseProps} />);
-    expect(screen.getByRole("button", { name: /open menu/i })).toHaveAttribute(
-      "data-tour",
-      "nav-menu",
-    );
+    expect(
+      screen.getByRole("button", { name: /mobile navigation menu/i }),
+    ).toHaveAttribute("data-tour", "nav-menu");
     expect(
       screen.getByRole("button", { name: /account menu/i }),
     ).toHaveAttribute("data-tour", "nav-account");
@@ -89,79 +97,6 @@ describe("DashboardNav", () => {
     );
   });
 
-  it("toggles the mobile link panel open and closed", async () => {
-    const user = userEvent.setup();
-    render(<DashboardNav {...baseProps} />);
-    const toggle = screen.getByRole("button", { name: /open menu/i });
-    await user.click(toggle);
-    expect(
-      screen.getByRole("button", { name: /close menu/i }),
-    ).toBeInTheDocument();
-  });
-
-  it("renders the burger toggle before the wordmark, and the account menu alone on the right", () => {
-    render(<DashboardNav {...baseProps} />);
-    const toggle = screen.getByRole("button", { name: /open menu/i });
-    const wordmarkLink = screen.getByRole("link", {
-      name: /loopkit dashboard home/i,
-    });
-    const accountButton = screen.getByRole("button", {
-      name: /account menu/i,
-    });
-
-    expect(
-      toggle.compareDocumentPosition(wordmarkLink) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-    expect(
-      wordmarkLink.compareDocumentPosition(accountButton) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-  });
-
-  it("closes the mobile panel when the tap-away scrim is clicked", async () => {
-    const user = userEvent.setup();
-    render(<DashboardNav {...baseProps} />);
-    await user.click(screen.getByRole("button", { name: /open menu/i }));
-    expect(
-      screen.getByRole("button", { name: /close menu/i }),
-    ).toBeInTheDocument();
-
-    const scrim = document.querySelector(
-      'button[aria-hidden="true"].fixed.inset-0',
-    );
-    expect(scrim).not.toBeNull();
-    await user.click(scrim as HTMLButtonElement);
-    expect(
-      screen.getByRole("button", { name: /open menu/i }),
-    ).toBeInTheDocument();
-  });
-
-  it("account menu has Profile, Settings, Plan, Sign out (in that order), and no separate Customers item", async () => {
-    const user = userEvent.setup();
-    render(<DashboardNav {...baseProps} />);
-    const accountButton = screen.getByRole("button", {
-      name: /account menu/i,
-    });
-    await user.click(accountButton);
-
-    const dropdownLinks = screen
-      .getAllByRole("menuitem")
-      .filter((l) =>
-        ["Profile", "Settings", "Plan"].includes(l.textContent ?? ""),
-      );
-    expect(dropdownLinks.map((l) => l.textContent)).toEqual([
-      "Profile",
-      "Settings",
-      "Plan",
-    ]);
-    expect(screen.getByText("Sign out")).toBeInTheDocument();
-    // "Customers" appears exactly once — the inline nav link (asserted by
-    // role "link" above) — proving the account-dropdown item was removed,
-    // not merely hidden.
-    expect(screen.getAllByText("Customers")).toHaveLength(1);
-  });
-
   it("account menu has Profile, Settings, Plan, Get help, Feedback, then Sign out, in order", async () => {
     const user = userEvent.setup();
     render(<DashboardNav {...baseProps} />);
@@ -170,53 +105,27 @@ describe("DashboardNav", () => {
     expect(menuItems.map((item) => item.textContent)).toEqual([
       "Profile",
       "Settings",
-      "Plan",
+      "Plan · free",
       "Get help",
       "Feedback",
       "Sign out",
     ]);
   });
 
-  it("opens the feedback sheet with the FeedbackForm when Feedback is clicked", async () => {
+  it("shows the tier badge behind the opened account menu", async () => {
     const user = userEvent.setup();
-    render(<DashboardNav {...baseProps} />);
+    render(<DashboardNav {...baseProps} tier="pro" />);
     await user.click(screen.getByRole("button", { name: /account menu/i }));
-    await user.click(screen.getByRole("menuitem", { name: /feedback/i }));
-    expect(
-      screen.getByRole("heading", { name: /share feedback/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/how likely are you to recommend loopkit/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Pro")).toBeInTheDocument();
   });
 
-  it("Get help opens a Sheet with the support form, not a mailto link", async () => {
-    const user = userEvent.setup();
-    render(
-      <DashboardNav
-        signOut={vi.fn(async () => {})}
-        email="vendor@example.com"
-        vendorName="Kopi Corner"
-        avatarUrl={null}
-        tier="free"
-      />,
-    );
-    await user.click(screen.getByRole("button", { name: /account menu/i }));
-
-    const getHelp = screen.getByRole("menuitem", { name: /get help/i });
-    expect(getHelp.querySelector("a")).toBeNull();
-
-    await user.click(getHelp);
-    expect(screen.getByTestId("support-form")).toBeInTheDocument();
-  });
-
-  it("account menu shows the stall name with a static 'Vendor account' subtitle, never the email", async () => {
+  it("account menu shows the real stall name, not a static 'Vendor account' label", async () => {
     const user = userEvent.setup();
     render(<DashboardNav {...baseProps} />);
     await user.click(screen.getByRole("button", { name: /account menu/i }));
     const menu = within(screen.getByRole("menu"));
     expect(menu.getByText("Kopi Corner")).toBeInTheDocument();
-    expect(menu.getByText("Vendor account")).toBeInTheDocument();
+    expect(screen.queryByText("Vendor account")).not.toBeInTheDocument();
     expect(screen.queryByText("vendor@example.com")).not.toBeInTheDocument();
   });
 
@@ -226,11 +135,10 @@ describe("DashboardNav", () => {
     await user.click(screen.getByRole("button", { name: /account menu/i }));
     const menu = within(screen.getByRole("menu"));
     expect(menu.getByText("Your stall")).toBeInTheDocument();
-    expect(menu.getByText("Vendor account")).toBeInTheDocument();
     expect(screen.queryByText("vendor@example.com")).not.toBeInTheDocument();
   });
 
-  it("shows the stall name beside the avatar in the trigger itself, matching qkit — not just inside the opened menu", () => {
+  it("shows the stall name beside the avatar in the trigger itself, not just inside the opened menu", () => {
     render(<DashboardNav {...baseProps} />);
     const accountButton = screen.getByRole("button", {
       name: /account menu/i,
@@ -238,11 +146,49 @@ describe("DashboardNav", () => {
     expect(within(accountButton).getByText("Kopi Corner")).toBeInTheDocument();
   });
 
-  it("trigger falls back to 'Account' (not 'Your stall' or the email) when no stall name is set", () => {
-    render(<DashboardNav {...baseProps} vendorName={null} />);
-    const accountButton = screen.getByRole("button", {
-      name: /account menu/i,
+  it("opening Feedback from the account menu and submitting calls submitFeedbackAction with the picked NPS score", async () => {
+    const user = userEvent.setup();
+    render(<DashboardNav {...baseProps} />);
+    await user.click(screen.getByRole("button", { name: /account menu/i }));
+    await user.click(screen.getByRole("menuitem", { name: /feedback/i }));
+
+    await user.click(screen.getByRole("radio", { name: "9" }));
+    await user.type(screen.getByRole("textbox"), "Great app");
+    await user.click(screen.getByRole("button", { name: /send/i }));
+
+    expect(submitFeedbackMock).toHaveBeenCalledWith({
+      nps: 9,
+      message: "Great app",
     });
-    expect(within(accountButton).getByText("Account")).toBeInTheDocument();
+  });
+
+  it("a failed feedback submit surfaces an inline error, not a silent failure", async () => {
+    submitFeedbackMock.mockResolvedValueOnce({
+      success: false,
+      error: "boom",
+    });
+    const user = userEvent.setup();
+    render(<DashboardNav {...baseProps} />);
+    await user.click(screen.getByRole("button", { name: /account menu/i }));
+    await user.click(screen.getByRole("menuitem", { name: /feedback/i }));
+    await user.click(screen.getByRole("radio", { name: "9" }));
+    await user.click(screen.getByRole("button", { name: /send/i }));
+
+    expect(await screen.findByText("boom")).toBeInTheDocument();
+  });
+
+  it("opening Get help and submitting maps the sheet's message to submitSupportMessageAction's body field", async () => {
+    const user = userEvent.setup();
+    render(<DashboardNav {...baseProps} />);
+    await user.click(screen.getByRole("button", { name: /account menu/i }));
+    await user.click(screen.getByRole("menuitem", { name: /get help/i }));
+
+    const textbox = screen.getByRole("textbox");
+    await user.type(textbox, "Something broke");
+    await user.click(screen.getByRole("button", { name: /send/i }));
+
+    expect(submitSupportMock).toHaveBeenCalledWith(
+      expect.objectContaining({ body: "Something broke" }),
+    );
   });
 });

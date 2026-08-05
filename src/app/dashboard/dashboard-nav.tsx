@@ -1,40 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  ChevronDown,
-  LifeBuoy,
-  LogOut,
-  Menu,
-  MessageSquarePlus,
-  Settings,
-  User,
-  Wallet,
-  X,
-} from "lucide-react";
+import { DashboardNav as SharedDashboardNav } from "@merqo/ui";
 import { Wordmark } from "@/components/landing/wordmark";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { FeedbackForm } from "@/components/feedback-form";
-import { SupportForm } from "@/components/support-form";
 import { cn } from "@/lib/utils";
+import { submitFeedbackAction } from "@/app/actions/feedback";
+import { submitSupportMessageAction } from "@/app/actions/support";
+import { SUPPORT_CATEGORY_LABELS } from "@/lib/schemas";
+import type { SupportMessageInput } from "@/lib/schemas";
 
 type Tier = "free" | "pro";
 
@@ -80,26 +53,21 @@ function TierBadge({ tier }: { tier: Tier }) {
   );
 }
 
-/**
- * Up to two initials from a label (stall name when set, else the email
- * local part); falls back to a bullet. Splitting on the same separators
- * works for both "Kopi Corner" (space) and "jane.doe" (dot) shapes.
- */
-function initials(label: string): string {
-  const parts = label
-    .trim()
-    .split(/[\s._-]+/)
-    .filter(Boolean);
-  if (parts.length === 0) return "•";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[1][0]).toUpperCase();
+const HELP_CATEGORY_VALUES = Object.keys(
+  SUPPORT_CATEGORY_LABELS,
+) as SupportMessageInput["category"][];
+
+function isSupportCategory(
+  value: string | undefined,
+): value is SupportMessageInput["category"] {
+  return (HELP_CATEGORY_VALUES as string[]).includes(value ?? "");
 }
 
 /**
- * Dashboard sticky-header row: brand, vendor-level nav links
- * (Customers/Activity/Stats — none are program-scoped, each defaults to a
- * merged view across every program), and the account menu (Plan, Profile,
- * Sign out). Inline on sm+; below sm, links collapse behind a burger.
+ * Dashboard sticky-header row: composes @merqo/ui's DashboardNav (burger +
+ * inline links) and AccountMenu (avatar dropdown, owning its own
+ * Feedback/Get-help Sheet chrome internally). Keeps the same call-site
+ * signature the old hand-rolled version had.
  */
 export function DashboardNav({
   signOut,
@@ -115,200 +83,53 @@ export function DashboardNav({
   tier: Tier;
 }) {
   const path = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
   const label = vendorName?.trim() || email.trim().split("@")[0];
 
   return (
-    <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-      <div className="flex min-w-0 items-center gap-1 sm:gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          data-tour="nav-menu"
-          className="-ml-1.5 rounded-lg sm:hidden"
-          aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          aria-expanded={mobileOpen}
-          onClick={() => setMobileOpen((v) => !v)}
-        >
-          {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </Button>
-
-        <Link
+    <SharedDashboardNav
+      wordmark={
+        <a
           href="/dashboard"
           aria-label="loopkit dashboard home"
           className="shrink-0 rounded-sm outline-none transition-opacity hover:opacity-80 focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
           <Wordmark className="text-3xl" />
-        </Link>
-
-        <nav className="hidden items-center gap-1 sm:flex">
-          {LINKS.map((link) => {
-            const active =
-              link.href === "/dashboard"
-                ? path === "/dashboard"
-                : isActive(path, link.href);
-            return (
-              <Button
-                key={link.href}
-                asChild
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "rounded-lg",
-                  active && "bg-primary/10 text-primary hover:bg-primary/10",
-                )}
-              >
-                <Link href={link.href} data-tour={tourAnchor(link.href)}>
-                  {link.label}
-                </Link>
-              </Button>
-            );
-          })}
-        </nav>
-      </div>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            data-tour="nav-account"
-            aria-label="Account menu"
-            className="flex items-center gap-2 rounded-lg py-1 pr-2 pl-1 text-left transition-colors outline-none hover:bg-secondary focus-visible:ring-[3px] focus-visible:ring-ring/50"
-          >
-            <Avatar className="size-8 shrink-0 rounded-md ring-1 ring-inset ring-primary/25">
-              <AvatarImage src={avatarUrl ?? undefined} alt="" />
-              <AvatarFallback className="rounded-md bg-primary/12 font-mono text-xs font-semibold tracking-tight text-primary">
-                {initials(label)}
-              </AvatarFallback>
-            </Avatar>
-            <span className="hidden max-w-[9rem] truncate text-sm font-semibold md:inline">
-              {vendorName || "Account"}
-            </span>
-            <ChevronDown className="hidden size-4 text-muted-foreground md:inline" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56 rounded-xl">
-          <DropdownMenuLabel className="px-2 py-2">
-            <div className="flex items-center gap-2">
-              <p className="truncate text-sm font-semibold">
-                {vendorName || "Your stall"}
-              </p>
-              <TierBadge tier={tier} />
-            </div>
-            <p className="text-xs font-normal text-muted-foreground">
-              Vendor account
-            </p>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard/profile" className="cursor-pointer">
-              <User className="size-4" />
-              Profile
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard/settings" className="cursor-pointer">
-              <Settings className="size-4" />
-              Settings
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link href="/dashboard/plan" className="cursor-pointer">
-              <Wallet className="size-4" />
-              Plan
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onSelect={() => setHelpOpen(true)}
-          >
-            <LifeBuoy className="size-4" />
-            Get help
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="cursor-pointer"
-            onSelect={() => setFeedbackOpen(true)}
-          >
-            <MessageSquarePlus className="size-4" />
-            Feedback
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <form action={signOut}>
-            <DropdownMenuItem asChild variant="destructive">
-              <button type="submit" className="w-full cursor-pointer">
-                <LogOut className="size-4" />
-                Sign out
-              </button>
-            </DropdownMenuItem>
-          </form>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {mobileOpen && (
-        <>
-          <button
-            type="button"
-            aria-hidden
-            tabIndex={-1}
-            onClick={() => setMobileOpen(false)}
-            className="fixed inset-0 z-30 cursor-default sm:hidden"
-          />
-          <div className="absolute inset-x-0 top-full z-40 border-b bg-background/95 px-5 py-3 backdrop-blur-md sm:hidden">
-            <div className="flex flex-col gap-1">
-              {LINKS.map((link) => {
-                const active =
-                  link.href === "/dashboard"
-                    ? path === "/dashboard"
-                    : isActive(path, link.href);
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      "rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-secondary",
-                      active && "bg-primary/10 text-primary",
-                    )}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
-
-      <Sheet open={feedbackOpen} onOpenChange={setFeedbackOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle className="text-2xl">Share feedback</SheetTitle>
-            <SheetDescription>
-              What&apos;s working, what&apos;s missing, what&apos;s broken?
-            </SheetDescription>
-          </SheetHeader>
-          <div className="px-4 pb-6">
-            <FeedbackForm />
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      <Sheet open={helpOpen} onOpenChange={setHelpOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle className="text-2xl">Get help</SheetTitle>
-            <SheetDescription>
-              Trouble with a program, a customer, or your Pro plan? Tell us and
-              we&apos;ll sort it out.
-            </SheetDescription>
-          </SheetHeader>
-          <div className="px-4 pb-6">
-            <SupportForm />
-          </div>
-        </SheetContent>
-      </Sheet>
-    </div>
+        </a>
+      }
+      navLinks={LINKS}
+      isActiveHref={(href) =>
+        href === "/dashboard" ? path === "/dashboard" : isActive(path, href)
+      }
+      tourAnchor={tourAnchor}
+      vendor={{
+        name: label,
+        avatarUrl: avatarUrl ?? undefined,
+        tier,
+        subtitle: vendorName?.trim() || "Your stall",
+      }}
+      signOutAction={signOut}
+      kitLocalSettingsHref="/dashboard/settings"
+      showPlanItem
+      tierBadge={<TierBadge tier={tier} />}
+      getHelp={{
+        type: "form",
+        onSubmit: async ({ message, category }) => {
+          const res = await submitSupportMessageAction({
+            category: isSupportCategory(category) ? category : "other",
+            body: message,
+          });
+          if (!res.success) throw new Error(res.error);
+        },
+        categories: HELP_CATEGORY_VALUES.map((value) => ({
+          value,
+          label: SUPPORT_CATEGORY_LABELS[value],
+        })),
+      }}
+      onFeedbackSubmit={async ({ message, nps }) => {
+        const res = await submitFeedbackAction({ nps: nps ?? 0, message });
+        if (!res.success) throw new Error(res.error);
+      }}
+      showNps
+    />
   );
 }

@@ -15,10 +15,16 @@ fail-open no-op) — `supabase/config.toml` matches the local-dev CLI
 config the other 4 Merqo kits already share. The dashboard's onboarding
 tour (`src/components/dashboard-tour.tsx`) stamps its "seen" state as
 soon as it auto-runs rather than when it finishes, so a refresh mid-tour
-can't make it re-trigger on the next load. See `CHANGELOG.md` for the
-latest changes, including deduplication of the shared bearer-auth and
-Merqo-RPC-call helpers and the addition of templateCentral 5.13.0's
-comment-hygiene enforcement layer.
+can't make it re-trigger on the next load. Migrated onto the shared
+`@merqo/ui` component package (v0.8.1, `package.json`): the dashboard
+nav/account dropdown, `useAsyncAction`, `InfoTooltip`, `ImageUploader`,
+`DashboardTour`, and the profile page's two-column layout all now
+delegate to `@merqo/ui`'s versions — see `AGENTS.md`'s File Layout and
+this README's Data model section below for what's still loopkit-local
+(`ElevatedCard`, the upload adapter, step/action wiring). See
+`CHANGELOG.md` for the latest changes, including deduplication of the
+shared bearer-auth and Merqo-RPC-call helpers and the addition of
+templateCentral 5.13.0's comment-hygiene enforcement layer.
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
@@ -48,7 +54,7 @@ cross-kit consistency goal, not a coincidence. Theme is "Raspberry-Rose Punch & 
 gold reward accent, chosen (over the earlier, dimmer "Mulberry & Gold") to
 read as celebratory rather than moody-fintech. Form fields keep their
 primary copy to one short line, pushing rationale/edge-case detail into a
-shared tap-to-open `(i)` info tooltip (`src/components/info-tooltip.tsx`).
+shared tap-to-open `(i)` info tooltip (`@merqo/ui`'s `InfoTooltip`).
 The login form (`src/features/auth/components/login-form.tsx`) runs on
 React Hook Form + Zod (a `loginSchema` in `src/lib/schemas.ts`) with a
 `zodResolver`, surfacing auth/server errors via sonner toasts rather than
@@ -109,11 +115,12 @@ feedback (the dashboard's "Share feedback" sheet) is submitted straight
 into the shared `merqo.vendor_feedback` table (`submit_vendor_feedback`, see
 `src/lib/merqo-vendor-feedback.ts`) instead of a local table — loopkit's own
 `loopkit.feedback` table is now historical-only (one-time backfilled into
-`merqo.vendor_feedback` by migration `0030`); and the dashboard's "Get help"
-Sheet (`SupportForm`) submits straight into the shared
-`merqo.support_messages` inbox (`submit_support_message`, see
-`src/lib/merqo-support.ts`) — triaged from merqo's own cross-kit admin
-console, with no loopkit-side table at all. See
+`merqo.vendor_feedback` by migration `0030`); and the dashboard's "Get
+help" Sheet (`@merqo/ui`'s `HelpSheet`, opened from `dashboard-nav.tsx`'s
+`AccountMenu`) submits straight into the shared `merqo.support_messages`
+inbox (`submit_support_message`, see `src/lib/merqo-support.ts`) —
+triaged from merqo's own cross-kit admin console, with no loopkit-side
+table at all. See
 `docs/business/2026-07-21-profile-settings-page-standard.md` (in the parent
 `Merqo Business/docs/` repo) for the locked cross-kit pattern.
 

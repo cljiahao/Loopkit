@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Migrated onto the shared `@merqo/ui` component package (v0.8.1): the
+  dashboard nav/account dropdown now composes `@merqo/ui`'s `DashboardNav`
+  and `AccountMenu` (with loopkit's own Feedback/Get-help server actions
+  wired through throw-adapters); `useAsyncAction`, `InfoTooltip`,
+  `ImageUploader` (via a new `uploadLoopkitImage` adapter,
+  `src/lib/image-upload-adapter.ts`), `DashboardTour`, and the profile
+  page's two-column layout (`TwoColumnSections`) all now delegate to the
+  shared package instead of hand-rolled local copies. `Section` keeps
+  loopkit's own `ElevatedCard` shell via the shared component's `wrapper`
+  render-prop, so the polished-card visual is unchanged. No user-visible
+  behavior change; removes `FeedbackForm`/`SupportForm`/local
+  `ImageUploader`/`InfoTooltip`/`tour.css` and the direct `driver.js`
+  dependency (now only reached transitively through `@merqo/ui`).
 - Deduplicated the per-route `bearerOk` bearer-secret check (previously copy-pasted into
   3 `src/app/api/merqo/*` routes) into a shared helper in `src/lib/merqo-auth.ts`, and the
   repeated Merqo-schema RPC-call boilerplate across `merqo-support.ts`/

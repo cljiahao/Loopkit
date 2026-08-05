@@ -45,4 +45,15 @@ describe("Section", () => {
     );
     expect(container.querySelector("section")).toBeInTheDocument();
   });
+
+  it("wraps content in an ElevatedCard, not @merqo/ui's default flat shell", () => {
+    const { container } = render(
+      <Section icon={<Store />} title="T" description="D">
+        <p>c</p>
+      </Section>,
+    );
+    const section = container.querySelector("section");
+    expect(section?.className).toContain("rounded-[20px]");
+    expect(section?.className).not.toContain("bg-card text-card-foreground");
+  });
 });

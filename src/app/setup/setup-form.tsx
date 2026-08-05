@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { usePreviewAnimation } from "@/app/setup/preview-animation";
 import { PreviewCard } from "@/app/setup/preview-card";
 import { Section } from "@/components/section";
-import { InfoTooltip } from "@/components/info-tooltip";
+import { InfoTooltip } from "@merqo/ui";
 import { ColorPicker } from "@/components/color-picker";
 import {
   Tag,
@@ -543,10 +543,16 @@ export function SetupForm({
                       <Label className={labelClass}>
                         {type === "wheel" ? "Wheel segments" : "Scratch prizes"}
                       </Label>
-                      <InfoTooltip label="What the number next to each prize means">
-                        That&apos;s the odds weight — higher numbers land more
-                        often relative to the other prizes.
-                      </InfoTooltip>
+                      <InfoTooltip
+                        ariaLabel="What the number next to each prize means"
+                        trigger="tap"
+                        content={
+                          <>
+                            That&apos;s the odds weight — higher numbers land
+                            more often relative to the other prizes.
+                          </>
+                        }
+                      />
                     </div>
                     <p className="text-sm font-semibold text-muted-foreground">
                       Overall win chance: {overallOddsPercent}%
@@ -813,11 +819,17 @@ export function SetupForm({
                   >
                     Give new customers a head start
                   </label>
-                  <InfoTooltip label="Why give a head start?">
-                    New signups start with a small amount of free progress
-                    toward their first reward — shown to measurably increase
-                    completion.
-                  </InfoTooltip>
+                  <InfoTooltip
+                    ariaLabel="Why give a head start?"
+                    trigger="tap"
+                    content={
+                      <>
+                        New signups start with a small amount of free progress
+                        toward their first reward — shown to measurably increase
+                        completion.
+                      </>
+                    }
+                  />
                 </div>
                 {headStart && (type === "stamp" || type === "plant") && (
                   <div className="flex items-center gap-2">
@@ -887,10 +899,16 @@ export function SetupForm({
               <Label htmlFor="expiry_days" className={labelClass}>
                 Card expires after (days, optional)
               </Label>
-              <InfoTooltip label="How card expiry is counted">
-                Counted from each customer&apos;s current cycle — resets
-                whenever their card is regenerated.
-              </InfoTooltip>
+              <InfoTooltip
+                ariaLabel="How card expiry is counted"
+                trigger="tap"
+                content={
+                  <>
+                    Counted from each customer&apos;s current cycle — resets
+                    whenever their card is regenerated.
+                  </>
+                }
+              />
             </div>
             <Input
               id="expiry_days"
@@ -913,11 +931,17 @@ export function SetupForm({
                 <Label htmlFor="reward_expiry_days" className={labelClass}>
                   Reward expires after (days, optional)
                 </Label>
-                <InfoTooltip label="How reward expiry differs from card expiry">
-                  Counted from the moment a customer earns the reward — separate
-                  from the card-expiry setting above, which resets a whole
-                  card&apos;s progress after inactivity.
-                </InfoTooltip>
+                <InfoTooltip
+                  ariaLabel="How reward expiry differs from card expiry"
+                  trigger="tap"
+                  content={
+                    <>
+                      Counted from the moment a customer earns the reward —
+                      separate from the card-expiry setting above, which resets
+                      a whole card&apos;s progress after inactivity.
+                    </>
+                  }
+                />
               </div>
               <Input
                 id="reward_expiry_days"

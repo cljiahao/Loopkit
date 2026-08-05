@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@source "../../node_modules/@merqo/ui/dist";
 
 /* ── loopkit — "Raspberry-Rose Punch & Gold" ─────────────────────────────────
    Digital stamp-card loyalty for SG small vendors. Replaces the earlier
