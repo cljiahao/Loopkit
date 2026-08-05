@@ -17,10 +17,8 @@ type DescribableProgram = {
 };
 
 // One-line reward-mechanic blurb per program type, for the dashboard card
-// header. Every branch is exercised now that all of a vendor's active
-// programs render at once (previously only the single switched-to program
-// was visible, so wheel/scratch silently fell through to a generic
-// description on dashboard/page.tsx).
+// header. All of a vendor's active programs render at once, so every
+// branch here is live — none is dead code for an unreachable program type.
 export function describeProgram(program: DescribableProgram): string {
   const { type, stamps_required, reward_text, config } = program;
   if (type === "lucky") {
