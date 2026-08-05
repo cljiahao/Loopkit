@@ -21,6 +21,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   behavior change; removes `FeedbackForm`/`SupportForm`/local
   `ImageUploader`/`InfoTooltip`/`tour.css` and the direct `driver.js`
   dependency (now only reached transitively through `@merqo/ui`).
+- Deduplicated the per-route `bearerOk` bearer-secret check (previously copy-pasted into
+  3 `src/app/api/merqo/*` routes) into a shared helper in `src/lib/merqo-auth.ts`, and the
+  repeated Merqo-schema RPC-call boilerplate across `merqo-support.ts`/
+  `merqo-vendor-feedback.ts`/`merqo-vendor-profile.ts` into a shared `callMerqoRpc` helper
+  in `src/lib/merqo-rpc.ts`. No behavior change.
+- Adopted templateCentral 5.13.0's mechanical comment-hygiene enforcement layer
+  (live edit-time feedback, pre-commit warn, CI gate on added lines).
 - Landing footer rebuilt to match qkit's exact single-row layout
   (wordmark, tagline, copyright, sign-in link as flex siblings), and the
   bottom call-to-action band above it removed — qkit's landing page never

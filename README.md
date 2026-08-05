@@ -21,7 +21,10 @@ nav/account dropdown, `useAsyncAction`, `InfoTooltip`, `ImageUploader`,
 `DashboardTour`, and the profile page's two-column layout all now
 delegate to `@merqo/ui`'s versions — see `AGENTS.md`'s File Layout and
 this README's Data model section below for what's still loopkit-local
-(`ElevatedCard`, the upload adapter, step/action wiring).
+(`ElevatedCard`, the upload adapter, step/action wiring). See
+`CHANGELOG.md` for the latest changes, including deduplication of the
+shared bearer-auth and Merqo-RPC-call helpers and the addition of
+templateCentral 5.13.0's comment-hygiene enforcement layer.
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view

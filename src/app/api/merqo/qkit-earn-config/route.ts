@@ -1,26 +1,11 @@
-import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
+import { bearerOk } from "@/lib/merqo-auth";
 
 export const revalidate = 0;
 
-// Ported verbatim from qkit's `bearerOk` — keep in lockstep with every other
-// /api/merqo/* route in both repos.
-function bearerOk(request: Request): boolean {
-  const secret = process.env.MERQO_METRICS_SECRET;
-  if (!secret) return false;
-  const header = request.headers.get("authorization") ?? "";
-  const prefix = "Bearer ";
-  if (!header.startsWith(prefix)) return false;
-  const provided = Buffer.from(header.slice(prefix.length));
-  const expected = Buffer.from(secret);
-  return (
-    provided.length === expected.length && timingSafeEqual(provided, expected)
-  );
-}
-
 export async function GET(request: Request) {
-  if (!bearerOk(request)) {
+  if (!bearerOk(request, "MERQO_METRICS_SECRET")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

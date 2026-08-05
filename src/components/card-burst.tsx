@@ -28,24 +28,24 @@ function makePieces(count: number): Piece[] {
   return Array.from({ length: count }, (_, i) => ({
     id: i,
     angle: Math.random() * 360,
-    // Wider spread than before (was 40-90px) — with more/bigger pieces the
-    // burst needs more room to breathe, otherwise it reads as a dense blob
-    // instead of a fireworks-style radiate-outward burst.
+    // A wide spread gives more/bigger pieces room to breathe, so the burst
+    // reads as a fireworks-style radiate-outward effect instead of a dense
+    // blob.
     distance: 50 + Math.random() * 80,
     delay: Math.random() * 0.15,
     duration: 0.7 + Math.random() * 0.5,
     color: COLORS[i % COLORS.length],
-    // Randomized size (was a fixed size-2/8px) and a mix of square/circle
-    // pieces for a punchier, less uniform "more confetti" look.
+    // Randomized size and a mix of square/circle pieces gives a punchier,
+    // less uniform "more confetti" look.
     size: 6 + Math.random() * 8,
     shape: Math.random() > 0.5 ? "circle" : "square",
   }));
 }
 
 // Fireworks-style burst contained to whatever relative-positioned box the
-// caller wraps it in (unlike the deleted ConfettiBurst, which was
-// `fixed inset-0` and covered the entire viewport regardless of where it
-// was mounted). Particles radiate outward from the container's center.
+// caller wraps it in — `absolute inset-0` on this element fills that box,
+// not the viewport, so the burst stays local to wherever it's mounted.
+// Particles radiate outward from the container's center.
 export function CardBurst({ active }: { active: boolean }) {
   const pieces = useMemo(
     () => (active ? makePieces(PIECE_COUNT) : []),
