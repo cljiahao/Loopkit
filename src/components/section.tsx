@@ -1,8 +1,11 @@
+import { Section as SharedSection } from "@merqo/ui";
 import { ElevatedCard } from "@/components/elevated-card";
 
-// Icon-badge + eyebrow/title/description header over an ElevatedCard.
-// Replaces the repeated hand-rolled <Card><CardHeader>...icon badge...
-// block in profile-form.tsx and setup-form.tsx (Tasks 3 and 5).
+// Delegates header rendering (icon badge, eyebrow, title, description) to
+// @merqo/ui's Section, keeping ElevatedCard — loopkit's own polished-card
+// visual, deliberately not qkit's Ticket theme — as the local shell via the
+// wrapper render-prop. Public shape is unchanged: every existing caller
+// (profile-form.tsx, setup-form.tsx) needs zero changes.
 export function Section({
   icon,
   eyebrow,
@@ -17,24 +20,18 @@ export function Section({
   children: React.ReactNode;
 }) {
   return (
-    <ElevatedCard as="section" className="px-7 py-6">
-      <div className="flex items-start gap-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-          {icon}
-        </span>
-        <div>
-          {eyebrow ? (
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              {eyebrow}
-            </p>
-          ) : null}
-          <h2 className="mt-0.5 font-display text-lg font-semibold leading-tight">
-            {title}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-        </div>
-      </div>
-      <div className="mt-5 space-y-4">{children}</div>
-    </ElevatedCard>
+    <SharedSection
+      icon={icon}
+      eyebrow={eyebrow}
+      title={title}
+      description={description}
+      wrapper={(content) => (
+        <ElevatedCard as="section" className="px-7 py-6">
+          {content}
+        </ElevatedCard>
+      )}
+    >
+      {children}
+    </SharedSection>
   );
 }
