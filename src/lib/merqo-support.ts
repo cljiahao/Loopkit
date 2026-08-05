@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { callMerqoRpc } from "@/lib/merqo-rpc";
 
 /**
  * Shape of the merqo.submit_support_message RPC — merqo owns this
@@ -7,20 +8,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * own supabase gen types scope (schema: "loopkit"). See
  * merqo/docs/superpowers/specs/2026-07-23-cross-kit-support-messages-remaining-kits-design.md.
  */
-type MerqoSupportSchema = {
-  merqo: {
-    Tables: Record<string, never>;
-    Views: Record<string, never>;
-    Functions: {
-      submit_support_message: {
-        Args: { p_kit_slug: string; p_category: string; p_body: string };
-        Returns: { id: string };
-      };
-    };
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
-  };
+type SubmitSupportMessageArgs = {
+  p_kit_slug: string;
+  p_category: string;
+  p_body: string;
 };
+type SubmitSupportMessageReturn = { id: string };
 
 export async function submitSupportMessage<
   Db,
@@ -30,15 +23,14 @@ export async function submitSupportMessage<
   category: string,
   body: string,
 ): Promise<void> {
-  const merqoClient = supabase as unknown as SupabaseClient<MerqoSupportSchema>;
-  const { error } = await merqoClient
-    .schema("merqo")
-    .rpc("submit_support_message", {
-      p_kit_slug: "loopkit",
-      p_category: category,
-      p_body: body,
-    });
-  if (error) {
-    throw new Error(`submit_support_message failed: ${error.message}`);
-  }
+  await callMerqoRpc<
+    SubmitSupportMessageArgs,
+    SubmitSupportMessageReturn,
+    Db,
+    SchemaName
+  >(supabase, "submit_support_message", {
+    p_kit_slug: "loopkit",
+    p_category: category,
+    p_body: body,
+  });
 }

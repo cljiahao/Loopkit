@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { callMerqoRpc } from "@/lib/merqo-rpc";
 
 /**
  * Shape of the merqo.submit_vendor_feedback RPC — merqo owns this
@@ -7,20 +8,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * own supabase gen types scope (schema: "loopkit"). See
  * merqo/docs/superpowers/specs/2026-07-23-cross-kit-vendor-feedback-design.md.
  */
-type MerqoVendorFeedbackSchema = {
-  merqo: {
-    Tables: Record<string, never>;
-    Views: Record<string, never>;
-    Functions: {
-      submit_vendor_feedback: {
-        Args: { p_kit_slug: string; p_nps: number; p_message: string | null };
-        Returns: { id: string };
-      };
-    };
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
-  };
+type SubmitVendorFeedbackArgs = {
+  p_kit_slug: string;
+  p_nps: number;
+  p_message: string | null;
 };
+type SubmitVendorFeedbackReturn = { id: string };
 
 /**
  * Callers pass in a client already scoped to their own (loopkit) Database
@@ -38,16 +31,14 @@ export async function submitVendorFeedback<
   nps: number,
   message: string | null,
 ): Promise<void> {
-  const merqoClient =
-    supabase as unknown as SupabaseClient<MerqoVendorFeedbackSchema>;
-  const { error } = await merqoClient
-    .schema("merqo")
-    .rpc("submit_vendor_feedback", {
-      p_kit_slug: kitSlug,
-      p_nps: nps,
-      p_message: message,
-    });
-  if (error) {
-    throw new Error(`submit_vendor_feedback failed: ${error.message}`);
-  }
+  await callMerqoRpc<
+    SubmitVendorFeedbackArgs,
+    SubmitVendorFeedbackReturn,
+    Db,
+    SchemaName
+  >(supabase, "submit_vendor_feedback", {
+    p_kit_slug: kitSlug,
+    p_nps: nps,
+    p_message: message,
+  });
 }

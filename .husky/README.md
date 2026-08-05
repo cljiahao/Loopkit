@@ -19,7 +19,8 @@ Smart App Control to block, unlike lefthook's unsigned `lefthook.exe`).
   staged `.ts/.tsx/.js/.mjs/.cjs`, xargs'd with `-d '\n'` so filenames with
   spaces/quotes survive), `tsc --noEmit`, a frozen-lockfile install check
   when `package.json` is staged, a gitleaks secret-scan on staged files (if
-  gitleaks is installed), then the README-coupling nudge.
+  gitleaks is installed), then the README-coupling nudge and the
+  comment-hygiene nudge.
 - `lib/commit-msg-check.sh` — Conventional Commits gate: validates the
   commit message's first line against
   `^(feat|fix|chore|docs|style|refactor|test|ci|perf|build|revert)(\(scope\))?: description`,
@@ -30,6 +31,10 @@ Smart App Control to block, unlike lefthook's unsigned `lefthook.exe`).
 - `lib/readme-coupling.sh` — pre-commit nudge (non-blocking): warns to
   stderr when staged files touch a folder whose `README.md` wasn't also
   staged; the commit still proceeds.
+- `lib/comment-hygiene.sh` — pre-commit nudge (non-blocking): flags
+  change-narration comments and oversized comment blocks in staged
+  `.ts/.tsx/.js/.jsx/.mjs/.cjs` files, using
+  `.claude/comment-hygiene-patterns.txt`; the commit still proceeds.
 
 ## Connectivity
 
@@ -43,7 +48,11 @@ layer needed is gone, not ported. `lib/pre-push.sh` separately runs
 `.claude/verify-harness.sh` and the full `pnpm run check && pnpm test`
 gate. `.claude/verify-harness.sh` treats every file in this folder as part
 of the integrity-checked enforcement layer recorded in
-`.claude/harness.json`.
+`.claude/harness.json`. `lib/comment-hygiene.sh` reads the same
+`.claude/comment-hygiene-patterns.txt` pattern file as
+`.claude/hooks/post-edit-comment-check.sh` (the live edit-time nudge) and
+the CI `comment-hygiene` job (`.github/workflows/ci.yml`, the PR-time hard
+gate) — one pattern list feeding all three enforcement surfaces.
 
 ## Parent
 

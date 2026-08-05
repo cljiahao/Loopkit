@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { callMerqoRpc } from "@/lib/merqo-rpc";
 
 /**
  * Shape returned by merqo's get_or_create_vendor_profile. merqo owns this
@@ -14,27 +15,14 @@ export type VendorProfile = {
   updated_at: string;
 };
 
-type MerqoSchema = {
-  merqo: {
-    Tables: Record<string, never>;
-    Views: Record<string, never>;
-    Functions: {
-      get_or_create_vendor_profile: {
-        Args: { p_vendor_id: string; p_default_stall_name: string | null };
-        Returns: VendorProfile;
-      };
-      upsert_vendor_profile: {
-        Args: {
-          p_vendor_id: string;
-          p_stall_name: string;
-          p_social_links: Record<string, string>;
-        };
-        Returns: VendorProfile;
-      };
-    };
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
-  };
+type GetOrCreateVendorProfileArgs = {
+  p_vendor_id: string;
+  p_default_stall_name: string | null;
+};
+type UpsertVendorProfileArgs = {
+  p_vendor_id: string;
+  p_stall_name: string;
+  p_social_links: Record<string, string>;
 };
 
 /**
@@ -44,8 +32,8 @@ type MerqoSchema = {
  * `"public"`, which real callers (scoped to `"loopkit"`) don't structurally
  * match. Declaring the function generic over the caller's own
  * Database/SchemaName lets each call site's concrete client type flow in
- * unchanged; the body then re-asserts it against MerqoSchema for the one
- * cross-schema call.
+ * unchanged; `callMerqoRpc` re-asserts it against the merqo schema for the
+ * one cross-schema call.
  */
 export async function getOrCreateVendorProfile<
   Db,
@@ -55,17 +43,15 @@ export async function getOrCreateVendorProfile<
   vendorId: string,
   defaultStallName: string | null,
 ): Promise<VendorProfile> {
-  const merqoClient = supabase as unknown as SupabaseClient<MerqoSchema>;
-  const { data, error } = await merqoClient
-    .schema("merqo")
-    .rpc("get_or_create_vendor_profile", {
-      p_vendor_id: vendorId,
-      p_default_stall_name: defaultStallName,
-    });
-  if (error) {
-    throw new Error(`get_or_create_vendor_profile failed: ${error.message}`);
-  }
-  return data;
+  return callMerqoRpc<
+    GetOrCreateVendorProfileArgs,
+    VendorProfile,
+    Db,
+    SchemaName
+  >(supabase, "get_or_create_vendor_profile", {
+    p_vendor_id: vendorId,
+    p_default_stall_name: defaultStallName,
+  });
 }
 
 /**
@@ -82,16 +68,13 @@ export async function upsertVendorProfile<
   stallName: string,
   socialLinks: Record<string, string>,
 ): Promise<VendorProfile> {
-  const merqoClient = supabase as unknown as SupabaseClient<MerqoSchema>;
-  const { data, error } = await merqoClient
-    .schema("merqo")
-    .rpc("upsert_vendor_profile", {
+  return callMerqoRpc<UpsertVendorProfileArgs, VendorProfile, Db, SchemaName>(
+    supabase,
+    "upsert_vendor_profile",
+    {
       p_vendor_id: vendorId,
       p_stall_name: stallName,
       p_social_links: socialLinks,
-    });
-  if (error) {
-    throw new Error(`upsert_vendor_profile failed: ${error.message}`);
-  }
-  return data;
+    },
+  );
 }
