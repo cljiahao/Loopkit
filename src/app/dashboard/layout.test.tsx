@@ -41,12 +41,18 @@ beforeEach(() => {
 });
 
 describe("DashboardLayout", () => {
-  it("renders the sticky header matching qkit's px-5 py-3.5 sizing", async () => {
+  it("wraps DashboardNav in a display:contents div, not its own <header>", async () => {
+    // @merqo/ui's DashboardNav owns the actual <header> element (sticky/
+    // border/background/blur) internally now — layout.tsx's own wrapper
+    // must not introduce a second one, which would break the header's
+    // `position: sticky` containing block. `display: contents` removes the
+    // wrapper's own box from layout while still applying print:hidden.
     render(await DashboardLayout({ children: <div>content</div> }));
 
-    const header = screen.getByRole("banner");
-    expect(header).toHaveClass("px-5", "py-3.5", "backdrop-blur-md");
-    expect(screen.getByTestId("dashboard-nav")).toBeInTheDocument();
+    const nav = screen.getByTestId("dashboard-nav");
+    const wrapper = nav.parentElement;
+    expect(wrapper).toHaveClass("contents", "print:hidden");
+    expect(wrapper?.tagName).not.toBe("HEADER");
   });
 
   it("passes seen=false to DashboardTour when the vendor has never completed it", async () => {

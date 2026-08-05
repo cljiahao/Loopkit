@@ -40,7 +40,14 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-20 border-b border-border bg-background/85 px-5 py-3.5 backdrop-blur-md print:hidden">
+      {/* @merqo/ui's DashboardNav renders its own <header> (sticky/border/
+          background/blur, identical classes to what this wrapper used to
+          own) — a plain <div> here would nest a second <header> inside it,
+          breaking `position: sticky`'s containing block. `display: contents`
+          removes this wrapper from the box tree entirely so DashboardNav's
+          own <header> becomes the direct flex child, while still applying
+          print:hidden. */}
+      <div className="contents print:hidden">
         <Suspense fallback={null}>
           <DashboardNav
             signOut={signOut}
@@ -50,7 +57,7 @@ export default async function DashboardLayout({
             tier={pro ? "pro" : "free"}
           />
         </Suspense>
-      </header>
+      </div>
       <div className="flex-1">{children}</div>
       <DashboardTour seen={!!vendorRow?.tour_seen_at} />
     </div>
