@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Dashboard onboarding tour re-running on every visit to the overview page
+  instead of staying dismissed. Root cause: the `@merqo/ui` v0.8.1/v0.9.0
+  migration swapped the dashboard nav's Next.js `<Link>`s for the shared
+  `DashboardNav`'s plain `<a>` tags (that package has no Next.js
+  dependency), so every dashboard nav click became a full-page hard
+  navigation instead of a client-side transition. The existing
+  stamp-tour-seen-on-start write (a Server Action call) raced that
+  navigation: a vendor who clicked a nav link shortly after the tour
+  auto-started (very plausible — it's the natural reaction to an intrusive
+  overlay) unloaded the page before the write landed, aborting it and
+  leaving `tour_seen_at` unstamped, so the tour auto-ran again next visit.
+  Replaced the Server Action with a `POST /api/tour-seen` Route Handler
+  called via `fetch(..., { keepalive: true })`
+  (`src/components/dashboard-tour.tsx`, `src/app/api/tour-seen/`) —
+  `keepalive` guarantees the browser finishes the write even after the
+  document that started it unloads, which a Server Action's own internal
+  fetch cannot opt into.
+
 ### Changed
 
 - Migrated onto the shared `@merqo/ui` component package (v0.8.1): the

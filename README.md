@@ -14,8 +14,12 @@ limiting on public actions (never provisioned in production, so it was a
 fail-open no-op) — `supabase/config.toml` matches the local-dev CLI
 config the other 4 Merqo kits already share. The dashboard's onboarding
 tour (`src/components/dashboard-tour.tsx`) stamps its "seen" state as
-soon as it auto-runs rather than when it finishes, so a refresh mid-tour
-can't make it re-trigger on the next load. Migrated onto the shared
+soon as it auto-runs rather than when it finishes, via a `keepalive` POST
+to `src/app/api/tour-seen/` rather than a Server Action, so the write
+survives not just a mid-tour refresh but a hard-navigation page unload —
+`@merqo/ui`'s shared `DashboardNav` renders plain `<a>` nav links, so any
+dashboard nav click (including back to the overview page) is a full
+reload, not a client-side transition. Migrated onto the shared
 `@merqo/ui` component package (v0.8.1, `package.json`): the dashboard
 nav/account dropdown, `useAsyncAction`, `InfoTooltip`, `ImageUploader`,
 `DashboardTour`, and the profile page's two-column layout all now

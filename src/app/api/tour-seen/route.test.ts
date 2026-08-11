@@ -24,13 +24,14 @@ beforeEach(() => {
   });
 });
 
-describe("markTourSeen", () => {
+describe("POST /api/tour-seen", () => {
   it("stamps tour_seen_at on the signed-in vendor's own row", async () => {
     getUserMock.mockResolvedValue({ data: { user: { id: "v1" } } });
 
-    const { markTourSeen } = await import("./tour-actions");
-    await markTourSeen();
+    const { POST } = await import("./route");
+    const res = await POST();
 
+    expect(res.status).toBe(204);
     expect(fromMock).toHaveBeenCalledWith("vendors");
     expect(updateMock).toHaveBeenCalledWith({
       tour_seen_at: expect.any(String),
@@ -41,9 +42,10 @@ describe("markTourSeen", () => {
   it("does nothing when no user is signed in", async () => {
     getUserMock.mockResolvedValue({ data: { user: null } });
 
-    const { markTourSeen } = await import("./tour-actions");
-    await markTourSeen();
+    const { POST } = await import("./route");
+    const res = await POST();
 
+    expect(res.status).toBe(204);
     expect(fromMock).not.toHaveBeenCalled();
   });
 
@@ -54,9 +56,10 @@ describe("markTourSeen", () => {
       .spyOn(console, "error")
       .mockImplementation(() => {});
 
-    const { markTourSeen } = await import("./tour-actions");
-    await expect(markTourSeen()).resolves.toBeUndefined();
+    const { POST } = await import("./route");
+    const res = await POST();
 
+    expect(res.status).toBe(204);
     expect(consoleError).toHaveBeenCalledWith(
       "markTourSeen failed",
       "RLS denied",

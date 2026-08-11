@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { render } from "@testing-library/react";
 import { DashboardTour } from "./dashboard-tour";
 
@@ -12,7 +12,6 @@ const mocks = vi.hoisted(() => {
   return {
     state,
     push: vi.fn(),
-    markTourSeen: vi.fn(),
     SharedDashboardTour: vi.fn((props: unknown) => {
       state.lastProps = props;
       return null;
@@ -21,9 +20,6 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("@merqo/ui", () => ({ DashboardTour: mocks.SharedDashboardTour }));
-vi.mock("@/app/dashboard/tour-actions", () => ({
-  markTourSeen: mocks.markTourSeen,
-}));
 vi.mock("next/navigation", () => ({
   usePathname: () => mocks.state.pathname,
   useRouter: () => ({ push: mocks.push }),
@@ -43,6 +39,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.state.pathname = "/dashboard";
   mocks.state.lastProps = null;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn().mockResolvedValue(new Response(null, { status: 204 })),
+  );
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 describe("DashboardTour", () => {
@@ -94,9 +98,19 @@ describe("DashboardTour", () => {
     expect(props().isHomeRoute).toBe(true);
   });
 
-  it("onFirstSeen is wired to markTourSeen", () => {
+  it("onFirstSeen posts to /api/tour-seen with keepalive, so the write survives a hard nav mid-flight", async () => {
     render(<DashboardTour seen={true} />);
-    expect(props().onFirstSeen).toBe(mocks.markTourSeen);
+    await props().onFirstSeen();
+    expect(fetch).toHaveBeenCalledWith("/api/tour-seen", {
+      method: "POST",
+      keepalive: true,
+    });
+  });
+
+  it("onFirstSeen never throws even if the fetch itself rejects", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
+    render(<DashboardTour seen={true} />);
+    await expect(props().onFirstSeen()).resolves.toBeUndefined();
   });
 
   it("scopeClassName is loopkit-tour", () => {
