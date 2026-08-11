@@ -16,19 +16,24 @@ config the other 4 Merqo kits already share. The dashboard's onboarding
 tour (`src/components/dashboard-tour.tsx`) stamps its "seen" state as
 soon as it auto-runs rather than when it finishes, via a `keepalive` POST
 to `src/app/api/tour-seen/` rather than a Server Action, so the write
-survives not just a mid-tour refresh but a hard-navigation page unload —
-`@merqo/ui`'s shared `DashboardNav` renders plain `<a>` nav links, so any
-dashboard nav click (including back to the overview page) is a full
-reload, not a client-side transition. Migrated onto the shared
-`@merqo/ui` component package (v0.8.1, `package.json`): the dashboard
-nav/account dropdown, `useAsyncAction`, `InfoTooltip`, `ImageUploader`,
-`DashboardTour`, and the profile page's two-column layout all now
-delegate to `@merqo/ui`'s versions — see `AGENTS.md`'s File Layout and
-this README's Data model section below for what's still loopkit-local
-(`ElevatedCard`, the upload adapter, step/action wiring). See
-`CHANGELOG.md` for the latest changes, including deduplication of the
-shared bearer-auth and Merqo-RPC-call helpers and the addition of
-templateCentral 5.13.0's comment-hygiene enforcement layer.
+survives not just a mid-tour refresh but a hard-navigation page unload,
+which mattered because `@merqo/ui`'s shared `DashboardNav` defaulted to
+plain `<a>` nav links (root cause, now fixed — see below). Migrated onto
+the shared `@merqo/ui` component package (v0.10.0, `package.json`): the
+dashboard nav/account dropdown, `useAsyncAction`, `InfoTooltip`,
+`ImageUploader`, `DashboardTour`, and the profile page's two-column
+layout all now delegate to `@merqo/ui`'s versions — see `AGENTS.md`'s
+File Layout and this README's Data model section below for what's still
+loopkit-local (`ElevatedCard`, the upload adapter, step/action wiring).
+`DashboardNav`'s wrapper (`src/app/dashboard/dashboard-nav.tsx`) passes
+`LinkComponent={Link}` (v0.10.0+) so the package renders `next/link`'s
+`Link` instead of a plain `<a>` for its nav links and the `AccountMenu`
+it composes internally (loopkit has no standalone `AccountMenu` usage) —
+dashboard nav clicks are client-side transitions again, not full-page
+reloads. See `CHANGELOG.md` for the latest changes, including
+deduplication of the shared bearer-auth and Merqo-RPC-call helpers and
+the addition of templateCentral 5.13.0's comment-hygiene enforcement
+layer.
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
