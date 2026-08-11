@@ -17,6 +17,8 @@ allowBuilds:
 #   sharp    GHSA-f88m-g3jw-g9cj  (via next>sharp; libvips CVE-2026-33327/33328/35590/35591)
 #   fast-uri GHSA-v2hh-gcrm-f6hx (dev: via stryker<-ajv; host confusion via
 #                                 literal backslash authority delimiter)
+#   nanoid   GHSA-2v37-7h3g-55p8 (via next>postcss>nanoid; custom generators
+#                                 can loop indefinitely when size is zero)
 #   brace-expansion — 3 separate advisories affected 3 separate transitive
 #   consumers, each naturally on its own major line (minimatch@3.1.5's
 #   eslint-internal chain wants 1.x, vitest coverage's glob wants 2.x,
