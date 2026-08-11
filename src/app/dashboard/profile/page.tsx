@@ -32,7 +32,7 @@ export default async function ProfilePage() {
   }
 
   return (
-    <main className="mx-auto max-w-lg space-y-8 p-5 py-10 md:max-w-4xl">
+    <div className="mx-auto max-w-lg space-y-8 md:max-w-4xl">
       <BackButton href="/dashboard" label="Back to dashboard" />
       <div>
         <h1 className="font-display text-2xl font-bold">Profile</h1>
@@ -49,6 +49,6 @@ export default async function ProfilePage() {
         displayName={displayName}
         socialLinks={socialLinks}
       />
-    </main>
+    </div>
   );
 }

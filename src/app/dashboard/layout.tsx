@@ -58,7 +58,16 @@ export default async function DashboardLayout({
           />
         </Suspense>
       </div>
-      <div className="flex-1">{children}</div>
+      {/* Single canonical content container for every /dashboard page — mirrors
+          qkit's dashboard/layout.tsx <main>, so the nav's inner max-w-7xl and
+          this container's max-w-7xl line up at the same edge. Individual pages
+          used to each set their own (inconsistent) width; they now render a
+          plain <div> (no landmark clash with this <main>) and may still nest a
+          narrower wrapper inside here when content genuinely reads better
+          narrower (profile/counter/plan/settings). */}
+      <main className="mx-auto w-full max-w-7xl flex-1 p-5 py-10">
+        {children}
+      </main>
       <DashboardTour seen={!!vendorRow?.tour_seen_at} />
     </div>
   );

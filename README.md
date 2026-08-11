@@ -16,12 +16,19 @@ config the other 4 Merqo kits already share. The dashboard's onboarding
 tour (`src/components/dashboard-tour.tsx`) stamps its "seen" state as
 soon as it auto-runs rather than when it finishes, so a refresh mid-tour
 can't make it re-trigger on the next load. Migrated onto the shared
-`@merqo/ui` component package (v0.8.1, `package.json`): the dashboard
+`@merqo/ui` component package (v0.9.0, `package.json`): the dashboard
 nav/account dropdown, `useAsyncAction`, `InfoTooltip`, `ImageUploader`,
-`DashboardTour`, and the profile page's two-column layout all now
-delegate to `@merqo/ui`'s versions — see `AGENTS.md`'s File Layout and
-this README's Data model section below for what's still loopkit-local
-(`ElevatedCard`, the upload adapter, step/action wiring). See
+`DashboardTour`, the landing page's sticky header (`LandingNav`, via
+`src/components/landing/nav.tsx`), and the profile page's two-column
+layout all now delegate to `@merqo/ui`'s versions — see `AGENTS.md`'s
+File Layout and this README's Data model section below for what's still
+loopkit-local (`ElevatedCard`, the upload adapter, step/action wiring).
+Every `/dashboard` page now shares one canonical `max-w-7xl` content
+container set at the layout level (`src/app/dashboard/layout.tsx`,
+matching qkit's `dashboard/layout.tsx` pattern) instead of each page
+picking its own width — a page whose content genuinely reads better
+narrower (profile, counter, plan, settings) still nests its own
+narrower wrapper `<div>` inside that shared container. See
 `CHANGELOG.md` for the latest changes, including deduplication of the
 shared bearer-auth and Merqo-RPC-call helpers and the addition of
 templateCentral 5.13.0's comment-hygiene enforcement layer.

@@ -82,7 +82,7 @@ export default async function CustomersPage({
   if (!p) {
     const customers = await listVendorCustomers(q);
     return (
-      <main className="mx-auto max-w-7xl space-y-8 p-5 py-10">
+      <div className="space-y-8">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -118,7 +118,7 @@ export default async function CustomersPage({
           </form>
         </div>
         <VendorCustomerList customers={customers} />
-      </main>
+      </div>
     );
   }
 
@@ -129,7 +129,7 @@ export default async function CustomersPage({
   const now = new Date();
 
   return (
-    <main className="mx-auto max-w-7xl space-y-8 p-5 py-10">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Customers</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -204,6 +204,6 @@ export default async function CustomersPage({
           ))}
         </ul>
       )}
-    </main>
+    </div>
   );
 }

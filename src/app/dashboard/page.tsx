@@ -45,7 +45,7 @@ export default async function DashboardPage() {
   );
 
   return (
-    <main className="mx-auto max-w-7xl space-y-6 p-5 py-10">
+    <div className="space-y-6">
       {!shouldShowQr(activePrograms.length) ? (
         <div
           className="rounded-2xl border border-dashed bg-card p-6 text-center text-sm text-muted-foreground"
@@ -85,6 +85,6 @@ export default async function DashboardPage() {
           </div>
         </>
       )}
-    </main>
+    </div>
   );
 }

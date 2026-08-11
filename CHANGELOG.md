@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Bumped `@merqo/ui` to v0.9.0. The landing page's sticky header
+  (`src/components/landing/nav.tsx`) now delegates its outer shell to the
+  new shared `LandingNav` component (`wordmark`/`end` slots), matching
+  qkit's landing-header sizing exactly the same way `DashboardNav` already
+  does for the dashboard header — no visible change to the wordmark, FAQ
+  button, or sign-in/get-started controls. Also unified every `/dashboard`
+  page onto one canonical `max-w-7xl` content container set at the layout
+  level (`src/app/dashboard/layout.tsx`, matching qkit's `dashboard/layout.tsx`
+  pattern) instead of each page picking its own (previously inconsistent)
+  width — `profile`/`counter`/`plan`/`settings` still nest their own
+  narrower wrapper inside that shared container, since those single-column
+  forms genuinely read better constrained.
 - Migrated onto the shared `@merqo/ui` component package (v0.8.1): the
   dashboard nav/account dropdown now composes `@merqo/ui`'s `DashboardNav`
   and `AccountMenu` (with loopkit's own Feedback/Get-help server actions
