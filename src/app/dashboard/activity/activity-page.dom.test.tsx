@@ -1,8 +1,31 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { ActivityTable } from "./activity-table";
 import type { VendorActivityRow } from "@/lib/activity";
+
+vi.mock("@/features/auth", () => ({ requireVendor: vi.fn(async () => ({})) }));
+
+const programs = [
+  { id: "p1", name: "Coffee Stamps", type: "stamp" },
+  { id: "p2", name: "Bakery Stamps", type: "stamp" },
+];
+
+vi.mock("@/lib/program", () => ({
+  listPrograms: vi.fn(async () => programs),
+  currentProgram: (progs: { id: string }[], id?: string) =>
+    progs.find((p) => p.id === id) ?? null,
+}));
+vi.mock("@/lib/activity", () => ({
+  listActivity: vi.fn(async () => ({ rows: [], hasMore: false })),
+}));
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`REDIRECT:${url}`);
+  }),
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const activity: VendorActivityRow[] = [
   {
@@ -39,5 +62,35 @@ describe("ActivityTable", () => {
     expect(
       screen.getByText(/no activity matches these filters/i),
     ).toBeInTheDocument();
+  });
+});
+
+describe("ActivityPage", () => {
+  it("renders the vendor-wide view (no ?p=) when the vendor runs more than one program", async () => {
+    const ActivityPage = (await import("./page")).default;
+    render(await ActivityPage({ searchParams: Promise.resolve({}) }));
+
+    expect(
+      screen.getByRole("heading", { name: "Activity" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/across every program/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/no activity matches these filters/i),
+    ).toBeInTheDocument();
+  });
+
+  it("renders the program-scoped view and its activity table when ?p= is set", async () => {
+    const ActivityPage = (await import("./page")).default;
+    const { listActivity } = await import("@/lib/activity");
+    vi.mocked(listActivity).mockResolvedValueOnce({
+      rows: activity,
+      hasMore: true,
+    });
+
+    render(await ActivityPage({ searchParams: Promise.resolve({ p: "p1" }) }));
+
+    expect(screen.getByText(/for coffee stamps/i)).toBeInTheDocument();
+    expect(screen.getByText("+6591234567")).toBeInTheDocument();
+    expect(screen.getByText("Next →")).toBeInTheDocument();
   });
 });
