@@ -137,7 +137,8 @@ the stamp being awarded automatically the moment the qkit order completes.
 - Plans/specs: `docs/superpowers/`
 - Release history: `CHANGELOG.md`
 - Dependency security overrides (force-patched transitive CVEs, each
-  scoped/commented with its advisory ID): `pnpm-workspace.yaml`
+  scoped/commented with its advisory ID, e.g. nanoid GHSA-2v37-7h3g-55p8):
+  `pnpm-workspace.yaml`
 
 See `AGENTS.md` for full engineering rules, harness details, and skills.
 
