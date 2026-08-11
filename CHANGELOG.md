@@ -28,6 +28,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Bumped `@merqo/ui` to v0.10.0 and wired its new `LinkComponent` prop
+  (`LinkComponent={Link}`, `src/app/dashboard/dashboard-nav.tsx`) through to
+  `DashboardNav` (which forwards it internally to the `AccountMenu` it
+  composes — loopkit has no standalone `AccountMenu` usage). Dashboard nav
+  and account-menu links now render as `next/link`'s `Link` instead of the
+  package's default plain `<a>`, so clicking them is a client-side
+  transition again instead of a full-page hard navigation — the root cause
+  the `/api/tour-seen` `keepalive` workaround above was patching around
+  the symptom of.
 - Migrated onto the shared `@merqo/ui` component package (v0.8.1): the
   dashboard nav/account dropdown now composes `@merqo/ui`'s `DashboardNav`
   and `AccountMenu` (with loopkit's own Feedback/Get-help server actions
