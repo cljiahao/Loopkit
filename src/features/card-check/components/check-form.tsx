@@ -14,13 +14,10 @@ export function CheckForm({ vendorId }: { vendorId: string }) {
     STATUS_IDLE,
   );
   const found = state.status === "found" && !!state.cards;
-  // A successful check collapses the (now-stale) form so the card status —
-  // and the QR the customer needs to show the shop — isn't pushed below a
-  // form they've already filled in. Re-opened on demand via "Not you?", and
-  // re-collapsed once a fresh result comes back (not immediately on submit,
-  // so the form stays visible through the pending "Checking…" state). Reset
-  // during render (not an effect) when `state` changes — the pattern React
-  // recommends for adjusting state in response to a prop/state change.
+  // Collapses the form once a card is found, so it doesn't push the reward
+  // status/QR below the fold. "Not you?" reopens it; resolving a new
+  // `state` re-collapses it (compared during render, not an effect, per
+  // React's guidance for resetting state on a change).
   const [editingRequested, setEditingRequested] = useState(false);
   const [lastState, setLastState] = useState(state);
   if (state !== lastState) {
