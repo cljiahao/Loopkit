@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Customer search inputs on the dashboard customers page relying on
+  placeholder text alone, with no accessible label (failed WCAG
+  1.3.1/3.3.2). Paired each with a screen-reader-only `Label`, matching
+  the pattern already used on `activity-filters.tsx`.
+- The program-card Edit link's ~28x28px hit area falling well short of
+  the ~44x44px touch-target guideline on a dashboard used standing at a
+  stall on phone/tablet. Enlarged the tap target.
+
 - Dashboard onboarding tour re-running on every visit to the overview page
   instead of staying dismissed. Root cause: the `@merqo/ui` v0.8.1/v0.9.0
   migration swapped the dashboard nav's Next.js `<Link>`s for the shared
