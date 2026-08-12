@@ -122,7 +122,7 @@ export default async function SetupPage({
                         ? "Set up your loyalty card"
                         : canCreate
                           ? "Create a program"
-                          : "Free plan: 1 program"}
+                          : "Add a program"}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {migrating
@@ -139,7 +139,7 @@ export default async function SetupPage({
                         ? "Set up your loyalty card in a minute."
                         : canCreate
                           ? "Pick a card type and set how customers earn their reward."
-                          : "You're on the free plan, which includes one loyalty program."}
+                          : "You've reached your plan's program limit."}
           </p>
         </div>
 

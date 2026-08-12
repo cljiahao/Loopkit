@@ -8,6 +8,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Second frontend-design/impeccable critique pass (the first covered
+  counter/benefits/FAQ/hero/stats/nav badge; this one hunted for what it
+  missed): the login page's wordmark subtitle read "Sign in to your loopkit
+  dashboard." even while the card below it read "Create your account" —
+  a static, mode-independent string contradicting the mode-aware card
+  copy — and the wordmark wasn't a link home, both deviations from qkit's
+  reference login pattern that PRODUCT.md calls a binding cross-kit
+  constraint (`src/features/auth/components/login-form.tsx`). The
+  customer-facing `/c` card-check form stayed fully visible above the
+  fetched card status after a successful lookup, pushing the actual
+  content customers need — the reward status and the QR to show the shop —
+  below a form they'd already filled in; it now collapses to a compact
+  "Showing +65… / Not you?" summary once a result lands
+  (`src/features/card-check/components/check-form.tsx`). The Settings
+  page's qkit-integration panel told a free-tier vendor to "Upgrade to
+  Pro" as plain, unlinked text instead of using the app's own established
+  `ProLock` upgrade-CTA pattern used at every other point of friction,
+  dead-ending the vendor with no path forward
+  (`src/app/dashboard/qkit-earn-settings.tsx`). The `/setup` page rendered
+  the literal same heading and paragraph ("Free plan: 1 program" / "You're
+  on the free plan, which includes one loyalty program.") twice in a row
+  for a free-tier vendor at their program cap — once as the page header,
+  again inside the upsell card immediately below it; the header now reads
+  "Add a program" / "You've reached your plan's program limit." instead
+  (`src/app/setup/page.tsx`).
 - Customer search inputs on the dashboard customers page relying on
   placeholder text alone, with no accessible label (failed WCAG
   1.3.1/3.3.2). Paired each with a screen-reader-only `Label`, matching

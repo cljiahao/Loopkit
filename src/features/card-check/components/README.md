@@ -8,7 +8,15 @@ Client-side card-check UI.
 
 - `check-form.tsx` — `CheckForm`: phone-entry form using `useActionState` +
   `checkStatusAction`, renders a `ProgramCardStatus` per returned card, and
-  shows a `role="alert"` message on an `"error"`/`"none"` result
+  shows a `role="alert"` message on an `"error"`/`"none"` result. On a
+  `"found"` result the form collapses to a compact "Showing +65… / Not
+  you?" summary so the card status (and the QR the customer needs to show
+  the shop) isn't pushed below a form they've already filled in; "Not
+  you?" reopens it, and it re-collapses once a fresh result comes back
+  (not immediately on submit, so it stays open through the pending
+  "Checking…" state) — done by comparing the current action state against
+  the last-seen one during render, React's documented alternative to a
+  `setState`-in-`useEffect` for resetting state on a change.
 - `check-form.dom.test.tsx` — jsdom tests for `CheckForm`: renders the phone
   input and hidden vendor field, submits the form and renders one
   `ProgramCardStatus` per returned card, and shows the `role="alert"`
