@@ -49,7 +49,7 @@ export function ProgramCard({ program }: { program: Program }) {
         <Link
           href={`/setup?edit=${program.id}`}
           aria-label={`Edit ${program.name}`}
-          className="relative z-10 shrink-0 rounded-lg p-1.5 text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          className="relative z-10 shrink-0 rounded-lg p-3.5 text-muted-foreground outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50"
         >
           <Pencil className="size-4" />
         </Link>

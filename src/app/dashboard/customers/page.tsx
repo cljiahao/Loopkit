@@ -6,6 +6,7 @@ import { listCards } from "@/lib/cards";
 import { listVendorCustomers, type VendorCustomerRow } from "@/lib/customers";
 import { formatSgtDate } from "@/lib/format";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ElevatedCard } from "@/components/elevated-card";
@@ -101,7 +102,11 @@ export default async function CustomersPage({
             className="flex w-full min-w-0 flex-1 items-center gap-3 sm:w-auto"
             action="/dashboard/customers"
           >
+            <Label htmlFor="customers-search-vendor" className="sr-only">
+              Search by phone
+            </Label>
             <Input
+              id="customers-search-vendor"
               type="search"
               name="q"
               defaultValue={q ?? ""}
@@ -150,7 +155,11 @@ export default async function CustomersPage({
           action="/dashboard/customers"
         >
           <input type="hidden" name="p" value={program.id} />
+          <Label htmlFor="customers-search-program" className="sr-only">
+            Search by phone
+          </Label>
           <Input
+            id="customers-search-program"
             type="search"
             name="q"
             defaultValue={q ?? ""}
