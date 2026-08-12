@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { DashboardNav as SharedDashboardNav } from "@merqo/ui";
 import { Wordmark } from "@/components/landing/wordmark";
 import { cn } from "@/lib/utils";
@@ -87,6 +88,7 @@ export function DashboardNav({
 
   return (
     <SharedDashboardNav
+      LinkComponent={Link}
       wordmark={
         <a
           href="/dashboard"

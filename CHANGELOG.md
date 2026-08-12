@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Dashboard onboarding tour re-running on every visit to the overview page
+  instead of staying dismissed. Root cause: the `@merqo/ui` v0.8.1/v0.9.0
+  migration swapped the dashboard nav's Next.js `<Link>`s for the shared
+  `DashboardNav`'s plain `<a>` tags (that package has no Next.js
+  dependency), so every dashboard nav click became a full-page hard
+  navigation instead of a client-side transition. The existing
+  stamp-tour-seen-on-start write (a Server Action call) raced that
+  navigation: a vendor who clicked a nav link shortly after the tour
+  auto-started (very plausible — it's the natural reaction to an intrusive
+  overlay) unloaded the page before the write landed, aborting it and
+  leaving `tour_seen_at` unstamped, so the tour auto-ran again next visit.
+  Replaced the Server Action with a `POST /api/tour-seen` Route Handler
+  called via `fetch(..., { keepalive: true })`
+  (`src/components/dashboard-tour.tsx`, `src/app/api/tour-seen/`) —
+  `keepalive` guarantees the browser finishes the write even after the
+  document that started it unloads, which a Server Action's own internal
+  fetch cannot opt into.
+
 ### Changed
 
 - Bumped `@merqo/ui` to v0.9.0. The landing page's sticky header
@@ -20,6 +40,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   width — `profile`/`counter`/`plan`/`settings` still nest their own
   narrower wrapper inside that shared container, since those single-column
   forms genuinely read better constrained.
+- Bumped `@merqo/ui` to v0.10.0 and wired its new `LinkComponent` prop
+  (`LinkComponent={Link}`, `src/app/dashboard/dashboard-nav.tsx`) through to
+  `DashboardNav` (which forwards it internally to the `AccountMenu` it
+  composes — loopkit has no standalone `AccountMenu` usage). Dashboard nav
+  and account-menu links now render as `next/link`'s `Link` instead of the
+  package's default plain `<a>`, so clicking them is a client-side
+  transition again instead of a full-page hard navigation — the root cause
+  the `/api/tour-seen` `keepalive` workaround above was patching around
+  the symptom of.
 - Migrated onto the shared `@merqo/ui` component package (v0.8.1): the
   dashboard nav/account dropdown now composes `@merqo/ui`'s `DashboardNav`
   and `AccountMenu` (with loopkit's own Feedback/Get-help server actions

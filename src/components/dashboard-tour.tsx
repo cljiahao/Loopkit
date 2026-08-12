@@ -3,7 +3,6 @@
 import { usePathname, useRouter } from "next/navigation";
 import { DashboardTour as SharedDashboardTour } from "@merqo/ui";
 
-import { markTourSeen } from "@/app/dashboard/tour-actions";
 import { tourSteps } from "./tour-steps";
 
 // Matches Tailwind's `sm` breakpoint: below 640px the nav links collapse
@@ -16,6 +15,23 @@ function resolveTourSteps() {
     typeof window.matchMedia === "function" &&
     window.matchMedia("(max-width: 639px)").matches;
   return tourSteps(isMobile);
+}
+
+// Fire-and-forget POST, not a Server Action: `@merqo/ui`'s shared
+// DashboardNav renders its links as plain <a> tags (the package has no
+// Next.js dependency), so every dashboard nav click — including the one
+// that brings a vendor back to the overview page while the just-auto-
+// started tour is still up — is a hard navigation, not a client-side
+// transition. A Server Action's own internal fetch can't opt into
+// `keepalive`, so a hard nav landing mid-write would abort it and leave
+// `tour_seen_at` unstamped, reproducing the "tour re-runs on every visit"
+// bug the stamp-on-start fix exists to prevent. `keepalive: true` tells
+// the browser to finish sending this request even after the document that
+// started it is gone.
+function markTourSeen(): Promise<void> {
+  return fetch("/api/tour-seen", { method: "POST", keepalive: true })
+    .then(() => undefined)
+    .catch(() => undefined);
 }
 
 /**

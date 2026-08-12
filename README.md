@@ -14,15 +14,24 @@ limiting on public actions (never provisioned in production, so it was a
 fail-open no-op) — `supabase/config.toml` matches the local-dev CLI
 config the other 4 Merqo kits already share. The dashboard's onboarding
 tour (`src/components/dashboard-tour.tsx`) stamps its "seen" state as
-soon as it auto-runs rather than when it finishes, so a refresh mid-tour
-can't make it re-trigger on the next load. Migrated onto the shared
-`@merqo/ui` component package (v0.9.0, `package.json`): the dashboard
-nav/account dropdown, `useAsyncAction`, `InfoTooltip`, `ImageUploader`,
-`DashboardTour`, the landing page's sticky header (`LandingNav`, via
-`src/components/landing/nav.tsx`), and the profile page's two-column
-layout all now delegate to `@merqo/ui`'s versions — see `AGENTS.md`'s
-File Layout and this README's Data model section below for what's still
-loopkit-local (`ElevatedCard`, the upload adapter, step/action wiring).
+soon as it auto-runs rather than when it finishes, via a `keepalive` POST
+to `src/app/api/tour-seen/` rather than a Server Action, so the write
+survives not just a mid-tour refresh but a hard-navigation page unload,
+which mattered because `@merqo/ui`'s shared `DashboardNav` defaulted to
+plain `<a>` nav links (root cause, now fixed — see below). Migrated onto
+the shared `@merqo/ui` component package (v0.10.1, `package.json`): the
+dashboard nav/account dropdown, `useAsyncAction`, `InfoTooltip`,
+`ImageUploader`, `DashboardTour`, the landing page's sticky header
+(`LandingNav`, via `src/components/landing/nav.tsx`), and the profile
+page's two-column layout all now delegate to `@merqo/ui`'s versions —
+see `AGENTS.md`'s File Layout and this README's Data model section below
+for what's still loopkit-local (`ElevatedCard`, the upload adapter,
+step/action wiring). `DashboardNav`'s wrapper
+(`src/app/dashboard/dashboard-nav.tsx`) passes `LinkComponent={Link}`
+(v0.10.0+) so the package renders `next/link`'s `Link` instead of a
+plain `<a>` for its nav links and the `AccountMenu` it composes
+internally (loopkit has no standalone `AccountMenu` usage) — dashboard
+nav clicks are client-side transitions again, not full-page reloads.
 Every `/dashboard` page now shares one canonical `max-w-7xl` content
 container set at the layout level (`src/app/dashboard/layout.tsx`,
 matching qkit's `dashboard/layout.tsx` pattern) instead of each page
@@ -145,7 +154,9 @@ the stamp being awarded automatically the moment the qkit order completes.
 - Release history: `CHANGELOG.md`
 - Dependency security overrides (force-patched transitive CVEs, each
   scoped/commented with its advisory ID, e.g. nanoid GHSA-2v37-7h3g-55p8):
-  `pnpm-workspace.yaml`
+  `pnpm-workspace.yaml`. `pnpm audit --prod --audit-level=high` is CI's hard
+  gate (`security.yml`) — bump the relevant floor there when a new advisory
+  lands rather than waiting on the upstream package to update.
 
 See `AGENTS.md` for full engineering rules, harness details, and skills.
 
