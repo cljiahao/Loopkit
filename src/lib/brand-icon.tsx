@@ -13,9 +13,9 @@ export const BRAND_BLUSH = "#fdf4f4";
  * construction formula as every other kit's brand-icon (see
  * docs/business/2026-07-21-brand-icon-family-standard.md): fontSize
  * size*0.62, borderRadius size*0.22, fontWeight 700 — only color/letter
- * differ per product. loopkit's display font (Bricolage Grotesque, see
- * `--font-display` in globals.css) is a sans-serif, not a serif, so unlike
- * qkit's Georgia stand-in this uses the system sans-serif stack.
+ * differ per product. loopkit's display font is Fraunces (shared family
+ * face, see docs/business/2026-08-13-typography-family-standard.md), a
+ * serif, so this uses the same Georgia stand-in as qkit.
  */
 export function brandIcon(size: number): ReactElement {
   return (
@@ -28,7 +28,7 @@ export function brandIcon(size: number): ReactElement {
         justifyContent: "center",
         background: BRAND_RASPBERRY,
         color: BRAND_BLUSH,
-        fontFamily: "ui-sans-serif, system-ui, sans-serif",
+        fontFamily: "Georgia, 'Times New Roman', serif",
         fontWeight: 700,
         fontSize: size * 0.62,
         lineHeight: 1,

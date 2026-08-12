@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Display font switched from Bricolage Grotesque to Fraunces (the shared
+  family display face — see
+  `docs/business/2026-08-13-typography-family-standard.md`). qkit already
+  used Fraunces; this brings loopkit in line with the rest of the family
+  now that cross-kit SSO means vendors move between kits under one
+  identity, so a per-kit display face reads as a seam rather than a
+  feature. Body (Plus Jakarta Sans) and mono (IBM Plex Mono) fonts are
+  unchanged. The brand-icon mark's font fallback also switched from the
+  system sans-serif stack to the Georgia serif stand-in, matching
+  Fraunces being a serif.
+
 ### Fixed
 
 - Second frontend-design/impeccable critique pass (the first covered
