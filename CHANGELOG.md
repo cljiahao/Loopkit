@@ -36,6 +36,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Design pass from a completed frontend-design/impeccable critique:
+  the counter page now leads with phone entry (the product's actual
+  mechanic) instead of a full-width scan button pushing it below the
+  fold on mobile; Benefits and FAQ gained the eyebrow/heading/divider
+  pattern already used by How-it-works; the hero's stamp-card now
+  pops its last dot on load; the stats bar chart was extracted into
+  a shared `VisitsChart` component (was ~110 duplicated lines) and
+  gained a baseline plus date labels; and the free-tier nav badge
+  got a visible gold-tinted outline instead of being nearly invisible.
 - Bumped `@merqo/ui` to v0.9.0. The landing page's sticky header
   (`src/components/landing/nav.tsx`) now delegates its outer shell to the
   new shared `LandingNav` component (`wordmark`/`end` slots), matching
