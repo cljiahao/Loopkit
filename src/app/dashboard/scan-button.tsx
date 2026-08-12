@@ -8,9 +8,14 @@ import { Button } from "@/components/ui/button";
 
 export function ScanButton({
   label = "Scan to serve",
+  variant = "button",
   onResolved,
 }: {
   label?: string;
+  /** "button" — full-width primary trigger (default). "link" — small
+   * secondary text trigger for contexts where scanning isn't the primary
+   * mechanic (e.g. above the phone-entry form on the Counter page). */
+  variant?: "button" | "link";
   onResolved: (result: { phone: string; programId: string }) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -57,15 +62,26 @@ export function ScanButton({
 
   return (
     <>
-      <Button
-        type="button"
-        size="lg"
-        onClick={() => setOpen(true)}
-        className="h-14 w-full rounded-xl text-base font-semibold"
-      >
-        <Camera className="size-5" />
-        {label}
-      </Button>
+      {variant === "link" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-1.5 rounded-sm text-xs font-medium text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        >
+          <Camera className="size-3.5" />
+          {label}
+        </button>
+      ) : (
+        <Button
+          type="button"
+          size="lg"
+          onClick={() => setOpen(true)}
+          className="h-14 w-full rounded-xl text-base font-semibold"
+        >
+          <Camera className="size-5" />
+          {label}
+        </Button>
+      )}
       {open && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-black/90 p-5">
           <video

@@ -9,6 +9,7 @@ import {
 } from "@/lib/stats";
 import { cn } from "@/lib/utils";
 import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
+import { VisitsChart } from "@/app/dashboard/stats/visits-chart";
 import { ElevatedCard } from "@/components/elevated-card";
 
 function Delta({ pct }: { pct: number | null }) {
@@ -71,7 +72,6 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
       getVendorStats(programIds),
       countExpiredVouchers(programIds),
     ]);
-    const maxDay = Math.max(1, ...stats.visitsByDay.map((d) => d.count));
 
     return (
       <div className="space-y-8">
@@ -140,17 +140,8 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
               <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                 Last 30 days
               </h2>
-              <div className="mt-4 flex h-24 items-end gap-[3px]">
-                {stats.visitsByDay.map((d) => (
-                  <div
-                    key={d.date}
-                    title={`${d.date}: ${d.count}`}
-                    className="flex-1 rounded-t bg-primary/70"
-                    style={{
-                      height: `${Math.max(4, (d.count / maxDay) * 100)}%`,
-                    }}
-                  />
-                ))}
+              <div className="mt-4">
+                <VisitsChart data={stats.visitsByDay} />
               </div>
             </ElevatedCard>
           </>
@@ -166,7 +157,6 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
     getProgramStats(program.id),
     countExpiredVouchers([program.id]),
   ]);
-  const maxDay = Math.max(1, ...stats.visitsByDay.map((d) => d.count));
 
   return (
     <div className="space-y-8">
@@ -235,17 +225,8 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Last 30 days
             </h2>
-            <div className="mt-4 flex h-24 items-end gap-[3px]">
-              {stats.visitsByDay.map((d) => (
-                <div
-                  key={d.date}
-                  title={`${d.date}: ${d.count}`}
-                  className="flex-1 rounded-t bg-primary/70"
-                  style={{
-                    height: `${Math.max(4, (d.count / maxDay) * 100)}%`,
-                  }}
-                />
-              ))}
+            <div className="mt-4">
+              <VisitsChart data={stats.visitsByDay} />
             </div>
           </ElevatedCard>
         </>

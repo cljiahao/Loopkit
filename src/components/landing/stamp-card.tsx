@@ -22,9 +22,11 @@ export function StampCard() {
         {Array.from({ length: TOTAL }).map((_, i) => {
           const isReward = i === TOTAL - 1;
           const stamped = i < STAMPED;
+          const justStamped = stamped && i === STAMPED - 1;
           return (
             <div
               key={i}
+              style={justStamped ? { animationDelay: "0.5s" } : undefined}
               className={cn(
                 "flex aspect-square items-center justify-center rounded-full border-2 text-sm",
                 isReward
@@ -32,6 +34,7 @@ export function StampCard() {
                   : stamped
                     ? "border-transparent bg-gold text-gold-foreground"
                     : "border-dashed border-border text-muted-foreground/40",
+                justStamped && "motion-safe:animate-stamp-pop",
               )}
             >
               {isReward ? (
