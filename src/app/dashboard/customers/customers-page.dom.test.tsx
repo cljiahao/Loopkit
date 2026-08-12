@@ -16,9 +16,12 @@ vi.mock("next/navigation", () => ({
 }));
 
 const program = { id: "p1", name: "Coffee Stamps", type: "stamp" };
+// Two programs so a bare (no ?p=) request renders the vendor-wide list
+// instead of redirecting to the vendor's one-and-only program.
+const programs = [program, { id: "p2", name: "Bakery Stamps", type: "stamp" }];
 
 vi.mock("@/lib/program", () => ({
-  listPrograms: vi.fn(async () => [program]),
+  listPrograms: vi.fn(async () => programs),
   currentProgram: (progs: { id: string }[], id?: string) =>
     progs.find((p) => p.id === id) ?? null,
 }));
@@ -58,6 +61,26 @@ describe("VendorCustomerList", () => {
 
   it("shows an empty state with zero customers", () => {
     render(<VendorCustomerList customers={[]} />);
+    expect(screen.getByText(/no customers yet/i)).toBeInTheDocument();
+  });
+});
+
+describe("CustomersPage (vendor-wide)", () => {
+  it("renders the merged customer list and search form when no program is selected", async () => {
+    const { listVendorCustomers } = await import("@/lib/customers");
+    vi.mocked(listVendorCustomers).mockResolvedValueOnce(customers);
+
+    render(await CustomersPage({ searchParams: Promise.resolve({}) }));
+
+    expect(
+      screen.getByRole("heading", { name: "Customers" }),
+    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search by phone")).toBeInTheDocument();
+    expect(screen.getByText("Jane")).toBeInTheDocument();
+  });
+
+  it("shows an empty state when the vendor has no customers on any program", async () => {
+    render(await CustomersPage({ searchParams: Promise.resolve({}) }));
     expect(screen.getByText(/no customers yet/i)).toBeInTheDocument();
   });
 });

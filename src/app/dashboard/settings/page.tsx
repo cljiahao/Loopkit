@@ -19,7 +19,7 @@ export default async function SettingsPage() {
     .maybeSingle();
 
   return (
-    <main className="mx-auto max-w-2xl space-y-8 p-5 py-10">
+    <div className="mx-auto max-w-2xl space-y-8">
       <BackButton href="/dashboard" label="Back to dashboard" />
       <div>
         <h1 className="font-display text-2xl font-bold">Settings</h1>
@@ -49,6 +49,6 @@ export default async function SettingsPage() {
           isPro={pro}
         />
       </div>
-    </main>
+    </div>
   );
 }

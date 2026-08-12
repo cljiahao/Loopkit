@@ -37,7 +37,7 @@ export default async function PlanPage({
   const stats = program ? await getProgramStats(program.id) : null;
 
   return (
-    <main className="mx-auto max-w-2xl space-y-7 p-5 py-10">
+    <div className="mx-auto max-w-2xl space-y-7">
       <div className="flex items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -121,6 +121,6 @@ export default async function PlanPage({
           </div>
         ))}
       </div>
-    </main>
+    </div>
   );
 }

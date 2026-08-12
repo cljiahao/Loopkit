@@ -21,19 +21,26 @@ which mattered because `@merqo/ui`'s shared `DashboardNav` defaulted to
 plain `<a>` nav links (root cause, now fixed — see below). Migrated onto
 the shared `@merqo/ui` component package (v0.10.1, `package.json`): the
 dashboard nav/account dropdown, `useAsyncAction`, `InfoTooltip`,
-`ImageUploader`, `DashboardTour`, and the profile page's two-column
-layout all now delegate to `@merqo/ui`'s versions — see `AGENTS.md`'s
-File Layout and this README's Data model section below for what's still
-loopkit-local (`ElevatedCard`, the upload adapter, step/action wiring).
-`DashboardNav`'s wrapper (`src/app/dashboard/dashboard-nav.tsx`) passes
-`LinkComponent={Link}` (v0.10.0+) so the package renders `next/link`'s
-`Link` instead of a plain `<a>` for its nav links and the `AccountMenu`
-it composes internally (loopkit has no standalone `AccountMenu` usage) —
-dashboard nav clicks are client-side transitions again, not full-page
-reloads. See `CHANGELOG.md` for the latest changes, including
-deduplication of the shared bearer-auth and Merqo-RPC-call helpers and
-the addition of templateCentral 5.13.0's comment-hygiene enforcement
-layer.
+`ImageUploader`, `DashboardTour`, the landing page's sticky header
+(`LandingNav`, via `src/components/landing/nav.tsx`), and the profile
+page's two-column layout all now delegate to `@merqo/ui`'s versions —
+see `AGENTS.md`'s File Layout and this README's Data model section below
+for what's still loopkit-local (`ElevatedCard`, the upload adapter,
+step/action wiring). `DashboardNav`'s wrapper
+(`src/app/dashboard/dashboard-nav.tsx`) passes `LinkComponent={Link}`
+(v0.10.0+) so the package renders `next/link`'s `Link` instead of a
+plain `<a>` for its nav links and the `AccountMenu` it composes
+internally (loopkit has no standalone `AccountMenu` usage) — dashboard
+nav clicks are client-side transitions again, not full-page reloads.
+Every `/dashboard` page now shares one canonical `max-w-7xl` content
+container set at the layout level (`src/app/dashboard/layout.tsx`,
+matching qkit's `dashboard/layout.tsx` pattern) instead of each page
+picking its own width — a page whose content genuinely reads better
+narrower (profile, counter, plan, settings) still nests its own
+narrower wrapper `<div>` inside that shared container. See
+`CHANGELOG.md` for the latest changes, including deduplication of the
+shared bearer-auth and Merqo-RPC-call helpers and the addition of
+templateCentral 5.13.0's comment-hygiene enforcement layer.
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view

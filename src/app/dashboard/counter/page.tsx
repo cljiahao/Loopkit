@@ -26,7 +26,7 @@ export default async function CounterPage({ searchParams }: CounterPageProps) {
   const badge = PROGRAM_TYPE_BADGE[program.type] ?? PROGRAM_TYPE_BADGE.stamp;
 
   return (
-    <main className="mx-auto max-w-2xl space-y-6 p-5 py-10">
+    <div className="mx-auto max-w-2xl space-y-6">
       <BackButton href="/dashboard" label="Back to dashboard" />
 
       <div>
@@ -47,6 +47,6 @@ export default async function CounterPage({ searchParams }: CounterPageProps) {
         rewardText={program.reward_text}
         initialPhone={phone}
       />
-    </main>
+    </div>
   );
 }
