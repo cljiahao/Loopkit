@@ -17,7 +17,11 @@ Client-side auth UI.
   react-hook-form + `loginSchema` (`@/lib/schemas`) with a "check your email"
   state for signup confirmation and password-reset links; auth/server errors
   (Google OAuth, sign-in/up, forgot-password) surface via sonner toasts,
-  field-validation errors render inline
+  field-validation errors render inline. The wordmark above the card is a
+  home link with a mode-independent tagline ("Loyalty for Singapore's small
+  vendors."), matching qkit's reference login pattern — it previously read
+  a static "Sign in to your loopkit dashboard." even in signup mode, while
+  the card below it correctly switched to "Create your account."
 - `reset-password-form.tsx` — `ResetPasswordForm`: `ElevatedCard`-wrapped
   password + confirm-password form on an active recovery session, calls
   `supabase.auth.updateUser` then redirects to `/dashboard`

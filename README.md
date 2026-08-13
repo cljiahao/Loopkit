@@ -3,7 +3,10 @@
 Digital stamp-card loyalty for SG small vendors. A Merqo kit — owns the
 `loopkit` schema in the shared Merqo Supabase project, reports metrics to
 merqo over HTTP. Browser-tab title follows the cross-kit "Name | Tagline"
-Title Case convention: "Loopkit | Loyalty Cards". The landing page's
+Title Case convention: "Loopkit | Loyalty Cards". Display font is Fraunces
+(`src/app/layout.tsx`), the shared family face every Merqo kit now uses —
+see `docs/business/2026-08-13-typography-family-standard.md` in the
+workspace root for why. The landing page's
 footer matches qkit's exactly (single-row wordmark/tagline/copyright/
 sign-in link, no CTA band above it) and its `BackToTop` button matches
 the cross-kit landing-page parity pass. In production, the Supabase auth
