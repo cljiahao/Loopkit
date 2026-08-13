@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -167,7 +168,13 @@ export function LoginForm() {
       <main className="flex min-h-screen items-center justify-center p-5">
         <div className="w-full max-w-md text-center">
           <ElevatedCard className="px-7 py-10">
-            <Wordmark className="text-2xl" />
+            <Link
+              href="/"
+              aria-label="loopkit home"
+              className="inline-block transition-opacity hover:opacity-80"
+            >
+              <Wordmark className="text-2xl" />
+            </Link>
             <h1 className="mt-6 text-3xl font-bold tracking-tight">
               Check your email
             </h1>
@@ -211,9 +218,15 @@ export function LoginForm() {
     <main className="flex min-h-screen items-center justify-center p-5">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <Wordmark className="text-3xl" />
+          <Link
+            href="/"
+            aria-label="loopkit home"
+            className="inline-block transition-opacity hover:opacity-80"
+          >
+            <Wordmark className="text-3xl" />
+          </Link>
           <p className="mt-1 text-sm text-muted-foreground">
-            Sign in to your loopkit dashboard.
+            Loyalty for Singapore&apos;s small vendors.
           </p>
         </div>
 

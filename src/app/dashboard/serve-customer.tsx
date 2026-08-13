@@ -315,30 +315,23 @@ export function ServeCustomer({
 
   return (
     <div className="space-y-4">
-      <ScanButton
-        onResolved={({ phone, programId: scannedProgramId }) => {
-          if (scannedProgramId !== programId) {
-            router.push(
-              `/dashboard/counter?p=${scannedProgramId}&phone=${encodeURIComponent(phone)}`,
-            );
-            return;
-          }
-          if (phoneRef.current) {
-            phoneRef.current.value = phone;
-            formRef.current?.requestSubmit();
-          }
-        }}
-      />
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center" aria-hidden="true">
-          <div className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center">
-          <span className="bg-card px-3 text-xs font-medium text-muted-foreground">
-            or enter phone manually
-          </span>
-        </div>
+      <div className="flex justify-end">
+        <ScanButton
+          label="Scan a QR instead"
+          variant="link"
+          onResolved={({ phone, programId: scannedProgramId }) => {
+            if (scannedProgramId !== programId) {
+              router.push(
+                `/dashboard/counter?p=${scannedProgramId}&phone=${encodeURIComponent(phone)}`,
+              );
+              return;
+            }
+            if (phoneRef.current) {
+              phoneRef.current.value = phone;
+              formRef.current?.requestSubmit();
+            }
+          }}
+        />
       </div>
 
       <form

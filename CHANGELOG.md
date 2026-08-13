@@ -6,8 +6,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Display font switched from Bricolage Grotesque to Fraunces (the shared
+  family display face — see
+  `docs/business/2026-08-13-typography-family-standard.md`). qkit already
+  used Fraunces; this brings loopkit in line with the rest of the family
+  now that cross-kit SSO means vendors move between kits under one
+  identity, so a per-kit display face reads as a seam rather than a
+  feature. Body (Plus Jakarta Sans) and mono (IBM Plex Mono) fonts are
+  unchanged. The brand-icon mark's font fallback also switched from the
+  system sans-serif stack to the Georgia serif stand-in, matching
+  Fraunces being a serif.
+
 ### Fixed
 
+- Second frontend-design/impeccable critique pass (the first covered
+  counter/benefits/FAQ/hero/stats/nav badge; this one hunted for what it
+  missed): the login page's wordmark subtitle read "Sign in to your loopkit
+  dashboard." even while the card below it read "Create your account" —
+  a static, mode-independent string contradicting the mode-aware card
+  copy — and the wordmark wasn't a link home, both deviations from qkit's
+  reference login pattern that PRODUCT.md calls a binding cross-kit
+  constraint (`src/features/auth/components/login-form.tsx`). The
+  customer-facing `/c` card-check form stayed fully visible above the
+  fetched card status after a successful lookup, pushing the actual
+  content customers need — the reward status and the QR to show the shop —
+  below a form they'd already filled in; it now collapses to a compact
+  "Showing +65… / Not you?" summary once a result lands
+  (`src/features/card-check/components/check-form.tsx`). The Settings
+  page's qkit-integration panel told a free-tier vendor to "Upgrade to
+  Pro" as plain, unlinked text instead of using the app's own established
+  `ProLock` upgrade-CTA pattern used at every other point of friction,
+  dead-ending the vendor with no path forward
+  (`src/app/dashboard/qkit-earn-settings.tsx`). The `/setup` page rendered
+  the literal same heading and paragraph ("Free plan: 1 program" / "You're
+  on the free plan, which includes one loyalty program.") twice in a row
+  for a free-tier vendor at their program cap — once as the page header,
+  again inside the upsell card immediately below it; the header now reads
+  "Add a program" / "You've reached your plan's program limit." instead
+  (`src/app/setup/page.tsx`).
 - Customer search inputs on the dashboard customers page relying on
   placeholder text alone, with no accessible label (failed WCAG
   1.3.1/3.3.2). Paired each with a screen-reader-only `Label`, matching
@@ -36,6 +74,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Design pass from a completed frontend-design/impeccable critique:
+  the counter page now leads with phone entry (the product's actual
+  mechanic) instead of a full-width scan button pushing it below the
+  fold on mobile; Benefits and FAQ gained the eyebrow/heading/divider
+  pattern already used by How-it-works; the hero's stamp-card now
+  pops its last dot on load; the stats bar chart was extracted into
+  a shared `VisitsChart` component (was ~110 duplicated lines) and
+  gained a baseline plus date labels; and the free-tier nav badge
+  got a visible gold-tinted outline instead of being nearly invisible.
 - Bumped `@merqo/ui` to v0.9.0. The landing page's sticky header
   (`src/components/landing/nav.tsx`) now delegates its outer shell to the
   new shared `LandingNav` component (`wordmark`/`end` slots), matching

@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ElevatedCard } from "@/components/elevated-card";
+import { ProLock } from "@/components/pro-lock";
 
 type Program = { id: string; name: string };
 
@@ -29,10 +30,12 @@ export function QkitEarnSettings({
 
   if (!isPro) {
     return (
-      <ElevatedCard className="p-4 text-sm text-muted-foreground">
-        Upgrade to Pro to let customers claim a stamp after completing a qkit
-        order — they get a link on their order page and enter their phone number
-        to collect it.
+      <ElevatedCard className="space-y-3 p-4 text-sm text-muted-foreground">
+        <p>
+          Let customers claim a stamp after completing a qkit order — they get a
+          link on their order page and enter their phone number to collect it.
+        </p>
+        <ProLock label="Upgrade to Pro" />
       </ElevatedCard>
     );
   }

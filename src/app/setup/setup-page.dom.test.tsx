@@ -80,7 +80,7 @@ describe("SetupPage", () => {
     render(await SetupPage({ searchParams: Promise.resolve({}) }));
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "Free plan: 1 program" }),
+      screen.getByRole("heading", { level: 1, name: "Add a program" }),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("setup-form")).not.toBeInTheDocument();
     expect(

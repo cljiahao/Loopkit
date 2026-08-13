@@ -31,7 +31,7 @@ function tourAnchor(href: string): string {
 const TIER_BADGE: Record<Tier, { label: string; className: string }> = {
   free: {
     label: "Free",
-    className: "bg-secondary text-muted-foreground ring-border",
+    className: "bg-gold/10 text-gold-accent ring-gold/40",
   },
   pro: {
     label: "Pro",

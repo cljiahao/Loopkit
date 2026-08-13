@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { checkStatusAction } from "../api/actions";
 import { STATUS_IDLE } from "../types";
 import { ProgramCardStatus } from "./program-card-status";
@@ -13,35 +13,63 @@ export function CheckForm({ vendorId }: { vendorId: string }) {
     checkStatusAction,
     STATUS_IDLE,
   );
+  const found = state.status === "found" && !!state.cards;
+  // Collapses the form once a card is found, so it doesn't push the reward
+  // status/QR below the fold. "Not you?" reopens it; resolving a new
+  // `state` re-collapses it (compared during render, not an effect, per
+  // React's guidance for resetting state on a change).
+  const [editingRequested, setEditingRequested] = useState(false);
+  const [lastState, setLastState] = useState(state);
+  if (state !== lastState) {
+    setLastState(state);
+    setEditingRequested(false);
+  }
+  const showForm = !found || editingRequested;
 
   return (
     <div className="space-y-6">
-      <form action={formAction} className="space-y-4">
-        <input type="hidden" name="vendor" value={vendorId} />
-        <div className="space-y-2">
-          <Label
-            htmlFor="phone"
-            className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+      {showForm ? (
+        <form action={formAction} className="space-y-4">
+          <input type="hidden" name="vendor" value={vendorId} />
+          <div className="space-y-2">
+            <Label
+              htmlFor="phone"
+              className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              Your phone number
+            </Label>
+            <Input
+              id="phone"
+              name="phone"
+              type="tel"
+              required
+              placeholder="9123 4567"
+              className="h-11 rounded-xl"
+            />
+          </div>
+          <Button
+            type="submit"
+            disabled={pending}
+            className="h-11 w-full rounded-xl text-base font-semibold"
           >
-            Your phone number
-          </Label>
-          <Input
-            id="phone"
-            name="phone"
-            type="tel"
-            required
-            placeholder="9123 4567"
-            className="h-11 rounded-xl"
-          />
+            {pending ? "Checking…" : "Check my card"}
+          </Button>
+        </form>
+      ) : (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            Showing{" "}
+            <span className="font-medium text-foreground">{state.phone}</span>
+          </p>
+          <button
+            type="button"
+            onClick={() => setEditingRequested(true)}
+            className="shrink-0 text-xs font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Not you?
+          </button>
         </div>
-        <Button
-          type="submit"
-          disabled={pending}
-          className="h-11 w-full rounded-xl text-base font-semibold"
-        >
-          {pending ? "Checking…" : "Check my card"}
-        </Button>
-      </form>
+      )}
 
       {(state.status === "none" || state.status === "error") && (
         <p role="alert" className="text-sm text-destructive">
@@ -49,9 +77,9 @@ export function CheckForm({ vendorId }: { vendorId: string }) {
         </p>
       )}
 
-      {state.status === "found" && state.cards && (
+      {found && (
         <div className="space-y-4">
-          {state.cards.map((card) => (
+          {state.cards!.map((card) => (
             <ProgramCardStatus
               key={card.programId}
               card={card}

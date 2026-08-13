@@ -1,17 +1,14 @@
 import type { Metadata } from "next";
-import {
-  Bricolage_Grotesque,
-  Plus_Jakarta_Sans,
-  IBM_Plex_Mono,
-} from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans, IBM_Plex_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-// Display: characterful grotesque for headlines, used with restraint.
-const bricolage = Bricolage_Grotesque({
+// Display: family-wide shared face (see docs/business/2026-08-13-typography-family-standard.md).
+const fraunces = Fraunces({
   subsets: ["latin"],
-  variable: "--font-bricolage",
+  variable: "--font-fraunces",
   display: "swap",
+  axes: ["SOFT", "WONK", "opsz"],
 });
 
 // Body: friendly, rounded, highly readable for non-technical vendors.
@@ -44,7 +41,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${bricolage.variable} ${jakarta.variable} ${plexMono.variable}`}
+      className={`${fraunces.variable} ${jakarta.variable} ${plexMono.variable}`}
     >
       <body>
         <Providers>{children}</Providers>
