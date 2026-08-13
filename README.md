@@ -22,7 +22,7 @@ to `src/app/api/tour-seen/` rather than a Server Action, so the write
 survives not just a mid-tour refresh but a hard-navigation page unload,
 which mattered because `@merqo/ui`'s shared `DashboardNav` defaulted to
 plain `<a>` nav links (root cause, now fixed — see below). Migrated onto
-the shared `@merqo/ui` component package (v0.10.1, `package.json`): the
+the shared `@merqo/ui` component package (v0.11.1, `package.json`): the
 dashboard nav/account dropdown, `useAsyncAction`, `InfoTooltip`,
 `ImageUploader`, `DashboardTour`, the landing page's sticky header
 (`LandingNav`, via `src/components/landing/nav.tsx`), and the profile
