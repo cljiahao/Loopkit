@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Expanded ESLint's sonarjs wiring from 2 hand-picked rules to the plugin's
+  full `configs.recommended` set. Fixed every real finding in app code:
+  nested-ternary/cognitive-complexity hotspots refactored into helper
+  functions across ~14 files (including a real DRY fix unifying
+  `dashboard/activity/page.tsx`'s duplicated render branches), super-linear
+  regex patterns in schema tests tightened, unused imports/vars removed,
+  and a component literally named `Error` (shadowing the global) renamed to
+  `RouteError`. Scoped, documented rule-offs remain for cosmetic
+  `Math.random()` use, test-file mock-chain nesting, and the two largest
+  pre-existing complexity hotspots (`setup/page.tsx`, `setup/setup-form.tsx`)
+  — tracked as follow-up debt, not silently suppressed.
+
 - Display font switched from Bricolage Grotesque to Fraunces (the shared
   family display face — see
   `docs/business/2026-08-13-typography-family-standard.md`). qkit already
