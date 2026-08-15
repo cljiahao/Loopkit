@@ -60,6 +60,7 @@ below.
 - `2026-07-22-card-type-regroup-and-chance-revamp-design.md`
 - `2026-07-25-loyalty-card-animation-polish-design.md`
 - `2026-07-27-card-visuals-phase2-design.md`
+- `2026-08-15-loopkit-admin-pricing-design.md` — "loopkit Admin-Tunable Pricing — Design": launches loopkit's first-ever live Pro price ($4.99/mo, admin-tunable from `/admin` with no redeploy) via a single-row `loopkit.pricing` table and a `setPricing` server action, replacing `/dashboard/plan`'s current "no card needed yet" copy with a real DB-sourced price while the existing manual "ask us" grant flow stays unchanged.
 
 ## Parent
 

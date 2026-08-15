@@ -68,6 +68,7 @@ self-describing dated slugs; no separate description column below.
 - `2026-07-27-fill-the-cup-redesign.md`
 - `2026-07-27-sprout-restage.md`
 - `2026-07-27-stamp-mark-logo-preset.md`
+- `2026-08-15-loopkit-admin-pricing.md` — "loopkit Admin-Tunable Pricing Implementation Plan": adds the `loopkit.pricing` table (seeded at $4.99/mo), the `setPricing` admin action, `@merqo/ui`'s new `PricingForm` wired into `/admin`, and a live price display on `/dashboard/plan` — the manual upgrade-request grant flow is untouched.
 
 ## Parent
 
