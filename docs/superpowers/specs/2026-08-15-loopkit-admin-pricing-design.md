@@ -156,7 +156,9 @@ export type PricingFormInput = z.infer<typeof pricingFormSchema>;
 form payload can't write an absurd price.
 
 ```ts
-export async function setPricing(input: PricingFormInput): Promise<ActionResult> {
+export async function setPricing(
+  input: PricingFormInput,
+): Promise<ActionResult> {
   const { user } = await requireAdmin();
   const parsed = pricingFormSchema.safeParse(input);
   if (!parsed.success) return { success: false, error: "Invalid input" };
@@ -164,14 +166,19 @@ export async function setPricing(input: PricingFormInput): Promise<ActionResult>
   const supabase = await createServiceClient();
   const { error } = await supabase
     .from("pricing")
-    .update({ monthly_cents: parsed.data.monthly_cents, updated_at: new Date().toISOString() })
+    .update({
+      monthly_cents: parsed.data.monthly_cents,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", 1);
   if (error) {
     console.error("setPricing failed", error.message);
     return { success: false, error: "Could not update pricing" };
   }
 
-  await recordAudit(user.id, "set_pricing", null, { monthly_cents: parsed.data.monthly_cents });
+  await recordAudit(user.id, "set_pricing", null, {
+    monthly_cents: parsed.data.monthly_cents,
+  });
 
   revalidatePath("/admin");
   revalidatePath("/dashboard/plan");
@@ -202,7 +209,10 @@ ever needs **one field**:
 ```tsx
 <PricingForm
   fields={[{ key: "monthly_cents", label: "Monthly (SGD)" }]}
-  initial={{ values: { monthly_cents: pricing.monthly_cents }, currency: pricing.currency }}
+  initial={{
+    values: { monthly_cents: pricing.monthly_cents },
+    currency: pricing.currency,
+  }}
   onSave={async (values) => {
     "use server"; // illustrative — real wiring goes through a client wrapper, see plan
   }}
@@ -241,7 +251,7 @@ fetch gains one query: `pricing` row select, same shape as `platformTotals`/
 sourced from the `pricing` row (same `paidMode`-style conditional qkit's
 plan page uses: show the real price when `monthly_cents > 0`, degrade to
 generic copy if the row is ever unreadable). Example shape (final copy is
-the plan's to write, this fixes the *mechanism*, not the exact words):
+the plan's to write, this fixes the _mechanism_, not the exact words):
 
 ```tsx
 <p className="mt-1 font-mono text-2xl font-bold">
@@ -254,7 +264,7 @@ the plan's to write, this fixes the *mechanism*, not the exact words):
 ```
 
 with the "Message us and we'll set you up — no card needed yet" sentence
-either kept as a trailing line under the CTA (explaining *how* to actually
+either kept as a trailing line under the CTA (explaining _how_ to actually
 get Pro today, since the grant mechanism is unchanged — see below) or
 folded into the `UpgradeCta` button's own label — the plan decides the
 exact placement; the requirement is that a real `$4.99 / month` figure is

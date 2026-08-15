@@ -61,7 +61,7 @@ dom tests) · pnpm.
   precedents), Tailwind class patterns already used in the file being
   edited.
 - Run `pnpm check` (prettier --check + eslint + tsc --noEmit) and `pnpm
-  test` before every commit that touches app code. Run `pnpm build` before
+test` before every commit that touches app code. Run `pnpm build` before
   the final task's verification gate — `pnpm check`/`pnpm test` miss
   Next.js client/server bundle-boundary errors, and this plan adds a new
   Client Component (`PricingFormClient`) importing a Server Action.
@@ -354,9 +354,7 @@ const {
   const updateMock = vi.fn(() => ({ eq: eqMock }));
   const insertMock = vi.fn(async () => ({ error: null }));
   const fromMock = vi.fn((table: string) =>
-    table === "pricing"
-      ? { update: updateMock }
-      : { insert: insertMock },
+    table === "pricing" ? { update: updateMock } : { insert: insertMock },
   );
   return {
     requireAdminMock: vi.fn(async () => ({ user: { id: "admin1" } })),
@@ -524,7 +522,7 @@ export described in `Merqo Business/merqo-ui/docs/superpowers/plans/
    `git tag --sort=-v:refname | head -1`.
 2. Confirm that tag's `dist`/`index.ts` actually exports `PricingForm`,
    `PricingFormProps`, `PricingFieldConfig` (e.g. `grep -r "PricingForm"
-   node_modules/@merqo/ui/dist` after installing, or check the tagged
+node_modules/@merqo/ui/dist` after installing, or check the tagged
    commit directly).
 3. If the tag doesn't exist yet or doesn't export `PricingForm`, **stop
    this task** and either wait for that plan to land or coordinate with
@@ -658,7 +656,9 @@ export function PricingFormClient({
       }}
       onSave={onSave}
       onError={(err) =>
-        toast.error(err instanceof Error ? err.message : "Could not update pricing")
+        toast.error(
+          err instanceof Error ? err.message : "Could not update pricing",
+        )
       }
       helpText="Shown on the vendor plan page."
     />
@@ -802,8 +802,8 @@ sentence, since the grant mechanism itself is unchanged):
     )}
   </p>
   <p className="mt-2 text-sm text-muted-foreground">
-    Run more than one loyalty program at a time. Message us and we&apos;ll
-    set you up — no card needed yet.
+    Run more than one loyalty program at a time. Message us and we&apos;ll set
+    you up — no card needed yet.
   </p>
   <div className="mt-4">
     <UpgradeCta />
@@ -925,8 +925,8 @@ plan (it touches qkit/stockkit/paykit rows this plan has no mandate to
 re-verify).
 
 - [ ] **Step 3: Commit** (in the `Merqo Business` parent, not this repo —
-  it is not a git repository; this step is a plain file save, no commit
-  command applies here.)
+      it is not a git repository; this step is a plain file save, no commit
+      command applies here.)
 
 ---
 
@@ -953,8 +953,7 @@ mistake that gate exists for.
 If a linked Supabase environment is available: apply migration `0034`,
 sign in as an admin, confirm `/admin`'s new Pricing section shows $4.99
 pre-filled, change it, confirm `/dashboard/plan` reflects the new value
-after a refresh, and confirm a non-admin visiting `/admin` still gets a
-404. If no linked environment is available in this session, this step is
+after a refresh, and confirm a non-admin visiting `/admin` still gets a 404. If no linked environment is available in this session, this step is
 deferred to whoever next has one — do not skip recording that it's
 deferred.
 
@@ -978,7 +977,7 @@ Do not open a PR on a red local gate.
   with the actual working wrapper).
 - **Type consistency:** `PricingConfig` (`src/lib/pricing.ts`) and
   `PricingFormInput` (`src/lib/schemas.ts`) both key off `monthly_cents:
-  number` — no drift between the read path and the write path. The
+number` — no drift between the read path and the write path. The
   `@merqo/ui` `PricingForm`'s own `Record<string, number>` contract is
   intentionally loose (shared across paykit/stockkit/loopkit's different
   field sets) — `PricingFormClient` is the one place that narrows it back
