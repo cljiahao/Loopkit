@@ -29,11 +29,8 @@ export function pickSegment(
   forceReward: boolean,
 ): ChanceSegment {
   const rewardSegments = segments.filter((s) => s.reward_text);
-  const pool = forceReward
-    ? rewardSegments.length > 0
-      ? rewardSegments
-      : segments
-    : segments;
+  const forcedPool = rewardSegments.length > 0 ? rewardSegments : segments;
+  const pool = forceReward ? forcedPool : segments;
   const total = pool.reduce((sum, s) => sum + s.weight, 0);
   let acc = 0;
   for (const segment of pool) {

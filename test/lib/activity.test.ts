@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapActivityRow, listActivity } from "@/lib/activity";
+import { mapActivityRow } from "@/lib/activity";
 
 describe("mapActivityRow", () => {
   const programNameById = { p1: "Coffee Stamps" };

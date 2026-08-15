@@ -40,7 +40,7 @@ describe("0015 vendor join", () => {
 
   it("only fans out enrollment into active programs", () => {
     expect(sql).toMatch(
-      /where p\.vendor_id = p_vendor and p\.active\s*\n\s*and not exists/i,
+      /where p\.vendor_id = p_vendor and p\.active[ \t]*\r?\n[ \t]*and not exists/i,
     );
   });
 

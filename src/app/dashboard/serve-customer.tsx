@@ -76,6 +76,25 @@ type ServeResult =
       rewardText: string;
     };
 
+function luckyResultMessage(
+  result: Extract<ServeResult, { mode: "lucky" }>,
+  rewardText: string,
+) {
+  if (result.won) {
+    return (
+      <p className="mt-1 text-sm font-semibold text-gold-accent">
+        🎉 Won {rewardText}!
+      </p>
+    );
+  }
+  if (result.played) {
+    return (
+      <p className="mt-1 text-sm text-muted-foreground">No win this time.</p>
+    );
+  }
+  return <p className="mt-1 text-sm text-muted-foreground">{result.label}</p>;
+}
+
 const ACTION_COPY: Record<string, { idle: string; pending: string }> = {
   lucky: { idle: "Play", pending: "Playing…" },
   plant: { idle: "Water", pending: "Watering…" },
@@ -112,98 +131,123 @@ export function ServeCustomer({
 
   const copy = ACTION_COPY[type] ?? ACTION_COPY.stamp;
 
+  // Each visit-recording flow is its own async step: call the server action,
+  // toast + celebrate on the outcome, and store the new card state. Returns
+  // whether the visit was actually recorded, so onPrimary below knows
+  // whether to reset the form (a failed/no-op attempt should leave the
+  // scanned phone number in place for retry).
+  async function handleLuckyVisit(formData: FormData): Promise<boolean> {
+    const res = await recordVisitAction(formData);
+    if (!res.success) {
+      toast.error(res.error);
+      return false;
+    }
+    if (res.rewardUnlocked) {
+      toast.success(`🎉 ${res.phone} won ${res.reward_text}!`);
+      setCelebration({ phone: res.phone, rewardText: res.reward_text });
+    } else {
+      toast(`No win this time for ${res.phone}.`);
+    }
+    setResult({
+      mode: "lucky",
+      phone: res.phone,
+      played: true,
+      won: res.rewardUnlocked,
+      label: res.progress.label,
+    });
+    return true;
+  }
+
+  async function handlePlantVisit(formData: FormData): Promise<boolean> {
+    const res = await recordVisitAction(formData);
+    if (!res.success) {
+      toast.error(res.error);
+      return false;
+    }
+    if (res.progress.view.kind !== "plant") return false;
+    if (res.rewardUnlocked) {
+      toast.success(`🌻 ${res.phone} bloomed — ${res.reward_text} unlocked!`);
+      setCelebration({ phone: res.phone, rewardText: res.reward_text });
+    } else {
+      toast(`Watered ${res.phone} — now ${res.progress.view.stageName}.`);
+    }
+    setResult({
+      mode: "plant",
+      phone: res.phone,
+      view: res.progress.view,
+      label: res.progress.label,
+      rewardReady: res.progress.rewardReady,
+      rewardUnlocked: res.rewardUnlocked,
+    });
+    return true;
+  }
+
+  async function handleChanceVisit(formData: FormData): Promise<boolean> {
+    const res = await recordVisitAction(formData);
+    if (!res.success) {
+      toast.error(res.error);
+      return false;
+    }
+    if (res.progress.view.kind !== "chance") return false;
+    if (res.rewardUnlocked) {
+      toast.success(`🎉 ${res.phone} won ${res.reward_text}!`);
+      setCelebration({ phone: res.phone, rewardText: res.reward_text });
+    } else {
+      toast(`No win this time for ${res.phone}.`);
+    }
+    setResult({
+      mode: "chance",
+      phone: res.phone,
+      view: res.progress.view,
+      label: res.progress.label,
+      wonThisTime: res.rewardUnlocked,
+      rewardText: res.reward_text,
+    });
+    return true;
+  }
+
+  async function handleStampVisit(formData: FormData): Promise<boolean> {
+    const prevResult = result;
+    const res = await stampAction(formData);
+    if (!res.success) {
+      toast.error(res.error);
+      return false;
+    }
+    toast.success(
+      `Stamped ${res.card.phone} — ${res.card.stamp_count}/${stampsRequired}`,
+    );
+    const wasReady =
+      prevResult?.mode === "stamp" && prevResult.phone === res.card.phone
+        ? prevResult.rewardReady
+        : false;
+    if (res.rewardReady && !wasReady) {
+      setCelebration({ phone: res.card.phone, rewardText });
+    }
+    setResult({
+      mode: "stamp",
+      phone: res.card.phone,
+      card: res.card,
+      rewardReady: res.rewardReady,
+    });
+    return true;
+  }
+
   function onPrimary(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const formEl = e.currentTarget;
     const formData = new FormData(formEl);
     run(async () => {
+      let recorded: boolean;
       if (type === "lucky") {
-        const res = await recordVisitAction(formData);
-        if (!res.success) {
-          toast.error(res.error);
-          return;
-        }
-        if (res.rewardUnlocked) {
-          toast.success(`🎉 ${res.phone} won ${res.reward_text}!`);
-          setCelebration({ phone: res.phone, rewardText: res.reward_text });
-        } else {
-          toast(`No win this time for ${res.phone}.`);
-        }
-        setResult({
-          mode: "lucky",
-          phone: res.phone,
-          played: true,
-          won: res.rewardUnlocked,
-          label: res.progress.label,
-        });
+        recorded = await handleLuckyVisit(formData);
       } else if (type === "plant") {
-        const res = await recordVisitAction(formData);
-        if (!res.success) {
-          toast.error(res.error);
-          return;
-        }
-        if (res.progress.view.kind !== "plant") return;
-        if (res.rewardUnlocked) {
-          toast.success(
-            `🌻 ${res.phone} bloomed — ${res.reward_text} unlocked!`,
-          );
-          setCelebration({ phone: res.phone, rewardText: res.reward_text });
-        } else {
-          toast(`Watered ${res.phone} — now ${res.progress.view.stageName}.`);
-        }
-        setResult({
-          mode: "plant",
-          phone: res.phone,
-          view: res.progress.view,
-          label: res.progress.label,
-          rewardReady: res.progress.rewardReady,
-          rewardUnlocked: res.rewardUnlocked,
-        });
+        recorded = await handlePlantVisit(formData);
       } else if (type === "wheel" || type === "scratch") {
-        const res = await recordVisitAction(formData);
-        if (!res.success) {
-          toast.error(res.error);
-          return;
-        }
-        if (res.progress.view.kind !== "chance") return;
-        if (res.rewardUnlocked) {
-          toast.success(`🎉 ${res.phone} won ${res.reward_text}!`);
-          setCelebration({ phone: res.phone, rewardText: res.reward_text });
-        } else {
-          toast(`No win this time for ${res.phone}.`);
-        }
-        setResult({
-          mode: "chance",
-          phone: res.phone,
-          view: res.progress.view,
-          label: res.progress.label,
-          wonThisTime: res.rewardUnlocked,
-          rewardText: res.reward_text,
-        });
+        recorded = await handleChanceVisit(formData);
       } else {
-        const prevResult = result;
-        const res = await stampAction(formData);
-        if (!res.success) {
-          toast.error(res.error);
-          return;
-        }
-        toast.success(
-          `Stamped ${res.card.phone} — ${res.card.stamp_count}/${stampsRequired}`,
-        );
-        const wasReady =
-          prevResult?.mode === "stamp" && prevResult.phone === res.card.phone
-            ? prevResult.rewardReady
-            : false;
-        if (res.rewardReady && !wasReady) {
-          setCelebration({ phone: res.card.phone, rewardText });
-        }
-        setResult({
-          mode: "stamp",
-          phone: res.card.phone,
-          card: res.card,
-          rewardReady: res.rewardReady,
-        });
+        recorded = await handleStampVisit(formData);
       }
+      if (!recorded) return;
       router.refresh();
       formEl.reset();
       phoneRef.current?.focus();
@@ -419,17 +463,7 @@ export function ServeCustomer({
           }
         >
           <p className="text-sm font-medium">{result.phone}</p>
-          {result.won ? (
-            <p className="mt-1 text-sm font-semibold text-gold-accent">
-              🎉 Won {rewardText}!
-            </p>
-          ) : result.played ? (
-            <p className="mt-1 text-sm text-muted-foreground">
-              No win this time.
-            </p>
-          ) : (
-            <p className="mt-1 text-sm text-muted-foreground">{result.label}</p>
-          )}
+          {luckyResultMessage(result, rewardText)}
         </div>
       )}
 

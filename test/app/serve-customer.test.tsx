@@ -318,6 +318,221 @@ describe("ServeCustomer", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows the not-yet-played label for a looked-up lucky card", async () => {
+    lookupMock.mockResolvedValue({
+      success: true,
+      card: { id: "card-1", phone: "+6591234567", stamp_count: 0 },
+      progress: { view: { kind: "dots", filled: 0, total: 5 }, label: "0/5" },
+    });
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="lucky"
+        stampsRequired={5}
+        rewardText="A prize"
+      />,
+    );
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Look up" }));
+
+    await waitFor(() => expect(lookupMock).toHaveBeenCalled());
+    expect(screen.getByText("0/5")).toBeInTheDocument();
+  });
+
+  it("toasts an error and does not reset the form on a failed lucky play", async () => {
+    recordVisitMock.mockResolvedValue({ success: false, error: "Bad number." });
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="lucky"
+        stampsRequired={5}
+        rewardText="A prize"
+      />,
+    );
+    const input = screen.getByLabelText("Customer phone") as HTMLInputElement;
+    await user.type(input, "91234567");
+    await user.click(screen.getByRole("button", { name: "Play" }));
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Bad number."));
+    expect(input.value).not.toBe("");
+  });
+
+  it("waters a plant and shows the bloom celebration when it unlocks", async () => {
+    recordVisitMock.mockResolvedValue({
+      success: true,
+      rewardUnlocked: true,
+      reward_text: "A bloom",
+      phone: "+6591234567",
+      progress: {
+        view: {
+          kind: "plant",
+          stage: 4,
+          stageName: "Bloom",
+          totalStages: 5,
+          wilting: false,
+          variant: "plant",
+        },
+        label: "Bloom",
+        rewardReady: true,
+      },
+    });
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="plant"
+        stampsRequired={8}
+        rewardText="A bloom"
+      />,
+    );
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Water" }));
+
+    await waitFor(() => expect(recordVisitMock).toHaveBeenCalled());
+    expect(
+      screen.getByRole("heading", { name: "🎉 Reward unlocked!" }),
+    ).toBeInTheDocument();
+  });
+
+  it("waters a plant with no bloom this time", async () => {
+    recordVisitMock.mockResolvedValue({
+      success: true,
+      rewardUnlocked: false,
+      reward_text: "A bloom",
+      phone: "+6591234567",
+      progress: {
+        view: {
+          kind: "plant",
+          stage: 2,
+          stageName: "Sprout",
+          totalStages: 5,
+          wilting: false,
+          variant: "plant",
+        },
+        label: "Sprout",
+        rewardReady: false,
+      },
+    });
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="plant"
+        stampsRequired={8}
+        rewardText="A bloom"
+      />,
+    );
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Water" }));
+
+    await waitFor(() => expect(recordVisitMock).toHaveBeenCalled());
+    expect(
+      screen.queryByRole("heading", { name: "🎉 Reward unlocked!" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("spins the wheel and shows the win celebration", async () => {
+    recordVisitMock.mockResolvedValue({
+      success: true,
+      rewardUnlocked: true,
+      reward_text: "A prize",
+      phone: "+6591234567",
+      progress: {
+        view: {
+          kind: "chance",
+          variant: "wheel",
+          segments: [{ id: "a", label: "Win", reward: true }],
+          landedId: "a",
+        },
+        label: "Won!",
+      },
+    });
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="wheel"
+        stampsRequired={1}
+        rewardText="A prize"
+      />,
+    );
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Spin" }));
+
+    await waitFor(() => expect(recordVisitMock).toHaveBeenCalled());
+    expect(
+      screen.getByRole("heading", { name: "🎉 Reward unlocked!" }),
+    ).toBeInTheDocument();
+  });
+
+  it("scratches with no win this time", async () => {
+    recordVisitMock.mockResolvedValue({
+      success: true,
+      rewardUnlocked: false,
+      reward_text: "A prize",
+      phone: "+6591234567",
+      progress: {
+        view: {
+          kind: "chance",
+          variant: "scratch",
+          segments: [{ id: "a", label: "Try again", reward: false }],
+          landedId: "a",
+        },
+        label: "No win",
+      },
+    });
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="scratch"
+        stampsRequired={1}
+        rewardText="A prize"
+      />,
+    );
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Scratch" }));
+
+    await waitFor(() => expect(recordVisitMock).toHaveBeenCalled());
+    expect(
+      screen.queryByRole("heading", { name: "🎉 Reward unlocked!" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not re-celebrate stamping the same already-reward-ready card twice in a row", async () => {
+    stampMock.mockResolvedValue({
+      success: true,
+      card: { id: "card-1", phone: "+6591234567", stamp_count: 10 },
+      rewardReady: true,
+    });
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="stamp"
+        stampsRequired={10}
+        rewardText="Free kopi"
+      />,
+    );
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Add stamp" }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("heading", { name: "🎉 Reward unlocked!" }),
+      ).toBeInTheDocument(),
+    );
+    await user.click(screen.getByRole("button", { name: "Nice!" }));
+
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Add stamp" }));
+    await waitFor(() => expect(stampMock).toHaveBeenCalledTimes(2));
+    expect(
+      screen.queryByRole("heading", { name: "🎉 Reward unlocked!" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("renders the Cup visual for a cup-variant plant program", async () => {
     lookupMock.mockResolvedValue({
       success: true,

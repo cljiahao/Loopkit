@@ -93,4 +93,43 @@ describe("ActivityPage", () => {
     expect(screen.getByText("+6591234567")).toBeInTheDocument();
     expect(screen.getByText("Next →")).toBeInTheDocument();
   });
+
+  it("shows a Previous link once past page 1", async () => {
+    const ActivityPage = (await import("./page")).default;
+
+    render(
+      await ActivityPage({
+        searchParams: Promise.resolve({ p: "p1", page: "2" }),
+      }),
+    );
+
+    const previous = screen.getByText("← Previous");
+    expect(previous).toBeInTheDocument();
+    expect(previous.closest("a")).toHaveAttribute(
+      "href",
+      "/dashboard/activity?p=p1&page=1",
+    );
+  });
+
+  it("redirects to /setup for a p that isn't one of the vendor's programs", async () => {
+    const ActivityPage = (await import("./page")).default;
+
+    await expect(
+      ActivityPage({ searchParams: Promise.resolve({ p: "not-a-program" }) }),
+    ).rejects.toThrow("REDIRECT:/setup");
+  });
+
+  it("redirects to the vendor's one program, carrying filters, when there's only one", async () => {
+    const ActivityPage = (await import("./page")).default;
+    const { listPrograms } = await import("@/lib/program");
+    vi.mocked(listPrograms).mockResolvedValueOnce([
+      programs[0],
+    ] as unknown as Awaited<ReturnType<typeof listPrograms>>);
+
+    await expect(
+      ActivityPage({
+        searchParams: Promise.resolve({ type: "stamps", page: "2" }),
+      }),
+    ).rejects.toThrow("REDIRECT:/dashboard/activity?type=stamps&page=2&p=p1");
+  });
 });

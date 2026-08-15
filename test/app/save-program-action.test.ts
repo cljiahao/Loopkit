@@ -119,6 +119,24 @@ describe("saveProgramAction (gated create + edit)", () => {
     expect(res.error).toMatch(/free plan/i);
   });
 
+  it("surfaces a generic error for a non-upsell RPC failure", async () => {
+    listProgramsMock.mockResolvedValue([]);
+    isProMock.mockResolvedValue(true);
+    rpcMock.mockResolvedValue({ data: null, error: { code: "23505" } });
+
+    const res = await saveProgramAction({}, form(stampFields));
+    expect(res.error).toMatch(/couldn't create/i);
+  });
+
+  it("surfaces a generic error when create_program returns no id", async () => {
+    listProgramsMock.mockResolvedValue([]);
+    isProMock.mockResolvedValue(true);
+    rpcMock.mockResolvedValue({ data: null, error: null });
+
+    const res = await saveProgramAction({}, form(stampFields));
+    expect(res.error).toMatch(/couldn't create/i);
+  });
+
   it("edits an existing program without re-checking the gate", async () => {
     getProgramByIdMock.mockResolvedValue({ id: "p-edit", type: "stamp" });
 

@@ -254,6 +254,12 @@ export function Wheel({
             const midRad = (midAngle * Math.PI) / 180;
             const tx = 50 + 30 * Math.cos(midRad);
             const ty = 50 + 30 * Math.sin(midRad);
+            const rewardTextClass = segment.reward
+              ? "fill-white"
+              : "fill-rose-950/70 dark:fill-white/80";
+            const segmentTextClass = segment.color
+              ? "fill-white [paint-order:stroke] [stroke-linejoin:round] [stroke-width:2.5px] stroke-black/60"
+              : rewardTextClass;
             return (
               <g key={segment.id}>
                 <path
@@ -289,11 +295,7 @@ export function Wheel({
                     // with a dark outline (paint-order+stroke, not a real
                     // CSS text-shadow which SVG <text> doesn't support)
                     // stays legible against any background color.
-                    segment.color
-                      ? "fill-white [paint-order:stroke] [stroke-linejoin:round] [stroke-width:2.5px] stroke-black/60"
-                      : segment.reward
-                        ? "fill-white"
-                        : "fill-rose-950/70 dark:fill-white/80",
+                    segmentTextClass,
                   )}
                 >
                   {segment.label}

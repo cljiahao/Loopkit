@@ -22,7 +22,7 @@ describe("0014 head start", () => {
     );
     expect(sql).toMatch(/p_head_start\s+boolean default false/i);
     expect(sql).toMatch(
-      /insert into loopkit\.programs\s*\n\s*\(vendor_id, type, name, stamps_required, reward_text, config, expiry_days, head_start\)/i,
+      /insert into loopkit\.programs[ \t]*\r?\n[ \t]*\(vendor_id, type, name, stamps_required, reward_text, config, expiry_days, head_start\)/i,
     );
   });
 

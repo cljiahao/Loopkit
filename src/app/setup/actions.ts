@@ -62,23 +62,21 @@ export async function saveProgramAction(
   }
 
   const data = parsed.data;
-  const { type, stampsRequired, config, headStart, headStartPercent } =
-    buildProgramFields(data);
-
+  const fields = buildProgramFields(data);
   const supabase = await createServerClient();
 
-  if (isEdit) {
+  async function updateExistingProgram(): Promise<SaveProgramState> {
     const update: ProgramUpdate = {
-      type,
+      type: fields.type,
       name: data.name,
-      stamps_required: stampsRequired,
+      stamps_required: fields.stampsRequired,
       reward_text: data.reward_text,
-      config,
+      config: fields.config,
       expiry_days: data.expiry_days ?? null,
       reward_expiry_days:
         "reward_expiry_days" in data ? (data.reward_expiry_days ?? null) : null,
-      head_start: headStart,
-      head_start_percent: headStartPercent,
+      head_start: fields.headStart,
+      head_start_percent: fields.headStartPercent,
     };
     const { error } = await supabase
       .from("programs")
@@ -89,42 +87,47 @@ export async function saveProgramAction(
     redirect(`/dashboard?p=${id}`);
   }
 
-  // Pre-check the free/Pro gate for a friendly message — never trust the client
-  // to have hidden the create form. The create_program RPC re-enforces this in
-  // the database (SECURITY DEFINER), so a direct PostgREST insert can't bypass it.
-  const programs = await listPrograms();
-  const pro = await isPro();
-  if (
-    !canCreateProgram(
-      getEntitlement(pro),
-      programs.filter((p) => p.active).length,
-    )
-  ) {
-    return { error: UPSELL_ERROR };
+  async function createNewProgram(): Promise<SaveProgramState> {
+    // Pre-check the free/Pro gate for a friendly message — never trust the
+    // client to have hidden the create form. The create_program RPC
+    // re-enforces this in the database (SECURITY DEFINER), so a direct
+    // PostgREST insert can't bypass it.
+    const programs = await listPrograms();
+    const pro = await isPro();
+    if (
+      !canCreateProgram(
+        getEntitlement(pro),
+        programs.filter((p) => p.active).length,
+      )
+    ) {
+      return { error: UPSELL_ERROR };
+    }
+
+    const { data: created, error } = await supabase.rpc("create_program", {
+      p_type: fields.type,
+      p_name: data.name,
+      p_stamps_required: fields.stampsRequired,
+      p_reward_text: data.reward_text,
+      p_config: fields.config,
+      p_expiry_days: data.expiry_days ?? null,
+      p_reward_expiry_days:
+        "reward_expiry_days" in data ? (data.reward_expiry_days ?? null) : null,
+      p_head_start: fields.headStart,
+      p_head_start_percent: fields.headStartPercent,
+    });
+    if (error) {
+      if (error.code === "42501") return { error: UPSELL_ERROR };
+      return { error: "Couldn't create your card. Try again." };
+    }
+    if (!created) {
+      return { error: "Couldn't create your card. Try again." };
+    }
+
+    revalidatePath("/dashboard");
+    redirect(`/dashboard?p=${created}`);
   }
 
-  const { data: created, error } = await supabase.rpc("create_program", {
-    p_type: type,
-    p_name: data.name,
-    p_stamps_required: stampsRequired,
-    p_reward_text: data.reward_text,
-    p_config: config,
-    p_expiry_days: data.expiry_days ?? null,
-    p_reward_expiry_days:
-      "reward_expiry_days" in data ? (data.reward_expiry_days ?? null) : null,
-    p_head_start: headStart,
-    p_head_start_percent: headStartPercent,
-  });
-  if (error) {
-    if (error.code === "42501") return { error: UPSELL_ERROR };
-    return { error: "Couldn't create your card. Try again." };
-  }
-  if (!created) {
-    return { error: "Couldn't create your card. Try again." };
-  }
-
-  revalidatePath("/dashboard");
-  redirect(`/dashboard?p=${created}`);
+  return isEdit ? updateExistingProgram() : createNewProgram();
 }
 
 // Vendor-initiated "change type" flow (templates-and-migration design,

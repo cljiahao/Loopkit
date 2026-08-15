@@ -33,7 +33,8 @@ export function mapActivityRow(
   if (!card) return null;
   const won = isWonVisit(event);
   const isReward = event.kind === "redeem" || won;
-  const label = won ? "Won" : event.kind === "visit" ? "Visit" : event.kind;
+  const visitLabel = event.kind === "visit" ? "Visit" : event.kind;
+  const label = won ? "Won" : visitLabel;
   return {
     id: event.id,
     phone: card.phone,

@@ -44,7 +44,7 @@ describe("0016 program replacement", () => {
   it("keeps vendor_join's phone guard and active-only enrollment fan-out", () => {
     expect(sql).toMatch(/\^\\\+65\[3689\]\[0-9\]\{7\}\$/);
     expect(sql).toMatch(
-      /where p\.vendor_id = p_vendor and p\.active\s*\n\s*and not exists/i,
+      /where p\.vendor_id = p_vendor and p\.active[ \t]*\r?\n[ \t]*and not exists/i,
     );
   });
 

@@ -46,6 +46,80 @@ export function PreviewCard({
   const view = progress.view;
   const isWheel = view.kind === "chance" && view.variant === "wheel";
 
+  function renderView() {
+    if (view.kind === "plant") {
+      if (view.variant === "cup") {
+        return (
+          <Cup
+            stage={view.stage}
+            totalStages={view.totalStages}
+            wilting={view.wilting}
+          />
+        );
+      }
+      return (
+        <Plant
+          stage={view.stage}
+          totalStages={view.totalStages}
+          wilting={view.wilting}
+        />
+      );
+    }
+    if (view.kind === "flame") {
+      return (
+        <FlameLayers
+          filled={view.filled}
+          total={view.total}
+          stage={view.stage}
+          stageName={view.stageName}
+        />
+      );
+    }
+    if (view.kind === "chance") {
+      if (view.variant === "wheel") {
+        return (
+          <Wheel
+            segments={view.segments}
+            landedId={view.landedId}
+            spinning={revealing}
+            onSettled={() => setWheelSettled(true)}
+          />
+        );
+      }
+      return (
+        <ScratchCard
+          scratching={revealing}
+          revealed={view.landedId !== null}
+          label={view.segments.find((s) => s.id === view.landedId)?.label ?? ""}
+          reward={
+            view.segments.find((s) => s.id === view.landedId)?.reward ?? false
+          }
+        />
+      );
+    }
+    if (view.kind === "lucky") {
+      return (
+        <LuckyBox
+          visitsSinceWin={view.visitsSinceWin}
+          pityCeiling={view.pityCeiling}
+        />
+      );
+    }
+    if (view.kind === "dots") {
+      if (view.variant === "points") {
+        return <PointsBar filled={view.filled} total={view.total} />;
+      }
+      return (
+        <StampDots
+          filled={view.filled}
+          total={view.total}
+          mark={resolveStampMark(view, vendorAvatarUrl)}
+        />
+      );
+    }
+    return null;
+  }
+
   // Wheel now owns and renders its own win/lose result overlay directly on
   // the wheel (see wheel.tsx) — deriving "won" from a separately-threaded
   // lastChanceResult value that had to stay in sync with Wheel's own async,
@@ -63,7 +137,6 @@ export function PreviewCard({
       // usePreviewAnimation), not derivable from existing render state —
       // same external-input-driven case already established elsewhere in
       // this file.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setWheelSettled(false);
     }
   }, [revealing, isWheel]);
@@ -92,64 +165,7 @@ export function PreviewCard({
       </p>
       <p className="text-sm font-semibold">{name || "Your card"}</p>
       <div className="flex h-36 items-center justify-center">
-        {view.kind === "plant" ? (
-          view.variant === "cup" ? (
-            <Cup
-              stage={view.stage}
-              totalStages={view.totalStages}
-              wilting={view.wilting}
-            />
-          ) : (
-            <Plant
-              stage={view.stage}
-              totalStages={view.totalStages}
-              wilting={view.wilting}
-            />
-          )
-        ) : view.kind === "flame" ? (
-          <FlameLayers
-            filled={view.filled}
-            total={view.total}
-            stage={view.stage}
-            stageName={view.stageName}
-          />
-        ) : view.kind === "chance" ? (
-          view.variant === "wheel" ? (
-            <Wheel
-              segments={view.segments}
-              landedId={view.landedId}
-              spinning={revealing}
-              onSettled={() => setWheelSettled(true)}
-            />
-          ) : (
-            <ScratchCard
-              scratching={revealing}
-              revealed={view.landedId !== null}
-              label={
-                view.segments.find((s) => s.id === view.landedId)?.label ?? ""
-              }
-              reward={
-                view.segments.find((s) => s.id === view.landedId)?.reward ??
-                false
-              }
-            />
-          )
-        ) : view.kind === "lucky" ? (
-          <LuckyBox
-            visitsSinceWin={view.visitsSinceWin}
-            pityCeiling={view.pityCeiling}
-          />
-        ) : view.kind === "dots" ? (
-          view.variant === "points" ? (
-            <PointsBar filled={view.filled} total={view.total} />
-          ) : (
-            <StampDots
-              filled={view.filled}
-              total={view.total}
-              mark={resolveStampMark(view, vendorAvatarUrl)}
-            />
-          )
-        ) : null}
+        {renderView()}
       </div>
       <p className="font-mono text-sm font-medium">{progress.label}</p>
       <p className="text-sm text-muted-foreground">

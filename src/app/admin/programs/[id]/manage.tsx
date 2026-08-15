@@ -100,6 +100,9 @@ function ActiveToggle({
     });
   }
 
+  const activeActionLabel = program.active ? "Deactivate" : "Reactivate";
+  const actionLabel = pending ? "Saving…" : activeActionLabel;
+
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
@@ -114,7 +117,7 @@ function ActiveToggle({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            {program.active ? "Deactivate" : "Reactivate"} {program.name}?
+            {activeActionLabel} {program.name}?
           </AlertDialogTitle>
           <AlertDialogDescription>
             {program.active
@@ -131,7 +134,7 @@ function ActiveToggle({
               confirm();
             }}
           >
-            {pending ? "Saving…" : program.active ? "Deactivate" : "Reactivate"}
+            {actionLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

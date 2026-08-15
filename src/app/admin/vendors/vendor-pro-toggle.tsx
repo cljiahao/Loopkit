@@ -38,6 +38,9 @@ export function VendorProToggle({
     });
   }
 
+  const toggleLabel = isPro ? "Remove Pro" : "Make Pro";
+  const label = pending ? "Saving…" : toggleLabel;
+
   return (
     <Button
       type="button"
@@ -47,7 +50,7 @@ export function VendorProToggle({
       onClick={toggle}
       className="rounded-xl"
     >
-      {pending ? "Saving…" : isPro ? "Remove Pro" : "Make Pro"}
+      {label}
     </Button>
   );
 }

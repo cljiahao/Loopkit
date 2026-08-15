@@ -75,9 +75,8 @@ export default async function CustomersPage({
   const { q, p } = await searchParams;
 
   if (!p && programs.length === 1) {
-    redirect(
-      `/dashboard/customers?p=${programs[0].id}${q ? `&q=${encodeURIComponent(q)}` : ""}`,
-    );
+    const qSuffix = q ? `&q=${encodeURIComponent(q)}` : "";
+    redirect(`/dashboard/customers?p=${programs[0].id}${qSuffix}`);
   }
 
   if (!p) {

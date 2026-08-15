@@ -21,7 +21,7 @@ export function FlameLayers({
   stageName: string;
   className?: string;
 }) {
-  const iconCount = stage === 0 ? 0 : stage === 1 ? 1 : 3;
+  const iconCount = stage <= 1 ? stage : 3;
   const size = FLAME_SIZES[stage] ?? FLAME_SIZES[1];
   const logCount = stage >= 4 ? 3 : 2;
 

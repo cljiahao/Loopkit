@@ -83,6 +83,17 @@ describe("CustomersPage (vendor-wide)", () => {
     render(await CustomersPage({ searchParams: Promise.resolve({}) }));
     expect(screen.getByText(/no customers yet/i)).toBeInTheDocument();
   });
+
+  it("redirects to the vendor's one program, carrying the q param, when there's only one", async () => {
+    const { listPrograms } = await import("@/lib/program");
+    vi.mocked(listPrograms).mockResolvedValueOnce([
+      program,
+    ] as unknown as Awaited<ReturnType<typeof listPrograms>>);
+
+    await expect(
+      CustomersPage({ searchParams: Promise.resolve({ q: "jane" }) }),
+    ).rejects.toThrow("REDIRECT:/dashboard/customers?p=p1&q=jane");
+  });
 });
 
 describe("CustomersPage (program-scoped)", () => {
