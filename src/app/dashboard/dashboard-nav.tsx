@@ -70,9 +70,8 @@ function isSupportCategory(
  * in-product navigation — no live API call, no per-vendor filtering. Every
  * kit's own dashboard already handles a signed-in vendor without that
  * kit's vendor row gracefully, so listing all live kits unconditionally
- * (minus loopkit itself) is safe. See merqo-ui's
- * docs/superpowers/plans/2026-08-16-kit-switcher.md for the full design
- * reasoning.
+ * (minus loopkit itself) is safe. See merqo-ui's kit-switcher plan doc
+ * (docs/superpowers/plans/ in that repo) for the full design reasoning.
  */
 const SWITCH_KITS = [
   { label: "qkit", href: "https://qkit-sg.vercel.app" },
