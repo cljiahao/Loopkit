@@ -65,6 +65,21 @@ function isSupportCategory(
 }
 
 /**
+ * The other live Merqo kits a signed-in vendor can jump to. SSO (shared
+ * `.merqo.io` cookie) already signs them in everywhere, so this is pure
+ * in-product navigation — no live API call, no per-vendor filtering. Every
+ * kit's own dashboard already handles a signed-in vendor without that
+ * kit's vendor row gracefully, so listing all live kits unconditionally
+ * (minus loopkit itself) is safe. See merqo-ui's kit-switcher plan doc
+ * (docs/superpowers/plans/ in that repo) for the full design reasoning.
+ */
+const SWITCH_KITS = [
+  { label: "qkit", href: "https://qkit-sg.vercel.app" },
+  { label: "paykit", href: "https://paykit-sg.vercel.app" },
+  { label: "stockkit", href: "https://stockkit-sg.vercel.app" },
+];
+
+/**
  * Dashboard sticky-header row: composes @merqo/ui's DashboardNav (burger +
  * inline links) and AccountMenu (avatar dropdown, owning its own
  * Feedback/Get-help Sheet chrome internally). Keeps the same call-site
@@ -113,6 +128,7 @@ export function DashboardNav({
       kitLocalSettingsHref="/dashboard/settings"
       showPlanItem
       tierBadge={<TierBadge tier={tier} />}
+      switchKits={SWITCH_KITS}
       getHelp={{
         type: "form",
         onSubmit: async ({ message, category }) => {
