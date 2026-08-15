@@ -28,8 +28,12 @@ list is the source of truth for which of those hook scripts (plus
 `settings.json` itself, the husky/gitleaks/CI config) count as
 "enforcement layer" — `verify-harness.sh` hashes each listed path and fails
 if it drifts from the recorded `origin_hash`, catching silent edits or
-accidental reverts. `.harness-base/` is a full-content mirror of the same 19
-`seeded_files` paths, captured at seed time — it's the merge-base snapshot
+accidental reverts. `.harness-base/` is a full-content mirror of the same 27
+`seeded_files` paths, captured at seed time (refreshed 2026-08-15 for the
+templateCentral v5.15.0 re-sync — the snapshot had a stale pre-husky-migration
+`lefthook.yml`/`.lefthook/` leftover and was missing the `.husky/*` and
+`post-edit-comment-check.sh`/`comment-hygiene-patterns.txt` entries) — it's
+the merge-base snapshot
 used to 3-way merge harness updates from the upstream template without
 clobbering project-specific edits, not a live-checked baseline itself (that's
 `harness.json`'s job); `protect-files.sh` guards writes to it for the same
