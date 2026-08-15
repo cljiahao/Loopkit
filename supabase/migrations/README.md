@@ -42,6 +42,7 @@ exception.
 - `0031_loopkit_vendor_join_avatar.sql` — appends `vendor_avatar_url` (read from `auth.users.raw_user_meta_data`) to `vendor_join`'s return columns, so the public `/c` page can render a vendor's chosen stamp-mark photo
 - `0032_loopkit_provision_default_program.sql` — `provision_default_program(p_vendor_id)`: service-role-only SECURITY DEFINER function (never granted to `authenticated`) that seeds a default "Starter" stamp program for a push-provisioned vendor, since `create_program` is keyed on the calling session's `auth.uid()` and can't run on a vendor's behalf; advisory-lock-guarded against a double-provision race, idempotent on `loopkit.programs` (a null return means the vendor already had a program). Backs `POST /api/merqo/vendor-provision`.
 - `0033_loopkit_vendor_tour_seen.sql` — adds `loopkit.vendors.tour_seen_at` (nullable `TIMESTAMPTZ`), tracking whether a vendor has completed the dashboard onboarding tour; no RLS change, the existing `vendors_own` policy already covers it
+- `0034_loopkit_pricing.sql` — `loopkit.pricing`: single-row (`id` pinned to `1`), admin-tunable `monthly_cents`/`currency` config seeded at 499 ($4.99/mo), loopkit's first-ever live price; public-select RLS only, no insert/update/delete policy — writes go through the service-role `setPricing` admin action
 
 ## Parent
 

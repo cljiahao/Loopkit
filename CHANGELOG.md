@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Admin-tunable Pro pricing — loopkit's first-ever live price. A new
+  single-row `loopkit.pricing` table (migration `0034`, seeded at
+  $4.99/mo) backs a `setPricing` admin action and `@merqo/ui`'s new
+  `PricingForm` component, wired into `/admin` so an admin can retune the
+  price with no redeploy. `/dashboard/plan` now shows the live price
+  (`$4.99 / month`) in place of the old "no card needed yet" copy with no
+dollar figure at all. The manual "ask us to upgrade" grant flow
+(`requestUpgrade`/`UpgradeCta`/`setVendorPro`/`resolveUpgradeRequest`) is
+  unchanged — this is a display/expectation-setting change, not a
+  checkout change.
+
 ### Changed
 
 - Expanded ESLint's sonarjs wiring from 2 hand-picked rules to the plugin's

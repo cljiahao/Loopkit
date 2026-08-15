@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/admin";
 import { createServiceClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/action-result";
 import type { Json } from "@/lib/types";
+import { pricingFormSchema, type PricingFormInput } from "@/lib/schemas";
 
 /**
  * Append an admin-audit row. Best-effort: a hiccup here must not fail the action
@@ -212,5 +213,40 @@ export async function resolveUpgradeRequest(
   });
 
   revalidatePath("/admin/vendors");
+  return { success: true };
+}
+
+/**
+ * Update the single pricing row shown on the vendor plan page. Admin-only:
+ * requireAdmin() 404s non-admins before any write. Service-role client,
+ * since the pricing table has no write RLS policy at all.
+ */
+export async function setPricing(
+  input: PricingFormInput,
+): Promise<ActionResult> {
+  const { user } = await requireAdmin();
+
+  const parsed = pricingFormSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: "Invalid input" };
+
+  const supabase = await createServiceClient();
+  const { error } = await supabase
+    .from("pricing")
+    .update({
+      monthly_cents: parsed.data.monthly_cents,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", 1);
+  if (error) {
+    console.error("setPricing failed", error.message);
+    return { success: false, error: "Could not update pricing" };
+  }
+
+  await recordAudit(user.id, "set_pricing", null, {
+    monthly_cents: parsed.data.monthly_cents,
+  });
+
+  revalidatePath("/admin");
+  revalidatePath("/dashboard/plan");
   return { success: true };
 }

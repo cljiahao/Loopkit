@@ -22,6 +22,9 @@ vi.mock("@/lib/stats", () => ({
     rewardsTotal: 3,
   })),
 }));
+vi.mock("@/lib/pricing", () => ({
+  getPricing: vi.fn(async () => ({ monthly_cents: 499, currency: "SGD" })),
+}));
 
 import PlanPage from "./page";
 
@@ -33,6 +36,7 @@ describe("PlanPage", () => {
     expect(
       screen.getByText(/run more than one loyalty program/i),
     ).toBeInTheDocument();
+    expect(screen.getByText("$4.99")).toBeInTheDocument();
     expect(screen.getByText("Loyalty programs")).toBeInTheDocument();
   });
 

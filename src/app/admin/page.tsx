@@ -1,18 +1,21 @@
 import { Gift, Stamp } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { platformTotals, recentActivity } from "@/lib/admin-data";
+import { getPricing } from "@/lib/pricing";
 import { formatSgtDateTime } from "@/lib/format";
 import { Stat } from "@/app/admin/stat";
 import { ElevatedCard } from "@/components/elevated-card";
+import { PricingFormClient } from "./pricing-form-client";
 
 export const revalidate = 0;
 
 export default async function AdminOverviewPage() {
   await requireAdmin();
 
-  const [totals, activity] = await Promise.all([
+  const [totals, activity, pricing] = await Promise.all([
     platformTotals(),
     recentActivity(15),
+    getPricing(),
   ]);
 
   return (
@@ -82,6 +85,13 @@ export default async function AdminOverviewPage() {
             )}
           </ul>
         </ElevatedCard>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          Pricing
+        </h2>
+        <PricingFormClient initial={pricing} />
       </section>
     </main>
   );

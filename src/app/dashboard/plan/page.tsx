@@ -2,6 +2,8 @@ import { Check, Sparkles } from "lucide-react";
 import { requireVendor } from "@/features/auth";
 import { isPro, listPrograms, currentProgram } from "@/lib/program";
 import { getProgramStats } from "@/lib/stats";
+import { getPricing } from "@/lib/pricing";
+import { formatPrice } from "@/lib/utils";
 import { UpgradeCta } from "@/app/dashboard/plan/upgrade-cta";
 import { Badge } from "@/components/ui/badge";
 import { ElevatedCard } from "@/components/elevated-card";
@@ -31,10 +33,16 @@ export default async function PlanPage({
   searchParams: Promise<{ p?: string }>;
 }) {
   await requireVendor();
-  const [pro, programs] = await Promise.all([isPro(), listPrograms()]);
+  const [pro, programs, pricing] = await Promise.all([
+    isPro(),
+    listPrograms(),
+    getPricing(),
+  ]);
   const { p } = await searchParams;
   const program = currentProgram(programs, p);
   const stats = program ? await getProgramStats(program.id) : null;
+  const monthlyPrice =
+    pricing.monthly_cents > 0 ? formatPrice(pricing.monthly_cents) : null;
 
   return (
     <div className="mx-auto max-w-2xl space-y-7">
@@ -87,6 +95,14 @@ export default async function PlanPage({
             <Sparkles className="size-4 text-primary" />
             <h2 className="font-display text-xl font-semibold">Pro</h2>
           </div>
+          <p className="mt-1 font-mono text-2xl font-bold">
+            {monthlyPrice ?? "Soon"}
+            {monthlyPrice && (
+              <span className="ml-1 text-sm font-normal text-muted-foreground">
+                / month
+              </span>
+            )}
+          </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Run more than one loyalty program at a time. Message us and
             we&apos;ll set you up — no card needed yet.

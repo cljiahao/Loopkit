@@ -244,6 +244,27 @@ export interface Database {
         };
         Relationships: [];
       };
+      pricing: {
+        Row: {
+          id: number;
+          monthly_cents: number;
+          currency: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: number;
+          monthly_cents?: number;
+          currency?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: number;
+          monthly_cents?: number;
+          currency?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       vendors: {
         Row: {
           vendor_id: string;
@@ -563,3 +584,5 @@ export interface Database {
     CompositeTypes: Record<string, never>;
   };
 }
+
+export type Pricing = Database["loopkit"]["Tables"]["pricing"]["Row"];
