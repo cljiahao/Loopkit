@@ -23,27 +23,27 @@ export function StampCard() {
           const isReward = i === TOTAL - 1;
           const stamped = i < STAMPED;
           const justStamped = stamped && i === STAMPED - 1;
+          let dotClassName =
+            "border-dashed border-border text-muted-foreground/40";
+          let icon = <span className="font-mono text-xs">{i + 1}</span>;
+          if (isReward) {
+            dotClassName = "border-gold text-gold-accent";
+            icon = <Gift className="size-4 text-gold" />;
+          } else if (stamped) {
+            dotClassName = "border-transparent bg-gold text-gold-foreground";
+            icon = <Check className="size-4" />;
+          }
           return (
             <div
               key={i}
               style={justStamped ? { animationDelay: "0.5s" } : undefined}
               className={cn(
                 "flex aspect-square items-center justify-center rounded-full border-2 text-sm",
-                isReward
-                  ? "border-gold text-gold-accent"
-                  : stamped
-                    ? "border-transparent bg-gold text-gold-foreground"
-                    : "border-dashed border-border text-muted-foreground/40",
+                dotClassName,
                 justStamped && "motion-safe:animate-stamp-pop",
               )}
             >
-              {isReward ? (
-                <Gift className="size-4 text-gold" />
-              ) : stamped ? (
-                <Check className="size-4" />
-              ) : (
-                <span className="font-mono text-xs">{i + 1}</span>
-              )}
+              {icon}
             </div>
           );
         })}

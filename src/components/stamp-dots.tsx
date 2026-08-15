@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Check, Gift, Coffee, Star, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,39 +33,49 @@ export function StampDots({
         const PresetIcon =
           mark?.kind === "preset" ? PRESET_ICONS[mark.key] : null;
 
+        let dotClassName = "border-dashed border-muted-foreground/30";
+        if (isReward) {
+          dotClassName = "border-gold text-gold-accent";
+        } else if (stamped) {
+          dotClassName = "border-transparent bg-gold text-gold-foreground";
+        }
+
+        let icon: ReactNode = null;
+        if (isReward) {
+          icon = <Gift className="size-3.5 text-gold" />;
+        } else if (mark?.kind === "photo") {
+          icon = (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={mark.url}
+              alt=""
+              className={cn(
+                "size-full object-cover",
+                !stamped && "opacity-40 grayscale",
+              )}
+            />
+          );
+        } else if (PresetIcon) {
+          icon = (
+            <PresetIcon
+              className={cn("size-3.5", !stamped && "opacity-40 grayscale")}
+            />
+          );
+        } else if (stamped) {
+          icon = <Check className="size-3.5" />;
+        }
+
         return (
           <span
             key={i}
             aria-hidden="true"
             className={cn(
               "flex size-7 items-center justify-center overflow-hidden rounded-full border-2 text-sm",
-              isReward
-                ? "border-gold text-gold-accent"
-                : stamped
-                  ? "border-transparent bg-gold text-gold-foreground"
-                  : "border-dashed border-muted-foreground/30",
+              dotClassName,
               justStamped && "motion-safe:animate-stamp-pop",
             )}
           >
-            {isReward ? (
-              <Gift className="size-3.5 text-gold" />
-            ) : mark?.kind === "photo" ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={mark.url}
-                alt=""
-                className={cn(
-                  "size-full object-cover",
-                  !stamped && "opacity-40 grayscale",
-                )}
-              />
-            ) : PresetIcon ? (
-              <PresetIcon
-                className={cn("size-3.5", !stamped && "opacity-40 grayscale")}
-              />
-            ) : stamped ? (
-              <Check className="size-3.5" />
-            ) : null}
+            {icon}
           </span>
         );
       })}

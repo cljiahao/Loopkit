@@ -71,6 +71,83 @@ export function ProgramCardStatus({
     setNoticeOpen(false);
   }
 
+  function renderView() {
+    if (view?.kind === "plant") {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          {view.variant === "cup" ? (
+            <Cup
+              stage={view.stage}
+              totalStages={view.totalStages}
+              wilting={view.wilting}
+            />
+          ) : (
+            <Plant
+              stage={view.stage}
+              totalStages={view.totalStages}
+              wilting={view.wilting}
+            />
+          )}
+        </div>
+      );
+    }
+    if (view?.kind === "flame") {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <FlameLayers
+            filled={view.filled}
+            total={view.total}
+            stage={view.stage}
+            stageName={view.stageName}
+          />
+        </div>
+      );
+    }
+    if (view?.kind === "chance") {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          {view.variant === "wheel" ? (
+            <Wheel segments={view.segments} landedId={view.landedId} />
+          ) : (
+            <ScratchCard
+              revealed={view.landedId !== null}
+              label={
+                view.segments.find((s) => s.id === view.landedId)?.label ?? ""
+              }
+              reward={
+                view.segments.find((s) => s.id === view.landedId)?.reward ??
+                false
+              }
+            />
+          )}
+        </div>
+      );
+    }
+    if (view?.kind === "lucky") {
+      return (
+        <div className="flex flex-col items-center gap-2">
+          <LuckyBox
+            visitsSinceWin={view.visitsSinceWin}
+            pityCeiling={view.pityCeiling}
+          />
+        </div>
+      );
+    }
+    if (view?.kind === "dots") {
+      if (view.variant === "points") {
+        return <PointsBar filled={view.filled} total={view.total} />;
+      }
+      return (
+        <StampDots
+          filled={view.filled}
+          total={view.total}
+          mark={resolveStampMark(view, vendorAvatarUrl)}
+        />
+      );
+    }
+    return null;
+  }
+
   function confirmRegenerate() {
     startRegenerate(async () => {
       const fd = new FormData();
@@ -89,66 +166,7 @@ export function ProgramCardStatus({
   return (
     <CardShell>
       <p className="text-sm font-semibold">{card.name}</p>
-      {view?.kind === "plant" ? (
-        <div className="flex flex-col items-center gap-2">
-          {view.variant === "cup" ? (
-            <Cup
-              stage={view.stage}
-              totalStages={view.totalStages}
-              wilting={view.wilting}
-            />
-          ) : (
-            <Plant
-              stage={view.stage}
-              totalStages={view.totalStages}
-              wilting={view.wilting}
-            />
-          )}
-        </div>
-      ) : view?.kind === "flame" ? (
-        <div className="flex flex-col items-center gap-2">
-          <FlameLayers
-            filled={view.filled}
-            total={view.total}
-            stage={view.stage}
-            stageName={view.stageName}
-          />
-        </div>
-      ) : view?.kind === "chance" ? (
-        <div className="flex flex-col items-center gap-2">
-          {view.variant === "wheel" ? (
-            <Wheel segments={view.segments} landedId={view.landedId} />
-          ) : (
-            <ScratchCard
-              revealed={view.landedId !== null}
-              label={
-                view.segments.find((s) => s.id === view.landedId)?.label ?? ""
-              }
-              reward={
-                view.segments.find((s) => s.id === view.landedId)?.reward ??
-                false
-              }
-            />
-          )}
-        </div>
-      ) : view?.kind === "lucky" ? (
-        <div className="flex flex-col items-center gap-2">
-          <LuckyBox
-            visitsSinceWin={view.visitsSinceWin}
-            pityCeiling={view.pityCeiling}
-          />
-        </div>
-      ) : view?.kind === "dots" ? (
-        view.variant === "points" ? (
-          <PointsBar filled={view.filled} total={view.total} />
-        ) : (
-          <StampDots
-            filled={view.filled}
-            total={view.total}
-            mark={resolveStampMark(view, vendorAvatarUrl)}
-          />
-        )
-      ) : null}
+      {renderView()}
       <p className="font-mono text-sm font-medium">{card.label}</p>
       <p className="text-sm text-muted-foreground">
         Reward: {card.reward_text}

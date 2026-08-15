@@ -130,12 +130,8 @@ export function usePreviewAnimation(input: PreviewInput): {
   useEffect(() => {
     if (reducedMotion) return;
     const isChance = type === "wheel" || type === "scratch";
-    const delay =
-      phase === "celebrating"
-        ? CELEBRATE_MS
-        : phase === "revealing"
-          ? REVEAL_MS
-          : TICK_MS;
+    const nonCelebratingDelay = phase === "revealing" ? REVEAL_MS : TICK_MS;
+    const delay = phase === "celebrating" ? CELEBRATE_MS : nonCelebratingDelay;
     const timer = setTimeout(() => {
       if (phase === "celebrating") {
         setCard(initialCard);

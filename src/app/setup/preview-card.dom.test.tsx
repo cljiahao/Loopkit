@@ -334,7 +334,7 @@ describe("PreviewCard", () => {
       },
       rewardReady: false,
     };
-    const { container } = render(
+    render(
       <PreviewCard
         progress={progress}
         name="Spin to win"

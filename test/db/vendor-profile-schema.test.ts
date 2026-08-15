@@ -20,7 +20,7 @@ describe("0017 vendor profile", () => {
       /alter table loopkit\.vendors enable row level security/i,
     );
     expect(sql).toMatch(
-      /create policy vendors_own on loopkit\.vendors\s*\n\s*for all using \(vendor_id = \(select auth\.uid\(\)\)\)/i,
+      /create policy vendors_own on loopkit\.vendors[ \t]*\r?\n[ \t]*for all using \(vendor_id = \(select auth\.uid\(\)\)\)/i,
     );
   });
 
@@ -33,7 +33,7 @@ describe("0017 vendor profile", () => {
 
   it("creates the public vendor-images bucket with per-vendor-folder object policies", () => {
     expect(sql).toMatch(
-      /insert into storage\.buckets \(id, name, public\)\s*\n\s*values \('vendor-images', 'vendor-images', true\)/i,
+      /insert into storage\.buckets \(id, name, public\)[ \t]*\r?\n[ \t]*values \('vendor-images', 'vendor-images', true\)/i,
     );
     expect(sql).toMatch(/vendor_images_public_read/i);
     expect(sql).toMatch(/vendor_images_vendor_insert/i);

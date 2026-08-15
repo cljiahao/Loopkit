@@ -10,6 +10,6 @@ describe("DashboardLoading", () => {
     expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(
       0,
     );
-    expect(container.querySelectorAll(".rounded-2xl").length).toBe(2);
+    expect(container.querySelectorAll(".rounded-2xl")).toHaveLength(2);
   });
 });

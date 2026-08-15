@@ -20,7 +20,7 @@ describe("0024 head start percent", () => {
     );
     expect(sql).toMatch(/p_head_start_percent\s+int default 20/i);
     expect(sql).toMatch(
-      /insert into loopkit\.programs\s*\n\s*\(vendor_id, type, name, stamps_required, reward_text, config, expiry_days,\s*\n\s*head_start, carry_over_stamps, active, head_start_percent\)/i,
+      /insert into loopkit\.programs[ \t]*\r?\n[ \t]*\(vendor_id, type, name, stamps_required, reward_text, config, expiry_days,[ \t]*\r?\n[ \t]*head_start, carry_over_stamps, active, head_start_percent\)/i,
     );
   });
 

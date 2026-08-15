@@ -52,7 +52,7 @@ describe("ProgramCardStatus points variant", () => {
       />,
     );
     expect(queryByText(/points$/)).not.toBeInTheDocument();
-    expect(container.querySelectorAll("span[aria-hidden]").length).toBe(5);
+    expect(container.querySelectorAll("span[aria-hidden]")).toHaveLength(5);
   });
 
   it("renders a photo stamp mark when the card's view carries markMode photo and a vendor avatar is provided", () => {

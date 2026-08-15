@@ -51,6 +51,7 @@ export function LoginForm() {
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
 
   const isSignin = mode === "signin";
+  const submitLabel = isSignin ? "Sign in" : "Create account";
   // Every submit surface (Google, phone-onboard toggle/submit, email form,
   // forgot-password) shares one disabled state, same as before the refactor —
   // only one of these flows can be in flight at a time.
@@ -397,11 +398,7 @@ export function LoginForm() {
                 className="h-12 w-full rounded-xl text-base font-semibold"
                 disabled={anyBusy}
               >
-                {busy
-                  ? "Please wait…"
-                  : isSignin
-                    ? "Sign in"
-                    : "Create account"}
+                {busy ? "Please wait…" : submitLabel}
               </Button>
             </form>
           </div>
