@@ -402,4 +402,21 @@ describe("PreviewCard", () => {
       expect(p.getAttribute("class")).toContain("scratch-draw-in");
     });
   });
+
+  it("renders no visual for an unrecognized view kind", () => {
+    const progress = {
+      stage: "unknown",
+      label: "—",
+      view: { kind: "unsupported" },
+      rewardReady: false,
+    } as unknown as Progress;
+    const { container } = render(
+      <PreviewCard
+        progress={progress}
+        name="Mystery card"
+        rewardText="Free item"
+      />,
+    );
+    expect(container.querySelector(".h-36")?.childElementCount).toBe(0);
+  });
 });
