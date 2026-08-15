@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- "Switch products" submenu in the dashboard account menu (via `@merqo/ui`
+  v0.13.0's `switchKits` prop), letting a signed-in vendor jump straight to
+  the other live Merqo kits — qkit, paykit, stockkit — since SSO via the
+  shared `.merqo.io` cookie already signs them in everywhere. Static list,
+  no new API call.
 - Admin-tunable Pro pricing — loopkit's first-ever live price. A new
   single-row `loopkit.pricing` table (migration `0034`, seeded at
   $4.99/mo) backs a `setPricing` admin action and `@merqo/ui`'s new
