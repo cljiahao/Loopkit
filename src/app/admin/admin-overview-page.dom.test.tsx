@@ -2,7 +2,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
 vi.mock("@/lib/admin", () => ({ requireAdmin: vi.fn(async () => ({})) }));
+vi.mock("@/lib/pricing", () => ({
+  getPricing: vi.fn(async () => ({ monthly_cents: 499, currency: "SGD" })),
+}));
 vi.mock("@/lib/admin-data", () => ({
   platformTotals: vi.fn(async () => ({
     programs: 4,
@@ -38,6 +44,7 @@ describe("AdminOverviewPage", () => {
     expect(screen.getByText("120")).toBeInTheDocument();
     expect(screen.getByText("Coffee Stamps")).toBeInTheDocument();
     expect(screen.getByText("Bakery Stamps")).toBeInTheDocument();
+    expect(screen.getByText("Pricing")).toBeInTheDocument();
   });
 
   it("shows an empty state when there is no activity yet", async () => {
