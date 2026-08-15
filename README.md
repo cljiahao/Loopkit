@@ -22,14 +22,15 @@ to `src/app/api/tour-seen/` rather than a Server Action, so the write
 survives not just a mid-tour refresh but a hard-navigation page unload,
 which mattered because `@merqo/ui`'s shared `DashboardNav` defaulted to
 plain `<a>` nav links (root cause, now fixed — see below). Migrated onto
-the shared `@merqo/ui` component package (v0.11.1, `package.json`): the
+the shared `@merqo/ui` component package (v0.12.0, `package.json`): the
 dashboard nav/account dropdown, `useAsyncAction`, `InfoTooltip`,
-`ImageUploader`, `DashboardTour`, the landing page's sticky header
-(`LandingNav`, via `src/components/landing/nav.tsx`), and the profile
-page's two-column layout all now delegate to `@merqo/ui`'s versions —
-see `AGENTS.md`'s File Layout and this README's Data model section below
-for what's still loopkit-local (`ElevatedCard`, the upload adapter,
-step/action wiring). `DashboardNav`'s wrapper
+`ImageUploader`, `DashboardTour`, `PricingForm` (the `/admin` pricing
+section, `src/app/admin/pricing-form-client.tsx`), the landing page's
+sticky header (`LandingNav`, via `src/components/landing/nav.tsx`), and
+the profile page's two-column layout all now delegate to `@merqo/ui`'s
+versions — see `AGENTS.md`'s File Layout and this README's Data model
+section below for what's still loopkit-local (`ElevatedCard`, the upload
+adapter, step/action wiring). `DashboardNav`'s wrapper
 (`src/app/dashboard/dashboard-nav.tsx`) passes `LinkComponent={Link}`
 (v0.10.0+) so the package renders `next/link`'s `Link` instead of a
 plain `<a>` for its nav links and the `AccountMenu` it composes
@@ -142,6 +143,16 @@ triaged from merqo's own cross-kit admin console, with no loopkit-side
 table at all. See
 `docs/business/2026-07-21-profile-settings-page-standard.md` (in the parent
 `Merqo Business/docs/` repo) for the locked cross-kit pattern.
+
+loopkit's first-ever live price ships as a single-row, admin-tunable
+`loopkit.pricing` table (migration `0034`, seeded at $4.99/mo, no write
+RLS policy — writes only via the service-role `setPricing` admin action,
+`src/lib/pricing.ts`/`src/app/admin/actions.ts`). `/admin` shows a
+`PricingForm` section to retune it with no redeploy, and `/dashboard/plan`
+reads the live value in place of the previous no-price copy. The manual
+"ask us to upgrade" grant flow (`requestUpgrade`/`UpgradeCta`/
+`setVendorPro`/`resolveUpgradeRequest`) is unchanged — this is a display
+change, not real Stripe billing.
 
 Separately, a Pro vendor can let customers earn a stamp from a completed
 qkit order (`src/app/dashboard/qkit-earn-settings.tsx`) — this is a pull-model
