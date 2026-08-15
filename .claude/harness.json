@@ -1,5 +1,5 @@
 {
-  "templatecentral_version": "5.11.0",
+  "templatecentral_version": "5.15.0",
   "stack": "nextjs",
   "adapted": "Next 16 + Supabase (auth/db/realtime) — Supabase variant, based on qkit harness",
   "seeded_at": "2026-07-17",
