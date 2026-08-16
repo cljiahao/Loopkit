@@ -23,7 +23,7 @@ mock the HTTP layer ahead of that; live verification cannot.
   reference `notify_ref` (loopkit has no "waiting" moment to attach a
   connect button to).
 - The stated cross-kit limitation (a customer only matches here if they
-  connected via qkit *with* a phone number) is not something to work
+  connected via qkit _with_ a phone number) is not something to work
   around in this plan — it's the correct, expected behavior.
 - TypeScript strict, no `any`.
 - Work on a feature branch, never commit directly to `main`.

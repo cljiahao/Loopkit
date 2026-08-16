@@ -130,6 +130,7 @@ src/lib/loyalty.ts      — stamping/redemption flow
 src/lib/stats.ts        — vendor-facing metrics
 src/lib/telegram.ts     — sendTelegramMessage + generateLinkToken (Bot API, no SDK)
 src/lib/telegram-link.ts — service-role link-token issuing + disconnect for Connect Telegram
+src/lib/merqo-customer-notify.ts — notifyCustomerByPhone: kit → merqo HTTP call reusing a customer's standing Telegram connection
 src/lib/merqo-vendor-status.ts — reports status/metrics to merqo over HTTP
 src/lib/supabase/       — browser / server / service clients (schema: loopkit)
 src/app/api/telegram/webhook/ — Telegram Bot API webhook (signature-verified, no session)
@@ -189,6 +190,16 @@ write goes through the service-role client (the webhook route on link, the
 settings page's token-issuing/disconnect actions). A missing link or a send
 failure is caught and logged, never affects `redeemAction`'s own returned
 result. See `docs/superpowers/specs/2026-08-16-telegram-reward-alerts-design.md`.
+
+`redeemAction` also calls `notifyCustomerByPhone` (`src/lib/merqo-customer-notify.ts`)
+as a sibling to that vendor alert — loopkit's reuse-only half of the
+cross-kit customer Telegram-connect design. It posts to merqo's
+`/api/merqo/notify-customer` in its `phone` lookup mode (bearer
+`MERQO_CUSTOMER_SECRET`, both env vars optional) so a customer who already
+connected Telegram via qkit _with a matching phone number_ also gets a
+redemption confirmation — no new UI, no new table, no connect flow on
+loopkit's side, and a failure never affects `redeemAction`'s own returned
+result. See `docs/superpowers/specs/2026-08-16-customer-telegram-connect-design.md`.
 
 Separately, a Pro vendor can let customers earn a stamp from a completed
 qkit order (`src/app/dashboard/qkit-earn-settings.tsx`) — this is a pull-model

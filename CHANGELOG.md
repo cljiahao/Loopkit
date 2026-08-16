@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Customer Telegram connect (reuse-only) — loopkit's half of the cross-kit
+  Phase B+D rollout. `redeemAction` now also calls a new
+  `notifyCustomerByPhone` (`src/lib/merqo-customer-notify.ts`) as a
+  sibling to the existing vendor Telegram alert, posting to merqo's
+  `notify-customer` endpoint in its `phone` lookup mode so a customer who
+  already connected Telegram via qkit (with a matching phone number)
+  gets a redemption confirmation too. No new UI, no new table, no connect
+  flow — loopkit never mints its own connect token, only reuses a
+  standing connection merqo already has. `MERQO_BASE_URL`/
+  `MERQO_CUSTOMER_SECRET` are optional; a failure or a missing connection
+  never affects `redeemAction`'s own returned result. Depends on merqo's
+  own Phase B+D endpoints (PR #50) already live.
 - Telegram reward-redemption alerts — loopkit's half of the cross-kit
   Telegram Phase A rollout. A vendor connects Telegram once from
   `/dashboard/settings` via a deep-link QR code (reusing the existing

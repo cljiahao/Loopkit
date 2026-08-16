@@ -27,8 +27,8 @@ is what motivated it: loopkit has no `notify_ref` to hand back, only a
 ## Guiding decisions
 
 - **Stated limitation, not a bug to work around:** a customer only shows
-  up in `merqo.customers` by `phone` if they connected via qkit *while
-  also giving a phone number* (the master doc's own stated cross-kit-reuse
+  up in `merqo.customers` by `phone` if they connected via qkit _while
+  also giving a phone number_ (the master doc's own stated cross-kit-reuse
   limitation). A Telegram-only qkit connection (no phone) will never match
   here — that's correct, not a gap to close in this phase.
 - **`phone` lookup, not `notify_ref`** — loopkit's redemption event has no
