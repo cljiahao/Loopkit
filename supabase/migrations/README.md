@@ -43,6 +43,7 @@ exception.
 - `0032_loopkit_provision_default_program.sql` — `provision_default_program(p_vendor_id)`: service-role-only SECURITY DEFINER function (never granted to `authenticated`) that seeds a default "Starter" stamp program for a push-provisioned vendor, since `create_program` is keyed on the calling session's `auth.uid()` and can't run on a vendor's behalf; advisory-lock-guarded against a double-provision race, idempotent on `loopkit.programs` (a null return means the vendor already had a program). Backs `POST /api/merqo/vendor-provision`.
 - `0033_loopkit_vendor_tour_seen.sql` — adds `loopkit.vendors.tour_seen_at` (nullable `TIMESTAMPTZ`), tracking whether a vendor has completed the dashboard onboarding tour; no RLS change, the existing `vendors_own` policy already covers it
 - `0034_loopkit_pricing.sql` — `loopkit.pricing`: single-row (`id` pinned to `1`), admin-tunable `monthly_cents`/`currency` config seeded at 499 ($4.99/mo), loopkit's first-ever live price; public-select RLS only, no insert/update/delete policy — writes go through the service-role `setPricing` admin action
+- `0035_loopkit_customers_merqo_sync.sql` — extends `sync_customer_on_card`/`sync_customer_on_activity` (0021) with a second write to the shared cross-kit `merqo.customers` table (merqo migration 0018), alongside the existing local `loopkit.customers` write, not a replacement; guarded the same way as 0030 so a loopkit-only local `supabase start` (no merqo schema) doesn't break every card/stamp-event insert
 
 ## Parent
 

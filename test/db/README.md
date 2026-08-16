@@ -14,6 +14,7 @@ substitute for running the migration against real Postgres.
 - `card-token-schema.test.ts` — checks migration `0006_loopkit_card_token.sql` (`card_token` column + enroll/read functions)
 - `carry-over-schema.test.ts` — checks migration `0018_loopkit_carry_over.sql` (`carry_over_stamps` column)
 - `chance-types-schema.test.ts` — checks migration `0010_loopkit_chance_types.sql` (wheel/scratch `type` constraint widening)
+- `customers-merqo-sync-schema.test.ts` — checks migration `0035_loopkit_customers_merqo_sync.sql` (`sync_customer_on_card`/`sync_customer_on_activity` keep their local `loopkit.customers` write and gain a guarded second write to `merqo.customers`)
 - `engine-schema.test.ts` — checks migration `0004_loopkit_engine.sql` (`programs.type`/`config`, `cards.state` columns)
 - `enroll-phone-guard-schema.test.ts` — checks migration `0009_loopkit_enroll_phone_guard.sql` (malformed-phone rejection in `enroll_card`)
 - `hardening-schema.test.ts` — checks migration `0008_loopkit_hardening.sql` (stamp-progress read fix, free/Pro limit, active-only enroll)
