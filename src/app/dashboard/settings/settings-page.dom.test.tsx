@@ -21,12 +21,20 @@ const qkitMaybeSingle = vi.fn(
     data: { program_id: string; enabled: boolean } | null;
   }> => ({ data: null }),
 );
+const notifySettingsMaybeSingle = vi.fn(
+  async (): Promise<{
+    data: { customer_telegram_notify_enabled: boolean } | null;
+  }> => ({ data: null }),
+);
 vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({
-    from: vi.fn(() => ({
+    from: vi.fn((table: string) => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          maybeSingle: qkitMaybeSingle,
+          maybeSingle:
+            table === "vendor_notify_settings"
+              ? notifySettingsMaybeSingle
+              : qkitMaybeSingle,
         })),
       })),
     })),
@@ -47,10 +55,19 @@ vi.mock("@/app/dashboard/qkit-earn-settings", () => ({
   ),
 }));
 
+vi.mock("@/app/dashboard/customer-notify-settings", () => ({
+  CustomerNotifySettings: (props: { current: { enabled: boolean } | null }) => (
+    <div data-testid="customer-notify-settings">
+      current:{props.current ? String(props.current.enabled) : "none"}
+    </div>
+  ),
+}));
+
 import SettingsPage from "./page";
 
 beforeEach(() => {
   qkitMaybeSingle.mockReset().mockResolvedValue({ data: null });
+  notifySettingsMaybeSingle.mockReset().mockResolvedValue({ data: null });
 });
 
 describe("SettingsPage", () => {
@@ -79,5 +96,23 @@ describe("SettingsPage", () => {
     const panel = screen.getByTestId("qkit-earn-settings");
     expect(panel).toHaveTextContent("current:p1");
     expect(panel).toHaveTextContent("pro:true");
+  });
+
+  it("passes null to CustomerNotifySettings when the vendor has no vendor_notify_settings row", async () => {
+    render(await SettingsPage());
+
+    const panel = screen.getByTestId("customer-notify-settings");
+    expect(panel).toHaveTextContent("current:none");
+  });
+
+  it("passes the existing customer notify setting through when one is already saved", async () => {
+    notifySettingsMaybeSingle.mockResolvedValueOnce({
+      data: { customer_telegram_notify_enabled: false },
+    });
+
+    render(await SettingsPage());
+
+    const panel = screen.getByTestId("customer-notify-settings");
+    expect(panel).toHaveTextContent("current:false");
   });
 });

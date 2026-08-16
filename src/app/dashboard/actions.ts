@@ -442,3 +442,32 @@ export async function saveQkitEarnConfigAction(
   revalidatePath("/dashboard/settings");
   return { success: true, enabled, programId };
 }
+
+export type CustomerNotifySettingsResult = ActionResult<{ enabled: boolean }>;
+
+// Vendor-owned setting: whether redeemAction's customer redemption
+// confirmation (notifyCustomerByPhone) fires on this vendor's redemptions.
+// Not Pro-gated — every vendor's customers may already have a standing
+// merqo Telegram connection via qkit. Same upsert-on-vendor_id shape as
+// saveQkitEarnConfigAction above.
+export async function saveCustomerNotifySettingsAction(
+  formData: FormData,
+): Promise<CustomerNotifySettingsResult> {
+  const { user } = await requireVendor();
+  const enabled = formData.get("enabled") === "on";
+
+  const supabase = await createServerClient();
+  const { error } = await supabase
+    .from("vendor_notify_settings")
+    .upsert(
+      { vendor_id: user.id, customer_telegram_notify_enabled: enabled },
+      { onConflict: "vendor_id" },
+    );
+  if (error) {
+    console.error("saveCustomerNotifySettingsAction failed", error.message);
+    return { success: false, error: "Something went wrong." };
+  }
+
+  revalidatePath("/dashboard/settings");
+  return { success: true, enabled };
+}

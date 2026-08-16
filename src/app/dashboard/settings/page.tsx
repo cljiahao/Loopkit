@@ -2,22 +2,30 @@ import { requireVendor } from "@/features/auth";
 import { listPrograms, isPro } from "@/lib/program";
 import { createServerClient } from "@/lib/supabase/server";
 import { QkitEarnSettings } from "@/app/dashboard/qkit-earn-settings";
+import { CustomerNotifySettings } from "@/app/dashboard/customer-notify-settings";
 import { BackButton } from "@/components/back-button";
 
 export default async function SettingsPage() {
   const { user } = await requireVendor();
   const supabase = await createServerClient();
 
-  const [programs, pro, qkitEarnConfigResult] = await Promise.all([
-    listPrograms(),
-    isPro(),
-    supabase
-      .from("qkit_earn_config")
-      .select("program_id, enabled")
-      .eq("vendor_id", user.id)
-      .maybeSingle(),
-  ]);
+  const [programs, pro, qkitEarnConfigResult, notifySettingsResult] =
+    await Promise.all([
+      listPrograms(),
+      isPro(),
+      supabase
+        .from("qkit_earn_config")
+        .select("program_id, enabled")
+        .eq("vendor_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("vendor_notify_settings")
+        .select("customer_telegram_notify_enabled")
+        .eq("vendor_id", user.id)
+        .maybeSingle(),
+    ]);
   const qkitEarnConfig = qkitEarnConfigResult.data;
+  const notifySettings = notifySettingsResult.data;
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
@@ -48,6 +56,18 @@ export default async function SettingsPage() {
               : null
           }
           isPro={pro}
+        />
+      </div>
+      <div>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          Customer notifications
+        </h2>
+        <CustomerNotifySettings
+          current={
+            notifySettings
+              ? { enabled: notifySettings.customer_telegram_notify_enabled }
+              : null
+          }
         />
       </div>
     </div>
