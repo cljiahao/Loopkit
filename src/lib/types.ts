@@ -406,6 +406,24 @@ export interface Database {
         };
         Relationships: [];
       };
+      vendor_notify_settings: {
+        Row: {
+          vendor_id: string;
+          customer_telegram_notify_enabled: boolean;
+          updated_at: string;
+        };
+        Insert: {
+          vendor_id: string;
+          customer_telegram_notify_enabled?: boolean;
+          updated_at?: string;
+        };
+        Update: {
+          vendor_id?: string;
+          customer_telegram_notify_enabled?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
