@@ -1,15 +1,16 @@
 -- loopkit/supabase/tests/rls.test.sql
 -- RLS cross-vendor isolation — pgTAP, run with `supabase test db`.
 --
--- Scoped to the highest-risk vendor-facing write paths (loopkit has 36+
+-- Scoped to the highest-risk vendor-facing write paths (loopkit has 38+
 -- migrations; exhaustive coverage of every table is out of scope for this
 -- pass — see docs/superpowers/specs/2026-07-22-cicd-hook-harness-parity-design.md
 -- §3): loopkit.vendors (shared profile, for-all self policy), loopkit.upgrade_requests
--- (vendor-insert/select-own + admin-select-all), loopkit.feedback (self-insert-only).
+-- (vendor-insert/select-own + admin-select-all), loopkit.feedback (self-insert-only),
+-- loopkit.vendor_notify_settings (for-all own-row, same shape as vendors).
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(27);
+select plan(35);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -40,10 +41,17 @@ values
   ('00000000-0000-0000-0000-0000000e0001', '00000000-0000-0000-0000-00000000000a', 'pending'),
   ('00000000-0000-0000-0000-0000000e0002', '00000000-0000-0000-0000-00000000000b', 'pending');
 
+-- Vendor B's own vendor_notify_settings row (0038) — seeded here, under the
+-- superuser fixture role, so Vendor A's cross-read/update tests below exercise
+-- real row-level isolation instead of just an empty result set.
+insert into loopkit.vendor_notify_settings (vendor_id, customer_telegram_notify_enabled)
+values ('00000000-0000-0000-0000-00000000000b', false);
+
 -- ── RLS is actually enabled on every protected table ─────────────────────────
 select ok((select relrowsecurity from pg_class where oid = 'loopkit.vendors'::regclass), 'RLS on vendors');
 select ok((select relrowsecurity from pg_class where oid = 'loopkit.upgrade_requests'::regclass), 'RLS on upgrade_requests');
 select ok((select relrowsecurity from pg_class where oid = 'loopkit.feedback'::regclass), 'RLS on feedback');
+select ok((select relrowsecurity from pg_class where oid = 'loopkit.vendor_notify_settings'::regclass), 'RLS on vendor_notify_settings');
 
 -- ── Act as Vendor A ────────────────────────────────────────────────────────
 set local role authenticated;
@@ -76,6 +84,33 @@ with upd as (
   returning 1
 )
 select is((select count(*)::int from upd), 0, 'A''s update of B''s vendors row is silently filtered to 0 rows');
+
+-- vendor_notify_settings: for-all own-row (0038) — a vendor upserts and reads
+-- only their own row directly under RLS, unlike the retired service-role-only
+-- vendor_telegram/telegram_link_tokens tables.
+select lives_ok(
+  $$ insert into loopkit.vendor_notify_settings (vendor_id, customer_telegram_notify_enabled) values ('00000000-0000-0000-0000-00000000000a', true) $$,
+  'A can insert its own vendor_notify_settings row');
+select throws_ok(
+  $$ insert into loopkit.vendor_notify_settings (vendor_id, customer_telegram_notify_enabled) values ('00000000-0000-0000-0000-00000000000b', true) $$,
+  '42501',
+  null,
+  'A cannot insert a vendor_notify_settings row as B (WITH CHECK fails before the PK conflict is ever reached)');
+select isnt_empty(
+  $$ select 1 from loopkit.vendor_notify_settings where vendor_id = '00000000-0000-0000-0000-00000000000a' $$,
+  'A reads its own vendor_notify_settings row');
+select is_empty(
+  $$ select 1 from loopkit.vendor_notify_settings where vendor_id = '00000000-0000-0000-0000-00000000000b' $$,
+  'A cannot read B''s vendor_notify_settings row');
+select lives_ok(
+  $$ update loopkit.vendor_notify_settings set customer_telegram_notify_enabled = false where vendor_id = '00000000-0000-0000-0000-00000000000a' $$,
+  'A can update its own vendor_notify_settings row');
+with upd_notify as (
+  update loopkit.vendor_notify_settings set customer_telegram_notify_enabled = true
+  where vendor_id = '00000000-0000-0000-0000-00000000000b'
+  returning 1
+)
+select is((select count(*)::int from upd_notify), 0, 'A''s update of B''s vendor_notify_settings row is silently filtered to 0 rows');
 
 -- upgrade_requests: vendor inserts/selects own, cannot select another's
 select lives_ok(
@@ -151,6 +186,11 @@ select throws_ok(
   '42501',
   null,
   'anon cannot read upgrade_requests (no SELECT grant)');
+select throws_ok(
+  $$ select 1 from loopkit.vendor_notify_settings $$,
+  '42501',
+  null,
+  'anon cannot read vendor_notify_settings (no SELECT grant)');
 
 -- provision_default_program: service_role-only, never authenticated —
 -- this function bypasses create_program's own auth.uid()-based ownership
