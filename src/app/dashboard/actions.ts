@@ -314,13 +314,10 @@ export async function lookupAction(formData: FormData): Promise<LookupResult> {
   };
 }
 
-// Fire-and-forget alert on a successful redemption: a missing link (no
-// vendor_telegram row) skips silently, and any failure along the way (the
-// lookup itself, or the send) is caught and logged — this must NEVER affect
-// redeemAction's own returned result. vendor_telegram has no client SELECT
-// scoped-by-anything-else grant issue here since we already know the exact
-// vendor_id (auth.uid(), from requireVendor()), but the table has no client
-// write grant at all and reads are simplest done service-role alongside it.
+// Fire-and-forget alert: a missing link skips silently, and any failure
+// (lookup or send) is caught and logged — this must NEVER affect
+// redeemAction's own returned result. Service-role client since
+// vendor_telegram has no client write grant (migration 0036).
 async function notifyRedemptionOnTelegram(
   vendorId: string,
   card: { phone: string; stamp_count: number },
