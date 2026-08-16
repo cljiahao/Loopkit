@@ -185,13 +185,13 @@ describe("DashboardNav", () => {
     await user.click(await screen.findByText(/switch products/i));
 
     const qkit = await screen.findByRole("menuitem", { name: "qkit" });
-    expect(qkit).toHaveAttribute("href", "https://qkit-sg.vercel.app");
+    expect(qkit).toHaveAttribute("href", "https://qkit.merqo.io");
     const paykit = await screen.findByRole("menuitem", { name: "paykit" });
-    expect(paykit).toHaveAttribute("href", "https://paykit-sg.vercel.app");
+    expect(paykit).toHaveAttribute("href", "https://paykit.merqo.io");
     const stockkit = await screen.findByRole("menuitem", {
       name: "stockkit",
     });
-    expect(stockkit).toHaveAttribute("href", "https://stockkit-sg.vercel.app");
+    expect(stockkit).toHaveAttribute("href", "https://stockkit.merqo.io");
     expect(
       screen.queryByRole("menuitem", { name: "loopkit" }),
     ).not.toBeInTheDocument();

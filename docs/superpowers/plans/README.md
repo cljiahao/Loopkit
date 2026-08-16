@@ -71,6 +71,7 @@ self-describing dated slugs; no separate description column below.
 - `2026-08-15-loopkit-admin-pricing.md` — "loopkit Admin-Tunable Pricing Implementation Plan": adds the `loopkit.pricing` table (seeded at $4.99/mo), the `setPricing` admin action, `@merqo/ui`'s new `PricingForm` wired into `/admin`, and a live price display on `/dashboard/plan` — the manual upgrade-request grant flow is untouched.
 - `2026-08-16-telegram-reward-alerts.md` — "Telegram Reward Redemption Alerts Implementation Plan": adds `vendor_telegram`/`telegram_link_tokens` tables, a signature-verified webhook route, a dashboard "Connect Telegram" section, and wires a fire-and-forget alert into `redeemAction` — a failed/missing link never affects redemption itself.
 - `2026-08-16-customer-telegram-connect.md` — "Customer Telegram Connect Implementation Plan": adds a `notifyCustomerByPhone` helper and wires it into `redeemAction` as a sibling to the existing vendor Telegram alert — no new table, no new UI. Depends on merqo's own plan shipping first.
+- `2026-08-16-customer-notify-vendor-toggle.md` — "Customer Notify Vendor Toggle Implementation Plan": adds a `vendor_notify_settings` table (default true) and gates `redeemAction`'s `notifyCustomerByPhone` call on it, plus a settings-page switch.
 
 ## Parent
 

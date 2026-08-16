@@ -43,7 +43,10 @@ registry rather than a locally hardcoded list) pointing at the other three
 live Merqo kits (qkit, paykit, stockkit) — no live API call and no
 per-vendor filtering, since SSO already signs a vendor in on every kit and
 each kit's own dashboard handles a signed-in vendor without that kit's
-vendor row gracefully.
+vendor row gracefully. Bumped to v0.14.1: `KIT_FAMILY` had pointed each
+kit at its `-sg.vercel.app` deployment host, a different domain from the
+shared-session cookie's `.merqo.io` scope, bouncing a switching vendor
+into a login loop — now points at each kit's real `<kit>.merqo.io` domain.
 Every `/dashboard` page now shares one canonical `max-w-7xl` content
 container set at the layout level (`src/app/dashboard/layout.tsx`,
 matching qkit's `dashboard/layout.tsx` pattern) instead of each page

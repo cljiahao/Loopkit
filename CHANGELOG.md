@@ -6,8 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Bumped `@merqo/ui` to v0.14.1 — the kit-switcher (account menu's
+  "Switch products") was sending vendors to a kit's `-sg.vercel.app`
+  deployment host instead of its real `<kit>.merqo.io` domain, a
+  different host from `NEXT_PUBLIC_AUTH_COOKIE_DOMAIN=.merqo.io`'s
+  shared-session cookie scope — bouncing a switching vendor into a login
+  loop instead of a live session.
+
 ### Added
 
+- Spec+plan for a vendor-side customer-notify on/off toggle
+  (`docs/superpowers/specs/2026-08-16-customer-notify-vendor-toggle-design.md`),
+  a fast-follow on the customer Telegram connect work above — not yet
+  implemented.
 - Customer Telegram connect (reuse-only) — loopkit's half of the cross-kit
   Phase B+D rollout. `redeemAction` now also calls a new
   `notifyCustomerByPhone` (`src/lib/merqo-customer-notify.ts`) as a
