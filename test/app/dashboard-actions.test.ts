@@ -8,6 +8,7 @@ const {
   telegramMaybeSingleMock,
   createServiceClientMock,
   sendTelegramMessageMock,
+  notifyCustomerByPhoneMock,
 } = vi.hoisted(() => ({
   requireVendorMock: vi.fn(),
   getProgramByIdMock: vi.fn(),
@@ -16,6 +17,7 @@ const {
   telegramMaybeSingleMock: vi.fn(),
   createServiceClientMock: vi.fn(),
   sendTelegramMessageMock: vi.fn(),
+  notifyCustomerByPhoneMock: vi.fn(),
 }));
 
 vi.mock("@/features/auth", () => ({ requireVendor: requireVendorMock }));
@@ -39,6 +41,9 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("@/lib/telegram", () => ({
   sendTelegramMessage: sendTelegramMessageMock,
+}));
+vi.mock("@/lib/merqo-customer-notify", () => ({
+  notifyCustomerByPhone: notifyCustomerByPhoneMock,
 }));
 
 import {
@@ -215,6 +220,7 @@ describe("redeemAction Telegram alert", () => {
     telegramMaybeSingleMock.mockResolvedValue({ data: null, error: null });
     createServiceClientMock.mockResolvedValue({ from: telegramFromMock });
     sendTelegramMessageMock.mockResolvedValue(undefined);
+    notifyCustomerByPhoneMock.mockResolvedValue(undefined);
   });
 
   it("sends a Telegram alert when the redeeming vendor has a linked chat_id", async () => {
@@ -279,5 +285,31 @@ describe("redeemAction Telegram alert", () => {
     expect(res.success).toBe(true);
     expect(sendTelegramMessageMock).not.toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+
+  it("notifies the redeeming customer by phone via merqo alongside the vendor alert", async () => {
+    const res = await redeemAction(form({ card_id: "c1" }));
+
+    expect(res.success).toBe(true);
+    expect(notifyCustomerByPhoneMock).toHaveBeenCalledWith(
+      "v1",
+      "+6591234567",
+      expect.stringContaining("Reward redeemed"),
+    );
+  });
+
+  it("still returns success when notifyCustomerByPhone itself rejects", async () => {
+    notifyCustomerByPhoneMock.mockRejectedValue(new Error("merqo down"));
+
+    const res = await redeemAction(form({ card_id: "c1" }));
+
+    expect(res.success).toBe(true);
+    if (res.success) {
+      expect(res.card).toEqual({
+        id: "c1",
+        phone: "+6591234567",
+        stamp_count: 0,
+      });
+    }
   });
 });

@@ -12,6 +12,7 @@ import { isCardExpired } from "@/lib/expiry";
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { disconnectTelegram } from "@/lib/telegram-link";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { notifyCustomerByPhone } from "@/lib/merqo-customer-notify";
 import type { ActionResult } from "@/lib/action-result";
 import type { Progress } from "@/lib/engine/types";
 import type { Json } from "@/lib/types";
@@ -372,6 +373,20 @@ export async function redeemAction(formData: FormData): Promise<CardResult> {
     phone: card.phone,
     stamp_count: card.stamp_count,
   });
+
+  // Sibling fire-and-forget call: notifyCustomerByPhone already catches its
+  // own errors internally, but this wraps the call site too so a mocked or
+  // unforeseen rejection still can't change redeemAction's own result —
+  // same "never affects redemption itself" rule as the vendor alert above.
+  try {
+    await notifyCustomerByPhone(
+      user.id,
+      card.phone,
+      `Reward redeemed: ${card.stamp_count} stamps used. See you again soon!`,
+    );
+  } catch (err) {
+    console.error("redeemAction: customer notify failed", err);
+  }
 
   return {
     success: true,
