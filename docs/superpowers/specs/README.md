@@ -64,6 +64,7 @@ below.
 - `2026-08-16-telegram-reward-alerts-design.md` — "Telegram Reward Redemption Alerts — Design": a vendor connects Telegram once (deep-link QR, own bot/webhook), then gets a message the moment a customer redeems a completed reward — loopkit's half of the cross-kit Telegram Phase A rollout, triggered from `redeemAction` (verified as the live redemption path, not the unused `redeemOldestVoucher`).
 - `2026-08-16-customer-telegram-connect-design.md` — "Customer Telegram Connect — Design": loopkit's reuse-only half of Phase B+D — `redeemAction` checks whether the redeeming customer's phone matches an existing merqo-owned Telegram connection (from connecting via qkit) and sends a redemption confirmation. No new UI, no new table, no connect flow.
 - `2026-08-16-customer-notify-vendor-toggle-design.md` — "Customer Notify Vendor Toggle — Design": fast-follow — a new `vendor_notify_settings` table (default on) letting a vendor turn off the customer redemption-confirmation message without touching the customer's own consent.
+- `2026-08-16-vendor-telegram-connect-design.md` — "Vendor Telegram Connect (Phase A2) — Design": retires loopkit's own Telegram bot (Phase A) in favor of merqo's shared one; `notifyRedemptionOnTelegram` now calls merqo's `notify-vendor` endpoint. Deletion-heavy spec; no data carries over, already-linked vendors must reconnect.
 
 ## Parent
 
