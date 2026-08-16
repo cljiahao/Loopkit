@@ -22,7 +22,7 @@ to `src/app/api/tour-seen/` rather than a Server Action, so the write
 survives not just a mid-tour refresh but a hard-navigation page unload,
 which mattered because `@merqo/ui`'s shared `DashboardNav` defaulted to
 plain `<a>` nav links (root cause, now fixed — see below). Migrated onto
-the shared `@merqo/ui` component package (v0.13.0, `package.json`): the
+the shared `@merqo/ui` component package (v0.14.0, `package.json`): the
 dashboard nav/account dropdown, `useAsyncAction`, `InfoTooltip`,
 `ImageUploader`, `DashboardTour`, `PricingForm` (the `/admin` pricing
 section, `src/app/admin/pricing-form-client.tsx`), the landing page's
@@ -37,11 +37,13 @@ plain `<a>` for its nav links and the `AccountMenu` it composes
 internally (loopkit has no standalone `AccountMenu` usage) — dashboard
 nav clicks are client-side transitions again, not full-page reloads.
 The account dropdown also renders a "Switch products" submenu
-(`@merqo/ui` v0.13.0's `switchKits` prop) pointing at the other three
-live Merqo kits (qkit, paykit, stockkit) — a hardcoded static list, no
-live API call and no per-vendor filtering, since SSO already signs a
-vendor in on every kit and each kit's own dashboard handles a
-signed-in vendor without that kit's vendor row gracefully.
+(`@merqo/ui` v0.13.0's `switchKits` prop, resolved via v0.14.0's
+`getSwitchKits("loopkit")` helper against its centralized `KIT_FAMILY`
+registry rather than a locally hardcoded list) pointing at the other three
+live Merqo kits (qkit, paykit, stockkit) — no live API call and no
+per-vendor filtering, since SSO already signs a vendor in on every kit and
+each kit's own dashboard handles a signed-in vendor without that kit's
+vendor row gracefully.
 Every `/dashboard` page now shares one canonical `max-w-7xl` content
 container set at the layout level (`src/app/dashboard/layout.tsx`,
 matching qkit's `dashboard/layout.tsx` pattern) instead of each page
