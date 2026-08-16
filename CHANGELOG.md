@@ -45,10 +45,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   are gone — `MERQO_BASE_URL`/`MERQO_CUSTOMER_SECRET` (already used by the
   customer-notify call below) now also power the vendor alert. Depends on
   merqo's own Phase A2 rollout (PR #51) already live.
-- Spec+plan for a vendor-side customer-notify on/off toggle
-  (`docs/superpowers/specs/2026-08-16-customer-notify-vendor-toggle-design.md`),
-  a fast-follow on the customer Telegram connect work above — not yet
-  implemented.
+- Customer-notify vendor toggle — a vendor-level on/off switch (default
+  on, opt-out) for `redeemAction`'s customer redemption-confirmation
+  message, a fast-follow on the customer Telegram connect work above. New
+  `loopkit.vendor_notify_settings` table (migration `0038`,
+  `customer_telegram_notify_enabled` boolean, default `true`) with a
+  `for all` own-row RLS policy and `select, insert, update` granted
+  directly to `authenticated` — a vendor upserts their own row under RLS
+  from a server action, not service-role-only like `vendor_telegram`/
+  `telegram_link_tokens` used to be. `redeemAction` reads the row via a
+  new `customerNotifyEnabled` helper and skips `notifyCustomerByPhone`
+  only when a row exists AND the flag is explicitly `false` — a vendor
+  who's never visited `/dashboard/settings` (no row at all) still gets
+  the confirmation, resolved in application code rather than relying on
+  the column default alone. New `saveCustomerNotifySettingsAction`
+  (same upsert-on-`vendor_id` shape as `saveQkitEarnConfigAction`) backs
+  a new switch in `/dashboard/settings`
+  (`src/app/dashboard/customer-notify-settings.tsx`), not Pro-gated.
+  See `docs/superpowers/specs/2026-08-16-customer-notify-vendor-toggle-design.md`.
 - Customer Telegram connect (reuse-only) — loopkit's half of the cross-kit
   Phase B+D rollout. `redeemAction` now also calls a new
   `notifyCustomerByPhone` (`src/lib/merqo-customer-notify.ts`) as a
