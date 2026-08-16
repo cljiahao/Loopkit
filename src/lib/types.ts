@@ -265,45 +265,6 @@ export interface Database {
         };
         Relationships: [];
       };
-      vendor_telegram: {
-        Row: {
-          vendor_id: string;
-          chat_id: number;
-          linked_at: string;
-        };
-        Insert: {
-          vendor_id: string;
-          chat_id: number;
-          linked_at?: string;
-        };
-        Update: {
-          vendor_id?: string;
-          chat_id?: number;
-          linked_at?: string;
-        };
-        Relationships: [];
-      };
-      telegram_link_tokens: {
-        Row: {
-          token: string;
-          vendor_id: string;
-          expires_at: string;
-          created_at: string;
-        };
-        Insert: {
-          token: string;
-          vendor_id: string;
-          expires_at: string;
-          created_at?: string;
-        };
-        Update: {
-          token?: string;
-          vendor_id?: string;
-          expires_at?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
       vendors: {
         Row: {
           vendor_id: string;

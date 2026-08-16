@@ -40,16 +40,14 @@ src/app/c/              — customer-facing card view (QR entry point)
 src/app/admin/          — Merqo-team admin console
 src/app/setup/          — vendor onboarding
 src/app/login/, auth/   — auth pages
-src/app/api/            — route handlers (merqo metrics, Telegram webhook, etc.)
-src/app/api/telegram/webhook/ — Telegram Bot API webhook (signature-verified, no session)
+src/app/api/            — route handlers (merqo metrics, etc.)
 src/proxy.ts            — Supabase session refresh + /dashboard,/setup guard (Next 16)
 src/lib/engine/         — stamp/points/lucky-reward core logic
 src/lib/program.ts      — program CRUD + rules
 src/lib/cards.ts        — customer card state
 src/lib/loyalty.ts      — stamping/redemption flow
 src/lib/stats.ts        — vendor-facing metrics
-src/lib/telegram.ts     — sendTelegramMessage + generateLinkToken (Bot API, no SDK)
-src/lib/telegram-link.ts — service-role link-token issuing + disconnect for Connect Telegram
+src/lib/merqo-customer-notify.ts — notifyCustomerByPhone/notifyVendor: kit → merqo HTTP calls (customer Telegram reuse + vendor alerts via merqo's shared bot)
 src/lib/merqo-vendor-status.ts — reports status/metrics to merqo over HTTP
 src/lib/supabase/       — browser / server / service clients + middleware helper
 src/lib/types.ts        — DB types (mirror of supabase/migrations)
@@ -170,18 +168,20 @@ of this route (see "AI Harness" above).
   (design: `docs/superpowers/specs/2026-07-07-loopkit-core-design.md`).
 - Later features are tracked as further specs/plans in the same
   `docs/superpowers/{specs,plans}/` dirs (v2 phases, workspace phases, etc.).
-- **Telegram reward-redemption alerts** (2026-08-16, Phase A of the
-  cross-kit Telegram integration design): a vendor connects Telegram once
-  via a deep-link QR in `/dashboard/settings`, then `redeemAction`
-  (`src/app/dashboard/actions.ts`) fires a Telegram message on every
-  reward redemption. `loopkit.vendor_telegram`/`loopkit.telegram_link_tokens`
-  (migration `0036`) have no client write grant — every write goes through
-  the service-role client (the webhook route on link, the settings page's
-  token-issuing/disconnect actions). A missing link or a send failure is
+- **Vendor Telegram Connect / Phase A2** (2026-08-16, supersedes Phase A):
+  loopkit no longer runs its own Telegram bot. Phase A (deep-link QR in
+  `/dashboard/settings`, `src/lib/telegram.ts`/`telegram-link.ts`, the
+  `src/app/api/telegram/webhook/` route, `loopkit.vendor_telegram`/
+  `loopkit.telegram_link_tokens` from migration `0036`) was retired in
+  full — those tables were dropped by migration `0037`, and every file
+  above was deleted. `redeemAction`'s vendor alert
+  (`notifyRedemptionOnTelegram`, `src/app/dashboard/actions.ts`) now calls
+  `notifyVendor` (`src/lib/merqo-customer-notify.ts`), which posts to
+  merqo's shared bot via `POST /api/merqo/notify-vendor`. A vendor who'd
+  linked loopkit's own bot must reconnect once via merqo's own profile
+  page — no data carried over. A missing connection or a send failure is
   caught and logged, never surfaces to `redeemAction`'s own result. See
-  `docs/superpowers/specs/2026-08-16-telegram-reward-alerts-design.md` and
-  `docs/DEPLOY.md`'s "Telegram bot setup" for the manual one-time
-  `setWebhook` step.
+  `docs/superpowers/specs/2026-08-16-vendor-telegram-connect-design.md`.
 - **Customer Telegram connect (2026-08-16), loopkit's reuse-only half of
   the cross-kit Phase B+D design:** `redeemAction` also calls
   `notifyCustomerByPhone` (`src/lib/merqo-customer-notify.ts`) as a

@@ -10,7 +10,6 @@ import { applyVisit, getProgress, resolvePlantState } from "@/lib/engine";
 import { plantStrategy, type PlantConfig } from "@/lib/engine/plant";
 import { isCardExpired } from "@/lib/expiry";
 import { createServerClient } from "@/lib/supabase/server";
-import { disconnectTelegram } from "@/lib/telegram-link";
 import {
   notifyVendor,
   notifyCustomerByPhone,
@@ -422,24 +421,4 @@ export async function saveQkitEarnConfigAction(
 
   revalidatePath("/dashboard/settings");
   return { success: true, enabled, programId };
-}
-
-// Disconnect the vendor's linked Telegram chat: deletes their vendor_telegram
-// row (service-role, since that table has no client write grant at all).
-// Idempotent — disconnecting an already-disconnected vendor just no-ops.
-export async function disconnectTelegramAction(): Promise<ActionResult> {
-  const { user } = await requireVendor();
-
-  try {
-    await disconnectTelegram(user.id);
-  } catch (err) {
-    console.error(
-      "disconnectTelegramAction failed",
-      err instanceof Error ? err.message : err,
-    );
-    return { success: false, error: "Something went wrong. Try again." };
-  }
-
-  revalidatePath("/dashboard/settings");
-  return { success: true };
 }

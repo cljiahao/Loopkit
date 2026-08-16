@@ -9,7 +9,7 @@ const NOTIFY_TIMEOUT_MS = 3000;
  * `MERQO_BASE_URL`/`MERQO_CUSTOMER_SECRET` no-ops, and a non-2xx response,
  * a timeout, or a network error is caught and logged — callers
  * (`redeemAction`) never let this affect their own result, same rule as
- * `sendTelegramMessage`.
+ * `notifyVendor` below.
  */
 export async function notifyCustomerByPhone(
   vendorId: string,
