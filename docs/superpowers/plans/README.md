@@ -73,6 +73,7 @@ self-describing dated slugs; no separate description column below.
 - `2026-08-16-customer-telegram-connect.md` — "Customer Telegram Connect Implementation Plan": adds a `notifyCustomerByPhone` helper and wires it into `redeemAction` as a sibling to the existing vendor Telegram alert — no new table, no new UI. Depends on merqo's own plan shipping first.
 - `2026-08-16-customer-notify-vendor-toggle.md` — "Customer Notify Vendor Toggle Implementation Plan": adds a `vendor_notify_settings` table (default true) and gates `redeemAction`'s `notifyCustomerByPhone` call on it, plus a settings-page switch.
 - `2026-08-16-vendor-telegram-connect.md` — "Vendor Telegram Connect (Phase A2) Implementation Plan": deletes loopkit's own Telegram bot/tables/webhook/settings section and rewires `notifyRedemptionOnTelegram` to call merqo's `notify-vendor` endpoint. Depends on merqo's own Phase A2 plan shipping first.
+- `2026-08-16-shared-plan-comparison-table.md` — "Shared Plan Comparison Table Implementation Plan": migrates loopkit's `/dashboard/plan` page onto the shared `@merqo/ui` `PlanComparisonTable` component. Depends on qkit's own plan building and tagging it first.
 
 ## Parent
 
