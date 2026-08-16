@@ -214,6 +214,12 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      race, idempotent on `loopkit.programs`. Backs
      `POST /api/merqo/vendor-provision`. Safe to re-run.
 
+   - apply `0036_vendor_telegram.sql` — adds `loopkit.vendor_telegram`
+     (own-row `SELECT` for `authenticated`, no client write grant) and
+     `loopkit.telegram_link_tokens` (RLS enabled, zero policies —
+     service-role only), backing the Telegram reward-redemption alerts
+     feature (see the "Telegram bot setup" note below). Safe to re-run.
+
    - **Optional — rate limiting on the public `/c` surface.** The card-check
      action is throttled per-IP only if an Upstash Redis is configured. Create a
      free Upstash Redis and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
@@ -244,9 +250,39 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
    - `SUPABASE_SECRET_KEY` = service_role key
    - `NEXT_PUBLIC_BASE_URL` = `https://<loopkit-domain>`
    - `MERQO_METRICS_SECRET` = a fresh strong secret (generate one; used in step C)
+   - `TELEGRAM_BOT_TOKEN` / `TELEGRAM_WEBHOOK_SECRET` / `TELEGRAM_BOT_USERNAME`
+     — optional; see "Telegram bot setup" below. Leave all three unset to
+     ship without the feature (`sendTelegramMessage` no-ops, and the
+     settings page shows "not set up yet" instead of a broken deep link).
 3. Deploy. **Smoke**: `/` (landing) loads; `/login` → sign in → `/setup` (first
    run) → set up a card → `/dashboard` → stamp a phone; `/c?p=<programId>` shows
    the customer's progress.
+
+### Telegram bot setup (one-time, manual)
+
+loopkit's Telegram reward-redemption alerts (migration `0036`,
+`src/lib/telegram.ts`, `src/app/api/telegram/webhook/route.ts`) need a bot
+registered with Telegram's BotFather and its webhook pointed at this
+deploy — neither step is automated by the app or its migrations:
+
+1. Talk to [@BotFather](https://t.me/BotFather), `/newbot`, name it (e.g.
+   "loopkit Alerts"). It returns a bot token — set as `TELEGRAM_BOT_TOKEN`
+   in Vercel. The bot's `@username` (without the `@`) is
+   `TELEGRAM_BOT_USERNAME`.
+2. Pick a random strong string for `TELEGRAM_WEBHOOK_SECRET` (this is
+   **not** the bot token — it's the value Telegram echoes back on every
+   webhook call for `route.ts` to verify) and set it in Vercel too.
+3. After deploying, register the webhook (once — not part of any
+   migration or app code):
+
+   ```bash
+   curl "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook" \
+     -d "url=https://<loopkit-domain>/api/telegram/webhook" \
+     -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>"
+   ```
+
+   → `{"ok":true,"result":true,...}`. Re-run it any time the domain or the
+   secret changes.
 
 ## C. Attach to merqo
 

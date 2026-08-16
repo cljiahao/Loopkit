@@ -9,7 +9,9 @@ import { rewardReady } from "@/lib/loyalty";
 import { applyVisit, getProgress, resolvePlantState } from "@/lib/engine";
 import { plantStrategy, type PlantConfig } from "@/lib/engine/plant";
 import { isCardExpired } from "@/lib/expiry";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServerClient, createServiceClient } from "@/lib/supabase/server";
+import { disconnectTelegram } from "@/lib/telegram-link";
+import { sendTelegramMessage } from "@/lib/telegram";
 import type { ActionResult } from "@/lib/action-result";
 import type { Progress } from "@/lib/engine/types";
 import type { Json } from "@/lib/types";
@@ -312,10 +314,43 @@ export async function lookupAction(formData: FormData): Promise<LookupResult> {
   };
 }
 
+// Fire-and-forget alert: a missing link skips silently, and any failure
+// (lookup or send) is caught and logged — this must NEVER affect
+// redeemAction's own returned result. Service-role client since
+// vendor_telegram has no client write grant (migration 0036).
+async function notifyRedemptionOnTelegram(
+  vendorId: string,
+  card: { phone: string; stamp_count: number },
+): Promise<void> {
+  try {
+    const service = await createServiceClient();
+    const { data: link, error } = await service
+      .from("vendor_telegram")
+      .select("chat_id")
+      .eq("vendor_id", vendorId)
+      .maybeSingle();
+    if (error) {
+      console.error(
+        "redeemAction: vendor_telegram lookup failed",
+        error.message,
+      );
+      return;
+    }
+    if (!link) return;
+
+    await sendTelegramMessage(
+      link.chat_id,
+      `Reward redeemed for ${card.phone} (${card.stamp_count} stamps).`,
+    );
+  } catch (err) {
+    console.error("redeemAction: telegram alert failed", err);
+  }
+}
+
 // Redeem a full card: resets stamps to 0 and logs the reward. Returns the
 // reset card so the UI can replace the reward-ready block with a confirmation.
 export async function redeemAction(formData: FormData): Promise<CardResult> {
-  await requireVendor();
+  const { user } = await requireVendor();
 
   const parsed = z.string().min(1).safeParse(formData.get("card_id"));
   if (!parsed.success) {
@@ -332,6 +367,12 @@ export async function redeemAction(formData: FormData): Promise<CardResult> {
   }
 
   revalidatePath("/dashboard");
+
+  await notifyRedemptionOnTelegram(user.id, {
+    phone: card.phone,
+    stamp_count: card.stamp_count,
+  });
+
   return {
     success: true,
     card: { id: card.id, phone: card.phone, stamp_count: card.stamp_count },
@@ -378,4 +419,24 @@ export async function saveQkitEarnConfigAction(
 
   revalidatePath("/dashboard/settings");
   return { success: true, enabled, programId };
+}
+
+// Disconnect the vendor's linked Telegram chat: deletes their vendor_telegram
+// row (service-role, since that table has no client write grant at all).
+// Idempotent — disconnecting an already-disconnected vendor just no-ops.
+export async function disconnectTelegramAction(): Promise<ActionResult> {
+  const { user } = await requireVendor();
+
+  try {
+    await disconnectTelegram(user.id);
+  } catch (err) {
+    console.error(
+      "disconnectTelegramAction failed",
+      err instanceof Error ? err.message : err,
+    );
+    return { success: false, error: "Something went wrong. Try again." };
+  }
+
+  revalidatePath("/dashboard/settings");
+  return { success: true };
 }

@@ -49,7 +49,12 @@ container set at the layout level (`src/app/dashboard/layout.tsx`,
 matching qkit's `dashboard/layout.tsx` pattern) instead of each page
 picking its own width — a page whose content genuinely reads better
 narrower (profile, counter, plan, settings) still nests its own
-narrower wrapper `<div>` inside that shared container. See
+narrower wrapper `<div>` inside that shared container. `/dashboard/settings`
+also gained a "Connect Telegram" section: a vendor scans a deep-link QR
+once (`src/app/dashboard/settings/connect-telegram-section.tsx`, reusing
+the existing `src/lib/qr.ts` renderer), and every reward redemption
+(`redeemAction`) then fires a Telegram message to their linked chat —
+see "Data model" below and `docs/DEPLOY.md`'s "Telegram bot setup". See
 `CHANGELOG.md` for the latest changes, including deduplication of the
 shared bearer-auth and Merqo-RPC-call helpers and the addition of
 templateCentral 5.13.0's comment-hygiene enforcement layer.
@@ -123,8 +128,11 @@ src/lib/program.ts      — program CRUD + rules
 src/lib/cards.ts        — customer card state
 src/lib/loyalty.ts      — stamping/redemption flow
 src/lib/stats.ts        — vendor-facing metrics
+src/lib/telegram.ts     — sendTelegramMessage + generateLinkToken (Bot API, no SDK)
+src/lib/telegram-link.ts — service-role link-token issuing + disconnect for Connect Telegram
 src/lib/merqo-vendor-status.ts — reports status/metrics to merqo over HTTP
 src/lib/supabase/       — browser / server / service clients (schema: loopkit)
+src/app/api/telegram/webhook/ — Telegram Bot API webhook (signature-verified, no session)
 src/components/         — wheel, scratch-card, flame-layers, cup, points-bar, stamp-dots, etc.
 supabase/migrations/    — SQL schema + RLS
 ```
@@ -169,6 +177,18 @@ reads the live value in place of the previous no-price copy. The manual
 "ask us to upgrade" grant flow (`requestUpgrade`/`UpgradeCta`/
 `setVendorPro`/`resolveUpgradeRequest`) is unchanged — this is a display
 change, not real Stripe billing.
+
+Telegram reward-redemption alerts (migration `0036`, `loopkit.vendor_telegram`/
+`loopkit.telegram_link_tokens`) are loopkit's half of the cross-kit Telegram
+Phase A rollout: a vendor connects Telegram once via a deep-link QR in
+`/dashboard/settings`, then `redeemAction` fires a message to their linked
+chat on every reward redemption. Both tables have RLS enabled;
+`vendor_telegram` grants `authenticated` `SELECT` on the caller's own row
+only, `telegram_link_tokens` has zero client policies/grants at all — every
+write goes through the service-role client (the webhook route on link, the
+settings page's token-issuing/disconnect actions). A missing link or a send
+failure is caught and logged, never affects `redeemAction`'s own returned
+result. See `docs/superpowers/specs/2026-08-16-telegram-reward-alerts-design.md`.
 
 Separately, a Pro vendor can let customers earn a stamp from a completed
 qkit order (`src/app/dashboard/qkit-earn-settings.tsx`) — this is a pull-model

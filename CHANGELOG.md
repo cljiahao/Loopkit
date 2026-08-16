@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Telegram reward-redemption alerts — loopkit's half of the cross-kit
+  Telegram Phase A rollout. A vendor connects Telegram once from
+  `/dashboard/settings` via a deep-link QR code (reusing the existing
+  `src/lib/qr.ts` QR renderer, no new QR library); every reward
+  redemption then fires a message to their linked chat via
+  `redeemAction`. New `loopkit.vendor_telegram`/`loopkit.telegram_link_
+tokens` tables (migration `0036`, no client write grant — every write
+  goes through the service-role webhook route or the settings page's
+  token-issuing/disconnect actions), a signature-verified webhook route
+  (`src/app/api/telegram/webhook/`), and `src/lib/telegram.ts`/
+  `src/lib/telegram-link.ts`. A missing link, a lookup failure, or a
+  send failure is caught and logged — never affects `redeemAction`'s own
+  returned result. `TELEGRAM_BOT_TOKEN`/`TELEGRAM_BOT_USERNAME`/
+  `TELEGRAM_WEBHOOK_SECRET` are optional; see `docs/DEPLOY.md`'s
+  "Telegram bot setup" for the manual one-time `setWebhook` step.
 - Cross-kit customer identity substrate: `sync_customer_on_card`/
   `sync_customer_on_activity` (migration `0035`) now also write to the
   shared `merqo.customers` table (merqo migration `0018`) alongside the

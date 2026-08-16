@@ -61,6 +61,7 @@ below.
 - `2026-07-25-loyalty-card-animation-polish-design.md`
 - `2026-07-27-card-visuals-phase2-design.md`
 - `2026-08-15-loopkit-admin-pricing-design.md` — "loopkit Admin-Tunable Pricing — Design": launches loopkit's first-ever live Pro price ($4.99/mo, admin-tunable from `/admin` with no redeploy) via a single-row `loopkit.pricing` table and a `setPricing` server action, replacing `/dashboard/plan`'s current "no card needed yet" copy with a real DB-sourced price while the existing manual "ask us" grant flow stays unchanged.
+- `2026-08-16-telegram-reward-alerts-design.md` — "Telegram Reward Redemption Alerts — Design": a vendor connects Telegram once (deep-link QR, own bot/webhook), then gets a message the moment a customer redeems a completed reward — loopkit's half of the cross-kit Telegram Phase A rollout, triggered from `redeemAction` (verified as the live redemption path, not the unused `redeemOldestVoucher`).
 
 ## Parent
 
