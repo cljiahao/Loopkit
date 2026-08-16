@@ -182,5 +182,19 @@ of this route (see "AI Harness" above).
   `docs/superpowers/specs/2026-08-16-telegram-reward-alerts-design.md` and
   `docs/DEPLOY.md`'s "Telegram bot setup" for the manual one-time
   `setWebhook` step.
+- **Customer Telegram connect (2026-08-16), loopkit's reuse-only half of
+  the cross-kit Phase B+D design:** `redeemAction` also calls
+  `notifyCustomerByPhone` (`src/lib/merqo-customer-notify.ts`) as a
+  sibling to the vendor alert above, posting to merqo's
+  `/api/merqo/notify-customer` endpoint in its `phone` lookup mode (never
+  `notify_ref` — loopkit has no prior connect-token round to attach one
+  to). This only reaches a customer who already has a **standing**
+  Telegram connection with merqo from having connected via qkit _with a
+  matching phone number_ — a Telegram-only qkit connection (no phone) or
+  a customer who never connected at all is a silent no-op, not a bug to
+  work around. No new UI, no new table, no connect flow on loopkit's side.
+  `MERQO_BASE_URL`/`MERQO_CUSTOMER_SECRET` are optional; a missing value
+  no-ops the same way the Telegram vars above do. See
+  `docs/superpowers/specs/2026-08-16-customer-telegram-connect-design.md`.
 
 <!-- [[post-harness]] — reserved for trace capture and meta-harness integration -->

@@ -25,6 +25,7 @@ profile/status).
 - `image-upload-adapter.ts` — `uploadLoopkitImage`: `@merqo/ui`'s `ImageUploader.onUpload` implementation, wrapping the app's own Supabase Storage upload call (a plain function, not a factory — `@merqo/ui` builds the object path internally from `pathPrefix`, so there's nothing vendor-scoped left to bind at creation time)
 - `list-all-users.ts` — `listAllUsers`: paginates `supabase.auth.admin.listUsers()` (1000/page) to completion, mirroring a single call's `{data, error}` shape; shared by `admin-data.ts` and the `vendor-status` route, both of which independently made the same page-1-only mistake before this was extracted
 - `loyalty.ts` — `rewardReady`: one-line pure check that a stamp count has met the program's requirement
+- `merqo-customer-notify.ts` — `notifyCustomerByPhone(vendorId, phone, message)`: fire-and-forget `POST ${MERQO_BASE_URL}/api/merqo/notify-customer` in merqo's `phone` lookup mode (never `notify_ref` — loopkit's redemption event has no prior connect-token round), bearer `MERQO_CUSTOMER_SECRET`, `AbortSignal.timeout(3000)`; no-ops when either env var is unset, and catches/logs (never throws) a non-2xx response, a timeout, or a network error — same "never affects the caller's result" contract as `telegram.ts`'s `sendTelegramMessage` (test: `merqo-customer-notify.test.ts`)
 - `merqo-auth.ts` — `bearerOk(request, envVarName)`: shared constant-time Bearer-token check against a named env var, used by every `/api/merqo/*` route handler (`MERQO_METRICS_SECRET` for the read/reporting routes, `MERQO_PROVISION_SECRET` for the write route); `provisionBearerOk` is a thin wrapper pinned to `MERQO_PROVISION_SECRET` (test: `test/lib/merqo-auth.test.ts`)
 - `merqo-rpc.ts` — `callMerqoRpc<TArgs, TReturn, Db, SchemaName>`: shared `.schema("merqo").rpc(...)` call plumbing (cast the caller's typed client across schemas, call, throw with RPC name + Postgres error message on failure) used by `merqo-support.ts`, `merqo-vendor-feedback.ts`, and `merqo-vendor-profile.ts` — each still owns its own Args/Return type mirror and public function signature, only the RPC-call mechanics are shared
 - `merqo-vendor-profile.test.ts` — vitest tests for `getOrCreateVendorProfile`: asserts the `.schema("merqo").rpc(...)` call shape and that a Postgres error is rethrown with context
@@ -68,7 +69,10 @@ service-role client for the cross-vendor `/admin` console.
 route handler, the two service-role callers of `auth.admin.listUsers()`.
 `merqo-vendor-profile.ts`/`merqo-vendor-status.ts`/`metrics.ts` form the HTTP
 contract with the merqo parent app, reusing the same Supabase client
-generically across schemas. `merqo-vendor-profile.ts`, `merqo-vendor-feedback.ts`,
+generically across schemas. `merqo-customer-notify.ts` is a different kind
+of cross-kit call — a plain HTTP `fetch` (kit → merqo, not merqo → kit),
+called by `redeemAction` (`src/app/dashboard/actions.ts`) as a sibling to
+its existing `sendTelegramMessage` vendor alert. `merqo-vendor-profile.ts`, `merqo-vendor-feedback.ts`,
 and `merqo-support.ts` share their `.schema("merqo").rpc(...)` call plumbing
 via `merqo-rpc.ts`'s `callMerqoRpc`; the three `/api/merqo/*` GET routes
 (`metrics`, `vendor-status`, `qkit-earn-config`) and the `vendor-provision`
