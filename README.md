@@ -134,7 +134,7 @@ supabase/migrations/    — SQL schema + RLS
 Owns the `loopkit` schema in the shared Merqo Supabase project. All
 Supabase clients are scoped to `db: { schema: "loopkit" }` — loopkit never
 reads/writes another kit's schema (e.g. qkit's) directly. Cross-kit data
-goes over HTTP (the merqo metrics API), except three deliberate exceptions,
+goes over HTTP (the merqo metrics API), except four deliberate exceptions,
 all same-Postgres-instance `SECURITY DEFINER` RPCs, never a raw
 cross-schema query: a vendor's stall name and social links live in the
 shared `merqo.vendor_profile` table (`get_or_create_vendor_profile`/
@@ -143,12 +143,20 @@ feedback (the dashboard's "Share feedback" sheet) is submitted straight
 into the shared `merqo.vendor_feedback` table (`submit_vendor_feedback`, see
 `src/lib/merqo-vendor-feedback.ts`) instead of a local table — loopkit's own
 `loopkit.feedback` table is now historical-only (one-time backfilled into
-`merqo.vendor_feedback` by migration `0030`); and the dashboard's "Get
+`merqo.vendor_feedback` by migration `0030`); the dashboard's "Get
 help" Sheet (`@merqo/ui`'s `HelpSheet`, opened from `dashboard-nav.tsx`'s
 `AccountMenu`) submits straight into the shared `merqo.support_messages`
 inbox (`submit_support_message`, see `src/lib/merqo-support.ts`) —
 triaged from merqo's own cross-kit admin console, with no loopkit-side
-table at all. See
+table at all; and customer identity is mirrored into the shared
+`merqo.customers` table (migration `0035`) by the same two SQL triggers
+that already sync loopkit's own local `loopkit.customers` table on card/
+stamp-event inserts (`loopkit.sync_customer_on_card`/
+`sync_customer_on_activity`, called from a trigger body, not application
+code) — additive only, loopkit's own dashboard still reads
+`loopkit.customers` directly, and the write is guarded to silently no-op
+if `merqo.upsert_customer` doesn't exist (a loopkit-only local `supabase
+start` has no merqo schema at all). See
 `docs/business/2026-07-21-profile-settings-page-standard.md` (in the parent
 `Merqo Business/docs/` repo) for the locked cross-kit pattern.
 

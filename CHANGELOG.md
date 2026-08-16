@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Cross-kit customer identity substrate: `sync_customer_on_card`/
+  `sync_customer_on_activity` (migration `0035`) now also write to the
+  shared `merqo.customers` table (merqo migration `0018`) alongside the
+  existing local `loopkit.customers` write. Additive only — loopkit's own
+  dashboard keeps reading `loopkit.customers` exactly as before; no new UI
+  yet. Guarded against loopkit-only local/CI `supabase start` (no merqo
+  schema present) the same way `0030_vendor_feedback_backfill.sql` is.
 - "Switch products" submenu in the dashboard account menu (via `@merqo/ui`
   v0.13.0's `switchKits` prop), letting a signed-in vendor jump straight to
   the other live Merqo kits — qkit, paykit, stockkit — since SSO via the
