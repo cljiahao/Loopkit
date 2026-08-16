@@ -17,6 +17,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Vendor Telegram Connect (Phase A2) — retires loopkit's own Telegram bot
+  in favor of merqo's shared one. `redeemAction`'s vendor alert
+  (`notifyRedemptionOnTelegram`) now calls a new `notifyVendor`
+  (`src/lib/merqo-customer-notify.ts`), posting to merqo's
+  `POST /api/merqo/notify-vendor` instead of a local `vendor_telegram`
+  lookup + `sendTelegramMessage` call. Deleted entirely: the Phase A
+  webhook route (`src/app/api/telegram/webhook/`), `src/lib/telegram.ts`,
+  `src/lib/telegram-link.ts`, the dashboard settings "Connect Telegram"
+  section, and `disconnectTelegramAction`. Migration `0037` drops
+  `loopkit.vendor_telegram`/`loopkit.telegram_link_tokens` (added by
+  `0036`) — no data carries over, so **any vendor who'd linked loopkit's
+  own bot must reconnect once via merqo's own profile page**; this is an
+  expected consequence of the retirement, not a regression.
+  `TELEGRAM_BOT_TOKEN`/`TELEGRAM_BOT_USERNAME`/`TELEGRAM_WEBHOOK_SECRET`
+  are gone — `MERQO_BASE_URL`/`MERQO_CUSTOMER_SECRET` (already used by the
+  customer-notify call below) now also power the vendor alert. Depends on
+  merqo's own Phase A2 rollout (PR #51) already live.
 - Spec+plan for a vendor-side customer-notify on/off toggle
   (`docs/superpowers/specs/2026-08-16-customer-notify-vendor-toggle-design.md`),
   a fast-follow on the customer Telegram connect work above — not yet

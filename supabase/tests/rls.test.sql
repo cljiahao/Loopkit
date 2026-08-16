@@ -1,17 +1,15 @@
 -- loopkit/supabase/tests/rls.test.sql
 -- RLS cross-vendor isolation — pgTAP, run with `supabase test db`.
 --
--- Scoped to the highest-risk vendor-facing write paths (loopkit has 36
+-- Scoped to the highest-risk vendor-facing write paths (loopkit has 36+
 -- migrations; exhaustive coverage of every table is out of scope for this
 -- pass — see docs/superpowers/specs/2026-07-22-cicd-hook-harness-parity-design.md
 -- §3): loopkit.vendors (shared profile, for-all self policy), loopkit.upgrade_requests
--- (vendor-insert/select-own + admin-select-all), loopkit.feedback (self-insert-only),
--- loopkit.vendor_telegram/loopkit.telegram_link_tokens (own-row select only /
--- zero client access at all — migration 0036).
+-- (vendor-insert/select-own + admin-select-all), loopkit.feedback (self-insert-only).
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(38);
+select plan(27);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -42,17 +40,10 @@ values
   ('00000000-0000-0000-0000-0000000e0001', '00000000-0000-0000-0000-00000000000a', 'pending'),
   ('00000000-0000-0000-0000-0000000e0002', '00000000-0000-0000-0000-00000000000b', 'pending');
 
-insert into loopkit.vendor_telegram (vendor_id, chat_id)
-values
-  ('00000000-0000-0000-0000-00000000000a', 111),
-  ('00000000-0000-0000-0000-00000000000b', 222);
-
 -- ── RLS is actually enabled on every protected table ─────────────────────────
 select ok((select relrowsecurity from pg_class where oid = 'loopkit.vendors'::regclass), 'RLS on vendors');
 select ok((select relrowsecurity from pg_class where oid = 'loopkit.upgrade_requests'::regclass), 'RLS on upgrade_requests');
 select ok((select relrowsecurity from pg_class where oid = 'loopkit.feedback'::regclass), 'RLS on feedback');
-select ok((select relrowsecurity from pg_class where oid = 'loopkit.vendor_telegram'::regclass), 'RLS on vendor_telegram');
-select ok((select relrowsecurity from pg_class where oid = 'loopkit.telegram_link_tokens'::regclass), 'RLS on telegram_link_tokens');
 
 -- ── Act as Vendor A ────────────────────────────────────────────────────────
 set local role authenticated;
@@ -112,47 +103,6 @@ select throws_ok(
   null,
   'A cannot insert feedback as B');
 
--- vendor_telegram: own-row select only (migration 0036) — A reads its own
--- linked chat, not B's, and has no write grant at all (writes are
--- service-role only: the webhook route on link, the settings page's
--- disconnect action).
-select isnt_empty(
-  $$ select 1 from loopkit.vendor_telegram where vendor_id = '00000000-0000-0000-0000-00000000000a' $$,
-  'A reads its own vendor_telegram row');
-select is_empty(
-  $$ select 1 from loopkit.vendor_telegram where vendor_id = '00000000-0000-0000-0000-00000000000b' $$,
-  'A cannot read B''s vendor_telegram row');
-select throws_ok(
-  $$ insert into loopkit.vendor_telegram (vendor_id, chat_id) values ('00000000-0000-0000-0000-00000000000a', 333) $$,
-  '42501',
-  null,
-  'A cannot insert into vendor_telegram (no client write grant)');
-select throws_ok(
-  $$ update loopkit.vendor_telegram set chat_id = 999 where vendor_id = '00000000-0000-0000-0000-00000000000a' $$,
-  '42501',
-  null,
-  'A cannot update vendor_telegram (no client write grant)');
-select throws_ok(
-  $$ delete from loopkit.vendor_telegram where vendor_id = '00000000-0000-0000-0000-00000000000a' $$,
-  '42501',
-  null,
-  'A cannot delete from vendor_telegram (no client write grant)');
-
--- telegram_link_tokens: RLS enabled, zero policies, zero grants to
--- authenticated at all (migration 0036) — even a SELECT of the caller's
--- own would-be row fails on the table-level privilege check, before RLS
--- ever runs. Service-role only, end to end.
-select throws_ok(
-  $$ select 1 from loopkit.telegram_link_tokens $$,
-  '42501',
-  null,
-  'A cannot read telegram_link_tokens (no SELECT grant at all)');
-select throws_ok(
-  $$ insert into loopkit.telegram_link_tokens (token, vendor_id, expires_at) values ('tok', '00000000-0000-0000-0000-00000000000a', now() + interval '30 minutes') $$,
-  '42501',
-  null,
-  'A cannot insert into telegram_link_tokens (no INSERT grant at all)');
-
 -- ── Act as the admin ──────────────────────────────────────────────────────
 select set_config(
   'request.jwt.claims',
@@ -201,16 +151,6 @@ select throws_ok(
   '42501',
   null,
   'anon cannot read upgrade_requests (no SELECT grant)');
-select throws_ok(
-  $$ select 1 from loopkit.vendor_telegram $$,
-  '42501',
-  null,
-  'anon cannot read vendor_telegram (no SELECT grant)');
-select throws_ok(
-  $$ select 1 from loopkit.telegram_link_tokens $$,
-  '42501',
-  null,
-  'anon cannot read telegram_link_tokens (no SELECT grant)');
 
 -- provision_default_program: service_role-only, never authenticated —
 -- this function bypasses create_program's own auth.uid()-based ownership

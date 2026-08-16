@@ -20,7 +20,7 @@ shared Merqo Supabase project.
   from the environment for local `supabase start` (see `.env.example`).
 - `migrations/` — SQL schema and RLS policies
 - `seed/` — manually-run seed data
-- `tests/` — pgTAP RLS test suite (vendors, upgrade_requests, feedback, vendor_telegram/telegram_link_tokens); run via `supabase test db`
+- `tests/` — pgTAP RLS test suite (vendors, upgrade_requests, feedback); run via `supabase test db`
 
 ## Parent
 

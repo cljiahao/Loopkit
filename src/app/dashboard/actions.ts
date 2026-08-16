@@ -9,10 +9,11 @@ import { rewardReady } from "@/lib/loyalty";
 import { applyVisit, getProgress, resolvePlantState } from "@/lib/engine";
 import { plantStrategy, type PlantConfig } from "@/lib/engine/plant";
 import { isCardExpired } from "@/lib/expiry";
-import { createServerClient, createServiceClient } from "@/lib/supabase/server";
-import { disconnectTelegram } from "@/lib/telegram-link";
-import { sendTelegramMessage } from "@/lib/telegram";
-import { notifyCustomerByPhone } from "@/lib/merqo-customer-notify";
+import { createServerClient } from "@/lib/supabase/server";
+import {
+  notifyVendor,
+  notifyCustomerByPhone,
+} from "@/lib/merqo-customer-notify";
 import type { ActionResult } from "@/lib/action-result";
 import type { Progress } from "@/lib/engine/types";
 import type { Json } from "@/lib/types";
@@ -315,32 +316,18 @@ export async function lookupAction(formData: FormData): Promise<LookupResult> {
   };
 }
 
-// Fire-and-forget alert: a missing link skips silently, and any failure
-// (lookup or send) is caught and logged — this must NEVER affect
-// redeemAction's own returned result. Service-role client since
-// vendor_telegram has no client write grant (migration 0036).
+// Fire-and-forget alert: routed through merqo's shared Telegram bot
+// (Phase A2) rather than a local table lookup — loopkit no longer runs
+// its own bot, vendors connect once via merqo's profile page instead.
+// Any failure is caught and logged — this must NEVER affect
+// redeemAction's own returned result.
 async function notifyRedemptionOnTelegram(
   vendorId: string,
   card: { phone: string; stamp_count: number },
 ): Promise<void> {
   try {
-    const service = await createServiceClient();
-    const { data: link, error } = await service
-      .from("vendor_telegram")
-      .select("chat_id")
-      .eq("vendor_id", vendorId)
-      .maybeSingle();
-    if (error) {
-      console.error(
-        "redeemAction: vendor_telegram lookup failed",
-        error.message,
-      );
-      return;
-    }
-    if (!link) return;
-
-    await sendTelegramMessage(
-      link.chat_id,
+    await notifyVendor(
+      vendorId,
       `Reward redeemed for ${card.phone} (${card.stamp_count} stamps).`,
     );
   } catch (err) {
@@ -434,24 +421,4 @@ export async function saveQkitEarnConfigAction(
 
   revalidatePath("/dashboard/settings");
   return { success: true, enabled, programId };
-}
-
-// Disconnect the vendor's linked Telegram chat: deletes their vendor_telegram
-// row (service-role, since that table has no client write grant at all).
-// Idempotent — disconnecting an already-disconnected vendor just no-ops.
-export async function disconnectTelegramAction(): Promise<ActionResult> {
-  const { user } = await requireVendor();
-
-  try {
-    await disconnectTelegram(user.id);
-  } catch (err) {
-    console.error(
-      "disconnectTelegramAction failed",
-      err instanceof Error ? err.message : err,
-    );
-    return { success: false, error: "Something went wrong. Try again." };
-  }
-
-  revalidatePath("/dashboard/settings");
-  return { success: true };
 }

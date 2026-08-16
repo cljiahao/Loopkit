@@ -5,18 +5,14 @@ const {
   getProgramByIdMock,
   rpcMock,
   maybeSingleMock,
-  telegramMaybeSingleMock,
-  createServiceClientMock,
-  sendTelegramMessageMock,
+  notifyVendorMock,
   notifyCustomerByPhoneMock,
 } = vi.hoisted(() => ({
   requireVendorMock: vi.fn(),
   getProgramByIdMock: vi.fn(),
   rpcMock: vi.fn(),
   maybeSingleMock: vi.fn(),
-  telegramMaybeSingleMock: vi.fn(),
-  createServiceClientMock: vi.fn(),
-  sendTelegramMessageMock: vi.fn(),
+  notifyVendorMock: vi.fn(),
   notifyCustomerByPhoneMock: vi.fn(),
 }));
 
@@ -32,17 +28,11 @@ const fromMock = vi.fn(() => ({
     eq: () => ({ eq: () => ({ maybeSingle: maybeSingleMock }) }),
   }),
 }));
-const telegramFromMock = vi.fn(() => ({
-  select: () => ({ eq: () => ({ maybeSingle: telegramMaybeSingleMock }) }),
-}));
 vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({ rpc: rpcMock, from: fromMock })),
-  createServiceClient: createServiceClientMock,
-}));
-vi.mock("@/lib/telegram", () => ({
-  sendTelegramMessage: sendTelegramMessageMock,
 }));
 vi.mock("@/lib/merqo-customer-notify", () => ({
+  notifyVendor: notifyVendorMock,
   notifyCustomerByPhone: notifyCustomerByPhoneMock,
 }));
 
@@ -209,7 +199,7 @@ describe("redeemPlantAction returns fresh progress", () => {
   });
 });
 
-describe("redeemAction Telegram alert", () => {
+describe("redeemAction vendor alert", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     requireVendorMock.mockResolvedValue({ user: { id: "v1" } });
@@ -217,43 +207,22 @@ describe("redeemAction Telegram alert", () => {
       data: { id: "c1", phone: "+6591234567", stamp_count: 0 },
       error: null,
     });
-    telegramMaybeSingleMock.mockResolvedValue({ data: null, error: null });
-    createServiceClientMock.mockResolvedValue({ from: telegramFromMock });
-    sendTelegramMessageMock.mockResolvedValue(undefined);
+    notifyVendorMock.mockResolvedValue(undefined);
     notifyCustomerByPhoneMock.mockResolvedValue(undefined);
   });
 
-  it("sends a Telegram alert when the redeeming vendor has a linked chat_id", async () => {
-    telegramMaybeSingleMock.mockResolvedValue({
-      data: { chat_id: 555 },
-      error: null,
-    });
-
+  it("calls notifyVendor with the vendor's own id and a redemption message on a successful redeem", async () => {
     const res = await redeemAction(form({ card_id: "c1" }));
 
     expect(res.success).toBe(true);
-    expect(telegramFromMock).toHaveBeenCalledWith("vendor_telegram");
-    expect(sendTelegramMessageMock).toHaveBeenCalledWith(
-      555,
+    expect(notifyVendorMock).toHaveBeenCalledWith(
+      "v1",
       expect.stringContaining("+6591234567"),
     );
   });
 
-  it("skips the alert silently when the vendor has no linked chat_id", async () => {
-    telegramMaybeSingleMock.mockResolvedValue({ data: null, error: null });
-
-    const res = await redeemAction(form({ card_id: "c1" }));
-
-    expect(res.success).toBe(true);
-    expect(sendTelegramMessageMock).not.toHaveBeenCalled();
-  });
-
-  it("still returns success when the Telegram send itself fails", async () => {
-    telegramMaybeSingleMock.mockResolvedValue({
-      data: { chat_id: 555 },
-      error: null,
-    });
-    sendTelegramMessageMock.mockRejectedValue(new Error("network down"));
+  it("still returns success when notifyVendor itself rejects", async () => {
+    notifyVendorMock.mockRejectedValue(new Error("merqo down"));
     const consoleError = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
@@ -268,22 +237,6 @@ describe("redeemAction Telegram alert", () => {
         stamp_count: 0,
       });
     }
-    consoleError.mockRestore();
-  });
-
-  it("still returns success when the vendor_telegram lookup itself errors", async () => {
-    telegramMaybeSingleMock.mockResolvedValue({
-      data: null,
-      error: { message: "connection refused" },
-    });
-    const consoleError = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
-
-    const res = await redeemAction(form({ card_id: "c1" }));
-
-    expect(res.success).toBe(true);
-    expect(sendTelegramMessageMock).not.toHaveBeenCalled();
     consoleError.mockRestore();
   });
 

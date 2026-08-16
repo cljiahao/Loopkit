@@ -52,13 +52,11 @@ container set at the layout level (`src/app/dashboard/layout.tsx`,
 matching qkit's `dashboard/layout.tsx` pattern) instead of each page
 picking its own width — a page whose content genuinely reads better
 narrower (profile, counter, plan, settings) still nests its own
-narrower wrapper `<div>` inside that shared container. `/dashboard/settings`
-also gained a "Connect Telegram" section: a vendor scans a deep-link QR
-once (`src/app/dashboard/settings/connect-telegram-section.tsx`, reusing
-the existing `src/lib/qr.ts` renderer), and every reward redemption
-(`redeemAction`) then fires a Telegram message to their linked chat —
-see "Data model" below and `docs/DEPLOY.md`'s "Telegram bot setup". See
-`CHANGELOG.md` for the latest changes, including deduplication of the
+narrower wrapper `<div>` inside that shared container. loopkit no longer
+runs its own Telegram bot for reward-redemption vendor alerts — that
+retired Phase A infrastructure (deep-link QR, own webhook/tables) has
+been replaced by a call to merqo's own shared bot (Phase A2); see "Data
+model" below. See `CHANGELOG.md` for the latest changes, including deduplication of the
 shared bearer-auth and Merqo-RPC-call helpers and the addition of
 templateCentral 5.13.0's comment-hygiene enforcement layer.
 
@@ -131,12 +129,9 @@ src/lib/program.ts      — program CRUD + rules
 src/lib/cards.ts        — customer card state
 src/lib/loyalty.ts      — stamping/redemption flow
 src/lib/stats.ts        — vendor-facing metrics
-src/lib/telegram.ts     — sendTelegramMessage + generateLinkToken (Bot API, no SDK)
-src/lib/telegram-link.ts — service-role link-token issuing + disconnect for Connect Telegram
-src/lib/merqo-customer-notify.ts — notifyCustomerByPhone: kit → merqo HTTP call reusing a customer's standing Telegram connection
+src/lib/merqo-customer-notify.ts — notifyCustomerByPhone/notifyVendor: kit → merqo HTTP calls (customer Telegram reuse + vendor alerts via merqo's shared bot)
 src/lib/merqo-vendor-status.ts — reports status/metrics to merqo over HTTP
 src/lib/supabase/       — browser / server / service clients (schema: loopkit)
-src/app/api/telegram/webhook/ — Telegram Bot API webhook (signature-verified, no session)
 src/components/         — wheel, scratch-card, flame-layers, cup, points-bar, stamp-dots, etc.
 supabase/migrations/    — SQL schema + RLS
 ```
@@ -182,17 +177,19 @@ reads the live value in place of the previous no-price copy. The manual
 `setVendorPro`/`resolveUpgradeRequest`) is unchanged — this is a display
 change, not real Stripe billing.
 
-Telegram reward-redemption alerts (migration `0036`, `loopkit.vendor_telegram`/
-`loopkit.telegram_link_tokens`) are loopkit's half of the cross-kit Telegram
-Phase A rollout: a vendor connects Telegram once via a deep-link QR in
-`/dashboard/settings`, then `redeemAction` fires a message to their linked
-chat on every reward redemption. Both tables have RLS enabled;
-`vendor_telegram` grants `authenticated` `SELECT` on the caller's own row
-only, `telegram_link_tokens` has zero client policies/grants at all — every
-write goes through the service-role client (the webhook route on link, the
-settings page's token-issuing/disconnect actions). A missing link or a send
+Reward-redemption vendor alerts route through merqo's own shared Telegram
+bot (Phase A2, `docs/superpowers/specs/2026-08-16-vendor-telegram-connect-design.md`):
+`redeemAction` calls `notifyVendor` (`src/lib/merqo-customer-notify.ts`),
+which posts to merqo's `POST /api/merqo/notify-vendor` (bearer
+`MERQO_CUSTOMER_SECRET`, same env vars as the customer notify call below).
+loopkit no longer runs its own Telegram bot/webhook/tables for this — that
+retired Phase A infrastructure (`loopkit.vendor_telegram`/
+`loopkit.telegram_link_tokens`, migration `0036`, dropped by migration
+`0037`) required a vendor to connect once via a loopkit-hosted deep-link QR;
+a vendor who'd linked loopkit's own bot must reconnect once via merqo's own
+profile page instead — no data carried over. A missing connection or a send
 failure is caught and logged, never affects `redeemAction`'s own returned
-result. See `docs/superpowers/specs/2026-08-16-telegram-reward-alerts-design.md`.
+result.
 
 `redeemAction` also calls `notifyCustomerByPhone` (`src/lib/merqo-customer-notify.ts`)
 as a sibling to that vendor alert — loopkit's reuse-only half of the
