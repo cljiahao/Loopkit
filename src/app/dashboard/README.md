@@ -6,7 +6,7 @@ Vendor console root: program grid, shared shop QR, scan-to-serve entry point, an
 
 ## Contents
 
-- `actions.ts` — server actions (`stampAction`, `recordVisitAction`, `redeemPlantAction`, `regenerateCardAction`, `resolveTokenAction`, `lookupAction`, `redeemAction`, `saveQkitEarnConfigAction`) that stamp/play/redeem/regenerate cards and save qkit-earn config, each RLS-scoped via `requireVendor`
+- `actions.ts` — server actions (`stampAction`, `recordVisitAction`, `redeemPlantAction`, `regenerateCardAction`, `resolveTokenAction`, `lookupAction`, `redeemAction`, `saveQkitEarnConfigAction`, `disconnectTelegramAction`) that stamp/play/redeem/regenerate cards, save qkit-earn config, and disconnect a linked Telegram chat, each RLS-scoped via `requireVendor`
 - `activity/`
 - `card-link.tsx` — client `CardLinkActions`: copy-link and print-QR buttons for the shop QR block
 - `card.ts` — exports the shared `StampCard` type `{ id, phone, stamp_count }` used across actions and form components
