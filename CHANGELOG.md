@@ -33,6 +33,12 @@ dollar figure at all. The manual "ask us to upgrade" grant flow
 
 ### Changed
 
+- Bumped `@merqo/ui` to v0.14.0 and switched the dashboard nav's "Switch
+  products" submenu from a locally hardcoded kit list to the package's new
+  `getSwitchKits("loopkit")` helper (backed by its centralized `KIT_FAMILY`
+  registry). Same three kits, same URLs — a future new kit now only needs
+  `KIT_FAMILY` updated once in `@merqo/ui`, not in every kit's own
+  `dashboard-nav.tsx`.
 - Expanded ESLint's sonarjs wiring from 2 hand-picked rules to the plugin's
   full `configs.recommended` set. Fixed every real finding in app code:
   nested-ternary/cognitive-complexity hotspots refactored into helper
