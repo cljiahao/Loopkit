@@ -196,5 +196,25 @@ of this route (see "AI Harness" above).
   `MERQO_BASE_URL`/`MERQO_CUSTOMER_SECRET` are optional; a missing value
   no-ops the same way the Telegram vars above do. See
   `docs/superpowers/specs/2026-08-16-customer-telegram-connect-design.md`.
+- **Customer notify vendor toggle (2026-08-16), fast-follow on the above:**
+  `loopkit.vendor_notify_settings` (migration `0038`) is a small dedicated
+  table — `vendor_id` primary key, `customer_telegram_notify_enabled`
+  boolean, default `true` — giving a vendor an on/off switch (default on,
+  opt-out) for `redeemAction`'s `notifyCustomerByPhone` call, since the
+  customer already consented by connecting Telegram; this is a vendor
+  brand-preference gate, never a consent gate, and it never touches
+  merqo's own connection data. RLS is `for all` own-row (not
+  service-role-only like `vendor_telegram`/`telegram_link_tokens` used to
+  be) — a vendor upserts their own row directly under RLS from
+  `saveCustomerNotifySettingsAction` (`src/app/dashboard/actions.ts`,
+  same upsert-on-`vendor_id` shape as `saveQkitEarnConfigAction`),
+  surfaced as a switch in `/dashboard/settings`
+  (`src/app/dashboard/customer-notify-settings.tsx`). `redeemAction`
+  reads the row itself via `customerNotifyEnabled` before calling
+  `notifyCustomerByPhone`, and skips the call only when a row exists AND
+  the flag is explicitly `false` — a vendor with no row at all (never
+  visited the settings page) still gets the call; that "no row means on"
+  default is resolved in application code, not just the column default.
+  See `docs/superpowers/specs/2026-08-16-customer-notify-vendor-toggle-design.md`.
 
 <!-- [[post-harness]] — reserved for trace capture and meta-harness integration -->

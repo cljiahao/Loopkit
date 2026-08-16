@@ -29,6 +29,7 @@ substitute for running the migration against real Postgres.
 - `stamp-cap.test.ts` — checks migration `0002_loopkit_stamp_cap.sql` (stamp ceiling at `stamps_required`)
 - `streak-type-schema.test.ts` — checks migration `0011_loopkit_streak_type.sql` (streak `type` constraint widening)
 - `vendor-join-schema.test.ts` — checks migration `0015_loopkit_vendor_join.sql` (`vendor_active_programs` public read function)
+- `vendor-notify-settings-schema.test.ts` — checks migration `0038_vendor_notify_settings.sql` (`vendor_notify_settings` table, own-row `for all` RLS policy, `select, insert, update` grant to `authenticated`)
 - `vendor-profile-schema.test.ts` — checks migration `0017_loopkit_vendor_profile.sql` (`loopkit.vendors` table)
 
 ## Parent

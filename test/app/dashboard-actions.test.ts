@@ -5,6 +5,7 @@ const {
   getProgramByIdMock,
   rpcMock,
   maybeSingleMock,
+  notifySettingsMaybeSingleMock,
   notifyVendorMock,
   notifyCustomerByPhoneMock,
 } = vi.hoisted(() => ({
@@ -12,6 +13,7 @@ const {
   getProgramByIdMock: vi.fn(),
   rpcMock: vi.fn(),
   maybeSingleMock: vi.fn(),
+  notifySettingsMaybeSingleMock: vi.fn(),
   notifyVendorMock: vi.fn(),
   notifyCustomerByPhoneMock: vi.fn(),
 }));
@@ -23,11 +25,23 @@ vi.mock("@/lib/program", async (importOriginal) => {
 });
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const fromMock = vi.fn(() => ({
-  select: () => ({
-    eq: () => ({ eq: () => ({ maybeSingle: maybeSingleMock }) }),
-  }),
-}));
+// vendor_notify_settings is read via a single .eq("vendor_id", ...) chain —
+// distinct from the cards lookup's double .eq() chain — so fromMock branches
+// on the table name to route each call to its own mock.
+const fromMock = vi.fn((table: string) => {
+  if (table === "vendor_notify_settings") {
+    return {
+      select: () => ({
+        eq: () => ({ maybeSingle: notifySettingsMaybeSingleMock }),
+      }),
+    };
+  }
+  return {
+    select: () => ({
+      eq: () => ({ eq: () => ({ maybeSingle: maybeSingleMock }) }),
+    }),
+  };
+});
 vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({ rpc: rpcMock, from: fromMock })),
 }));
@@ -209,6 +223,12 @@ describe("redeemAction vendor alert", () => {
     });
     notifyVendorMock.mockResolvedValue(undefined);
     notifyCustomerByPhoneMock.mockResolvedValue(undefined);
+    // Default: no vendor_notify_settings row at all — must still resolve to
+    // "enabled" (backward compat for a vendor who never visited settings).
+    notifySettingsMaybeSingleMock.mockResolvedValue({
+      data: null,
+      error: null,
+    });
   });
 
   it("calls notifyVendor with the vendor's own id and a redemption message on a successful redeem", async () => {
@@ -264,5 +284,62 @@ describe("redeemAction vendor alert", () => {
         stamp_count: 0,
       });
     }
+  });
+});
+
+describe("redeemAction customer notify vendor toggle", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireVendorMock.mockResolvedValue({ user: { id: "v1" } });
+    rpcMock.mockResolvedValue({
+      data: { id: "c1", phone: "+6591234567", stamp_count: 0 },
+      error: null,
+    });
+    notifyVendorMock.mockResolvedValue(undefined);
+    notifyCustomerByPhoneMock.mockResolvedValue(undefined);
+  });
+
+  it("does not call notifyCustomerByPhone when the vendor's row explicitly disables it", async () => {
+    notifySettingsMaybeSingleMock.mockResolvedValue({
+      data: { customer_telegram_notify_enabled: false },
+      error: null,
+    });
+
+    const res = await redeemAction(form({ card_id: "c1" }));
+
+    expect(res.success).toBe(true);
+    expect(notifyCustomerByPhoneMock).not.toHaveBeenCalled();
+  });
+
+  it("still calls notifyCustomerByPhone when the vendor's row explicitly enables it", async () => {
+    notifySettingsMaybeSingleMock.mockResolvedValue({
+      data: { customer_telegram_notify_enabled: true },
+      error: null,
+    });
+
+    const res = await redeemAction(form({ card_id: "c1" }));
+
+    expect(res.success).toBe(true);
+    expect(notifyCustomerByPhoneMock).toHaveBeenCalledWith(
+      "v1",
+      "+6591234567",
+      expect.stringContaining("Reward redeemed"),
+    );
+  });
+
+  it("still calls notifyCustomerByPhone when the vendor has no vendor_notify_settings row at all (backward compat: no row means enabled)", async () => {
+    notifySettingsMaybeSingleMock.mockResolvedValue({
+      data: null,
+      error: null,
+    });
+
+    const res = await redeemAction(form({ card_id: "c1" }));
+
+    expect(res.success).toBe(true);
+    expect(notifyCustomerByPhoneMock).toHaveBeenCalledWith(
+      "v1",
+      "+6591234567",
+      expect.stringContaining("Reward redeemed"),
+    );
   });
 });

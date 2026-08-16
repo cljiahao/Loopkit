@@ -201,9 +201,21 @@ cross-kit customer Telegram-connect design. It posts to merqo's
 `/api/merqo/notify-customer` in its `phone` lookup mode (bearer
 `MERQO_CUSTOMER_SECRET`, both env vars optional) so a customer who already
 connected Telegram via qkit _with a matching phone number_ also gets a
-redemption confirmation — no new UI, no new table, no connect flow on
-loopkit's side, and a failure never affects `redeemAction`'s own returned
-result. See `docs/superpowers/specs/2026-08-16-customer-telegram-connect-design.md`.
+redemption confirmation — no connect flow on loopkit's side, and a failure
+never affects `redeemAction`'s own returned result. See
+`docs/superpowers/specs/2026-08-16-customer-telegram-connect-design.md`.
+
+That call is gated by a fast-follow vendor-level on/off toggle
+(`loopkit.vendor_notify_settings`, migration `0038`; default on, opt-out —
+the customer already consented by connecting Telegram, this only lets a
+vendor who finds it off-brand turn it off): `redeemAction` reads the
+vendor's row via `customerNotifyEnabled` and skips the call only when a
+row exists AND the flag is explicitly `false` — a vendor with no row at
+all (never visited `/dashboard/settings`) still gets the call. A vendor
+flips it from a switch there (`src/app/dashboard/customer-notify-settings.tsx`,
+`saveCustomerNotifySettingsAction`), which upserts its own row directly
+under RLS (`for all` own-row policy, not service-role-only). See
+`docs/superpowers/specs/2026-08-16-customer-notify-vendor-toggle-design.md`.
 
 Separately, a Pro vendor can let customers earn a stamp from a completed
 qkit order (`src/app/dashboard/qkit-earn-settings.tsx`) — this is a pull-model

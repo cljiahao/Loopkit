@@ -335,6 +335,22 @@ async function notifyRedemptionOnTelegram(
   }
 }
 
+// A vendor's customer-notify preference. A row absent entirely (vendor never
+// visited the settings page) resolves to "enabled" here — the column default
+// alone isn't enough, since a lookup that finds no row returns null data, not
+// the table's default value.
+async function customerNotifyEnabled(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  vendorId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("vendor_notify_settings")
+    .select("customer_telegram_notify_enabled")
+    .eq("vendor_id", vendorId)
+    .maybeSingle();
+  return data?.customer_telegram_notify_enabled !== false;
+}
+
 // Redeem a full card: resets stamps to 0 and logs the reward. Returns the
 // reset card so the UI can replace the reward-ready block with a confirmation.
 export async function redeemAction(formData: FormData): Promise<CardResult> {
@@ -365,12 +381,16 @@ export async function redeemAction(formData: FormData): Promise<CardResult> {
   // own errors internally, but this wraps the call site too so a mocked or
   // unforeseen rejection still can't change redeemAction's own result —
   // same "never affects redemption itself" rule as the vendor alert above.
+  // Gated on the vendor's own on/off toggle: only skip the call when a row
+  // exists AND the flag is explicitly false — a missing row still means on.
   try {
-    await notifyCustomerByPhone(
-      user.id,
-      card.phone,
-      `Reward redeemed: ${card.stamp_count} stamps used. See you again soon!`,
-    );
+    if (await customerNotifyEnabled(supabase, user.id)) {
+      await notifyCustomerByPhone(
+        user.id,
+        card.phone,
+        `Reward redeemed: ${card.stamp_count} stamps used. See you again soon!`,
+      );
+    }
   } catch (err) {
     console.error("redeemAction: customer notify failed", err);
   }
@@ -421,4 +441,33 @@ export async function saveQkitEarnConfigAction(
 
   revalidatePath("/dashboard/settings");
   return { success: true, enabled, programId };
+}
+
+export type CustomerNotifySettingsResult = ActionResult<{ enabled: boolean }>;
+
+// Vendor-owned setting: whether redeemAction's customer redemption
+// confirmation (notifyCustomerByPhone) fires on this vendor's redemptions.
+// Not Pro-gated — every vendor's customers may already have a standing
+// merqo Telegram connection via qkit. Same upsert-on-vendor_id shape as
+// saveQkitEarnConfigAction above.
+export async function saveCustomerNotifySettingsAction(
+  formData: FormData,
+): Promise<CustomerNotifySettingsResult> {
+  const { user } = await requireVendor();
+  const enabled = formData.get("enabled") === "on";
+
+  const supabase = await createServerClient();
+  const { error } = await supabase
+    .from("vendor_notify_settings")
+    .upsert(
+      { vendor_id: user.id, customer_telegram_notify_enabled: enabled },
+      { onConflict: "vendor_id" },
+    );
+  if (error) {
+    console.error("saveCustomerNotifySettingsAction failed", error.message);
+    return { success: false, error: "Something went wrong." };
+  }
+
+  revalidatePath("/dashboard/settings");
+  return { success: true, enabled };
 }
