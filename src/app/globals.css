@@ -109,6 +109,13 @@
   --color-gold-foreground: var(--gold-foreground);
   --color-gold-accent: var(--gold-accent);
 
+  /* @merqo/ui's PlanComparisonTable (src/app/dashboard/plan/page.tsx) hardcodes
+     `text-status-ready` on its check icon — a token qkit defines for its own
+     order-status palette but loopkit has no order-status concept for. Mapped
+     to --primary so the check keeps the same brand-red it had under the
+     local Cell helper this component replaced, not an unstyled fallback. */
+  --color-status-ready: var(--primary);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

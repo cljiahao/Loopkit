@@ -65,6 +65,7 @@ below.
 - `2026-08-16-customer-telegram-connect-design.md` — "Customer Telegram Connect — Design": loopkit's reuse-only half of Phase B+D — `redeemAction` checks whether the redeeming customer's phone matches an existing merqo-owned Telegram connection (from connecting via qkit) and sends a redemption confirmation. No new UI, no new table, no connect flow.
 - `2026-08-16-customer-notify-vendor-toggle-design.md` — "Customer Notify Vendor Toggle — Design": fast-follow — a new `vendor_notify_settings` table (default on) letting a vendor turn off the customer redemption-confirmation message without touching the customer's own consent.
 - `2026-08-16-vendor-telegram-connect-design.md` — "Vendor Telegram Connect (Phase A2) — Design": retires loopkit's own Telegram bot (Phase A) in favor of merqo's shared one; `notifyRedemptionOnTelegram` now calls merqo's `notify-vendor` endpoint. Deletion-heavy spec; no data carries over, already-linked vendors must reconnect.
+- `2026-08-16-shared-plan-comparison-table-design.md` — "Shared Plan Comparison Table — Design": loopkit's migration onto qkit's new `@merqo/ui` `PlanComparisonTable` component — loopkit's existing 2-tier, boolean/string feature data needs zero reshaping to fit it.
 
 ## Parent
 

@@ -1,4 +1,5 @@
-import { Check, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { PlanComparisonTable } from "@merqo/ui";
 import { requireVendor } from "@/features/auth";
 import { isPro, listPrograms, currentProgram } from "@/lib/program";
 import { getProgramStats } from "@/lib/stats";
@@ -7,18 +8,6 @@ import { formatPrice } from "@/lib/utils";
 import { UpgradeCta } from "@/app/dashboard/plan/upgrade-cta";
 import { Badge } from "@/components/ui/badge";
 import { ElevatedCard } from "@/components/elevated-card";
-
-function Cell({ on }: { on: boolean }) {
-  return (
-    <span className="flex justify-center">
-      {on ? (
-        <Check className="size-4 text-primary" />
-      ) : (
-        <span className="text-muted-foreground/40">—</span>
-      )}
-    </span>
-  );
-}
 
 const FEATURES = [
   { label: "Loyalty programs", free: "1", pro: "∞" },
@@ -113,30 +102,16 @@ export default async function PlanPage({
         </ElevatedCard>
       )}
 
-      {/* Header and every row use the same fixed column widths (not "auto")
-          so the Free/Pro ticks line up under their headers regardless of
-          each row being its own grid instance. */}
-      <div className="overflow-hidden rounded-2xl border">
-        <div className="grid grid-cols-[1fr_2.75rem_2.75rem] gap-x-5 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          <span>Feature</span>
-          <span className="text-center">Free</span>
-          <span className="text-center">Pro</span>
-        </div>
-        {FEATURES.map((f) => (
-          <div
-            key={f.label}
-            className="grid grid-cols-[1fr_2.75rem_2.75rem] items-center gap-x-5 border-t px-5 py-3 text-sm"
-          >
-            <span>{f.label}</span>
-            <span className="text-center text-muted-foreground">
-              {typeof f.free === "string" ? f.free : <Cell on={f.free} />}
-            </span>
-            <span className="text-center">
-              {typeof f.pro === "string" ? f.pro : <Cell on={f.pro} />}
-            </span>
-          </div>
-        ))}
-      </div>
+      <PlanComparisonTable
+        tiers={[
+          { key: "free", label: "Free" },
+          { key: "pro", label: "Pro" },
+        ]}
+        rows={FEATURES.map((f) => ({
+          label: f.label,
+          values: { free: f.free, pro: f.pro },
+        }))}
+      />
     </div>
   );
 }
