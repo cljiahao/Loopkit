@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped `@merqo/ui` to v0.16.0 and migrated `/dashboard/plan`'s feature
+  comparison grid onto the shared `PlanComparisonTable` component (matching
+  qkit's own migration onto the same component). Replaces the page's local
+  `FEATURES`-rendering JSX + local `Cell` helper — same 2-tier (Free/Pro)
+  visible output, including the "Loyalty programs" row's string cell values
+  (`"1"`/`"∞"`). Also adds `--color-status-ready` (mapped to `--primary`) in
+  `src/app/globals.css`, since the shared component's check icon hardcodes
+  that token and loopkit had no order-status palette to supply it.
+
 ### Fixed
 
 - Bumped `@merqo/ui` to v0.14.1 — the kit-switcher (account menu's
