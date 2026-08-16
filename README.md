@@ -56,7 +56,11 @@ narrower wrapper `<div>` inside that shared container. loopkit no longer
 runs its own Telegram bot for reward-redemption vendor alerts — that
 retired Phase A infrastructure (deep-link QR, own webhook/tables) has
 been replaced by a call to merqo's own shared bot (Phase A2); see "Data
-model" below. See `CHANGELOG.md` for the latest changes, including deduplication of the
+model" below. Bumped `@merqo/ui` to v0.16.0: `/dashboard/plan`'s Free/Pro
+feature comparison grid now renders through the package's shared
+`PlanComparisonTable` (matching qkit's own migration onto the same
+component) instead of a local `FEATURES`-rendering grid + local `Cell`
+helper — see `src/app/dashboard/plan/README.md`. See `CHANGELOG.md` for the latest changes, including deduplication of the
 shared bearer-auth and Merqo-RPC-call helpers and the addition of
 templateCentral 5.13.0's comment-hygiene enforcement layer.
 
