@@ -7,7 +7,7 @@ figure/badge helpers used by the overview, programs, and vendors screens.
 
 ## Contents
 
-- `actions.ts` — Server Actions (all admin-only via `requireAdmin()`): `setProgramActive`, `setVendorPro`, `removeCard`, `resolveUpgradeRequest`, `setPricing`, each writing via the service-role client and appending an `admin_audit` row.
+- `actions.ts` — Server Actions (all admin-only via `requireAdmin()`): `setProgramActive`, `setVendorPro`, `removeCard`, `resolveUpgradeRequest`, `setPricing`, each writing via the service-role client and appending an `admin_audit` row via `recordAudit` (`@/lib/admin-audit`, shared with `vendor-provision/route.ts`).
 - `admin-nav.tsx` — `AdminNav` client component: the Overview/Programs/Vendors tab bar, highlighting the active section by path.
 - `health-badge.ts` — `HEALTH_BADGE` map from `ProgramHealth` to a Badge variant/label, shared by the programs list and the program detail header.
 - `layout.tsx` — `AdminLayout`: gates every `/admin` route with `requireAdmin()`, renders the header (wordmark, Admin badge, sign-out) and `AdminNav`.

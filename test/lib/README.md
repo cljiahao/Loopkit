@@ -9,6 +9,7 @@ several (`admin-data.test.ts`, `admin.test.ts`, `cards.test.ts`,
 ## Contents
 
 - `activity.test.ts` — `mapActivityRow`: classifies a stamp/redeem/enroll event row into an activity feed entry
+- `admin-audit.test.ts` — `recordAudit`: inserts an `admin_audit`-shaped row via the service-role client (including a `null` `target_id`), and logs-but-swallows an insert error rather than throwing
 - `admin-data.test.ts` — `listProgramsOverview`/`listVendors`/`listPendingUpgradeRequests`/`platformTotals`/`recentActivity`/`getProgramDetail`: each function's happy path plus its error-throwing path, mocking `createServiceClient`'s `.from()` chain and `auth.admin.listUsers`
 - `admin.test.ts` — `isAdmin`: true/false on presence/absence of an `admins` row; `requireAdmin`: returns `{user}` for a signed-in admin, 404s (via `next/navigation`'s `notFound()`) when signed out or signed in but not an admin
 - `build-plant-config.test.ts` — `buildPlantConfig`: derives five named growth stages from a single visits-to-bloom knob

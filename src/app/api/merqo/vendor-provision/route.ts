@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
 import { provisionBearerOk } from "@/lib/merqo-auth";
+import { recordAudit } from "@/lib/admin-audit";
 
 export const revalidate = 0;
 
@@ -82,9 +83,25 @@ export async function POST(request: Request) {
     );
   }
 
+  const plan = proRow ? "pro" : "free";
+
+  // merqo push-provisions this vendor over a bearer secret, not a signed-in
+  // admin — there's no real admin (or merqo-team user) id to attribute this
+  // to. Sentinel convention (see recordAudit's docstring, @/lib/admin-audit):
+  // admin_id is the vendor's own auth.users id (the only id guaranteed to
+  // satisfy admin_id's FK here — it's the row that was just provisioned),
+  // and detail.actor = "merqo_system" documents that this action was taken
+  // BY merqo ON this vendor, not something the vendor did to themselves.
+  // Best-effort — never fails the response the caller is waiting on.
+  await recordAudit(user_id, "merqo_vendor_provision", user_id, {
+    actor: "merqo_system",
+    already_existed: alreadyExisted,
+    plan,
+  });
+
   return NextResponse.json({
     ok: true,
     already_existed: alreadyExisted,
-    plan: proRow ? "pro" : "free",
+    plan,
   });
 }

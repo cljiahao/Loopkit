@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-const { fromMock, rpcMock } = vi.hoisted(() => ({
+const { fromMock, rpcMock, auditInsertMock } = vi.hoisted(() => ({
   fromMock: vi.fn(),
   rpcMock: vi.fn(),
+  auditInsertMock: vi.fn(async () => ({ error: null })),
 }));
 vi.mock("@/lib/supabase/server", () => ({
   createServiceClient: vi.fn(async () => ({ from: fromMock, rpc: rpcMock })),
@@ -50,6 +51,12 @@ function tables(opts: {
         }),
       };
     }
+    // recordAudit (@/lib/admin-audit) calls createServiceClient() again
+    // internally, which resolves to this same mocked client, so its
+    // .from("admin_audit").insert(...) also flows through this branch.
+    if (table === "admin_audit") {
+      return { insert: auditInsertMock };
+    }
     throw new Error(`unexpected table: ${table}`);
   };
 }
@@ -59,6 +66,7 @@ describe("POST /api/merqo/vendor-provision (loopkit)", () => {
     vi.clearAllMocks();
     process.env.MERQO_PROVISION_SECRET = "test-secret";
     rpcMock.mockResolvedValue({ data: "new-program-id", error: null });
+    auditInsertMock.mockResolvedValue({ error: null });
   });
 
   it("401 when the bearer is missing", async () => {
@@ -188,5 +196,53 @@ describe("POST /api/merqo/vendor-provision (loopkit)", () => {
     );
     const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
     expect(res.status).toBe(500);
+  });
+
+  it("records an admin_audit row attributing the provision to a merqo-system actor", async () => {
+    fromMock.mockImplementation(tables({ insertError: null, isPro: false }));
+    const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
+
+    expect(res.status).toBe(200);
+    expect(auditInsertMock).toHaveBeenCalledWith({
+      admin_id: USER_ID,
+      action: "merqo_vendor_provision",
+      target_id: USER_ID,
+      detail: {
+        actor: "merqo_system",
+        already_existed: false,
+        plan: "free",
+      },
+    });
+  });
+
+  it("still records admin_audit on a re-provision, with already_existed true", async () => {
+    fromMock.mockImplementation(
+      tables({
+        insertError: { code: "23505", message: "duplicate key" },
+        isPro: true,
+      }),
+    );
+    const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
+
+    expect(res.status).toBe(200);
+    expect(auditInsertMock).toHaveBeenCalledWith({
+      admin_id: USER_ID,
+      action: "merqo_vendor_provision",
+      target_id: USER_ID,
+      detail: {
+        actor: "merqo_system",
+        already_existed: true,
+        plan: "pro",
+      },
+    });
+  });
+
+  it("does not record admin_audit when provisioning fails before completion", async () => {
+    fromMock.mockImplementation(tables({ insertError: null, isPro: false }));
+    rpcMock.mockResolvedValue({ data: null, error: { message: "boom" } });
+    const res = await POST(req({ user_id: USER_ID }, "Bearer test-secret"));
+
+    expect(res.status).toBe(500);
+    expect(auditInsertMock).not.toHaveBeenCalled();
   });
 });

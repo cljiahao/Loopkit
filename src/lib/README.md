@@ -11,6 +11,7 @@ profile/status).
 
 - `action-result.ts` — `ActionResult<T>`: discriminated `{success:true}&T | {success:false,error}` return type shared by Server Actions
 - `activity.ts` — `mapActivityRow` (pure event→row classifier) and `listActivity` (paginated, filterable vendor activity feed across programs, fetches `limit+1` rows to detect a next page)
+- `admin-audit.ts` — `recordAudit(actorId, action, targetId, detail)`: best-effort append to `loopkit.admin_audit` (migration `0003`) via the service-role client, logging (never throwing) on an insert failure; shared by every `/admin` Server Action (`src/app/admin/actions.ts`) and `POST /api/merqo/vendor-provision`, which has no signed-in admin and instead passes the provisioned vendor's own id as `actorId` with `detail.actor: "merqo_system"` as a documented sentinel
 - `admin-data.ts` — service-role reads for the `/admin` console: `listProgramsOverview`, `listVendors`, `listPendingUpgradeRequests`, `platformTotals`, `recentActivity`, `getProgramDetail`; resolves vendor email via `listAllUsers()` (`list-all-users.ts`)
 - `admin.ts` — `isAdmin`/`requireAdmin`: admin membership check via the `admins` table (RLS-gated) and a 404-on-fail gate for `/admin` routes and actions
 - `brand-icon.test.ts` — unit tests for `brandIcon`: renders the "L" letter on the raspberry background/blush foreground, and scales `fontSize`/`borderRadius` proportionally to the requested size
@@ -65,6 +66,10 @@ data layer; `admin.ts`/`admin-data.ts` mirror the same tables via the
 service-role client for the cross-vendor `/admin` console.
 `list-all-users.ts` is shared by `admin-data.ts` and the `vendor-status`
 route handler, the two service-role callers of `auth.admin.listUsers()`.
+`admin-audit.ts` is the single write path into `loopkit.admin_audit`, called
+by every `/admin` Server Action and by `vendor-provision/route.ts` (the one
+merqo→loopkit write path that mutates a vendor's access without a signed-in
+admin behind it).
 `merqo-vendor-profile.ts`/`merqo-vendor-status.ts`/`metrics.ts` form the HTTP
 contract with the merqo parent app, reusing the same Supabase client
 generically across schemas. `merqo-customer-notify.ts` is a different kind
