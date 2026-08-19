@@ -329,30 +329,42 @@ select ok(
 
 -- ── vendor_join_referred / apply_referral_credit ─────────────────────────
 -- Both are granted to anon (same public-surface shape as vendor_join
--- itself) — a real guest tapping a /c?ref= link never has a session.
+-- itself) — a real guest tapping a /c?ref= link never has a session. Every
+-- direct table read below (guest_count/stamp_count/state/credited_at) runs
+-- with role reset first: anon has no SELECT grant on referral_hosts/cards/
+-- referral_credits by design (a guest reads through the RPCs only, never
+-- the tables directly) — asserting on those columns needs the privileged
+-- test-harness role, not the identity under test. Only the RPC calls
+-- themselves run as anon.
+
 reset role;
-set local role anon;
+select is(
+  (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
+  0, 'C''s stamp referral host starts at 0 guests (pre-condition)');
 
 -- Self-referral (guest phone == host phone) is a deliberate no-op: the
 -- guest still gets enrolled normally, but the host must never be credited
 -- or bumped — guards against someone farming their own link.
-select is(
-  (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
-  0, 'C''s stamp referral host starts at 0 guests (pre-condition)');
+set local role anon;
 select lives_ok(
   $$ select * from loopkit.vendor_join_referred(
        '00000000-0000-0000-0000-00000000000c', '+6591110001', 'c-stamp-code') $$,
   'a self-referral call does not throw');
+
+reset role;
 select is(
   (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
   0, 'a self-referral does not bump guest_count');
 
 -- First distinct guest: credits the host exactly once (stamp-type credits
 -- inline, mirroring add_stamp's own body).
+set local role anon;
 select lives_ok(
   $$ select * from loopkit.vendor_join_referred(
        '00000000-0000-0000-0000-00000000000c', '+6591119001', 'c-stamp-code') $$,
   'the first guest referral call does not throw');
+
+reset role;
 select is(
   (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
   1, 'the first distinct guest bumps guest_count to 1');
@@ -361,10 +373,13 @@ select is(
   1, 'the host''s stamp card has exactly 1 stamp after one distinct guest');
 
 -- Same guest again via the same link: no double credit.
+set local role anon;
 select lives_ok(
   $$ select * from loopkit.vendor_join_referred(
        '00000000-0000-0000-0000-00000000000c', '+6591119001', 'c-stamp-code') $$,
   'a repeat visit from the same guest phone does not throw');
+
+reset role;
 select is(
   (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
   1, 'a repeat visit from the same guest phone does not bump guest_count again');
@@ -374,10 +389,13 @@ select is(
 
 -- A second, genuinely different guest: credits again (proves the guard is
 -- per-guest, not a blanket "already credited once" flag on the host).
+set local role anon;
 select lives_ok(
   $$ select * from loopkit.vendor_join_referred(
        '00000000-0000-0000-0000-00000000000c', '+6591119002', 'c-stamp-code') $$,
   'a second distinct guest does not throw');
+
+reset role;
 select is(
   (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
   2, 'a second distinct guest bumps guest_count to 2');
@@ -391,10 +409,13 @@ select is(
 -- thing standing between "a code from C" and "credits something at F". The
 -- guest still gets enrolled normally at F, since enrollment doesn't depend
 -- on the referral code resolving at all.
+set local role anon;
 select lives_ok(
   $$ select * from loopkit.vendor_join_referred(
        '00000000-0000-0000-0000-00000000000f', '+6591129001', 'c-stamp-code') $$,
   'a code from vendor C used against vendor F does not throw');
+
+reset role;
 select is(
   (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
   2, 'vendor C''s referral host is untouched when its code is called against vendor F');
@@ -413,29 +434,33 @@ select isnt_empty(
 select is(
   (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1002'),
   0, 'C''s plant referral host starts at 0 guests (pre-condition)');
+
+set local role anon;
 select results_eq(
   $$ select (referral_credit->>'pending')::boolean
      from loopkit.vendor_join_referred('00000000-0000-0000-0000-00000000000c', '+6591139001', 'c-plant-code')
      where program_id = '00000000-0000-0000-0000-0000000f0002' $$,
   $$ values (true) $$,
   'a non-stamp referral reserves a pending credit instead of crediting inline');
+
+reset role;
 select is(
   (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1002'),
   1, 'the reservation itself still bumps guest_count immediately');
-
-reset role;
 select is(
   (select credited_at from loopkit.referral_credits
      where referral_host_id = '00000000-0000-0000-0000-0000000f1002' and guest_phone = '+6591139001'),
   null, 'the reserved plant credit is not yet finished (credited_at still null)');
-set local role anon;
 
+set local role anon;
 select lives_ok(
   $$ select * from loopkit.apply_referral_credit(
        '00000000-0000-0000-0000-0000000f1002', '+6591139001',
        '{"growth": 2, "last_visit_at": null, "blooms": 0, "bloomed": false}'::jsonb,
        'visit', '{"won": false}'::jsonb) $$,
   'apply_referral_credit finishes the reserved plant credit without throwing');
+
+reset role;
 select is(
   (select (state->>'growth')::int from loopkit.cards
      where program_id = '00000000-0000-0000-0000-0000000f0002' and phone = '+6591110003'),
@@ -443,12 +468,15 @@ select is(
 
 -- A second finish attempt on the same reservation must be a no-op — proves
 -- the deferred non-stamp path can't double-credit either.
+set local role anon;
 select lives_ok(
   $$ select * from loopkit.apply_referral_credit(
        '00000000-0000-0000-0000-0000000f1002', '+6591139001',
        '{"growth": 99, "last_visit_at": null, "blooms": 0, "bloomed": false}'::jsonb,
        'visit', '{"won": false}'::jsonb) $$,
   'a repeated finish call does not throw');
+
+reset role;
 select is(
   (select (state->>'growth')::int from loopkit.cards
      where program_id = '00000000-0000-0000-0000-0000000f0002' and phone = '+6591110003'),
