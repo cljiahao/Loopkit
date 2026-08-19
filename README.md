@@ -87,10 +87,11 @@ segments can take a vendor-picked color via `src/components/color-picker.tsx`
 has no official color-picker primitive). The dashboard's
 account-menu trigger, order, and content
 deliberately mirror qkit's (see `src/app/dashboard/dashboard-nav.tsx`) — a
-cross-kit consistency goal, not a coincidence. Theme is "Raspberry-Rose Punch & Gold"
-(`src/app/globals.css`) — a bright, saturated raspberry-red primary plus a
-gold reward accent, chosen (over the earlier, dimmer "Mulberry & Gold") to
-read as celebratory rather than moody-fintech. Form fields keep their
+cross-kit consistency goal, not a coincidence. Theme is "Sealing Wax" (`src/app/globals.css`, as of 2026-08-19) — an
+oxblood-crimson primary plus an antique-brass counter-tone, pushed
+darker/denser than the prior "Raspberry-Rose Punch & Gold," which itself
+had replaced the earlier, dimmer "Mulberry & Gold" chosen to read as
+celebratory rather than moody-fintech. Form fields keep their
 primary copy to one short line, pushing rationale/edge-case detail into a
 shared tap-to-open `(i)` info tooltip (`@merqo/ui`'s `InfoTooltip`).
 The login form (`src/features/auth/components/login-form.tsx`) runs on
