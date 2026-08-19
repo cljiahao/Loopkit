@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Brand theme: `globals.css`'s color tokens replaced with "Sealing Wax"
+  (oxblood-crimson primary, antique-brass counter-tone), light and
+  dark, replacing "Raspberry-Rose Punch & Gold" — same berry family,
+  pushed darker/denser. Purely cosmetic — no component/behavior change.
 - Bumped `@merqo/ui` to v0.16.0 and migrated `/dashboard/plan`'s feature
   comparison grid onto the shared `PlanComparisonTable` component (matching
   qkit's own migration onto the same component). Replaces the page's local
