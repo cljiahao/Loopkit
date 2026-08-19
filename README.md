@@ -96,7 +96,9 @@ cross-kit consistency goal, not a coincidence. Theme is "Sealing Wax" (`src/app/
 oxblood-crimson primary plus an antique-brass counter-tone, pushed
 darker/denser than the prior "Raspberry-Rose Punch & Gold," which itself
 had replaced the earlier, dimmer "Mulberry & Gold" chosen to read as
-celebratory rather than moody-fintech. Form fields keep their
+celebratory rather than moody-fintech. `src/lib/brand-icon.tsx`'s
+ImageResponse-generated favicon/apple-touch-icon carries the same
+rebrand. Form fields keep their
 primary copy to one short line, pushing rationale/edge-case detail into a
 shared tap-to-open `(i)` info tooltip (`@merqo/ui`'s `InfoTooltip`).
 The login form (`src/features/auth/components/login-form.tsx`) runs on
