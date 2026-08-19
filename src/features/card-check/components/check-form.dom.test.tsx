@@ -30,6 +30,19 @@ describe("CheckForm", () => {
     expect(hidden).toHaveValue("v1");
   });
 
+  it("renders no hidden ref field when no referral code is given", () => {
+    const { container } = render(<CheckForm vendorId="v1" />);
+    expect(container.querySelector('input[name="ref"]')).toBeNull();
+  });
+
+  it("renders the referral code in a hidden ref field when given", () => {
+    const { container } = render(
+      <CheckForm vendorId="v1" referralCode="abc123" />,
+    );
+    const hidden = container.querySelector('input[name="ref"]');
+    expect(hidden).toHaveValue("abc123");
+  });
+
   it("submits the phone and vendor id, then renders a ProgramCardStatus per returned card", async () => {
     checkStatusActionMock.mockResolvedValue({
       status: "found",

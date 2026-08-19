@@ -42,6 +42,7 @@ profile/status).
 - `pricing.ts` — `PricingConfig`, `DEFAULT_PRICING`, `getPricing()`: reads the single-row, admin-tunable `pricing` table (public-select RLS), falling back to a zeroed config only if the row is ever unreadable.
 - `program.ts` — `Program`/`SaveProgramInput` types, `programInputSchema`/`saveProgramSchema` (discriminated-union Zod schema per program type), `buildProgramFields`, `listPrograms`/`getProgramById`/`currentProgram`, `Entitlement`/`getEntitlement`/`canCreateProgram`/`canPrepProgram` (free vs. pro tier caps), `isPro`, `applyDueCutovers` (lazy scheduled-retirement cutover), `getProgram` (transitional single-program shim)
 - `qr.ts` — `qrSvg`: renders a QR code as an SVG string via the `qrcode` package
+- `referrals.ts` — `referralLink` (pure `/c?v=<vendorId>&ref=<code>` builder) and `listReferralHosts` (impure shell, RLS-scoped read of the signed-in vendor's `loopkit.referral_hosts` rows, most recent first) backing `src/app/dashboard/referrals/`
 - `schemas.ts` — `loginSchema`/`LoginInput` (email format + non-empty password) backing `LoginForm`'s react-hook-form resolver; `supportMessageSchema`/`SupportMessageInput` (category enum + 1-2000 char body) and `SUPPORT_CATEGORY_LABELS`, the shared Get-help validation/labels used by `actions/support.ts` and `dashboard-nav.tsx`'s `@merqo/ui` `HelpSheet` wiring, plus `pricingFormSchema`/`PricingFormInput`/`MAX_MONEY_CENTS` for the admin pricing form
 - `stamp-mark.ts` — `resolveStampMark(view, vendorAvatarUrl)`: pure resolver converting the engine's `ProgressView` dots variant (vendor's chosen mark mode/preset) and vendor avatar URL into the concrete `StampMark` value `StampDots` renders; shared by `/c` and `/setup` live preview so both resolve marks identically
 - `stats.ts` — `classifyActivity`/`pctChange`/`bucketVisitsByDay`/`avgDaysBetweenVisits`/`computeCardStats` (pure aggregation pipeline) plus `getProgramStats`/`getVendorStats` (impure shells fetching cards+stamp_events) and `countExpiredVouchers` (impure shell counting `reward_vouchers` that expired in the last 30 days — a separately-sourced tile added alongside, not replacing, `rewards30d`/`redemptionRate` per `docs/superpowers/specs/2026-07-16-reward-voucher-ledger-design.md`) — powers the vendor stats dashboard
@@ -68,6 +69,12 @@ data layer; `admin.ts`/`admin-data.ts` mirror the same tables via the
 service-role client for the cross-vendor `/admin` console.
 `list-all-users.ts` is shared by `admin-data.ts` and the `vendor-status`
 route handler, the two service-role callers of `auth.admin.listUsers()`.
+`referrals.ts` is read by `src/app/dashboard/referrals/page.tsx` and its
+`referralLink` builder is reused by `src/app/dashboard/referrals/actions.ts`
+so a freshly created host's link is built identically to an existing one's;
+the actual referral-crediting logic lives in the `vendor_join_referred`/
+`apply_referral_credit` SQL functions and `checkStatusAction`
+(`src/features/card-check/api/actions.ts`), not here.
 `admin-audit.ts` is the single write path into `loopkit.admin_audit`, called
 by every `/admin` Server Action and by `vendor-provision/route.ts` (the one
 merqo→loopkit write path that mutates a vendor's access without a signed-in

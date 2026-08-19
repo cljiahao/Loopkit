@@ -8,7 +8,10 @@ Client-side card-check UI.
 
 - `check-form.tsx` — `CheckForm`: phone-entry form using `useActionState` +
   `checkStatusAction`, renders a `ProgramCardStatus` per returned card, and
-  shows a `role="alert"` message on an `"error"`/`"none"` result. On a
+  shows a `role="alert"` message on an `"error"`/`"none"` result. Accepts
+  an optional `referralCode` prop (`src/app/c/page.tsx`'s `?ref=` query
+  param) rendered as a hidden `ref` form field only when present — an
+  unchanged, ref-less submit behaves exactly as before. On a
   `"found"` result the form collapses to a compact "Showing +65… / Not
   you?" summary so the card status (and the QR the customer needs to show
   the shop) isn't pushed below a form they've already filled in; "Not
@@ -19,8 +22,9 @@ Client-side card-check UI.
   `setState`-in-`useEffect` for resetting state on a change.
 - `check-form.dom.test.tsx` — jsdom tests for `CheckForm`: renders the phone
   input and hidden vendor field, submits the form and renders one
-  `ProgramCardStatus` per returned card, and shows the `role="alert"`
-  message for both the error and not-found results
+  `ProgramCardStatus` per returned card, shows the `role="alert"` message
+  for both the error and not-found results, and renders a hidden `ref`
+  field only when a `referralCode` prop is given
 - `program-card-status.tsx` — `ProgramCardStatus`: renders one program's
   progress visual by `view.kind`/`view.variant` (`Plant`/`Cup`,
   `FlameLayers`, `Wheel`/`ScratchCard`, `StampDots`/`PointsBar`), and owns

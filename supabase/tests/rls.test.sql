@@ -10,7 +10,7 @@
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(35);
+select plan(67);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -26,7 +26,17 @@ values
    'vendor-b@test.local'),
   ('00000000-0000-0000-0000-00000000000d',
    '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-   'admin-d@test.local');
+   'admin-d@test.local'),
+  -- Vendor C, Vendor F: dedicated to the referral_hosts/vendor_join_referred
+  -- tests below — kept separate from A/B so those tests' own program
+  -- fixtures don't disturb the provision_default_program section's
+  -- "vendor A/B start with N programs" pre-conditions further down.
+  ('00000000-0000-0000-0000-00000000000c',
+   '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+   'vendor-c@test.local'),
+  ('00000000-0000-0000-0000-00000000000f',
+   '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+   'vendor-f@test.local');
 
 insert into loopkit.admins (user_id)
 values ('00000000-0000-0000-0000-00000000000d');
@@ -47,11 +57,33 @@ values
 insert into loopkit.vendor_notify_settings (vendor_id, customer_telegram_notify_enabled)
 values ('00000000-0000-0000-0000-00000000000b', false);
 
+-- Host/couple-facing referral mechanic (0040): a stamp program and a plant
+-- program for vendor C (so the referral tests below cover both the
+-- crediting-happens-inline-in-SQL path and the reserve-then-TS-finishes
+-- path), plus a stamp program for vendor F purely to prove cross-vendor
+-- isolation. referral_code is set explicitly (not left to its random
+-- default) so the functional tests below can reference it directly.
+insert into loopkit.programs (id, vendor_id, type, name, stamps_required, reward_text, config, active)
+values
+  ('00000000-0000-0000-0000-0000000f0001', '00000000-0000-0000-0000-00000000000c', 'stamp', 'C Stamp Club', 10, 'Free coffee',
+   '{"stamps_required": 10, "reward_text": "Free coffee", "variant": "dots", "points_per_visit": 1}'::jsonb, true),
+  ('00000000-0000-0000-0000-0000000f0002', '00000000-0000-0000-0000-00000000000c', 'plant', 'C Plant Club', 8, 'Free plant',
+   '{"visits_to_bloom": 8, "reward_text": "Free plant", "variant": "plant"}'::jsonb, true),
+  ('00000000-0000-0000-0000-0000000f0003', '00000000-0000-0000-0000-00000000000f', 'stamp', 'F Stamp Club', 10, 'Free coffee',
+   '{"stamps_required": 10, "reward_text": "Free coffee", "variant": "dots", "points_per_visit": 1}'::jsonb, true);
+
+insert into loopkit.referral_hosts (id, vendor_id, program_id, host_phone, label, referral_code)
+values
+  ('00000000-0000-0000-0000-0000000f1001', '00000000-0000-0000-0000-00000000000c', '00000000-0000-0000-0000-0000000f0001', '+6591110001', 'C Stamp Wedding', 'c-stamp-code'),
+  ('00000000-0000-0000-0000-0000000f1002', '00000000-0000-0000-0000-00000000000c', '00000000-0000-0000-0000-0000000f0002', '+6591110003', 'C Plant Wedding', 'c-plant-code'),
+  ('00000000-0000-0000-0000-0000000f1003', '00000000-0000-0000-0000-00000000000f', '00000000-0000-0000-0000-0000000f0003', '+6591110002', 'F Wedding', 'f-stamp-code');
+
 -- ── RLS is actually enabled on every protected table ─────────────────────────
 select ok((select relrowsecurity from pg_class where oid = 'loopkit.vendors'::regclass), 'RLS on vendors');
 select ok((select relrowsecurity from pg_class where oid = 'loopkit.upgrade_requests'::regclass), 'RLS on upgrade_requests');
 select ok((select relrowsecurity from pg_class where oid = 'loopkit.feedback'::regclass), 'RLS on feedback');
 select ok((select relrowsecurity from pg_class where oid = 'loopkit.vendor_notify_settings'::regclass), 'RLS on vendor_notify_settings');
+select ok((select relrowsecurity from pg_class where oid = 'loopkit.referral_hosts'::regclass), 'RLS on referral_hosts');
 
 -- ── Act as Vendor A ────────────────────────────────────────────────────────
 set local role authenticated;
@@ -191,6 +223,11 @@ select throws_ok(
   '42501',
   null,
   'anon cannot read vendor_notify_settings (no SELECT grant)');
+select throws_ok(
+  $$ select 1 from loopkit.referral_hosts $$,
+  '42501',
+  null,
+  'anon cannot read referral_hosts (no SELECT grant)');
 
 -- provision_default_program: service_role-only, never authenticated —
 -- this function bypasses create_program's own auth.uid()-based ownership
@@ -249,6 +286,171 @@ select is(
 select ok(
   position('pg_advisory_xact_lock' in pg_get_functiondef('loopkit.provision_default_program(uuid)'::regprocedure)) > 0,
   'provision_default_program takes an advisory lock before its idempotency check');
+
+-- ── Act as Vendor C (referral_hosts RLS) ─────────────────────────────────
+-- referral_hosts: vendor create/read own, no update/delete grant this round
+-- (0040) — same "for all" policy shape as programs_own, but the table-level
+-- grant only includes select/insert, so an authenticated UPDATE/DELETE is
+-- denied at the privilege check before RLS ever runs (same idiom as
+-- upgrade_requests_admin_update's documented-but-unreachable UPDATE policy
+-- above). Vendor C/F (not A/B) so these fixtures never touch A/B's own
+-- program-count pre-conditions above.
+reset role;
+set local role authenticated;
+select set_config(
+  'request.jwt.claims',
+  json_build_object('sub', '00000000-0000-0000-0000-00000000000c', 'role', 'authenticated')::text,
+  true);
+
+select isnt_empty(
+  $$ select 1 from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001' $$,
+  'C reads its own referral_hosts row');
+select is_empty(
+  $$ select 1 from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1003' $$,
+  'C cannot read F''s referral_hosts row');
+select lives_ok(
+  $$ insert into loopkit.referral_hosts (vendor_id, program_id, host_phone, label)
+     values ('00000000-0000-0000-0000-00000000000c', '00000000-0000-0000-0000-0000000f0001', '+6591110009', 'Another C Wedding') $$,
+  'C can create a referral host on its own program');
+select throws_ok(
+  $$ insert into loopkit.referral_hosts (vendor_id, program_id, host_phone)
+     values ('00000000-0000-0000-0000-00000000000f', '00000000-0000-0000-0000-0000000f0003', '+6591110099') $$,
+  '42501',
+  null,
+  'C cannot create a referral host as F');
+select ok(
+  not has_table_privilege('authenticated', 'loopkit.referral_hosts', 'UPDATE'),
+  'authenticated has no UPDATE grant on referral_hosts (create-only this round)');
+select ok(
+  not has_table_privilege('authenticated', 'loopkit.referral_hosts', 'DELETE'),
+  'authenticated has no DELETE grant on referral_hosts (create-only this round)');
+
+-- ── vendor_join_referred / apply_referral_credit ─────────────────────────
+-- Both are granted to anon (same public-surface shape as vendor_join
+-- itself) — a real guest tapping a /c?ref= link never has a session.
+reset role;
+set local role anon;
+
+-- Self-referral (guest phone == host phone) is a deliberate no-op: the
+-- guest still gets enrolled normally, but the host must never be credited
+-- or bumped — guards against someone farming their own link.
+select is(
+  (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
+  0, 'C''s stamp referral host starts at 0 guests (pre-condition)');
+select lives_ok(
+  $$ select * from loopkit.vendor_join_referred(
+       '00000000-0000-0000-0000-00000000000c', '+6591110001', 'c-stamp-code') $$,
+  'a self-referral call does not throw');
+select is(
+  (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
+  0, 'a self-referral does not bump guest_count');
+
+-- First distinct guest: credits the host exactly once (stamp-type credits
+-- inline, mirroring add_stamp's own body).
+select lives_ok(
+  $$ select * from loopkit.vendor_join_referred(
+       '00000000-0000-0000-0000-00000000000c', '+6591119001', 'c-stamp-code') $$,
+  'the first guest referral call does not throw');
+select is(
+  (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
+  1, 'the first distinct guest bumps guest_count to 1');
+select is(
+  (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-0000000f0001' and phone = '+6591110001'),
+  1, 'the host''s stamp card has exactly 1 stamp after one distinct guest');
+
+-- Same guest again via the same link: no double credit.
+select lives_ok(
+  $$ select * from loopkit.vendor_join_referred(
+       '00000000-0000-0000-0000-00000000000c', '+6591119001', 'c-stamp-code') $$,
+  'a repeat visit from the same guest phone does not throw');
+select is(
+  (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
+  1, 'a repeat visit from the same guest phone does not bump guest_count again');
+select is(
+  (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-0000000f0001' and phone = '+6591110001'),
+  1, 'a repeat visit from the same guest phone does not credit the host a second stamp');
+
+-- A second, genuinely different guest: credits again (proves the guard is
+-- per-guest, not a blanket "already credited once" flag on the host).
+select lives_ok(
+  $$ select * from loopkit.vendor_join_referred(
+       '00000000-0000-0000-0000-00000000000c', '+6591119002', 'c-stamp-code') $$,
+  'a second distinct guest does not throw');
+select is(
+  (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
+  2, 'a second distinct guest bumps guest_count to 2');
+select is(
+  (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-0000000f0001' and phone = '+6591110001'),
+  2, 'the host''s stamp card has exactly 2 stamps after two distinct guests');
+
+-- Cross-vendor isolation: C's referral_code, called with F as p_vendor, must
+-- never resolve or credit anything — referral_code is globally unique, so
+-- the vendor_id scope in vendor_join_referred's own lookup is the only
+-- thing standing between "a code from C" and "credits something at F". The
+-- guest still gets enrolled normally at F, since enrollment doesn't depend
+-- on the referral code resolving at all.
+select lives_ok(
+  $$ select * from loopkit.vendor_join_referred(
+       '00000000-0000-0000-0000-00000000000f', '+6591129001', 'c-stamp-code') $$,
+  'a code from vendor C used against vendor F does not throw');
+select is(
+  (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1001'),
+  2, 'vendor C''s referral host is untouched when its code is called against vendor F');
+select is(
+  (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-0000000f0001' and phone = '+6591110001'),
+  2, 'vendor C''s host card is untouched when C''s code is called against vendor F');
+select isnt_empty(
+  $$ select 1 from loopkit.cards where program_id = '00000000-0000-0000-0000-0000000f0003' and phone = '+6591129001' $$,
+  'the guest is still enrolled normally at vendor F even though the foreign referral code did nothing');
+
+-- Non-stamp (plant) type: vendor_join_referred can't compute the engine
+-- state itself, so it only *reserves* the credit — guest_count still bumps
+-- immediately, but the host's card is untouched until apply_referral_credit
+-- (the TypeScript-engine-computed finish step, exercised by
+-- src/features/card-check/api/actions.test.ts) runs.
+select is(
+  (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1002'),
+  0, 'C''s plant referral host starts at 0 guests (pre-condition)');
+select results_eq(
+  $$ select (referral_credit->>'pending')::boolean
+     from loopkit.vendor_join_referred('00000000-0000-0000-0000-00000000000c', '+6591139001', 'c-plant-code')
+     where program_id = '00000000-0000-0000-0000-0000000f0002' $$,
+  $$ values (true) $$,
+  'a non-stamp referral reserves a pending credit instead of crediting inline');
+select is(
+  (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1002'),
+  1, 'the reservation itself still bumps guest_count immediately');
+
+reset role;
+select is(
+  (select credited_at from loopkit.referral_credits
+     where referral_host_id = '00000000-0000-0000-0000-0000000f1002' and guest_phone = '+6591139001'),
+  null, 'the reserved plant credit is not yet finished (credited_at still null)');
+set local role anon;
+
+select lives_ok(
+  $$ select * from loopkit.apply_referral_credit(
+       '00000000-0000-0000-0000-0000000f1002', '+6591139001',
+       '{"growth": 2, "last_visit_at": null, "blooms": 0, "bloomed": false}'::jsonb,
+       'visit', '{"won": false}'::jsonb) $$,
+  'apply_referral_credit finishes the reserved plant credit without throwing');
+select is(
+  (select (state->>'growth')::int from loopkit.cards
+     where program_id = '00000000-0000-0000-0000-0000000f0002' and phone = '+6591110003'),
+  2, 'the host''s plant card state reflects the TS-engine-computed state');
+
+-- A second finish attempt on the same reservation must be a no-op — proves
+-- the deferred non-stamp path can't double-credit either.
+select lives_ok(
+  $$ select * from loopkit.apply_referral_credit(
+       '00000000-0000-0000-0000-0000000f1002', '+6591139001',
+       '{"growth": 99, "last_visit_at": null, "blooms": 0, "bloomed": false}'::jsonb,
+       'visit', '{"won": false}'::jsonb) $$,
+  'a repeated finish call does not throw');
+select is(
+  (select (state->>'growth')::int from loopkit.cards
+     where program_id = '00000000-0000-0000-0000-0000000f0002' and phone = '+6591110003'),
+  2, 'a repeated finish call does not overwrite the already-credited state');
 
 select * from finish();
 rollback;
