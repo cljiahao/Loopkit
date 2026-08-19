@@ -11,6 +11,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The favicon/apple-touch-icon (`src/lib/brand-icon.tsx`) still rendered
   the old "Raspberry-Rose Punch & Gold" hex after the Sealing Wax
   rebrand — a real visible bug, not just stale docs.
+- Onboarding tour re-triggered on a page refresh: the client-fired "seen"
+  stamp was fire-and-forget and could lose a race against a fast reload.
+  `src/lib/tour-prefs.ts`'s `stampTourSeen` now also runs synchronously in
+  `dashboard/layout.tsx`'s own server render, durable regardless of what
+  happens client-side.
+
+### Changed
+
+- Onboarding tour copy: no more em dashes, and two new steps (Activity,
+  Stats) covering ground the tour skipped before. The first step now shows
+  an example stamp-card preview.
 
 ### Added
 
