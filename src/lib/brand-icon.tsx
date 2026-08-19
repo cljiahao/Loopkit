@@ -1,12 +1,12 @@
 import type { ReactElement } from "react";
 
-// "Raspberry-Rose Punch & Gold" marks, approximated from the OKLCH theme
-// tokens as concrete hex — ImageResponse needs literal CSS colors, it can't
+// "Sealing Wax" marks, approximated from the OKLCH theme tokens as
+// concrete hex — ImageResponse needs literal CSS colors, it can't
 // consume the app's OKLCH custom properties. (Named BRAND_MULBERRY in
 // docs/business/2026-07-21-brand-icon-family-standard.md's "Source token"
-// column, written against the prior theme — that table is now stale.)
-export const BRAND_RASPBERRY = "#93002e";
-export const BRAND_BLUSH = "#fdf4f4";
+// column, written against an even earlier theme — that table is now stale.)
+export const BRAND_RASPBERRY = "#a8002c";
+export const BRAND_BLUSH = "#fcf3ed";
 
 /**
  * The loopkit "L" app mark for ImageResponse-generated icons. Same
