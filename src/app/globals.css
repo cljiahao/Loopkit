@@ -2,29 +2,18 @@
 @import "tw-animate-css";
 @source "../../node_modules/@merqo/ui/dist";
 
-/* ── loopkit — "Raspberry-Rose Punch & Gold" ─────────────────────────────────
-   Digital stamp-card loyalty for SG small vendors. Replaces the earlier
-   "Mulberry & Gold" theme, which read as moody/fintech rather than a
-   celebratory reward program — verified research (BMC Psychology 2025;
-   Royal Society Open Science 2023) found brightness and saturation, not hue
-   family, are the dominant drivers of whether a color reads as "rewarding"
-   vs. "moody." This direction keeps the ownable berry-family identity but
-   pushes it warmer (hue ~350 → ~15, magenta-plum → raspberry-red) and
-   substantially brighter/more saturated, matching how real gamified-reward
-   products (Duolingo) pair a bright, saturated core hue with a gold/bold
-   accent rather than a dark, muted one. Deliberately NOT qkit's ember-kraft
-   (hue ~45-60, well clear of this hue ~15) nor merqo's control-room grey. */
+/* ── loopkit — "Sealing Wax": oxblood crimson + antique brass, replacing "Raspberry-Rose Punch & Gold". */
 
 :root {
-  /* warm blush paper, raspberry-red ink and brand, gold reward stamp. */
-  --background: oklch(0.982 0.008 15);
-  --foreground: oklch(0.24 0.05 15);
-  --card: oklch(0.995 0.005 15);
-  --card-foreground: oklch(0.24 0.05 15);
-  --popover: oklch(0.995 0.005 15);
-  --popover-foreground: oklch(0.24 0.05 15);
-  --primary: oklch(0.6 0.19 15);
-  --primary-foreground: oklch(0.99 0.01 15);
+  /* cream parchment paper, iron-gall ink, sealing-wax crimson brand, antique-brass counter-tone. */
+  --background: oklch(0.97 0.013 56.3);
+  --foreground: oklch(0.22 0.035 28.9);
+  --card: oklch(0.97 0.013 56.3);
+  --card-foreground: oklch(0.22 0.035 28.9);
+  --popover: oklch(0.97 0.013 56.3);
+  --popover-foreground: oklch(0.22 0.035 28.9);
+  --primary: oklch(0.463 0.186 19);
+  --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.94 0.025 15);
   --secondary-foreground: oklch(0.34 0.09 15);
   --muted: oklch(0.955 0.015 15);
@@ -32,21 +21,24 @@
   --accent: oklch(0.92 0.035 13);
   --accent-foreground: oklch(0.34 0.09 15);
   /* Nudged a few degrees warmer than a bare "red" (27→32) so it stays
-     clearly distinct from the new, much-closer primary hue (15) — at
-     similar lightness/chroma, 12° apart reads as "the same color" at a
-     glance; 17° apart still reads as its own destructive/error red. */
+     clearly distinct from the primary hue — at similar lightness/chroma,
+     12° apart reads as "the same color" at a glance; 17° apart still reads
+     as its own destructive/error red. Sealing Wax's primary hue (~19) sits
+     13° from this 32 — closer than the old raspberry hue's 17° margin, still
+     above the 12° "reads as same" threshold, but worth a look if the two
+     ever get confused in practice. */
   --destructive: oklch(0.55 0.2 32);
   --border: oklch(0.9 0.02 13);
   --input: oklch(0.9 0.02 13);
-  --ring: oklch(0.6 0.19 15);
+  --ring: oklch(0.463 0.186 19);
   --radius: 0.75rem;
 
-  /* signature reward stamp — gold ink pressed into the card, unchanged */
-  --gold: oklch(0.79 0.125 82);
-  --gold-foreground: oklch(0.28 0.05 62);
+  /* signature reward stamp — antique-brass ink pressed into the card */
+  --gold: oklch(0.721 0.09 75.2);
+  --gold-foreground: oklch(0.22 0.035 28.9);
   /* accent text drawn directly on the page (not on a solid --gold fill) —
      needs its own contrast pass per mode: dark ink on light paper here,
-     flipped to light gold ink on dark paper below. Never reuse
+     flipped to light brass ink on dark paper below. Never reuse
      --gold-foreground for this — it stays dark in both modes and goes
      unreadable on a dark card. */
   --gold-accent: var(--gold-foreground);
@@ -60,14 +52,18 @@
        with* low saturation reads moody. So the canvas can stay dark as
        long as it's warmly tinted, while --primary/--ring carry the actual
        brightness+saturation the "celebratory" read depends on. */
-    --background: oklch(0.2 0.025 15);
-    --foreground: oklch(0.96 0.012 15);
-    --card: oklch(0.25 0.032 15);
-    --card-foreground: oklch(0.96 0.012 15);
-    --popover: oklch(0.25 0.032 15);
-    --popover-foreground: oklch(0.96 0.012 15);
-    --primary: oklch(0.68 0.17 15);
-    --primary-foreground: oklch(0.16 0.03 15);
+    --background: oklch(0.189 0.021 29.7);
+    --foreground: oklch(0.95 0.013 48.6);
+    --card: oklch(0.189 0.021 29.7);
+    --card-foreground: oklch(0.95 0.013 48.6);
+    --popover: oklch(0.189 0.021 29.7);
+    --popover-foreground: oklch(0.95 0.013 48.6);
+    --primary: oklch(0.64 0.17 18.1);
+    /* Iron Gall ink (the same dark literal used as --foreground in light
+       mode), not this theme's own (light) --foreground — this lighter
+       dark-mode red needs a dark foreground for contrast, not a white/light
+       one. */
+    --primary-foreground: oklch(0.22 0.035 28.9);
     --secondary: oklch(0.32 0.03 15);
     --secondary-foreground: oklch(0.96 0.012 15);
     --muted: oklch(0.3 0.026 15);
@@ -77,10 +73,12 @@
     --destructive: oklch(0.62 0.2 32);
     --border: oklch(0.36 0.03 13);
     --input: oklch(0.38 0.03 13);
-    --ring: oklch(0.68 0.17 15);
+    --ring: oklch(0.64 0.17 18.1);
 
-    --gold: oklch(0.83 0.135 85);
-    --gold-foreground: oklch(0.2 0.04 60);
+    --gold: oklch(0.749 0.095 75);
+    /* Same Iron Gall literal as light mode's --gold-foreground — brass reads
+       light-toned in both themes, so it always wants a dark foreground. */
+    --gold-foreground: oklch(0.22 0.035 28.9);
     --gold-accent: var(--gold);
   }
 }
@@ -166,17 +164,17 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans);
-  /* two soft reward-glows: a gold wash top-right, a raspberry wash top-left —
-     keeps the blush paper feeling bright and celebratory, never papery. */
+  /* two soft reward-glows: a brass wash top-right, a sealing-wax wash
+     top-left — keeps the parchment paper feeling warm, never papery. */
   background-image:
     radial-gradient(
       ellipse 70% 55% at 88% -8%,
-      oklch(0.79 0.125 82 / 0.14),
+      oklch(0.721 0.09 75.2 / 0.14),
       transparent 60%
     ),
     radial-gradient(
       ellipse 65% 50% at 6% -6%,
-      oklch(0.6 0.19 15 / 0.08),
+      oklch(0.463 0.186 19 / 0.08),
       transparent 58%
     );
   background-attachment: fixed;
@@ -185,18 +183,18 @@ body {
 @media (prefers-color-scheme: dark) {
   body {
     /* Same two-glow idea, re-tuned for the dark canvas — flat light-mode
-       values would be duller against the dark background and read flat/moody
-       instead of celebratory. Brighter gold wash + the lighter dark-mode
+       values would be duller against the dark background and read flat
+       instead of warm. Brighter brass wash + the lighter dark-mode
        primary, both at higher opacity to actually read against --background. */
     background-image:
       radial-gradient(
         ellipse 70% 55% at 88% -8%,
-        oklch(0.81 0.13 84 / 0.16),
+        oklch(0.749 0.095 75 / 0.16),
         transparent 60%
       ),
       radial-gradient(
         ellipse 65% 50% at 6% -6%,
-        oklch(0.68 0.17 15 / 0.14),
+        oklch(0.64 0.17 18.1 / 0.14),
         transparent 58%
       );
   }
