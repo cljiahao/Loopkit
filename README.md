@@ -12,7 +12,12 @@ sign-in link, no CTA band above it) and its `BackToTop` button matches
 the cross-kit landing-page parity pass. In production, the Supabase auth
 cookie is scoped to
 `.merqo.io` (`NEXT_PUBLIC_AUTH_COOKIE_DOMAIN`, `src/lib/supabase/`), so
-signing in on one Merqo kit signs you in on the rest. No per-IP rate
+signing in on one Merqo kit signs you in on the rest. `admin_audit`'s
+coverage now extends past `/admin` (merqo's own `/api/merqo/vendor-provision`
+write is recorded too, attributed via a `merqo_system` sentinel) and the
+table is append-only at the grant level (`service_role` can no longer
+`UPDATE`/`DELETE` it, only `SELECT`/`INSERT`) — see `AGENTS.md`'s data
+model section for the retention policy. No per-IP rate
 limiting on public actions (never provisioned in production, so it was a
 fail-open no-op) — `supabase/config.toml` matches the local-dev CLI
 config the other 4 Merqo kits already share. The dashboard's onboarding
