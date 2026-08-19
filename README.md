@@ -66,7 +66,15 @@ model" below. Bumped `@merqo/ui` to v0.16.0: `/dashboard/plan`'s Free/Pro
 feature comparison grid now renders through the package's shared
 `PlanComparisonTable` (matching qkit's own migration onto the same
 component) instead of a local `FEATURES`-rendering grid + local `Cell`
-helper — see `src/app/dashboard/plan/README.md`. See `CHANGELOG.md` for the latest changes, including deduplication of the
+helper — see `src/app/dashboard/plan/README.md`. Bumped `@merqo/ui` to
+v0.18.0 for its built-in, always-rendered `AccountMenu` Light/Dark/System
+theme control (`next-themes`' `useTheme()`); `src/app/globals.css` moved
+its dark-mode tokens from pure `@media (prefers-color-scheme: dark)` CSS
+to a `@custom-variant dark` + `.dark`-class approach, and
+`src/app/layout.tsx` now wraps `<Providers>` in `next-themes`'
+`ThemeProvider` (`attribute="class"`, `defaultTheme="system"`) so that
+control actually works — OS-auto behavior is unchanged, this only adds a
+manual override. See `CHANGELOG.md` for the latest changes, including deduplication of the
 shared bearer-auth and Merqo-RPC-call helpers and the addition of
 templateCentral 5.13.0's comment-hygiene enforcement layer.
 
