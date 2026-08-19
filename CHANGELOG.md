@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- The favicon/apple-touch-icon (`src/lib/brand-icon.tsx`) still rendered
+  the old "Raspberry-Rose Punch & Gold" hex after the Sealing Wax
+  rebrand — a real visible bug, not just stale docs.
+
 ### Added
 
 - Cross-kit audit-trail sweep: extracted `admin_audit`'s insert helper out
