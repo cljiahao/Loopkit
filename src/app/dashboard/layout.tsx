@@ -5,6 +5,7 @@ import { isAdmin } from "@/lib/admin";
 import { isPro } from "@/lib/program";
 import { getVendorProfile } from "@/lib/vendor";
 import { createServerClient } from "@/lib/supabase/server";
+import { stampTourSeen } from "@/lib/tour-prefs";
 import { DashboardNav } from "@/app/dashboard/dashboard-nav";
 import { DashboardTour } from "@/components/dashboard-tour";
 
@@ -28,6 +29,16 @@ export default async function DashboardLayout({
     getVendorProfile(),
     supabase.from("vendors").select("tour_seen_at").maybeSingle(),
   ]);
+
+  // Durable "start" stamp, in addition to dashboard-tour.tsx's client-fired
+  // one: this layout wraps every /dashboard/* page, so stamping here —
+  // synchronously, as part of this request — lands before the response is
+  // even sent, no matter what happens client-side afterwards. See
+  // tour-prefs.ts's stampTourSeen and dashboard-tour.tsx's markTourSeen
+  // comments for the hard-navigation race this closes.
+  if (!vendorRow?.tour_seen_at) {
+    await stampTourSeen(supabase, user.id);
+  }
 
   // Inline server action so the header's Sign out `<form>` can post directly —
   // no client bundle, no exposed endpoint beyond this closure.

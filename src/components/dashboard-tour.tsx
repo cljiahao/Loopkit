@@ -19,9 +19,9 @@ function resolveTourSteps() {
 
 // Fire-and-forget POST, not a Server Action: `@merqo/ui`'s shared
 // DashboardNav renders its links as plain <a> tags (the package has no
-// Next.js dependency), so every dashboard nav click — including the one
+// Next.js dependency), so every dashboard nav click (including the one
 // that brings a vendor back to the overview page while the just-auto-
-// started tour is still up — is a hard navigation, not a client-side
+// started tour is still up) is a hard navigation, not a client-side
 // transition. A Server Action's own internal fetch can't opt into
 // `keepalive`, so a hard nav landing mid-write would abort it and leave
 // `tour_seen_at` unstamped, reproducing the "tour re-runs on every visit"

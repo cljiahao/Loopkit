@@ -16,25 +16,38 @@ const DESKTOP: TourStep[] = [
     element: sel("shop-qr"),
     title: "Your shop QR",
     description:
-      "Welcome to Loopkit. Put this QR code at your counter — customers scan it once to join every active program you run.",
+      "Welcome to Loopkit. Put this QR code at your counter. Customers scan it once to join every active program you run." +
+      '<div class="tour-example"><div class="tour-example-label">Example card</div><div class="tour-example-row" style="margin-top:0.35rem"><strong>5 of 8 stamps</strong><span class="tour-example-pill">3 more for a reward</span></div></div>',
   },
   {
     element: sel("nav-customers"),
     title: "Start here: Customers",
     description:
-      "See everyone who's joined, their stamp progress, and their rewards, all in one list.",
+      "Search a customer by phone number to add a stamp or check their progress. Tap into a program to open its counter, where every stamp gets added.",
+  },
+  {
+    element: sel("nav-activity"),
+    title: "Activity",
+    description:
+      "See every stamp and reward as it happens, across all your programs, in one running feed.",
+  },
+  {
+    element: sel("nav-stats"),
+    title: "Stats",
+    description:
+      "Track how many customers you have and how often they come back.",
   },
   {
     element: sel("nav-account"),
     title: "Your account",
     description:
-      "Update your stall name, profile icon, and social links here — shared across every Merqo kit you use.",
+      "Update your stall name, profile icon, and social links here. Shared across every Merqo kit you use.",
   },
   {
     element: sel("tour-replay"),
     title: "Replay anytime",
     description:
-      "Tap here to run this tour again whenever you like. Now — go put your QR code where customers can scan it →",
+      "Tap here to run this tour again whenever you like. Ready? Go put your QR code where customers can scan it.",
   },
 ];
 
@@ -46,7 +59,7 @@ const MOBILE: TourStep[] = [
     element: sel("nav-menu"),
     title: "Your sections",
     description:
-      "Customers, Activity, and Stats all live in here. Start with Customers to see who's joined.",
+      "Customers, Activity, and Stats all live in here. Start with Customers to add your first stamp.",
   },
   DESKTOP[DESKTOP.length - 1],
 ];
