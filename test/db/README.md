@@ -9,6 +9,7 @@ substitute for running the migration against real Postgres.
 
 ## Contents
 
+- `admin-audit-immutable-schema.test.ts` — checks migration `0039_admin_audit_immutable.sql` (revokes `update`/`delete` on `admin_audit` from `service_role`, leaves `select`/`insert` alone)
 - `admin-schema.test.ts` — checks migration `0003_loopkit_admin.sql` (admins table + `is_admin`)
 - `card-lifecycle-schema.test.ts` — checks migration `0012_loopkit_card_lifecycle.sql` (expiry + card regeneration)
 - `card-token-schema.test.ts` — checks migration `0006_loopkit_card_token.sql` (`card_token` column + enroll/read functions)

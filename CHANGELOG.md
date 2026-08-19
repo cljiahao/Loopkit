@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Cross-kit audit-trail sweep: extracted `admin_audit`'s insert helper out
+  of `src/app/admin/actions.ts` into a shared `recordAudit`
+  (`src/lib/admin-audit.ts`, no behavior change for the existing 5 admin
+  actions) so it can be reused outside `/admin`. `POST
+/api/merqo/vendor-provision` — the one place merqo mutates a vendor's
+  access on loopkit directly, over a bearer secret with no signed-in admin
+  behind it — now calls it too, attributing the action to the provisioned
+  vendor's own id with a `detail.actor: "merqo_system"` sentinel. Migration
+  `0039` also revokes `update`/`delete` on `loopkit.admin_audit` from
+  `service_role` (RLS already blocked `authenticated`/`anon`; the app only
+  ever inserts), and `AGENTS.md` now states a 5-year retention policy for
+  `admin_audit`, matching IRAS record-keeping norms.
+
 ### Changed
 
 - Brand theme: `globals.css`'s color tokens replaced with "Sealing Wax"

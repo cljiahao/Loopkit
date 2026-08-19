@@ -28,7 +28,11 @@ status by email, `qkit-earn-config/` returns whether a vendor's qkit-earn
 integration is enabled, and `vendor-provision/` calls
 `loopkit.provision_default_program` (idempotent, keyed on whether the
 vendor already has any program row) via `supabase.rpc(...)` on the
-service-role client.
+service-role client. `vendor-provision/` is the only one of the four that
+mutates a vendor's access on merqo's behalf, so it's also the only one that
+calls `recordAudit` (`@/lib/admin-audit`) — attributed to the provisioned
+vendor's own id with `detail.actor: "merqo_system"`, since there's no
+signed-in admin behind this call.
 
 ## Parent
 

@@ -216,5 +216,15 @@ of this route (see "AI Harness" above).
   visited the settings page) still gets the call; that "no row means on"
   default is resolved in application code, not just the column default.
   See `docs/superpowers/specs/2026-08-16-customer-notify-vendor-toggle-design.md`.
+- **`admin_audit` retention (2026-08-19):** `loopkit.admin_audit` (migration
+  `0003`; helper: `recordAudit`, `src/lib/admin-audit.ts`) is retained for
+  **5 years** from `created_at` — matching Singapore's IRAS record-keeping
+  norm for a small business. No archival/purge job exists yet; this is a
+  stated policy so retention isn't decided ad hoc later, not an automated
+  one — add a scheduled purge only if/when actually needed. Separately,
+  migration `0039` revokes `UPDATE`/`DELETE` on `admin_audit` from
+  `service_role` (RLS already blocked `authenticated`/`anon`; the app only
+  ever `INSERT`s into it) so the trail can't be edited or erased even by
+  whoever holds the service-role key.
 
 <!-- [[post-harness]] — reserved for trace capture and meta-harness integration -->
