@@ -4,6 +4,7 @@ import { render, screen } from "@testing-library/react";
 
 const mocks = vi.hoisted(() => ({
   maybeSingle: vi.fn(),
+  stampTourSeen: vi.fn(),
 }));
 
 vi.mock("@/features/auth", () => ({
@@ -24,6 +25,9 @@ vi.mock("@/lib/supabase/server", () => ({
     }),
   }),
 }));
+vi.mock("@/lib/tour-prefs", () => ({
+  stampTourSeen: mocks.stampTourSeen,
+}));
 vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
 vi.mock("@/app/dashboard/dashboard-nav", () => ({
   DashboardNav: () => <div data-testid="dashboard-nav" />,
@@ -38,6 +42,7 @@ import DashboardLayout from "./layout";
 
 beforeEach(() => {
   mocks.maybeSingle.mockReset().mockResolvedValue({ data: null });
+  mocks.stampTourSeen.mockReset().mockResolvedValue(undefined);
 });
 
 describe("DashboardLayout", () => {
@@ -85,5 +90,32 @@ describe("DashboardLayout", () => {
       "data-seen",
       "false",
     );
+  });
+
+  it("durably stamps tour_seen_at server-side when the vendor has never seen the tour", async () => {
+    // Regression test for the real bug: a fast page refresh can land before
+    // dashboard-tour.tsx's client-fired, keepalive POST completes, so the
+    // next server render must stamp tour_seen_at itself rather than relying
+    // solely on that client write.
+    mocks.maybeSingle.mockResolvedValue({ data: { tour_seen_at: null } });
+    render(await DashboardLayout({ children: <div>content</div> }));
+
+    expect(mocks.stampTourSeen).toHaveBeenCalledWith(expect.anything(), "u1");
+  });
+
+  it("durably stamps tour_seen_at server-side when no vendor row is found yet", async () => {
+    mocks.maybeSingle.mockResolvedValue({ data: null });
+    render(await DashboardLayout({ children: <div>content</div> }));
+
+    expect(mocks.stampTourSeen).toHaveBeenCalledWith(expect.anything(), "u1");
+  });
+
+  it("does not re-stamp tour_seen_at once it is already set", async () => {
+    mocks.maybeSingle.mockResolvedValue({
+      data: { tour_seen_at: "2026-08-01T00:00:00.000Z" },
+    });
+    render(await DashboardLayout({ children: <div>content</div> }));
+
+    expect(mocks.stampTourSeen).not.toHaveBeenCalled();
   });
 });

@@ -46,6 +46,8 @@ profile/status).
 - `stamp-mark.ts` — `resolveStampMark(view, vendorAvatarUrl)`: pure resolver converting the engine's `ProgressView` dots variant (vendor's chosen mark mode/preset) and vendor avatar URL into the concrete `StampMark` value `StampDots` renders; shared by `/c` and `/setup` live preview so both resolve marks identically
 - `stats.ts` — `classifyActivity`/`pctChange`/`bucketVisitsByDay`/`avgDaysBetweenVisits`/`computeCardStats` (pure aggregation pipeline) plus `getProgramStats`/`getVendorStats` (impure shells fetching cards+stamp_events) and `countExpiredVouchers` (impure shell counting `reward_vouchers` that expired in the last 30 days — a separately-sourced tile added alongside, not replacing, `rewards30d`/`redemptionRate` per `docs/superpowers/specs/2026-07-16-reward-voucher-ledger-design.md`) — powers the vendor stats dashboard
 - `supabase/`
+- `tour-prefs.test.ts` — vitest tests for `stampTourSeen`: updates `tour_seen_at` scoped to `vendor_id`, and logs (never throws) on an update error
+- `tour-prefs.ts` — `stampTourSeen(supabase, vendorId)`: the single update (`vendors.tour_seen_at = now()`, scoped to `vendor_id = auth.uid()` via the `vendors_own` RLS policy) shared by `src/app/api/tour-seen/route.ts`'s client-fired `POST` and `src/app/dashboard/layout.tsx`'s own durable server-render stamp — best-effort, logs (never throws) on failure
 - `types.ts` — `Json` type, `SocialLinks` (shape of the shared `merqo.vendor_profile.social_links` JSONB column — not part of the `loopkit` schema), and the hand-written `Database["loopkit"]` interface (Row/Insert/Update per table, including `vendor_notify_settings`), a manual mirror of `supabase/migrations/` kept in sync by hand (no live DB codegen yet)
 - `utils.ts` — `cn` (clsx+tailwind-merge), `MS_PER_HOUR`/`MS_PER_DAY` constants, `formatPrice`, `centsToDollarString`, `genOrderNumber`, `parseDollarsToCents`, `orderHasPricing`, `count`, `formatOptions` — general-purpose formatting/shared helpers
 - `vendor.ts` — `stallNameSchema`, `getVendorProfile`/`saveStallName`: the vendor's stall name, read from and written to the shared `merqo.vendor_profile` table (local `vendors.name` is only a lazy-create seed value)
@@ -70,6 +72,11 @@ route handler, the two service-role callers of `auth.admin.listUsers()`.
 by every `/admin` Server Action and by `vendor-provision/route.ts` (the one
 merqo→loopkit write path that mutates a vendor's access without a signed-in
 admin behind it).
+`tour-prefs.ts`'s `stampTourSeen` is the single write path into
+`vendors.tour_seen_at`, shared by `src/app/api/tour-seen/route.ts` (the
+client-fired, `keepalive` path) and `src/app/dashboard/layout.tsx` (the
+durable server-render path that closes the race the client-fired path alone
+can't).
 `merqo-vendor-profile.ts`/`merqo-vendor-status.ts`/`metrics.ts` form the HTTP
 contract with the merqo parent app, reusing the same Supabase client
 generically across schemas. `merqo-customer-notify.ts` is a different kind
