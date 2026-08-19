@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @source "../../node_modules/@merqo/ui/dist";
 
+@custom-variant dark (&:is(.dark *));
+
 /* ── loopkit — "Sealing Wax": oxblood crimson + antique brass, replacing "Raspberry-Rose Punch & Gold". */
 
 :root {
@@ -44,43 +46,41 @@
   --gold-accent: var(--gold-foreground);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Dark canvas stays a genuinely dark, warm near-black (not just a
-       lightened version of light mode) — the verified research finding is
-       that darkness itself isn't disqualifying, only darkness *combined
-       with* low saturation reads moody. So the canvas can stay dark as
-       long as it's warmly tinted, while --primary/--ring carry the actual
-       brightness+saturation the "celebratory" read depends on. */
-    --background: oklch(0.189 0.021 29.7);
-    --foreground: oklch(0.95 0.013 48.6);
-    --card: oklch(0.189 0.021 29.7);
-    --card-foreground: oklch(0.95 0.013 48.6);
-    --popover: oklch(0.189 0.021 29.7);
-    --popover-foreground: oklch(0.95 0.013 48.6);
-    --primary: oklch(0.64 0.17 18.1);
-    /* Iron Gall ink (the same dark literal used as --foreground in light
-       mode), not this theme's own (light) --foreground — this lighter
-       dark-mode red needs a dark foreground for contrast, not a white/light
-       one. */
-    --primary-foreground: oklch(0.22 0.035 28.9);
-    --secondary: oklch(0.32 0.03 15);
-    --secondary-foreground: oklch(0.96 0.012 15);
-    --muted: oklch(0.3 0.026 15);
-    --muted-foreground: oklch(0.75 0.02 15);
-    --accent: oklch(0.35 0.036 13);
-    --accent-foreground: oklch(0.96 0.012 15);
-    --destructive: oklch(0.62 0.2 32);
-    --border: oklch(0.36 0.03 13);
-    --input: oklch(0.38 0.03 13);
-    --ring: oklch(0.64 0.17 18.1);
+.dark {
+  /* Dark canvas stays a genuinely dark, warm near-black (not just a
+     lightened version of light mode) — the verified research finding is
+     that darkness itself isn't disqualifying, only darkness *combined
+     with* low saturation reads moody. So the canvas can stay dark as
+     long as it's warmly tinted, while --primary/--ring carry the actual
+     brightness+saturation the "celebratory" read depends on. */
+  --background: oklch(0.189 0.021 29.7);
+  --foreground: oklch(0.95 0.013 48.6);
+  --card: oklch(0.189 0.021 29.7);
+  --card-foreground: oklch(0.95 0.013 48.6);
+  --popover: oklch(0.189 0.021 29.7);
+  --popover-foreground: oklch(0.95 0.013 48.6);
+  --primary: oklch(0.64 0.17 18.1);
+  /* Iron Gall ink (the same dark literal used as --foreground in light
+     mode), not this theme's own (light) --foreground — this lighter
+     dark-mode red needs a dark foreground for contrast, not a white/light
+     one. */
+  --primary-foreground: oklch(0.22 0.035 28.9);
+  --secondary: oklch(0.32 0.03 15);
+  --secondary-foreground: oklch(0.96 0.012 15);
+  --muted: oklch(0.3 0.026 15);
+  --muted-foreground: oklch(0.75 0.02 15);
+  --accent: oklch(0.35 0.036 13);
+  --accent-foreground: oklch(0.96 0.012 15);
+  --destructive: oklch(0.62 0.2 32);
+  --border: oklch(0.36 0.03 13);
+  --input: oklch(0.38 0.03 13);
+  --ring: oklch(0.64 0.17 18.1);
 
-    --gold: oklch(0.749 0.095 75);
-    /* Same Iron Gall literal as light mode's --gold-foreground — brass reads
-       light-toned in both themes, so it always wants a dark foreground. */
-    --gold-foreground: oklch(0.22 0.035 28.9);
-    --gold-accent: var(--gold);
-  }
+  --gold: oklch(0.749 0.095 75);
+  /* Same Iron Gall literal as light mode's --gold-foreground — brass reads
+     light-toned in both themes, so it always wants a dark foreground. */
+  --gold-foreground: oklch(0.22 0.035 28.9);
+  --gold-accent: var(--gold);
 }
 
 @theme inline {
@@ -180,24 +180,22 @@ body {
   background-attachment: fixed;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    /* Same two-glow idea, re-tuned for the dark canvas — flat light-mode
-       values would be duller against the dark background and read flat
-       instead of warm. Brighter brass wash + the lighter dark-mode
-       primary, both at higher opacity to actually read against --background. */
-    background-image:
-      radial-gradient(
-        ellipse 70% 55% at 88% -8%,
-        oklch(0.749 0.095 75 / 0.16),
-        transparent 60%
-      ),
-      radial-gradient(
-        ellipse 65% 50% at 6% -6%,
-        oklch(0.64 0.17 18.1 / 0.14),
-        transparent 58%
-      );
-  }
+.dark body {
+  /* Same two-glow idea, re-tuned for the dark canvas — flat light-mode
+     values would be duller against the dark background and read flat
+     instead of warm. Brighter brass wash + the lighter dark-mode
+     primary, both at higher opacity to actually read against --background. */
+  background-image:
+    radial-gradient(
+      ellipse 70% 55% at 88% -8%,
+      oklch(0.749 0.095 75 / 0.16),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 65% 50% at 6% -6%,
+      oklch(0.64 0.17 18.1 / 0.14),
+      transparent 58%
+    );
 }
 
 /* Display headings tuned for Fraunces optical sizing (shared family face). */

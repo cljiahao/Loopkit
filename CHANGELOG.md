@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Dark mode moved from pure OS-media-query CSS to a `.dark`-class-based
+  approach (`@custom-variant dark`), now driven by `next-themes`'
+  `ThemeProvider` (`src/app/layout.tsx`) — gives a manual Light/Dark/System
+  control in the account menu (via `@merqo/ui` bumped to v0.18.0) on top of
+  the existing OS-auto behavior. `src/app/globals.css`'s color tokens are
+  unchanged, only the two `@media (prefers-color-scheme: dark)` blocks were
+  converted to `.dark`/`.dark body` selectors.
+
 ### Fixed
 
 - The favicon/apple-touch-icon (`src/lib/brand-icon.tsx`) still rendered
