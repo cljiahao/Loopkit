@@ -23,10 +23,11 @@ fail-open no-op) — `supabase/config.toml` matches the local-dev CLI
 config the other 4 Merqo kits already share. The dashboard's onboarding
 tour (`src/components/dashboard-tour.tsx`) stamps its "seen" state as
 soon as it auto-runs rather than when it finishes, via a `keepalive` POST
-to `src/app/api/tour-seen/` rather than a Server Action, so the write
-survives not just a mid-tour refresh but a hard-navigation page unload,
-which mattered because `@merqo/ui`'s shared `DashboardNav` defaulted to
-plain `<a>` nav links (root cause, now fixed — see below). Migrated onto
+to `src/app/api/tour-seen/` rather than a Server Action. That client-fired
+stamp is still fire-and-forget, so a fast page refresh can complete before
+it lands — `src/app/dashboard/layout.tsx` now also calls
+`src/lib/tour-prefs.ts`'s `stampTourSeen` directly, synchronously, as part
+of its own server render, closing that race for good. Migrated onto
 the shared `@merqo/ui` component package (v0.14.0, `package.json`): the
 dashboard nav/account dropdown, `useAsyncAction`, `InfoTooltip`,
 `ImageUploader`, `DashboardTour`, `PricingForm` (the `/admin` pricing
