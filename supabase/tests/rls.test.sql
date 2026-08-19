@@ -1,12 +1,14 @@
 -- loopkit/supabase/tests/rls.test.sql
 -- RLS cross-vendor isolation — pgTAP, run with `supabase test db`.
 --
--- Scoped to the highest-risk vendor-facing write paths (loopkit has 38+
+-- Scoped to the highest-risk vendor-facing write paths (loopkit has 40+
 -- migrations; exhaustive coverage of every table is out of scope for this
 -- pass — see docs/superpowers/specs/2026-07-22-cicd-hook-harness-parity-design.md
 -- §3): loopkit.vendors (shared profile, for-all self policy), loopkit.upgrade_requests
 -- (vendor-insert/select-own + admin-select-all), loopkit.feedback (self-insert-only),
--- loopkit.vendor_notify_settings (for-all own-row, same shape as vendors).
+-- loopkit.vendor_notify_settings (for-all own-row, same shape as vendors),
+-- loopkit.referral_hosts (own-row create/read, no update/delete grant), and a
+-- functional suite for vendor_join_referred/apply_referral_credit.
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
