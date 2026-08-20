@@ -216,6 +216,17 @@ of this route (see "AI Harness" above).
   visited the settings page) still gets the call; that "no row means on"
   default is resolved in application code, not just the column default.
   See `docs/superpowers/specs/2026-08-16-customer-notify-vendor-toggle-design.md`.
+- **Host/couple-facing referral mechanic (2026-08-20):** `loopkit.
+referral_hosts` (migration `0040`) lets a vendor name one of their own
+  active programs plus a host's phone (the bride/groom/organizer who chose
+  them), and share a `/c?v=<vendorId>&ref=<code>` link
+  (`src/app/dashboard/referrals/`). Every distinct guest who joins through
+  that link bumps the host one stamp/visit on the named program — credit-
+  routing on an existing program, not a sixth engine `type`. See
+  `README.md`'s "Data model" section for the full RPC/table shape
+  (`vendor_join_referred`, `apply_referral_credit`, `loopkit.
+referral_credits`) and `docs/superpowers/specs/
+2026-08-20-host-referral-mechanic-design.md`.
 - **`admin_audit` retention (2026-08-19):** `loopkit.admin_audit` (migration
   `0003`; helper: `recordAudit`, `src/lib/admin-audit.ts`) is retained for
   **5 years** from `created_at` — matching Singapore's IRAS record-keeping

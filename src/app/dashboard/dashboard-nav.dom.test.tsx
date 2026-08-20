@@ -34,7 +34,7 @@ describe("DashboardNav", () => {
     tier: "free" as const,
   };
 
-  it("renders Customers, Activity, and Stats as inline nav links", () => {
+  it("renders Customers, Activity, Stats, and Referrals as inline nav links", () => {
     render(<DashboardNav {...baseProps} />);
     expect(screen.getByRole("link", { name: "Customers" })).toHaveAttribute(
       "href",
@@ -48,12 +48,22 @@ describe("DashboardNav", () => {
       "href",
       "/dashboard/stats",
     );
+    expect(screen.getByRole("link", { name: "Referrals" })).toHaveAttribute(
+      "href",
+      "/dashboard/referrals",
+    );
   });
 
   it("renders Dashboard as the first inline nav link", () => {
     render(<DashboardNav {...baseProps} />);
     const links = screen.getAllByRole("link");
-    const navLabels = ["Dashboard", "Customers", "Activity", "Stats"];
+    const navLabels = [
+      "Dashboard",
+      "Customers",
+      "Activity",
+      "Stats",
+      "Referrals",
+    ];
     const navLinks = links.filter((l) =>
       navLabels.includes(l.textContent ?? ""),
     );
@@ -94,6 +104,10 @@ describe("DashboardNav", () => {
     expect(screen.getByRole("link", { name: "Stats" })).toHaveAttribute(
       "data-tour",
       "nav-stats",
+    );
+    expect(screen.getByRole("link", { name: "Referrals" })).toHaveAttribute(
+      "data-tour",
+      "nav-referrals",
     );
   });
 

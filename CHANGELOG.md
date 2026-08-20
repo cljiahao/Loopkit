@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Host/couple-facing referral mechanic for event-cart vendors
+  (`/dashboard/referrals`): a vendor names one of their own active
+  programs plus a host's phone (the bride/groom/organizer who chose them),
+  and gets a shareable `/c?v=<vendorId>&ref=<code>` link. Every distinct
+  guest who joins through that link earns their own card as usual and
+  bumps the host one stamp/visit on the named program — credit-routing on
+  an existing program, not a new engine type. New `vendor_join_referred`/
+  `apply_referral_credit` RPCs and `loopkit.referral_hosts`/
+  `referral_credits` tables (migration `0040`); `vendor_join` itself is
+  unchanged for every existing caller.
+
 ### Changed
 
 - Dark mode moved from pure OS-media-query CSS to a `.dark`-class-based

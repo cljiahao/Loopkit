@@ -3,11 +3,11 @@ import { createServerClient } from "@/lib/supabase/server";
 import { CheckForm } from "@/features/card-check";
 
 type CheckPageProps = {
-  searchParams: Promise<{ v?: string }>;
+  searchParams: Promise<{ v?: string; ref?: string }>;
 };
 
 export default async function CheckPage({ searchParams }: CheckPageProps) {
-  const { v } = await searchParams;
+  const { v, ref } = await searchParams;
 
   // Resolve which active programs this vendor runs up front, so the
   // customer sees what a scan joins before they type anything.
@@ -47,7 +47,7 @@ export default async function CheckPage({ searchParams }: CheckPageProps) {
 
         <div className="rounded-2xl border bg-card px-7 py-9 shadow-sm">
           {v ? (
-            <CheckForm vendorId={v} />
+            <CheckForm vendorId={v} referralCode={ref} />
           ) : (
             <p className="text-sm text-muted-foreground">
               Ask the shop for their loyalty link.

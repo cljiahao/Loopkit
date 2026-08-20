@@ -66,6 +66,7 @@ below.
 - `2026-08-16-customer-notify-vendor-toggle-design.md` — "Customer Notify Vendor Toggle — Design": fast-follow — a new `vendor_notify_settings` table (default on) letting a vendor turn off the customer redemption-confirmation message without touching the customer's own consent.
 - `2026-08-16-vendor-telegram-connect-design.md` — "Vendor Telegram Connect (Phase A2) — Design": retires loopkit's own Telegram bot (Phase A) in favor of merqo's shared one; `notifyRedemptionOnTelegram` now calls merqo's `notify-vendor` endpoint. Deletion-heavy spec; no data carries over, already-linked vendors must reconnect.
 - `2026-08-16-shared-plan-comparison-table-design.md` — "Shared Plan Comparison Table — Design": loopkit's migration onto qkit's new `@merqo/ui` `PlanComparisonTable` component — loopkit's existing 2-tier, boolean/string feature data needs zero reshaping to fit it.
+- `2026-08-20-host-referral-mechanic-design.md` — "Host/Couple-Facing Referral Mechanic — Design": credit-routing on an existing program (not a sixth engine `type`) rewarding a wedding/event host — every distinct guest who joins via the host's `/c?ref=` link bumps the host one stamp/visit; `vendor_join_referred`/`apply_referral_credit` (migration `0040`) plus `/dashboard/referrals`.
 
 ## Parent
 

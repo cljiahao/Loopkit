@@ -241,6 +241,33 @@ customer's order page, which sends them to loopkit's own `/earn?order=...`
 page to enter their phone number and claim it (`src/app/earn/`), rather than
 the stamp being awarded automatically the moment the qkit order completes.
 
+Host/couple-facing referral mechanic for event-cart vendors (migration
+`0040`, `src/app/dashboard/referrals/`): a wedding guest is a one-off the
+vendor will likely never see again, but the host (bride/groom/organizer) who
+chose this vendor is a real repeat/referral relationship worth rewarding.
+This is credit-routing on an EXISTING program a vendor already runs, not a
+sixth engine `type` — `loopkit.referral_hosts` (`vendor_id`, `program_id`,
+`host_phone`, `label`, a unique `referral_code`, `guest_count`) names one of
+the vendor's own active programs plus a host phone, and the vendor shares
+the resulting `/c?v=<vendorId>&ref=<code>` link. `checkStatusAction`
+(`src/features/card-check/api/actions.ts`) calls `vendor_join_referred`
+instead of plain `vendor_join` whenever a `ref` is present (falling back to
+`vendor_join`, unchanged, otherwise) — both now share their enrollment/read
+logic via `vendor_join_enroll`/`vendor_join_cards`. `vendor_join_referred`
+scopes the referral-code lookup to the calling `p_vendor`, so a code minted
+by one vendor can never credit anything at another; a guest referring
+themselves (`guest phone == host phone`) is a no-op; and `loopkit.
+referral_credits` (unique on `(referral_host_id, guest_phone)`) ensures a
+host is credited only the first time each distinct guest phone joins via
+that link. Stamp-type programs are credited inline (mirroring `add_stamp`'s
+own body, minus its vendor-session gate — this path is anonymous/public);
+every other type needs the TypeScript engine's `applyVisit` to compute the
+next state, so `vendor_join_referred` only _reserves_ the credit and
+`checkStatusAction` finishes it via `apply_referral_credit`, the same
+read-compute-persist shape `recordVisitAction` uses for a vendor-triggered
+visit. VIP tiers, birthday rewards, and wallet passes are separate,
+out-of-scope roadmap items.
+
 ## Docs
 
 - Deploy runbook: `docs/DEPLOY.md`

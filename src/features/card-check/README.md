@@ -2,9 +2,12 @@
 
 ## Purpose
 
-The public, unauthenticated card-check flow reached via `/c?v=<vendorId>` —
-a customer checks or enrolls their loyalty card by phone number, and can
-self-service regenerate a lost/expired card.
+The public, unauthenticated card-check flow reached via `/c?v=<vendorId>`
+(optionally `&ref=<code>`, a host/couple referral link —
+`src/app/dashboard/referrals/`) — a customer checks or enrolls their
+loyalty card by phone number, and can self-service regenerate a
+lost/expired card. A `ref` link additionally credits the referring host
+one stamp/visit the first time each distinct guest phone joins through it.
 
 ## Contents
 

@@ -8,7 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function CheckForm({ vendorId }: { vendorId: string }) {
+export function CheckForm({
+  vendorId,
+  referralCode,
+}: {
+  vendorId: string;
+  referralCode?: string;
+}) {
   const [state, formAction, pending] = useActionState(
     checkStatusAction,
     STATUS_IDLE,
@@ -31,6 +37,9 @@ export function CheckForm({ vendorId }: { vendorId: string }) {
       {showForm ? (
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="vendor" value={vendorId} />
+          {referralCode && (
+            <input type="hidden" name="ref" value={referralCode} />
+          )}
           <div className="space-y-2">
             <Label
               htmlFor="phone"

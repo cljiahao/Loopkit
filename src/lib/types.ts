@@ -424,6 +424,63 @@ export interface Database {
         };
         Relationships: [];
       };
+      referral_hosts: {
+        Row: {
+          id: string;
+          vendor_id: string;
+          program_id: string;
+          host_phone: string;
+          label: string | null;
+          referral_code: string;
+          guest_count: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          vendor_id: string;
+          program_id: string;
+          host_phone: string;
+          label?: string | null;
+          referral_code?: string;
+          guest_count?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          vendor_id?: string;
+          program_id?: string;
+          host_phone?: string;
+          label?: string | null;
+          referral_code?: string;
+          guest_count?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      referral_credits: {
+        Row: {
+          id: string;
+          referral_host_id: string;
+          guest_phone: string;
+          credited_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          referral_host_id: string;
+          guest_phone: string;
+          credited_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          referral_host_id?: string;
+          guest_phone?: string;
+          credited_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
@@ -533,6 +590,42 @@ export interface Database {
           voucher_expires_at: string | null;
           vendor_avatar_url: string | null;
         }[];
+      };
+      vendor_join_referred: {
+        Args: {
+          p_vendor: string;
+          p_phone: string;
+          p_referral_code: string;
+        };
+        Returns: {
+          program_id: string;
+          name: string;
+          type: string;
+          config: Json;
+          state: Json;
+          stamp_count: number;
+          card_token: string;
+          reward_text: string;
+          stamps_required: number;
+          expiry_days: number | null;
+          cycle_started_at: string | null;
+          active: boolean;
+          replaced_by_name: string | null;
+          replaced_by_stamp_count: number | null;
+          voucher_expires_at: string | null;
+          vendor_avatar_url: string | null;
+          referral_credit: Json | null;
+        }[];
+      };
+      apply_referral_credit: {
+        Args: {
+          p_referral_host_id: string;
+          p_guest_phone: string;
+          p_state: Json;
+          p_kind: string;
+          p_payload: Json;
+        };
+        Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
       };
       card_by_token: {
         Args: { p_token: string };

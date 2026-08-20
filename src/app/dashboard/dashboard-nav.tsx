@@ -17,6 +17,7 @@ const LINKS = [
   { href: "/dashboard/customers", label: "Customers" },
   { href: "/dashboard/activity", label: "Activity" },
   { href: "/dashboard/stats", label: "Stats" },
+  { href: "/dashboard/referrals", label: "Referrals" },
 ];
 
 function isActive(path: string, href: string): boolean {
