@@ -189,14 +189,14 @@ begin
       if v_program.type = 'stamp' then
         insert into loopkit.cards (program_id, phone, stamp_count)
           values (v_referral.program_id, v_referral.host_phone, 1)
-        on conflict (program_id, phone) do nothing
+        on conflict on constraint cards_program_id_phone_key do nothing
         returning * into v_card;
         if v_card.id is not null then
           insert into loopkit.stamp_events (card_id, kind) values (v_card.id, 'stamp');
         else
           update loopkit.cards
-            set stamp_count = stamp_count + 1, updated_at = now()
-            where program_id = v_referral.program_id and phone = v_referral.host_phone
+            set stamp_count = loopkit.cards.stamp_count + 1, updated_at = now()
+            where loopkit.cards.program_id = v_referral.program_id and phone = v_referral.host_phone
           returning * into v_card;
           insert into loopkit.stamp_events (card_id, kind) values (v_card.id, 'stamp');
         end if;
@@ -205,7 +205,7 @@ begin
           where referral_host_id = v_referral.id and guest_phone = p_phone;
       else
         select * into v_card from loopkit.cards
-          where program_id = v_referral.program_id and phone = v_referral.host_phone;
+          where loopkit.cards.program_id = v_referral.program_id and phone = v_referral.host_phone;
 
         v_credit := jsonb_build_object(
           'pending', true,
