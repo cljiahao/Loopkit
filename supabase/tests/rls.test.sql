@@ -438,8 +438,8 @@ select is(
 set local role anon;
 select results_eq(
   $$ select (referral_credit->>'pending')::boolean
-     from loopkit.vendor_join_referred('00000000-0000-0000-0000-00000000000c', '+6591139001', 'c-plant-code')
-     where program_id = '00000000-0000-0000-0000-0000000f0002' $$,
+     from loopkit.vendor_join_referred('00000000-0000-0000-0000-00000000000c', '+6591139001', 'c-plant-code') vjr
+     where vjr.program_id = '00000000-0000-0000-0000-0000000f0002' $$,
   $$ values (true) $$,
   'a non-stamp referral reserves a pending credit instead of crediting inline');
 
