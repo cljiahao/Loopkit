@@ -55,9 +55,9 @@
      brightness+saturation the "celebratory" read depends on. */
   --background: oklch(0.189 0.021 29.7);
   --foreground: oklch(0.95 0.013 48.6);
-  --card: oklch(0.259 0.031 29.7);
+  --card: oklch(0.279 0.034 29.7);
   --card-foreground: oklch(0.95 0.013 48.6);
-  --popover: oklch(0.259 0.031 29.7);
+  --popover: oklch(0.279 0.034 29.7);
   --popover-foreground: oklch(0.95 0.013 48.6);
   --primary: oklch(0.64 0.17 18.1);
   /* Iron Gall ink (the same dark literal used as --foreground in light
