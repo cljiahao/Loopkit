@@ -10,9 +10,9 @@
   /* cream parchment paper, iron-gall ink, sealing-wax crimson brand, antique-brass counter-tone. */
   --background: oklch(0.97 0.013 56.3);
   --foreground: oklch(0.22 0.035 28.9);
-  --card: oklch(0.983 0.008 56.3);
+  --card: oklch(0.992 0.004 56.3);
   --card-foreground: oklch(0.22 0.035 28.9);
-  --popover: oklch(0.983 0.008 56.3);
+  --popover: oklch(0.992 0.004 56.3);
   --popover-foreground: oklch(0.22 0.035 28.9);
   --primary: oklch(0.463 0.186 19);
   --primary-foreground: oklch(1 0 0);
@@ -55,9 +55,9 @@
      brightness+saturation the "celebratory" read depends on. */
   --background: oklch(0.189 0.021 29.7);
   --foreground: oklch(0.95 0.013 48.6);
-  --card: oklch(0.239 0.027 29.7);
+  --card: oklch(0.259 0.031 29.7);
   --card-foreground: oklch(0.95 0.013 48.6);
-  --popover: oklch(0.239 0.027 29.7);
+  --popover: oklch(0.259 0.031 29.7);
   --popover-foreground: oklch(0.95 0.013 48.6);
   --primary: oklch(0.64 0.17 18.1);
   /* Iron Gall ink (the same dark literal used as --foreground in light
