@@ -78,8 +78,11 @@ manual override. Bumped `@merqo/ui` to v0.19.0: the theme control now sits
 behind a collapsed "Theme · {current}" submenu (matching the existing
 "Switch products"/"Get help" pattern) instead of three always-expanded
 radio options. See `CHANGELOG.md` for the latest changes, including deduplication of the
-shared bearer-auth and Merqo-RPC-call helpers and the addition of
-templateCentral 5.13.0's comment-hygiene enforcement layer.
+shared bearer-auth and Merqo-RPC-call helpers, the addition of
+templateCentral 5.13.0's comment-hygiene enforcement layer, and a fix
+restoring card/background contrast (both modes) after the Sealing Wax
+rebrand had accidentally collapsed them to the same color, plus follow-up
+passes that widened both deltas further.
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
