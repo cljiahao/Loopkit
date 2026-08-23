@@ -74,7 +74,10 @@ to a `@custom-variant dark` + `.dark`-class approach, and
 `src/app/layout.tsx` now wraps `<Providers>` in `next-themes`'
 `ThemeProvider` (`attribute="class"`, `defaultTheme="system"`) so that
 control actually works — OS-auto behavior is unchanged, this only adds a
-manual override. See `CHANGELOG.md` for the latest changes, including deduplication of the
+manual override. Bumped `@merqo/ui` to v0.19.0: the theme control now sits
+behind a collapsed "Theme · {current}" submenu (matching the existing
+"Switch products"/"Get help" pattern) instead of three always-expanded
+radio options. See `CHANGELOG.md` for the latest changes, including deduplication of the
 shared bearer-auth and Merqo-RPC-call helpers and the addition of
 templateCentral 5.13.0's comment-hygiene enforcement layer.
 

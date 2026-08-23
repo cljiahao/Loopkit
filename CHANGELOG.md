@@ -28,6 +28,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the existing OS-auto behavior. `src/app/globals.css`'s color tokens are
   unchanged, only the two `@media (prefers-color-scheme: dark)` blocks were
   converted to `.dark`/`.dark body` selectors.
+- Bumped `@merqo/ui` to v0.19.0: the theme control now sits behind a
+  collapsed "Theme · {current}" submenu instead of three always-expanded
+  radio options.
 
 ### Fixed
 
