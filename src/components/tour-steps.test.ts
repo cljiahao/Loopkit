@@ -53,6 +53,12 @@ describe("tourSteps", () => {
     }
   });
 
+  it("renders the real stampStrategy.progress() label for the example card, not a hand-copied one", () => {
+    const description = tourSteps(false)[0].description;
+    expect(description).toContain("5/8 stamps");
+    expect(description).not.toContain('class="tour-example-pill"');
+  });
+
   it("embeds the example-card preview markup in the first desktop step only", () => {
     const desktop = tourSteps(false);
     expect(desktop[0].description).toContain("tour-example");

@@ -27,7 +27,12 @@ to `src/app/api/tour-seen/` rather than a Server Action. That client-fired
 stamp is still fire-and-forget, so a fast page refresh can complete before
 it lands — `src/app/dashboard/layout.tsx` now also calls
 `src/lib/tour-prefs.ts`'s `stampTourSeen` directly, synchronously, as part
-of its own server render, closing that race for good. Migrated onto
+of its own server render, closing that race for good. The tour's first-step
+"example card" progress text renders the real `stampStrategy.progress()`
+output instead of a hand-copied string, so it can't drift from what the
+engine actually computes — see
+`docs/superpowers/specs/2026-08-25-tour-example-badge-drift-fix-design.md`
+in the workspace root. Migrated onto
 the shared `@merqo/ui` component package (v0.14.0, `package.json`): the
 dashboard nav/account dropdown, `useAsyncAction`, `InfoTooltip`,
 `ImageUploader`, `DashboardTour`, `PricingForm` (the `/admin` pricing

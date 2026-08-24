@@ -1,5 +1,6 @@
 // Pure step config for the dashboard onboarding tour. No driver.js import here
 // so it stays node-unit-testable; the controller maps these to driver's Config.
+import { stampStrategy } from "@/lib/engine/stamp";
 
 export type TourStep = {
   /** CSS selector for the element to spotlight. */
@@ -10,6 +11,13 @@ export type TourStep = {
 
 const sel = (tour: string) => `[data-tour="${tour}"]`;
 
+// Real progress label, not a hand-copied one, so the example can't drift.
+const exampleProgressLabel = stampStrategy.progress(
+  { stamp_count: 5, reward_count: 0 },
+  { stamps_required: 8, reward_text: "" },
+  new Date(),
+).label;
+
 // Desktop: nav links are visible, so we can spotlight each landmark.
 const DESKTOP: TourStep[] = [
   {
@@ -17,7 +25,7 @@ const DESKTOP: TourStep[] = [
     title: "Your shop QR",
     description:
       "Welcome to Loopkit. Put this QR code at your counter. Customers scan it once to join every active program you run." +
-      '<div class="tour-example"><div class="tour-example-label">Example card</div><div class="tour-example-row" style="margin-top:0.35rem"><strong>5 of 8 stamps</strong><span class="tour-example-pill">3 more for a reward</span></div></div>',
+      `<div class="tour-example"><div class="tour-example-label">Example card</div><div class="tour-example-row" style="margin-top:0.35rem"><strong>${exampleProgressLabel}</strong></div></div>`,
   },
   {
     element: sel("nav-customers"),
