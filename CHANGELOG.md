@@ -31,6 +31,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Bumped `@merqo/ui` to v0.19.0: the theme control now sits behind a
   collapsed "Theme · {current}" submenu instead of three always-expanded
   radio options.
+- The onboarding tour's "example card" progress text now renders the real
+  `stampStrategy.progress()` output instead of a hand-copied "5 of 8
+  stamps"/"3 more for a reward" — the hand copy had already drifted from
+  the engine's real `N/M stamps` label format.
 
 ### Fixed
 
