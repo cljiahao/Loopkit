@@ -31,7 +31,7 @@ of its own server render, closing that race for good. The tour's first-step
 "example card" progress text renders the real `stampStrategy.progress()`
 output instead of a hand-copied string, so it can't drift from what the
 engine actually computes — see
-`docs/superpowers/specs/2026-08-25-tour-example-badge-drift-fix-design.md`
+`../docs/superpowers/specs/2026-08-25-tour-example-badge-drift-fix-design.md`
 in the workspace root. Migrated onto
 the shared `@merqo/ui` component package (v0.14.0, `package.json`): the
 dashboard nav/account dropdown, `useAsyncAction`, `InfoTooltip`,
