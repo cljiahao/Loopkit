@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Per-mechanic stats breakdown on the vendor-wide `/dashboard/stats` page:
+  a new "By mechanic" card groups enrolled/visits/redemption-rate by which
+  named mechanic (Stamp/Growth/Chance Card) a program's engine `type`
+  belongs to, shown only when a vendor runs 2+ distinct mechanics.
 - Host/couple-facing referral mechanic for event-cart vendors
   (`/dashboard/referrals`): a vendor names one of their own active
   programs plus a host's phone (the bride/groom/organizer who chose them),

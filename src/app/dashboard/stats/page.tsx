@@ -5,6 +5,7 @@ import { listPrograms, currentProgram } from "@/lib/program";
 import {
   getProgramStats,
   getVendorStats,
+  getVendorMechanicBreakdown,
   countExpiredVouchers,
 } from "@/lib/stats";
 import { cn } from "@/lib/utils";
@@ -68,9 +69,10 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
 
   if (!p) {
     const programIds = programs.map((prog) => prog.id);
-    const [stats, expiredUnclaimed] = await Promise.all([
+    const [stats, expiredUnclaimed, mechanicBreakdown] = await Promise.all([
       getVendorStats(programIds),
       countExpiredVouchers(programIds),
+      getVendorMechanicBreakdown(programIds),
     ]);
 
     return (
@@ -144,6 +146,25 @@ export default async function StatsPage({ searchParams }: StatsPageProps) {
                 <VisitsChart data={stats.visitsByDay} />
               </div>
             </ElevatedCard>
+
+            {mechanicBreakdown.length > 1 && (
+              <ElevatedCard className="p-6">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  By mechanic
+                </h2>
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {mechanicBreakdown.map((m) => (
+                    <div key={m.mechanic} className="rounded-lg border p-3">
+                      <p className="text-sm font-semibold">{m.mechanic}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {m.enrolled} enrolled · {m.visitsTotal} visits ·{" "}
+                        {Math.round(m.redemptionRate * 100)}% redemption
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </ElevatedCard>
+            )}
           </>
         )}
       </div>

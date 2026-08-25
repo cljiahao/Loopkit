@@ -38,6 +38,7 @@ vi.mock("@/lib/stats", () => ({
   getVendorStats: vi.fn(async () => statsWithData),
   getProgramStats: vi.fn(async () => statsWithData),
   countExpiredVouchers: vi.fn(async () => 1),
+  getVendorMechanicBreakdown: vi.fn(async () => []),
 }));
 vi.mock("next/navigation", () => ({
   redirect: vi.fn((url: string) => {
@@ -76,5 +77,34 @@ describe("StatsPage", () => {
     expect(
       screen.getByText(/share your qr from the counter page/i),
     ).toBeInTheDocument();
+  });
+
+  it("shows a per-mechanic breakdown when 2+ mechanics are in use", async () => {
+    const { getVendorMechanicBreakdown } = await import("@/lib/stats");
+    vi.mocked(getVendorMechanicBreakdown).mockResolvedValueOnce([
+      {
+        mechanic: "Stamp",
+        enrolled: 5,
+        visitsTotal: 20,
+        rewardsTotal: 3,
+        redemptionRate: 0.6,
+      },
+      {
+        mechanic: "Chance Card",
+        enrolled: 3,
+        visitsTotal: 10,
+        rewardsTotal: 1,
+        redemptionRate: 0.33,
+      },
+    ]);
+    render(await StatsPage({ searchParams: Promise.resolve({}) }));
+    expect(screen.getByText("By mechanic")).toBeInTheDocument();
+    expect(screen.getByText("Stamp")).toBeInTheDocument();
+    expect(screen.getByText("Chance Card")).toBeInTheDocument();
+  });
+
+  it("hides the per-mechanic breakdown when only one mechanic is in use", async () => {
+    render(await StatsPage({ searchParams: Promise.resolve({}) }));
+    expect(screen.queryByText("By mechanic")).not.toBeInTheDocument();
   });
 });
