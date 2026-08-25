@@ -15,6 +15,16 @@ vi.mock("@/app/setup/actions", () => ({
 import { SetupForm } from "@/app/setup/setup-form";
 import type { Program } from "@/lib/program";
 
+// Create-flow only: Type/Basics/Rules are step-gated, so most tests below
+// need to advance through them to reach a later step's fields. Edit mode
+// (isEdit) keeps the original single-page layout and never needs these.
+async function goToBasics(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Next: Basics" }));
+}
+async function goToRules(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Next: Rules" }));
+}
+
 const stampProgram: Program = {
   id: "p1",
   name: "Coffee Stamps",
@@ -77,8 +87,10 @@ describe("SetupForm live preview", () => {
         replacingType={null}
       />,
     );
+    await goToBasics(user);
     await user.type(screen.getByLabelText("Card name"), "Coffee card");
     await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await goToRules(user);
     await user.click(screen.getByRole("button", { name: "Create card" }));
 
     expect(saveMock).toHaveBeenCalled();
@@ -99,12 +111,19 @@ describe("SetupForm live preview", () => {
       />,
     );
     // Default type/variant is already stamp/dots, so the "Stamp mark"
-    // Section is visible without picking a family/style first.
+    // Section is available once "advanced options" is revealed on Rules.
+    await goToBasics(user);
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await goToRules(user);
+    await user.click(
+      screen.getByRole("button", {
+        name: "Show advanced options (stamp mark)",
+      }),
+    );
     await user.click(screen.getByRole("radio", { name: "Preset icon" }));
     await user.click(screen.getByRole("button", { name: "star" }));
 
-    await user.type(screen.getByLabelText("Card name"), "Coffee card");
-    await user.type(screen.getByLabelText("Reward"), "Free kopi");
     await user.click(screen.getByRole("button", { name: "Create card" }));
 
     expect(saveMock).toHaveBeenCalled();
@@ -316,10 +335,12 @@ describe("SetupForm type picker", () => {
     );
     await user.click(screen.getByRole("button", { name: "Growth" }));
     await user.click(screen.getByRole("button", { name: "Flame Club" }));
+    await goToBasics(user);
     expect(screen.getByText("Visits for full blaze")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Card name"), "Coffee card");
     await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await goToRules(user);
     await user.click(screen.getByRole("button", { name: "Create card" }));
 
     expect(saveMock).toHaveBeenCalled();
@@ -339,6 +360,7 @@ describe("SetupForm type picker", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: "Points Club" }));
+    await goToBasics(user);
     expect(screen.getByText("Points required")).toBeInTheDocument();
     expect(screen.getByLabelText("Points per visit")).toBeInTheDocument();
 
@@ -352,6 +374,7 @@ describe("SetupForm type picker", () => {
 
     await user.type(screen.getByLabelText("Card name"), "Coffee Points");
     await user.type(screen.getByLabelText("Reward"), "Free drink");
+    await goToRules(user);
     await user.click(screen.getByRole("button", { name: "Create card" }));
 
     expect(saveMock).toHaveBeenCalled();
@@ -374,10 +397,12 @@ describe("SetupForm type picker", () => {
     );
     await user.click(screen.getByRole("button", { name: "Growth" }));
     await user.click(screen.getByRole("button", { name: "Fill the Cup" }));
+    await goToBasics(user);
     expect(screen.getByText("Visits to fill")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Card name"), "Fill-a-kopi");
     await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await goToRules(user);
     await user.click(screen.getByRole("button", { name: "Create card" }));
 
     expect(saveMock).toHaveBeenCalled();
@@ -398,10 +423,12 @@ describe("SetupForm type picker", () => {
     );
     await user.click(screen.getByRole("button", { name: "Growth" }));
     await user.click(screen.getByRole("button", { name: "Sprout" }));
+    await goToBasics(user);
     expect(screen.getByText("Visits to bloom")).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Card name"), "Grow-a-kopi");
     await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await goToRules(user);
     await user.click(screen.getByRole("button", { name: "Create card" }));
 
     expect(saveMock).toHaveBeenCalled();
@@ -422,6 +449,7 @@ describe("SetupForm type picker", () => {
     );
     await user.click(screen.getByRole("button", { name: "Chance Card" }));
     await user.click(screen.getByRole("button", { name: "Spin the Wheel" }));
+    await goToBasics(user);
 
     expect(screen.getByText("Wheel segments")).toBeInTheDocument();
     expect(screen.getByText("Overall win chance: 17%")).toBeInTheDocument();
@@ -438,6 +466,7 @@ describe("SetupForm type picker", () => {
 
     await user.type(screen.getByLabelText("Card name"), "Spin to win");
     await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await goToRules(user);
     await user.click(screen.getByRole("button", { name: "Create card" }));
 
     expect(saveMock).toHaveBeenCalled();
@@ -456,6 +485,7 @@ describe("SetupForm type picker", () => {
         replacingType={null}
       />,
     );
+    await goToBasics(user);
     await user.click(screen.getByRole("button", { name: "15" }));
     expect(screen.getByLabelText("Stamps required")).toHaveValue(15);
     expect(screen.getAllByText("0/15 stamps")[0]).toBeInTheDocument();
@@ -514,6 +544,10 @@ describe("SetupForm type picker", () => {
         replacingType={null}
       />,
     );
+    await goToBasics(user);
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await goToRules(user);
     expect(
       screen.queryByLabelText("Head start amount"),
     ).not.toBeInTheDocument();
@@ -524,13 +558,119 @@ describe("SetupForm type picker", () => {
 
     await user.clear(percentInput);
     await user.type(percentInput, "35");
-    await user.type(screen.getByLabelText("Card name"), "Coffee card");
-    await user.type(screen.getByLabelText("Reward"), "Free kopi");
     await user.click(screen.getByRole("button", { name: "Create card" }));
 
     expect(saveMock).toHaveBeenCalled();
     const submitted = saveMock.mock.calls[0][1] as FormData;
     expect(submitted.get("head_start_percent")).toBe("35");
+  });
+});
+
+describe("SetupForm create-flow step wizard", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("shows the 3-step indicator and step 1's Next button, but no Back/Rules content yet", () => {
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    expect(screen.getByText("1. Type")).toBeInTheDocument();
+    expect(screen.getByText("2. Basics")).toBeInTheDocument();
+    expect(screen.getByText("3. Rules")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Next: Basics" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Create card" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("disables Next: Rules until a card name is entered, then enables it", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await goToBasics(user);
+    expect(screen.getByRole("button", { name: "Next: Rules" })).toBeDisabled();
+
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    expect(screen.getByRole("button", { name: "Next: Rules" })).toBeEnabled();
+  });
+
+  it("going Back from Basics to Type preserves the entered card name", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await goToBasics(user);
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    await user.click(screen.getByRole("button", { name: "← Back" }));
+
+    expect(
+      screen.getByRole("button", { name: "Next: Basics" }),
+    ).toBeInTheDocument();
+
+    await goToBasics(user);
+    expect(screen.getByLabelText("Card name")).toHaveValue("Coffee card");
+  });
+
+  it("keeps the stamp mark section collapsed behind 'Show advanced options' until asked for", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await goToBasics(user);
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    await goToRules(user);
+
+    expect(
+      screen.queryByRole("radio", { name: "Preset icon" }),
+    ).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", {
+        name: "Show advanced options (stamp mark)",
+      }),
+    );
+    expect(
+      screen.getByRole("radio", { name: "Preset icon" }),
+    ).toBeInTheDocument();
+  });
+
+  it("edit mode never shows the step indicator or wizard Next/Back controls", () => {
+    render(
+      <SetupForm
+        program={stampProgram}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    expect(screen.queryByText("1. Type")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Next: Basics" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Save changes" }),
+    ).toBeInTheDocument();
   });
 });
 
