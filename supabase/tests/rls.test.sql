@@ -529,7 +529,7 @@ select is(
 set local role anon;
 select lives_ok(
   $$ select loopkit.set_customer_birthday(
-       '00000000-0000-0000-0000-00000000000a', '+6590009999', 6, 15) $$,
+       '00000000-0000-0000-0000-00000000000a', '+6590009999', 6::smallint, 15::smallint) $$,
   'set_customer_birthday on an unknown phone does not throw');
 
 reset role;
