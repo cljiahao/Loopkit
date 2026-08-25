@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { StatTile } from "@merqo/ui";
 import { requireVendor } from "@/features/auth";
 import { listPrograms, currentProgram } from "@/lib/program";
 import {
@@ -8,31 +8,11 @@ import {
   getVendorMechanicBreakdown,
   countExpiredVouchers,
 } from "@/lib/stats";
-import { cn } from "@/lib/utils";
 import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
 import { VisitsChart } from "@/app/dashboard/stats/visits-chart";
 import { ElevatedCard } from "@/components/elevated-card";
 
-function Delta({ pct }: { pct: number | null }) {
-  if (pct === null) return null;
-  const up = pct >= 0;
-  const Icon = up ? ArrowUp : ArrowDown;
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[0.65rem] font-semibold tabular-nums",
-        up
-          ? "bg-emerald-500/12 text-emerald-700 dark:text-emerald-400"
-          : "bg-destructive/12 text-destructive",
-      )}
-      title="vs. the prior 30 days"
-    >
-      <Icon className="size-3" />
-      {Math.abs(Math.round(pct))}%
-    </span>
-  );
-}
-
+/** Wraps @merqo/ui's shared StatTile (value-above-label) in loopkit's own card shell. */
 function Tile({
   label,
   value,
@@ -44,11 +24,15 @@ function Tile({
 }) {
   return (
     <ElevatedCard className="p-5">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-2xl font-bold tracking-tight">{value}</p>
-        {delta !== undefined && <Delta pct={delta} />}
-      </div>
-      <p className="mt-1 text-xs font-medium text-muted-foreground">{label}</p>
+      <StatTile
+        label={label}
+        value={value}
+        valueClassName="tracking-tight"
+        reverse
+        delta={delta}
+        deltaSize="xs"
+        deltaTooltip="vs. the prior 30 days"
+      />
     </ElevatedCard>
   );
 }
