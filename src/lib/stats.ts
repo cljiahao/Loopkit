@@ -179,6 +179,120 @@ export function computeCardStats(
   };
 }
 
+// Which named mechanic (per docs/business's Stamp/Growth/Chance-Card framing)
+// a program's engine `type` belongs to. "Points" is a stamp.ts render variant
+// (points_per_visit config), not a distinct DB-level type — grouping it apart
+// from Stamp would mean guessing at a config heuristic, so it stays under
+// Stamp here.
+export function mechanicLabel(type: string): string {
+  if (type === "plant") return "Growth";
+  if (type === "lucky" || type === "wheel" || type === "scratch") {
+    return "Chance Card";
+  }
+  return "Stamp";
+}
+
+export type MechanicStats = {
+  mechanic: string;
+  enrolled: number;
+  visitsTotal: number;
+  rewardsTotal: number;
+  redemptionRate: number;
+};
+
+// Pure aggregation, same shape as computeCardStats but bucketed by mechanic
+// instead of pooled across every program.
+export function computeMechanicBreakdown(
+  programs: { id: string; type: string }[],
+  cards: { id: string; program_id: string }[],
+  activityEvents: StatsEvent[],
+  rewardEvents: StatsEvent[],
+): MechanicStats[] {
+  const programType = new Map(programs.map((p) => [p.id, p.type]));
+  const cardMechanic = new Map(
+    cards.map((c) => [
+      c.id,
+      mechanicLabel(programType.get(c.program_id) ?? "stamp"),
+    ]),
+  );
+
+  const byMechanic = new Map<
+    string,
+    { enrolled: number; visitsTotal: number; rewardsTotal: number }
+  >();
+  const bucket = (mechanic: string) => {
+    let b = byMechanic.get(mechanic);
+    if (!b) {
+      b = { enrolled: 0, visitsTotal: 0, rewardsTotal: 0 };
+      byMechanic.set(mechanic, b);
+    }
+    return b;
+  };
+
+  for (const c of cards) bucket(cardMechanic.get(c.id) ?? "Stamp").enrolled++;
+  for (const e of activityEvents) {
+    bucket(cardMechanic.get(e.card_id) ?? "Stamp").visitsTotal++;
+  }
+  for (const e of rewardEvents) {
+    bucket(cardMechanic.get(e.card_id) ?? "Stamp").rewardsTotal++;
+  }
+
+  return [...byMechanic.entries()]
+    .map(([mechanic, b]) => ({
+      mechanic,
+      ...b,
+      redemptionRate: b.enrolled === 0 ? 0 : b.rewardsTotal / b.enrolled,
+    }))
+    .sort((a, b) => b.visitsTotal - a.visitsTotal);
+}
+
+// Impure shell: fetch every one of the vendor's programs' cards + events,
+// then delegate to computeMechanicBreakdown. Only meaningful vendor-wide —
+// a single program is already one mechanic.
+export async function getVendorMechanicBreakdown(
+  programIds: string[],
+): Promise<MechanicStats[]> {
+  if (programIds.length === 0) return [];
+  const supabase = await createServerClient();
+
+  const { data: programs, error: programsError } = await supabase
+    .from("programs")
+    .select("id,type")
+    .in("id", programIds);
+  if (programsError) {
+    throw new Error(`getVendorMechanicBreakdown: ${programsError.message}`);
+  }
+
+  const { data: cards, error: cardsError } = await supabase
+    .from("cards")
+    .select("id,program_id")
+    .in("program_id", programIds);
+  if (cardsError) {
+    throw new Error(`getVendorMechanicBreakdown: ${cardsError.message}`);
+  }
+
+  const cardIds = (cards ?? []).map((c) => c.id);
+  let events: StatsEvent[] = [];
+  if (cardIds.length > 0) {
+    const { data, error } = await supabase
+      .from("stamp_events")
+      .select("card_id,kind,payload,created_at")
+      .in("card_id", cardIds);
+    if (error) {
+      throw new Error(`getVendorMechanicBreakdown: ${error.message}`);
+    }
+    events = data ?? [];
+  }
+
+  const { activityEvents, rewardEvents } = classifyActivity(events);
+  return computeMechanicBreakdown(
+    programs ?? [],
+    cards ?? [],
+    activityEvents,
+    rewardEvents,
+  );
+}
+
 // Impure shell: fetch this program's cards + stamp_events (RLS scopes both
 // to the signed-in vendor, same as activity/page.tsx), then delegate to the
 // pure helpers above.
