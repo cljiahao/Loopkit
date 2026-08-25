@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireVendor } from "@/features/auth";
 import { listPrograms, currentProgram } from "@/lib/program";
@@ -41,7 +42,12 @@ export function VendorCustomerList({
           className="flex flex-col gap-2 p-3 text-sm"
         >
           <div className="flex items-center justify-between gap-3">
-            <p className="font-medium">{customer.name ?? customer.phone}</p>
+            <Link
+              href={`/dashboard/customers/${encodeURIComponent(customer.phone)}`}
+              className="font-medium hover:underline"
+            >
+              {customer.name ?? customer.phone}
+            </Link>
             <span className="shrink-0 text-xs text-muted-foreground">
               {formatSgtDate(customer.lastSeenAt)}
             </span>
@@ -188,7 +194,12 @@ export default async function CustomersPage({
               className="flex items-center justify-between gap-3 p-3 text-sm"
             >
               <div className="min-w-0">
-                <p className="font-medium">{card.phone}</p>
+                <Link
+                  href={`/dashboard/customers/${encodeURIComponent(card.phone)}`}
+                  className="font-medium hover:underline"
+                >
+                  {card.phone}
+                </Link>
                 <p className="mt-0.5 truncate text-muted-foreground">
                   {
                     getProgress(

@@ -12,7 +12,7 @@
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(80);
+select plan(90);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -582,6 +582,67 @@ reset role;
 select is(
   (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000002' and phone = '+6590000001'),
   1, 'a program not opted into the birthday bonus grants only the real stamp');
+
+-- ── Manual stamp adjustment (0042) ─────────────────────────────────────
+-- Reuses A Birthday Club's card for +6590000001, at stamp_count = 4 from
+-- the birthday-bonus block above.
+set local role authenticated;
+select set_config('request.jwt.claims',
+  json_build_object('sub', '00000000-0000-0000-0000-00000000000a', 'role', 'authenticated')::text, true);
+select lives_ok(
+  $$ select * from loopkit.adjust_stamp('00000000-0000-0000-0000-100000000001', '+6590000001', 2, 'Missed stamps from a system outage') $$,
+  'A can adjust an existing customer''s stamp count with a reason');
+
+reset role;
+select is(
+  (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001'),
+  6, 'a +2 adjustment on a card at 4 stamps lands at 6');
+-- created_at is frozen at transaction start for every statement in this
+-- file (one pgTAP run = one Postgres transaction), so "order by created_at
+-- desc limit 1" can't reliably pick the newest row among same-timestamp
+-- ties — filter by kind='adjust' directly instead (unique at this point).
+select is(
+  (select count(*)::int from loopkit.stamp_events
+     where card_id = (select id from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001')
+       and kind = 'adjust'),
+  1, 'the adjustment is logged as its own event kind, exactly once');
+select is(
+  (select payload->>'reason' from loopkit.stamp_events
+     where card_id = (select id from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001')
+       and kind = 'adjust'),
+  'Missed stamps from a system outage', 'the reason is recorded on the event');
+
+set local role authenticated;
+select set_config('request.jwt.claims',
+  json_build_object('sub', '00000000-0000-0000-0000-00000000000a', 'role', 'authenticated')::text, true);
+select lives_ok(
+  $$ select * from loopkit.adjust_stamp('00000000-0000-0000-0000-100000000001', '+6590000001', -100, 'Large correction') $$,
+  'a large negative adjustment does not throw');
+
+reset role;
+select is(
+  (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001'),
+  0, 'stamp_count is clamped at 0, never negative');
+
+set local role authenticated;
+select set_config('request.jwt.claims',
+  json_build_object('sub', '00000000-0000-0000-0000-00000000000a', 'role', 'authenticated')::text, true);
+select throws_ok(
+  $$ select * from loopkit.adjust_stamp('00000000-0000-0000-0000-100000000001', '+6590000001', 0, 'zero delta') $$,
+  'delta must be nonzero', 'a zero delta is rejected');
+select throws_ok(
+  $$ select * from loopkit.adjust_stamp('00000000-0000-0000-0000-100000000001', '+6590000001', 1, '') $$,
+  'reason is required', 'an empty reason is rejected');
+select throws_ok(
+  $$ select * from loopkit.adjust_stamp('00000000-0000-0000-0000-100000000001', '+6590009999', 1, 'no such customer') $$,
+  'no card found for this customer', 'adjusting a nonexistent card throws, never creates one');
+
+set local role authenticated;
+select set_config('request.jwt.claims',
+  json_build_object('sub', '00000000-0000-0000-0000-00000000000b', 'role', 'authenticated')::text, true);
+select throws_ok(
+  $$ select * from loopkit.adjust_stamp('00000000-0000-0000-0000-100000000001', '+6590000001', 1, 'not mine') $$,
+  'not authorized', 'vendor B cannot adjust vendor A''s program');
 
 select * from finish();
 rollback;

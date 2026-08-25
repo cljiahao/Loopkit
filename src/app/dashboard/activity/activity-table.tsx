@@ -1,4 +1,4 @@
-import { Gift, Stamp } from "lucide-react";
+import { Gift, Stamp, Pencil } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -11,6 +11,16 @@ import { Badge } from "@/components/ui/badge";
 import { ElevatedCard } from "@/components/elevated-card";
 import { formatSgtDateTime } from "@/lib/format";
 import type { VendorActivityRow } from "@/lib/activity";
+
+function activityIcon(event: VendorActivityRow) {
+  if (event.isAdjust) {
+    return { bg: "bg-amber-500/15 text-amber-600", Icon: Pencil };
+  }
+  if (event.isReward) {
+    return { bg: "bg-gold/20 text-gold-accent", Icon: Gift };
+  }
+  return { bg: "bg-primary/10 text-primary", Icon: Stamp };
+}
 
 // Extracted so it's testable with plain props, mirroring this repo's
 // existing precedent for list/table extraction (e.g. VendorCustomerList).
@@ -43,39 +53,43 @@ export function ActivityTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {activity.map((event) => (
-            <TableRow key={event.id}>
-              <TableCell>
-                <span className="flex items-center gap-2">
-                  <span
-                    className={
-                      event.isReward
-                        ? "grid size-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold-accent"
-                        : "grid size-7 shrink-0 place-items-center rounded-full bg-primary/10 text-primary"
-                    }
-                  >
-                    {event.isReward ? (
-                      <Gift className="size-3.5" />
-                    ) : (
-                      <Stamp className="size-3.5" />
-                    )}
-                  </span>
-                  <span className="font-medium capitalize">{event.label}</span>
-                </span>
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {event.phone}
-              </TableCell>
-              {showProgram && (
+          {activity.map((event) => {
+            const { bg, Icon } = activityIcon(event);
+            return (
+              <TableRow key={event.id}>
                 <TableCell>
-                  <Badge variant="secondary">{event.programName}</Badge>
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={`grid size-7 shrink-0 place-items-center rounded-full ${bg}`}
+                    >
+                      <Icon className="size-3.5" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block font-medium capitalize">
+                        {event.label}
+                      </span>
+                      {event.isAdjust && event.reason && (
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {event.reason}
+                        </span>
+                      )}
+                    </span>
+                  </span>
                 </TableCell>
-              )}
-              <TableCell className="text-right text-muted-foreground">
-                {formatSgtDateTime(event.createdAt)}
-              </TableCell>
-            </TableRow>
-          ))}
+                <TableCell className="text-muted-foreground">
+                  {event.phone}
+                </TableCell>
+                {showProgram && (
+                  <TableCell>
+                    <Badge variant="secondary">{event.programName}</Badge>
+                  </TableCell>
+                )}
+                <TableCell className="text-right text-muted-foreground">
+                  {formatSgtDateTime(event.createdAt)}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

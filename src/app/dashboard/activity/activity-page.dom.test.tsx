@@ -34,7 +34,9 @@ const activity: VendorActivityRow[] = [
     programName: "Coffee Stamps",
     kind: "stamp",
     isReward: false,
+    isAdjust: false,
     label: "stamp",
+    reason: null,
     createdAt: "2026-07-10T00:00:00Z",
   },
 ];
@@ -61,6 +63,25 @@ describe("ActivityTable", () => {
     render(<ActivityTable activity={[]} showProgram />);
     expect(
       screen.getByText(/no activity matches these filters/i),
+    ).toBeInTheDocument();
+  });
+
+  it("shows a manual adjustment's label and reason distinctly", () => {
+    const adjustRow: VendorActivityRow = {
+      id: "e9",
+      phone: "+6591234567",
+      programName: "Coffee Stamps",
+      kind: "adjust",
+      isReward: false,
+      isAdjust: true,
+      label: "Adjusted +2",
+      reason: "Missed stamps from a system outage",
+      createdAt: "2026-07-10T00:00:00Z",
+    };
+    render(<ActivityTable activity={[adjustRow]} showProgram />);
+    expect(screen.getByText("Adjusted +2")).toBeInTheDocument();
+    expect(
+      screen.getByText("Missed stamps from a system outage"),
     ).toBeInTheDocument();
   });
 });

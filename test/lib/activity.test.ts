@@ -22,7 +22,9 @@ describe("mapActivityRow", () => {
       programName: "Coffee Stamps",
       kind: "stamp",
       isReward: false,
+      isAdjust: false,
       label: "stamp",
+      reason: null,
       createdAt: "2026-07-10T00:00:00Z",
     });
   });
@@ -72,6 +74,39 @@ describe("mapActivityRow", () => {
     );
     expect(row?.label).toBe("Visit");
     expect(row?.isReward).toBe(false);
+  });
+
+  it("maps a positive adjustment with its delta and reason", () => {
+    const row = mapActivityRow(
+      {
+        id: "e7",
+        card_id: "c1",
+        kind: "adjust",
+        payload: { delta: 3, reason: "Missed stamps from a system outage" },
+        created_at: "2026-07-10T00:00:00Z",
+      },
+      card,
+      programNameById,
+    );
+    expect(row?.isAdjust).toBe(true);
+    expect(row?.isReward).toBe(false);
+    expect(row?.label).toBe("Adjusted +3");
+    expect(row?.reason).toBe("Missed stamps from a system outage");
+  });
+
+  it("maps a negative adjustment without a leading '+'", () => {
+    const row = mapActivityRow(
+      {
+        id: "e8",
+        card_id: "c1",
+        kind: "adjust",
+        payload: { delta: -2, reason: "Duplicate stamp entered by mistake" },
+        created_at: "2026-07-10T00:00:00Z",
+      },
+      card,
+      programNameById,
+    );
+    expect(row?.label).toBe("Adjusted -2");
   });
 
   it("returns null when the event's card is missing", () => {

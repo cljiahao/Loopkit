@@ -52,6 +52,7 @@ vi.mock("@/lib/merqo-customer-notify", () => ({
 
 import {
   stampAction,
+  adjustStampAction,
   lookupAction,
   redeemAction,
   redeemPlantAction,
@@ -130,6 +131,77 @@ describe("dashboard actions thread program_id", () => {
     const res = await stampAction(form({ phone: "91234567" }));
     expect(res.success).toBe(false);
     expect(getProgramByIdMock).not.toHaveBeenCalled();
+  });
+
+  it("adjustStampAction sends the delta and reason to adjust_stamp", async () => {
+    getProgramByIdMock.mockResolvedValue(program);
+    rpcMock.mockResolvedValue({
+      data: { id: "c1", phone: "+6591234567", stamp_count: 5 },
+      error: null,
+    });
+
+    const res = await adjustStampAction(
+      form({
+        program_id: "p1",
+        phone: "91234567",
+        delta: "3",
+        reason: "Missed stamps from a system outage",
+      }),
+    );
+
+    expect(rpcMock).toHaveBeenCalledWith("adjust_stamp", {
+      p_program: "p1",
+      p_phone: "+6591234567",
+      p_delta: 3,
+      p_reason: "Missed stamps from a system outage",
+    });
+    expect(res.success).toBe(true);
+  });
+
+  it("adjustStampAction rejects a zero delta without calling the RPC", async () => {
+    getProgramByIdMock.mockResolvedValue(program);
+
+    const res = await adjustStampAction(
+      form({
+        program_id: "p1",
+        phone: "91234567",
+        delta: "0",
+        reason: "Oops",
+      }),
+    );
+
+    expect(res.success).toBe(false);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("adjustStampAction rejects a missing reason without calling the RPC", async () => {
+    getProgramByIdMock.mockResolvedValue(program);
+
+    const res = await adjustStampAction(
+      form({ program_id: "p1", phone: "91234567", delta: "2", reason: "  " }),
+    );
+
+    expect(res.success).toBe(false);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("adjustStampAction surfaces a not-found card as a friendly error", async () => {
+    getProgramByIdMock.mockResolvedValue(program);
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { message: "no card found for this customer" },
+    });
+
+    const res = await adjustStampAction(
+      form({
+        program_id: "p1",
+        phone: "91234567",
+        delta: "1",
+        reason: "Correction",
+      }),
+    );
+
+    expect(res.success).toBe(false);
   });
 
   it("lookupAction scopes the card read to the resolved program and returns type-aware progress", async () => {

@@ -41,7 +41,13 @@ design.md` §3): `loopkit.vendors` (shared profile, for-all self policy),
   is a safe no-op on an unknown phone, creating no row), the lazy
   check-on-next-visit trigger granting exactly one bonus stamp on a real
   birthday match, no second bonus on a same-day repeat visit, and no bonus
-  at all on a program that never opted in.
+  at all on a program that never opted in. 90 assertions total: a manual
+  stamp-adjustment block (migration `0042`) adds 10, reusing Vendor A's
+  birthday-bonus card — a reasoned `+2` adjustment lands the count and logs
+  its own `'adjust'` event with the reason, a large negative delta clamps
+  at 0 rather than going negative, a zero delta/blank reason/nonexistent
+  card each throw their own distinct error without mutating anything, and
+  Vendor B cannot adjust Vendor A's program.
 
 ## Parent
 
