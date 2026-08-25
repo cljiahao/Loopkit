@@ -519,7 +519,7 @@ select lives_ok(
 
 reset role;
 select is(
-  (select birth_month from loopkit.customers where vendor_id = '00000000-0000-0000-0000-00000000000a' and phone = '+6590000001'),
+  (select birth_month::int from loopkit.customers where vendor_id = '00000000-0000-0000-0000-00000000000a' and phone = '+6590000001'),
   extract(month from (now() at time zone 'Asia/Singapore'))::int,
   'the birthday was recorded');
 
