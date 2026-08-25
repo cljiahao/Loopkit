@@ -81,9 +81,7 @@ export async function stampAction(formData: FormData): Promise<CardResult> {
   };
 }
 
-// Manual correction for classic Stamp-type programs — the only fix a vendor
-// had before this was "Regenerate card" (a full reset, invalidates the QR).
-// Requires an existing card and a reason; never creates a card.
+// Manual correction for classic Stamp-type programs; requires an existing card and a reason, never creates one.
 export async function adjustStampAction(
   formData: FormData,
 ): Promise<CardResult> {

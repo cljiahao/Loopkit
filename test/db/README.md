@@ -9,6 +9,7 @@ substitute for running the migration against real Postgres.
 
 ## Contents
 
+- `adjust-stamp-schema.test.ts` — checks migration `0042_loopkit_adjust_stamp.sql` (widened `stamp_events_kind_check`, the ownership/nonzero-delta/required-reason guards, the 0-clamp, that it never inserts a card, the payload shape, and the `authenticated`-only grant)
 - `admin-audit-immutable-schema.test.ts` — checks migration `0039_admin_audit_immutable.sql` (revokes `update`/`delete` on `admin_audit` from `service_role`, leaves `select`/`insert` alone)
 - `admin-schema.test.ts` — checks migration `0003_loopkit_admin.sql` (admins table + `is_admin`)
 - `birthday-bonus-schema.test.ts` — checks migration `0041_loopkit_birthday_bonus.sql` (new `customers`/`programs` columns, `set_customer_birthday` granted to `anon`, the bonus trigger's kind/type/toggle guards, the recursion guard ordering, and that `add_stamp`'s own `owns_program` gate is unchanged)
