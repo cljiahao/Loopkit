@@ -12,7 +12,7 @@
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(67);
+select plan(80);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -481,6 +481,107 @@ select is(
   (select (state->>'growth')::int from loopkit.cards
      where program_id = '00000000-0000-0000-0000-0000000f0002' and phone = '+6591110003'),
   2, 'a repeated finish call does not overwrite the already-credited state');
+
+-- ── Birthday self-entry + per-program bonus stamp (0041) ──────────────────
+-- Two new stamp programs for Vendor A: one opted into the birthday bonus,
+-- one not, so the "not opted in" guard has real coverage too.
+insert into loopkit.programs (id, vendor_id, type, name, stamps_required, reward_text, config, active)
+values
+  ('00000000-0000-0000-0000-100000000001', '00000000-0000-0000-0000-00000000000a', 'stamp', 'A Birthday Club', 10, 'Free coffee',
+   '{"stamps_required": 10, "reward_text": "Free coffee", "variant": "dots", "points_per_visit": 1}'::jsonb, true),
+  ('00000000-0000-0000-0000-100000000002', '00000000-0000-0000-0000-00000000000a', 'stamp', 'A No-Bonus Club', 10, 'Free tea',
+   '{"stamps_required": 10, "reward_text": "Free tea", "variant": "dots", "points_per_visit": 1}'::jsonb, true);
+update loopkit.programs set birthday_bonus_enabled = true
+  where id = '00000000-0000-0000-0000-100000000001';
+
+set local role authenticated;
+select set_config('request.jwt.claims',
+  json_build_object('sub', '00000000-0000-0000-0000-00000000000a', 'role', 'authenticated')::text, true);
+select lives_ok(
+  $$ select * from loopkit.add_stamp('00000000-0000-0000-0000-100000000001', '+6590000001') $$,
+  'A can stamp a new customer on the birthday-bonus program');
+
+reset role;
+select is(
+  (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001'),
+  1, 'no bonus fires before the customer has a birthday on file');
+
+-- Anon self-entry (the card-view page's own new field): sets today's real
+-- month/day, scoped to this exact (vendor, phone) pair — no separate
+-- customer auth exists in this app, same trust model as vendor_join itself.
+set local role anon;
+select lives_ok(
+  $$ select loopkit.set_customer_birthday(
+       '00000000-0000-0000-0000-00000000000a', '+6590000001',
+       extract(month from (now() at time zone 'Asia/Singapore'))::smallint,
+       extract(day from (now() at time zone 'Asia/Singapore'))::smallint) $$,
+  'anon can self-enter a birthday for their own phone at this vendor');
+
+reset role;
+select is(
+  (select birth_month from loopkit.customers where vendor_id = '00000000-0000-0000-0000-00000000000a' and phone = '+6590000001'),
+  extract(month from (now() at time zone 'Asia/Singapore'))::int,
+  'the birthday was recorded');
+
+-- Scoping: an unknown phone at this vendor is a safe no-op, not an error,
+-- and creates no row — set_customer_birthday only ever UPDATEs an existing
+-- customers row, per its own migration comment.
+set local role anon;
+select lives_ok(
+  $$ select loopkit.set_customer_birthday(
+       '00000000-0000-0000-0000-00000000000a', '+6590009999', 6, 15) $$,
+  'set_customer_birthday on an unknown phone does not throw');
+
+reset role;
+select is_empty(
+  $$ select 1 from loopkit.customers where vendor_id = '00000000-0000-0000-0000-00000000000a' and phone = '+6590009999' $$,
+  'set_customer_birthday does not create a row for an unknown phone');
+
+-- Next visit on the bonus-enabled program lands on the customer's real
+-- birthday: this one add_stamp call grants the real stamp plus one bonus
+-- stamp via the lazy check-on-next-visit trigger (1 -> 3, not 1 -> 2).
+set local role authenticated;
+select set_config('request.jwt.claims',
+  json_build_object('sub', '00000000-0000-0000-0000-00000000000a', 'role', 'authenticated')::text, true);
+select lives_ok(
+  $$ select * from loopkit.add_stamp('00000000-0000-0000-0000-100000000001', '+6590000001') $$,
+  'A stamps the customer again, now on their birthday');
+
+reset role;
+select is(
+  (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001'),
+  3, 'the birthday visit grants the real stamp plus one bonus stamp');
+select is(
+  (select last_birthday_reward_year from loopkit.customers where vendor_id = '00000000-0000-0000-0000-00000000000a' and phone = '+6590000001'),
+  extract(year from (now() at time zone 'Asia/Singapore'))::int,
+  'last_birthday_reward_year is stamped for this year');
+
+-- A second visit the same day must not grant a second bonus.
+set local role authenticated;
+select set_config('request.jwt.claims',
+  json_build_object('sub', '00000000-0000-0000-0000-00000000000a', 'role', 'authenticated')::text, true);
+select lives_ok(
+  $$ select * from loopkit.add_stamp('00000000-0000-0000-0000-100000000001', '+6590000001') $$,
+  'A stamps the customer a third time, same day');
+
+reset role;
+select is(
+  (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001'),
+  4, 'a second same-day visit grants only the real stamp, no second bonus');
+
+-- A program not opted into the bonus never grants it, even for the same
+-- birthday customer, on the same day.
+set local role authenticated;
+select set_config('request.jwt.claims',
+  json_build_object('sub', '00000000-0000-0000-0000-00000000000a', 'role', 'authenticated')::text, true);
+select lives_ok(
+  $$ select * from loopkit.add_stamp('00000000-0000-0000-0000-100000000002', '+6590000001') $$,
+  'A stamps the same customer on the non-bonus program');
+
+reset role;
+select is(
+  (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000002' and phone = '+6590000001'),
+  1, 'a program not opted into the birthday bonus grants only the real stamp');
 
 select * from finish();
 rollback;

@@ -22,7 +22,7 @@ several (`admin-data.test.ts`, `admin.test.ts`, `cards.test.ts`,
 - `merqo-auth.test.ts` — `provisionBearerOk`: true on the correct `MERQO_PROVISION_SECRET` bearer, false when missing/unset, false when the `MERQO_METRICS_SECRET` value is sent instead — the two secrets must not be interchangeable; plus `bearerOk(request, envVarName)`, the shared helper the 3 `src/app/api/merqo/*` routes now call instead of each defining their own copy
 - `metrics.test.ts` — `computeLoopkitMetrics`: maps programs/cards/stamp events onto merqo's metrics shape
 - `phone.test.ts` — `normalizePhone`: SG mobile formats normalize to E.164 `+65…`
-- `program-access.test.ts` — `currentProgram`/`canCreateProgram`/`getEntitlement`: free/Pro program-count gating
+- `program-access.test.ts` — `currentProgram`/`canCreateProgram`/`getEntitlement`: free/Pro program-count gating; its `Program` fixture includes `birthday_bonus_enabled` (migration `0041`)
 - `program-config.test.ts` — `segmentWinPercent`/`overallWinPercent`: each segment's rounded win-% share of total weight, the reward-only overall percentage, and the zero-total-weight edge case for both
 - `program-health.test.ts` — `programHealth`: "new"/"quiet"/"active" triage from customer count, age, last activity
 - `program.test.ts` — `programInputSchema`/`canPrepProgram`/`getEntitlement`: program validation and tier caps

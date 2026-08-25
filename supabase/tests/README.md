@@ -34,7 +34,14 @@ design.md` §3): `loopkit.vendors` (shared profile, for-all self policy),
   deferred `apply_referral_credit` finish step, and cross-vendor referral-
   code isolation) — kept separate from A/B so its own program fixtures
   never disturb the `provision_default_program` section's "vendor A/B
-  start with N programs" pre-conditions.
+  start with N programs" pre-conditions. 80 assertions total: a birthday-
+  bonus functional block (migration `0041`) adds 13, reusing Vendor A with
+  two new stamp programs (one opted into the bonus, one not) — covers
+  `set_customer_birthday`'s anon-scoped write (records the birthday, and
+  is a safe no-op on an unknown phone, creating no row), the lazy
+  check-on-next-visit trigger granting exactly one bonus stamp on a real
+  birthday match, no second bonus on a same-day repeat visit, and no bonus
+  at all on a program that never opted in.
 
 ## Parent
 

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Server-side card-check logic: the two public `"use server"` actions behind
+Server-side card-check logic: the public `"use server"` actions behind
 `/c?v=<vendorId>`.
 
 ## Contents
@@ -22,12 +22,21 @@ Server-side card-check logic: the two public `"use server"` actions behind
   succeeded by that point. `regenerateCardAction`: reissues one program's
   card via the `regenerate_card` RPC for a lost or expired card, same
   phone-as-identity trust model, acting on one program at a time (invoked
-  per-card from the check-form's card list)
+  per-card from the check-form's card list). `setCustomerBirthdayAction`:
+  optional, self-entered birthday for the birthday-bonus feature (migration
+  `0041`) — same anonymous, phone-scoped trust model as the two actions
+  above; calls `loopkit.set_customer_birthday`, which only ever UPDATEs an
+  existing `loopkit.customers` row for the exact `(vendor, phone)` pair,
+  never creates one
 - `actions.test.ts` — vitest tests for `checkStatusAction`'s referral path:
   dispatches to `vendor_join` vs. `vendor_join_referred` based on whether
   `ref` is present, calls `apply_referral_credit` only for a pending
   non-stamp credit (never for an already-credited stamp-type row), and logs
-  (without throwing or changing the result) when the finish call fails
+  (without throwing or changing the result) when the finish call fails.
+  `setCustomerBirthdayAction` tests: submits the normalized phone and
+  numeric month/day, rejects an invalid phone/missing vendor/out-of-range
+  month or day without calling the RPC, and surfaces a friendly error on
+  RPC failure
 
 ## Connectivity
 

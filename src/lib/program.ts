@@ -14,7 +14,7 @@ export type { ProgramType, SegmentInput };
 export { buildChanceConfig, buildPlantConfig };
 
 const PROGRAM_COLUMNS =
-  "id,name,stamps_required,reward_text,type,config,active,expiry_days,reward_expiry_days,head_start,head_start_percent,replaced_by,carry_over_stamps";
+  "id,name,stamps_required,reward_text,type,config,active,expiry_days,reward_expiry_days,head_start,head_start_percent,replaced_by,carry_over_stamps,birthday_bonus_enabled";
 
 export type Program = {
   id: string;
@@ -30,6 +30,7 @@ export type Program = {
   head_start_percent: number;
   replaced_by: string | null;
   carry_over_stamps: boolean;
+  birthday_bonus_enabled: boolean;
 };
 
 export const programInputSchema = z.object({
@@ -98,6 +99,10 @@ export const saveProgramSchema = z
       ),
       expiry_days: expiryDaysSchema,
       reward_expiry_days: rewardExpiryDaysSchema,
+      birthday_bonus_enabled: z.preprocess(
+        emptyToUndefined,
+        z.enum(["true", "false"]).optional(),
+      ),
     }),
     z.object({
       type: z.literal("lucky"),

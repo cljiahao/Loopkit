@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { checkStatusAction } from "../api/actions";
 import { STATUS_IDLE } from "../types";
 import { ProgramCardStatus } from "./program-card-status";
+import { BirthdayField } from "./birthday-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -96,6 +97,7 @@ export function CheckForm({
               vendorAvatarUrl={state.vendorAvatarUrl ?? null}
             />
           ))}
+          <BirthdayField vendorId={vendorId} phone={state.phone!} />
         </div>
       )}
     </div>

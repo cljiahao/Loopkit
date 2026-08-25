@@ -6,7 +6,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("@/lib/qr", () => ({ qrSvg: vi.fn(async () => "<svg></svg>") }));
 
-import { checkStatusAction } from "./actions";
+import { checkStatusAction, setCustomerBirthdayAction } from "./actions";
 import { STATUS_IDLE } from "../types";
 import { buildPlantConfig } from "@/lib/program-config";
 
@@ -171,6 +171,87 @@ describe("checkStatusAction", () => {
     );
 
     expect(result.status).toBe("found");
+    expect(consoleError).toHaveBeenCalled();
+    consoleError.mockRestore();
+  });
+});
+
+describe("setCustomerBirthdayAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("calls set_customer_birthday with the normalized phone and numeric month/day", async () => {
+    rpcMock.mockResolvedValue({ data: null, error: null });
+
+    const result = await setCustomerBirthdayAction(
+      formData({ phone: "91234567", vendor: "v1", month: "6", day: "15" }),
+    );
+
+    expect(result).toEqual({ success: true });
+    expect(rpcMock).toHaveBeenCalledWith("set_customer_birthday", {
+      p_vendor: "v1",
+      p_phone: "+6591234567",
+      p_birth_month: 6,
+      p_birth_day: 15,
+    });
+  });
+
+  it("rejects an invalid phone without calling the RPC", async () => {
+    const result = await setCustomerBirthdayAction(
+      formData({ phone: "not-a-phone", vendor: "v1", month: "6", day: "15" }),
+    );
+    expect(result).toEqual({
+      success: false,
+      error: "Enter a valid Singapore phone number.",
+    });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing vendor without calling the RPC", async () => {
+    const result = await setCustomerBirthdayAction(
+      formData({ phone: "91234567", vendor: "", month: "6", day: "15" }),
+    );
+    expect(result).toEqual({ success: false, error: "Missing shop." });
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it.each(["0", "13", "abc", ""])(
+    "rejects an out-of-range or non-numeric month (%s) without calling the RPC",
+    async (month) => {
+      const result = await setCustomerBirthdayAction(
+        formData({ phone: "91234567", vendor: "v1", month, day: "15" }),
+      );
+      expect(result).toEqual({ success: false, error: "Pick a month." });
+      expect(rpcMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["0", "32", "abc", ""])(
+    "rejects an out-of-range or non-numeric day (%s) without calling the RPC",
+    async (day) => {
+      const result = await setCustomerBirthdayAction(
+        formData({ phone: "91234567", vendor: "v1", month: "6", day }),
+      );
+      expect(result).toEqual({ success: false, error: "Pick a day." });
+      expect(rpcMock).not.toHaveBeenCalled();
+    },
+  );
+
+  it("returns a friendly error and logs when the RPC fails", async () => {
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    rpcMock.mockResolvedValue({ data: null, error: { message: "boom" } });
+
+    const result = await setCustomerBirthdayAction(
+      formData({ phone: "91234567", vendor: "v1", month: "6", day: "15" }),
+    );
+
+    expect(result).toEqual({
+      success: false,
+      error: "Something went wrong.",
+    });
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
   });

@@ -17,6 +17,7 @@ const program: Program = {
   head_start_percent: 20,
   replaced_by: null,
   carry_over_stamps: false,
+  birthday_bonus_enabled: false,
 };
 
 describe("ProgramCard", () => {
