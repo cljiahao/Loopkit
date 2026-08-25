@@ -238,3 +238,46 @@ export async function regenerateCardAction(
 
   return { success: true, phone: normalized.phone };
 }
+
+// Customer self-entry for the birthday-bonus feature — optional, never
+// required. Same anonymous, phone-scoped trust model as checkStatusAction/
+// regenerateCardAction above: identity is the phone already shown on this
+// page, no separate customer auth exists. loopkit.set_customer_birthday
+// only ever UPDATEs an existing loopkit.customers row for the exact
+// (vendor, phone) pair it's called with (migration 0041) — a phone with no
+// row yet (shouldn't happen here, since this only renders after a
+// successful checkStatusAction) is a silent no-op, not an error.
+export async function setCustomerBirthdayAction(
+  formData: FormData,
+): Promise<ActionResult> {
+  const normalized = normalizePhone(String(formData.get("phone") ?? ""));
+  if (!normalized.ok) {
+    return { success: false, error: "Enter a valid Singapore phone number." };
+  }
+  const vendorId = String(formData.get("vendor") ?? "");
+  if (!vendorId) {
+    return { success: false, error: "Missing shop." };
+  }
+  const month = Number(formData.get("month"));
+  const day = Number(formData.get("day"));
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return { success: false, error: "Pick a month." };
+  }
+  if (!Number.isInteger(day) || day < 1 || day > 31) {
+    return { success: false, error: "Pick a day." };
+  }
+
+  const supabase = await createServerClient();
+  const { error } = await supabase.rpc("set_customer_birthday", {
+    p_vendor: vendorId,
+    p_phone: normalized.phone,
+    p_birth_month: month,
+    p_birth_day: day,
+  });
+  if (error) {
+    console.error("set_customer_birthday failed", error.message);
+    return { success: false, error: "Something went wrong." };
+  }
+
+  return { success: true };
+}

@@ -49,7 +49,8 @@ not a sixth engine `type`. See
 - `referrals-page.dom.test.tsx` — jsdom tests for `ReferralsPage`: only
   active programs are offered to the create form, each existing host's
   link is built from the request origin, and the setup-prompt renders
-  instead of the panel with zero active programs
+  instead of the panel with zero active programs; its inactive-program
+  fixture includes `birthday_bonus_enabled` (migration `0041`)
 - `types.ts` — `ReferralHostSummary` (a host plus its resolved program name
   and shareable link/QR) and `CreateReferralHostState` (the
   `useActionState` result union) plus its `CREATE_REFERRAL_HOST_IDLE`

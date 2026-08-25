@@ -13,6 +13,23 @@ vi.mock("@/app/setup/actions", () => ({
 }));
 
 import { SetupForm } from "@/app/setup/setup-form";
+import type { Program } from "@/lib/program";
+
+const stampProgram: Program = {
+  id: "p1",
+  name: "Coffee Stamps",
+  stamps_required: 10,
+  reward_text: "Free kopi",
+  type: "stamp",
+  config: {},
+  active: true,
+  expiry_days: null,
+  head_start: false,
+  head_start_percent: 20,
+  replaced_by: null,
+  carry_over_stamps: false,
+  birthday_bonus_enabled: false,
+};
 
 describe("SetupForm live preview", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -94,6 +111,61 @@ describe("SetupForm live preview", () => {
     const submitted = saveMock.mock.calls[0][1] as FormData;
     expect(submitted.get("stamp_mark_mode")).toBe("preset");
     expect(submitted.get("stamp_mark_preset")).toBe("star");
+  });
+});
+
+describe("SetupForm birthday bonus toggle", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("is hidden in create mode, even for a stamp program", () => {
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    expect(
+      screen.queryByText(/give a bonus stamp on a customer's birthday/i),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows unchecked by default in edit mode for a stamp program, and submits true once toggled on", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={stampProgram}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    const toggle = screen.getByLabelText(
+      /give a bonus stamp on a customer's birthday/i,
+    );
+    expect(toggle).not.toBeChecked();
+
+    await user.click(toggle);
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(saveMock).toHaveBeenCalled();
+    const submitted = saveMock.mock.calls[0][1] as FormData;
+    expect(submitted.get("birthday_bonus_enabled")).toBe("true");
+  });
+
+  it("reflects an already-enabled program's toggle state", () => {
+    render(
+      <SetupForm
+        program={{ ...stampProgram, birthday_bonus_enabled: true }}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    expect(
+      screen.getByLabelText(/give a bonus stamp on a customer's birthday/i),
+    ).toBeChecked();
   });
 });
 

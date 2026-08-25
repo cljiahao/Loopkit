@@ -132,6 +132,9 @@ same fix in paykit/merqo. The vendor-wide `/dashboard/stats` page now
 also shows a "By mechanic" breakdown (`src/lib/stats.ts`'s
 `getVendorMechanicBreakdown`) — which of Stamp/Growth/Chance Card is
 actually driving redemption, shown only when a vendor runs 2+ mechanics.
+Stamp programs can also opt into a birthday bonus (migration `0041`,
+`loopkit.set_customer_birthday` + a lazy check-on-next-visit trigger on
+`stamp_events`) — see `src/features/card-check/README.md`.
 
 ## Stack
 

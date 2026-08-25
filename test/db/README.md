@@ -11,6 +11,7 @@ substitute for running the migration against real Postgres.
 
 - `admin-audit-immutable-schema.test.ts` — checks migration `0039_admin_audit_immutable.sql` (revokes `update`/`delete` on `admin_audit` from `service_role`, leaves `select`/`insert` alone)
 - `admin-schema.test.ts` — checks migration `0003_loopkit_admin.sql` (admins table + `is_admin`)
+- `birthday-bonus-schema.test.ts` — checks migration `0041_loopkit_birthday_bonus.sql` (new `customers`/`programs` columns, `set_customer_birthday` granted to `anon`, the bonus trigger's kind/type/toggle guards, the recursion guard ordering, and that `add_stamp`'s own `owns_program` gate is unchanged)
 - `card-lifecycle-schema.test.ts` — checks migration `0012_loopkit_card_lifecycle.sql` (expiry + card regeneration)
 - `card-token-schema.test.ts` — checks migration `0006_loopkit_card_token.sql` (`card_token` column + enroll/read functions)
 - `carry-over-schema.test.ts` — checks migration `0018_loopkit_carry_over.sql` (`carry_over_stamps` column)

@@ -19,7 +19,8 @@ Client-side card-check UI.
   (not immediately on submit, so it stays open through the pending
   "Checking…" state) — done by comparing the current action state against
   the last-seen one during render, React's documented alternative to a
-  `setState`-in-`useEffect` for resetting state on a change.
+  `setState`-in-`useEffect` for resetting state on a change. Renders
+  `BirthdayField` once, below the card list, on a `"found"` result.
 - `check-form.dom.test.tsx` — jsdom tests for `CheckForm`: renders the phone
   input and hidden vendor field, submits the form and renders one
   `ProgramCardStatus` per returned card, shows the `role="alert"` message
@@ -38,6 +39,17 @@ Client-side card-check UI.
   verifies `PointsBar` vs `StampDots` renders per `view.variant` on a
   `"dots"` view, and `Cup` vs `Plant` renders per `view.variant` on a
   `"plant"` view
+- `birthday-field.tsx` — `BirthdayField({vendorId, phone})`: optional,
+  self-entered birthday (plain native `<select>`s for month/day, not the
+  shadcn `Select` — Radix's pointer-event/`scrollIntoView` needs have no
+  existing jsdom-test precedent in this repo, and a native select is fine
+  UX here) calling `setCustomerBirthdayAction` via `useTransition`; shows a
+  "Birthday saved." confirmation and hides the form once saved, never says
+  whether the vendor's own bonus toggle is actually on
+- `birthday-field.dom.test.tsx` — jsdom tests for `BirthdayField`: Save
+  stays disabled until both month and day are picked, submits vendor/phone/
+  month/day as `FormData`, shows the saved confirmation and removes the
+  form on success, and stays on the form with an error toast on failure
 
 ## Parent
 

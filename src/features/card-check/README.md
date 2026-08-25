@@ -8,6 +8,8 @@ The public, unauthenticated card-check flow reached via `/c?v=<vendorId>`
 loyalty card by phone number, and can self-service regenerate a
 lost/expired card. A `ref` link additionally credits the referring host
 one stamp/visit the first time each distinct guest phone joins through it.
+A found card also offers an optional, self-entered birthday — vendors can
+opt a Stamp program into granting a bonus stamp on it (migration `0041`).
 
 ## Contents
 

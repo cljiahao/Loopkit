@@ -42,6 +42,7 @@ export interface Database {
           carry_over_stamps: boolean;
           head_start_percent: number;
           scheduled_deactivate_at: string | null;
+          birthday_bonus_enabled: boolean;
           created_at: string;
         };
         Insert: {
@@ -60,6 +61,7 @@ export interface Database {
           carry_over_stamps?: boolean;
           head_start_percent?: number;
           scheduled_deactivate_at?: string | null;
+          birthday_bonus_enabled?: boolean;
           created_at?: string;
         };
         Update: {
@@ -78,6 +80,7 @@ export interface Database {
           carry_over_stamps?: boolean;
           head_start_percent?: number;
           scheduled_deactivate_at?: string | null;
+          birthday_bonus_enabled?: boolean;
           created_at?: string;
         };
         Relationships: [];
@@ -365,6 +368,9 @@ export interface Database {
           name: string | null;
           first_seen_at: string;
           last_seen_at: string;
+          birth_month: number | null;
+          birth_day: number | null;
+          last_birthday_reward_year: number | null;
         };
         Insert: {
           vendor_id: string;
@@ -372,6 +378,9 @@ export interface Database {
           name?: string | null;
           first_seen_at?: string;
           last_seen_at?: string;
+          birth_month?: number | null;
+          birth_day?: number | null;
+          last_birthday_reward_year?: number | null;
         };
         Update: {
           vendor_id?: string;
@@ -379,6 +388,9 @@ export interface Database {
           name?: string | null;
           first_seen_at?: string;
           last_seen_at?: string;
+          birth_month?: number | null;
+          birth_day?: number | null;
+          last_birthday_reward_year?: number | null;
         };
         Relationships: [];
       };
@@ -487,6 +499,15 @@ export interface Database {
       owns_program: {
         Args: { p_program: string };
         Returns: boolean;
+      };
+      set_customer_birthday: {
+        Args: {
+          p_vendor: string;
+          p_phone: string;
+          p_birth_month: number;
+          p_birth_day: number;
+        };
+        Returns: void;
       };
       add_stamp: {
         Args: { p_program: string; p_phone: string };

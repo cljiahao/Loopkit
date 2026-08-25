@@ -56,6 +56,7 @@ export async function saveProgramAction(
     head_start: formData.get("head_start"),
     head_start_percent: formData.get("head_start_percent"),
     variant: formData.get("variant"),
+    birthday_bonus_enabled: formData.get("birthday_bonus_enabled"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
@@ -77,6 +78,9 @@ export async function saveProgramAction(
         "reward_expiry_days" in data ? (data.reward_expiry_days ?? null) : null,
       head_start: fields.headStart,
       head_start_percent: fields.headStartPercent,
+      ...(data.type === "stamp"
+        ? { birthday_bonus_enabled: data.birthday_bonus_enabled === "true" }
+        : {}),
     };
     const { error } = await supabase
       .from("programs")

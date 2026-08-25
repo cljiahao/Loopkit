@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Birthday bonus for Stamp programs: customers can optionally self-enter
+  their birthday on the card-check page (`loopkit.set_customer_birthday`,
+  anon-scoped to the exact vendor+phone pair). A vendor opts a Stamp
+  program in via a new edit-mode toggle; the next visit on or after the
+  birthday grants one bonus stamp, once per year, via a lazy
+  check-on-next-visit trigger on `stamp_events` — no cron. Reuses
+  `add_stamp`'s real threshold-crossing/reward-voucher accounting (now
+  factored into `loopkit._add_stamp_unchecked`) instead of a second,
+  parallel stamp-granting path. Migration `0041`.
 - Per-mechanic stats breakdown on the vendor-wide `/dashboard/stats` page:
   a new "By mechanic" card groups enrolled/visits/redemption-rate by which
   named mechanic (Stamp/Growth/Chance Card) a program's engine `type`

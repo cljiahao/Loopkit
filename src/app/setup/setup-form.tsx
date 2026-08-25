@@ -200,6 +200,9 @@ export function SetupForm({
   const [carryOverStamps, setCarryOverStamps] = useState(false);
   const showCarryOverOption =
     replacingId !== null && replacingType === "stamp" && type === "stamp";
+  const [birthdayBonusEnabled, setBirthdayBonusEnabled] = useState(
+    program?.birthday_bonus_enabled ?? false,
+  );
 
   const {
     progress: previewProgress,
@@ -866,6 +869,35 @@ export function SetupForm({
                   value={headStartPercent}
                 />
               )}
+            </div>
+          )}
+
+          {isEdit && type === "stamp" && (
+            <div className="flex items-start gap-3 rounded-xl border bg-muted/40 p-3">
+              <Switch
+                id="birthday_bonus_enabled_checkbox"
+                checked={birthdayBonusEnabled}
+                onCheckedChange={setBirthdayBonusEnabled}
+                className="mt-0.5"
+              />
+              <label
+                htmlFor="birthday_bonus_enabled_checkbox"
+                className="text-sm"
+              >
+                <span className="font-medium">
+                  Give a bonus stamp on a customer&apos;s birthday
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Customers can add their birthday on their card page. One extra
+                  stamp is granted the next time they visit on or after it, once
+                  per year.
+                </span>
+              </label>
+              <input
+                type="hidden"
+                name="birthday_bonus_enabled"
+                value={birthdayBonusEnabled ? "true" : "false"}
+              />
             </div>
           )}
 
