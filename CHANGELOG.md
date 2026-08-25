@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Onboarding step wizard for first-run program creation: `/setup`'s create
+  flow (not edit, not a scheduled type-change, not an in-place type swap)
+  now walks a vendor through Type → Basics → Rules with a numbered
+  progress indicator instead of one long page, `Next: Rules` disabled
+  until a card name is entered, and the optional "Stamp mark" section
+  collapsed behind a "Show advanced options" toggle. Every field stays
+  mounted across steps (hidden via the native HTML `hidden` attribute,
+  not unmounted), so nothing loses its value going Back. Editing an
+  existing program keeps the original single-page layout unchanged.
+
 - Manual stamp adjustment and a per-customer detail view — the real day-2
   ops gap: a vendor's only correction tool used to be "Regenerate card," a
   full reset that also invalidates the customer's QR. `/dashboard/customers/
