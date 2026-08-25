@@ -597,15 +597,19 @@ reset role;
 select is(
   (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001'),
   6, 'a +2 adjustment on a card at 4 stamps lands at 6');
+-- created_at is frozen at transaction start for every statement in this
+-- file (one pgTAP run = one Postgres transaction), so "order by created_at
+-- desc limit 1" can't reliably pick the newest row among same-timestamp
+-- ties — filter by kind='adjust' directly instead (unique at this point).
 select is(
-  (select kind from loopkit.stamp_events
+  (select count(*)::int from loopkit.stamp_events
      where card_id = (select id from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001')
-     order by created_at desc limit 1),
-  'adjust', 'the adjustment is logged as its own event kind');
+       and kind = 'adjust'),
+  1, 'the adjustment is logged as its own event kind, exactly once');
 select is(
   (select payload->>'reason' from loopkit.stamp_events
      where card_id = (select id from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001')
-     order by created_at desc limit 1),
+       and kind = 'adjust'),
   'Missed stamps from a system outage', 'the reason is recorded on the event');
 
 set local role authenticated;
