@@ -81,6 +81,58 @@ export async function stampAction(formData: FormData): Promise<CardResult> {
   };
 }
 
+// Manual correction for classic Stamp-type programs — the only fix a vendor
+// had before this was "Regenerate card" (a full reset, invalidates the QR).
+// Requires an existing card and a reason; never creates a card.
+export async function adjustStampAction(
+  formData: FormData,
+): Promise<CardResult> {
+  await requireVendor();
+
+  const program = await programFromForm(formData);
+  if (!program) {
+    return { success: false, error: "Set up your card first." };
+  }
+
+  const normalized = normalizePhone(String(formData.get("phone") ?? ""));
+  if (!normalized.ok) {
+    return { success: false, error: "Enter a valid Singapore phone number." };
+  }
+
+  const delta = Number(formData.get("delta"));
+  if (!Number.isInteger(delta) || delta === 0) {
+    return { success: false, error: "Enter a nonzero whole number." };
+  }
+
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (reason.length === 0) {
+    return { success: false, error: "A reason is required." };
+  }
+
+  const supabase = await createServerClient();
+  const { data: card, error } = await supabase.rpc("adjust_stamp", {
+    p_program: program.id,
+    p_phone: normalized.phone,
+    p_delta: delta,
+    p_reason: reason,
+  });
+  if (error || !card) {
+    console.error("adjust_stamp failed", error);
+    return {
+      success: false,
+      error: "No card found for this customer, or something went wrong.",
+    };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath(`/dashboard/customers/${normalized.phone}`);
+  return {
+    success: true,
+    card: { id: card.id, phone: card.phone, stamp_count: card.stamp_count },
+    rewardReady: rewardReady(card.stamp_count, program.stamps_required),
+  };
+}
+
 type VisitResult = ActionResult<{
   rewardUnlocked: boolean;
   progress: Progress;

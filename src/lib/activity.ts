@@ -8,7 +8,9 @@ export type VendorActivityRow = {
   programName: string;
   kind: string;
   isReward: boolean;
+  isAdjust: boolean;
   label: string;
+  reason: string | null;
   createdAt: string;
 };
 
@@ -33,15 +35,27 @@ export function mapActivityRow(
   if (!card) return null;
   const won = isWonVisit(event);
   const isReward = event.kind === "redeem" || won;
+  const isAdjust = event.kind === "adjust";
+  const payload =
+    isAdjust && event.payload && typeof event.payload === "object"
+      ? (event.payload as { delta?: number; reason?: string })
+      : null;
   const visitLabel = event.kind === "visit" ? "Visit" : event.kind;
-  const label = won ? "Won" : visitLabel;
+  let label = visitLabel;
+  if (won) {
+    label = "Won";
+  } else if (isAdjust && typeof payload?.delta === "number") {
+    label = `Adjusted ${payload.delta > 0 ? "+" : ""}${payload.delta}`;
+  }
   return {
     id: event.id,
     phone: card.phone,
     programName: programNameById[card.program_id] ?? "—",
     kind: event.kind,
     isReward,
+    isAdjust,
     label,
+    reason: payload?.reason ?? null,
     createdAt: event.created_at,
   };
 }
@@ -53,6 +67,7 @@ export type ListActivityOptions = {
   type?: ActivityTypeFilter;
   dateFrom?: string;
   dateTo?: string;
+  phone?: string;
   limit: number;
   offset: number;
 };
@@ -71,7 +86,7 @@ export type ListActivityResult = {
 export async function listActivity(
   options: ListActivityOptions,
 ): Promise<ListActivityResult> {
-  const { programIds, type, dateFrom, dateTo, limit, offset } = options;
+  const { programIds, type, dateFrom, dateTo, phone, limit, offset } = options;
   if (programIds.length === 0) return { rows: [], hasMore: false };
 
   const supabase = await createServerClient();
@@ -80,10 +95,12 @@ export async function listActivity(
     programs.map((p) => [p.id, p.name]),
   );
 
-  const { data: cardsData, error: cardsError } = await supabase
+  let cardsQuery = supabase
     .from("cards")
     .select("id,phone,program_id")
     .in("program_id", programIds);
+  if (phone) cardsQuery = cardsQuery.eq("phone", phone);
+  const { data: cardsData, error: cardsError } = await cardsQuery;
   if (cardsError) throw new Error(`listActivity: ${cardsError.message}`);
 
   const cards = cardsData ?? [];

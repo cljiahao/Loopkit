@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Manual stamp adjustment and a per-customer detail view — the real day-2
+  ops gap: a vendor's only correction tool used to be "Regenerate card," a
+  full reset that also invalidates the customer's QR. `/dashboard/customers/
+[phone]` shows every card a customer holds across the vendor's own
+  programs, their full activity history, and (for classic Stamp-type
+  programs) an "Adjust stamps" action — a `±` delta with a required reason,
+  clamped at 0, logged as its own `stamp_events` kind (`adjust`, distinct
+  from a real stamp) via `loopkit.adjust_stamp` (migration `0042`). Free-tier,
+  not Pro-gated. Growth/Points/Chance cards are out of scope for this pass.
+
 - Birthday bonus for Stamp programs: customers can optionally self-enter
   their birthday on the card-check page (`loopkit.set_customer_birthday`,
   anon-scoped to the exact vendor+phone pair). A vendor opts a Stamp

@@ -513,6 +513,15 @@ export interface Database {
         Args: { p_program: string; p_phone: string };
         Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
       };
+      adjust_stamp: {
+        Args: {
+          p_program: string;
+          p_phone: string;
+          p_delta: number;
+          p_reason: string;
+        };
+        Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
+      };
       redeem: {
         Args: { p_card: string };
         Returns: Database["loopkit"]["Tables"]["cards"]["Row"];

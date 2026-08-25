@@ -1,5 +1,5 @@
 import { createServerClient } from "@/lib/supabase/server";
-import { listPrograms } from "@/lib/program";
+import { listPrograms, type Program } from "@/lib/program";
 
 export type VendorCustomerRow = {
   phone: string;
@@ -97,4 +97,72 @@ export async function listVendorCustomers(
     cardsData ?? [],
     programNameById,
   );
+}
+
+export type CustomerCardRow = {
+  programId: string;
+  programName: string;
+  programType: string;
+  stampCount: number;
+  rewardCount: number;
+  updatedAt: string;
+};
+
+export type CustomerDetail = {
+  phone: string;
+  name: string | null;
+  lastSeenAt: string | null;
+  cards: CustomerCardRow[];
+};
+
+// One customer's real name (from `customers`, synced off card/stamp
+// events — see 0021_loopkit_customers.sql) plus every card they hold
+// across the vendor's own programs. RLS scopes both reads to the
+// signed-in vendor automatically, same as listVendorCustomers.
+export async function getCustomerDetail(
+  phone: string,
+): Promise<CustomerDetail> {
+  const supabase = await createServerClient();
+  const programs = await listPrograms();
+  const programById = new Map<string, Program>(programs.map((p) => [p.id, p]));
+  const programIds = programs.map((p) => p.id);
+
+  const { data: customerData, error: customerError } = await supabase
+    .from("customers")
+    .select("name,last_seen_at")
+    .eq("phone", phone)
+    .maybeSingle();
+  if (customerError)
+    throw new Error(`getCustomerDetail: ${customerError.message}`);
+
+  let cards: CustomerCardRow[] = [];
+  if (programIds.length > 0) {
+    const { data: cardsData, error: cardsError } = await supabase
+      .from("cards")
+      .select("program_id,stamp_count,reward_count,updated_at")
+      .eq("phone", phone)
+      .in("program_id", programIds);
+    if (cardsError) throw new Error(`getCustomerDetail: ${cardsError.message}`);
+    cards = (cardsData ?? [])
+      .map((card) => {
+        const program = programById.get(card.program_id);
+        if (!program) return null;
+        return {
+          programId: card.program_id,
+          programName: program.name,
+          programType: program.type,
+          stampCount: card.stamp_count,
+          rewardCount: card.reward_count,
+          updatedAt: card.updated_at,
+        };
+      })
+      .filter((row): row is CustomerCardRow => row !== null);
+  }
+
+  return {
+    phone,
+    name: customerData?.name ?? null,
+    lastSeenAt: customerData?.last_seen_at ?? null,
+    cards,
+  };
 }
