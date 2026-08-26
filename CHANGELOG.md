@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- `@merqo/ui` bumped to v0.22.1 (TS2742 declaration-emit fix): the activity
+  table, admin programs list, and admin vendors list now render through the
+  shared `DataTable` component instead of hand-rolled/shadcn-`Table` markup.
+
 ### Added
 
 - Admin `/admin/activity` tab rendering `admin_audit` via `@merqo/ui`'s

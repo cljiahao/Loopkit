@@ -16,7 +16,9 @@ signing in on one Merqo kit signs you in on the rest. `admin_audit`'s
 coverage now extends past `/admin` (merqo's own `/api/merqo/vendor-provision`
 write is recorded too, attributed via a `merqo_system` sentinel), it's now
 readable via the `/admin/activity` tab (`@merqo/ui`'s shared `AuditLogTable`
-— see `src/app/admin/activity/README.md`), and the table is append-only at
+— see `src/app/admin/activity/README.md`), the activity/programs/vendors
+admin tables now render via `@merqo/ui`'s shared `DataTable`, and the table
+is append-only at
 the grant level (`service_role` can no longer `UPDATE`/`DELETE` it, only
 `SELECT`/`INSERT`) — see `AGENTS.md`'s data
 model section for the retention policy. No per-IP rate
