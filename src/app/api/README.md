@@ -20,7 +20,8 @@ favor of merqo's shared one, Phase A2) — see
 ## Connectivity
 
 `merqo/`'s routes let the Merqo platform pull loopkit data (metrics, vendor
-status, qkit earn-config) over authenticated HTTP. `tour-seen/` is the odd
+status, per-vendor activity, qkit earn-config) over authenticated HTTP.
+`tour-seen/` is the odd
 one out — it's called from loopkit's own dashboard in the browser
 (`src/components/dashboard-tour.tsx`), authenticated by the vendor's own
 Supabase session cookie rather than a bearer secret; it's a plain Route
