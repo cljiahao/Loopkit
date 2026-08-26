@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `GET /api/merqo/vendor-activity?email=` — merqo's cross-kit vendor
+  detail view now gets real per-vendor loyalty activity (programs, cards,
+  stamps/rewards in the last 30 days) instead of nothing.
+
 - Admin `/admin/activity` tab rendering `admin_audit` via `@merqo/ui`'s
   shared `AuditLogTable` — the first kit-family reader of an audit trail
   that every kit already writes to but none previously displayed.

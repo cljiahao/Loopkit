@@ -21,7 +21,10 @@ admin tables now render via `@merqo/ui`'s shared `DataTable`, and the table
 is append-only at
 the grant level (`service_role` can no longer `UPDATE`/`DELETE` it, only
 `SELECT`/`INSERT`) — see `AGENTS.md`'s data
-model section for the retention policy. No per-IP rate
+model section for the retention policy. `GET /api/merqo/vendor-activity`
+gives merqo's cross-kit vendor detail view real per-vendor loyalty activity
+(programs, cards, stamps/rewards in the last 30 days) instead of nothing —
+see `src/app/api/merqo/vendor-activity/README.md`. No per-IP rate
 limiting on public actions (never provisioned in production, so it was a
 fail-open no-op) — `supabase/config.toml` matches the local-dev CLI
 config the other 4 Merqo kits already share. The dashboard's onboarding
