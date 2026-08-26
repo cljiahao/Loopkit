@@ -1,6 +1,7 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import { listAllUsers } from "@/lib/list-all-users";
 import type { CardRow } from "@/lib/cards";
+import type { Json } from "@/lib/types";
 
 type ServiceClient = Awaited<ReturnType<typeof createServiceClient>>;
 
@@ -307,4 +308,37 @@ export async function getProgramDetail(
       phone: phoneByCardId.get(e.card_id) ?? null,
     })),
   };
+}
+
+export type AdminAuditRow = {
+  id: string;
+  admin_id: string;
+  actor_email: string | null;
+  action: string;
+  target_id: string | null;
+  detail: Json | null;
+  created_at: string;
+};
+
+/**
+ * Most recent `admin_audit` rows, newest first, for the admin Activity tab.
+ * Actor identity is resolved to email via the same admin-API lookup as
+ * vendor/program rows; `admin_id` is kept alongside for the
+ * `merqo_vendor_provision` sentinel case (see `recordAudit`'s docstring)
+ * where the id belongs to a vendor, not a real admin.
+ */
+export async function listAdminAudit(limit = 100): Promise<AdminAuditRow[]> {
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from("admin_audit")
+    .select("id, admin_id, action, target_id, detail, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`listAdminAudit: ${error.message}`);
+
+  const emails = await emailByUserId(supabase);
+  return (data ?? []).map((r) => ({
+    ...r,
+    actor_email: emails.get(r.admin_id) ?? null,
+  }));
 }

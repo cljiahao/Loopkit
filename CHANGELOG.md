@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Admin `/admin/activity` tab rendering `admin_audit` via `@merqo/ui`'s
+  shared `AuditLogTable` — the first kit-family reader of an audit trail
+  that every kit already writes to but none previously displayed.
 - Onboarding step wizard for first-run program creation: `/setup`'s create
   flow (not edit, not a scheduled type-change, not an in-place type swap)
   now walks a vendor through Type → Basics → Rules with a numbered
