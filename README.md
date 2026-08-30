@@ -17,7 +17,11 @@ coverage now extends past `/admin` (merqo's own `/api/merqo/vendor-provision`
 write is recorded too, attributed via a `merqo_system` sentinel), it's now
 readable via the `/admin/activity` tab (`@merqo/ui`'s shared `AuditLogTable`
 — see `src/app/admin/activity/README.md`), the activity/programs/vendors
-admin tables now render via `@merqo/ui`'s shared `DataTable`, and the table
+admin tables now render via `@merqo/ui`'s shared `DataTable`. `/admin/activity`
+and `/admin/vendors` reach those Client Components through a small
+`"use client"` wrapper each (`activity-log.tsx`, `vendors-table.tsx`) that
+owns the callback props, since a Server Component can't pass a function
+across the client boundary. The audit table
 is append-only at
 the grant level (`service_role` can no longer `UPDATE`/`DELETE` it, only
 `SELECT`/`INSERT`) — see `AGENTS.md`'s data

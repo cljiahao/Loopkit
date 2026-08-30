@@ -1,26 +1,10 @@
-import { AuditLogTable, type AuditLogEntry } from "@merqo/ui";
+import type { AuditLogEntry } from "@merqo/ui";
 import { requireAdmin } from "@/lib/admin";
 import { listAdminAudit, type AdminAuditRow } from "@/lib/admin-data";
-import { formatSgtDateTime } from "@/lib/format";
 import type { Json } from "@/lib/types";
+import { AdminActivityLog } from "@/app/admin/activity/activity-log";
 
 export const revalidate = 0;
-
-// Human labels for the real `action` strings written by recordAudit's call
-// sites (src/app/admin/actions.ts, src/app/api/merqo/vendor-provision).
-// Unrecognized actions fall back to the raw string, not a guessed label.
-const ACTION_LABELS: Record<string, string> = {
-  set_program_active: "Program activation changed",
-  set_vendor_pro: "Vendor Pro status changed",
-  remove_card: "Card removed",
-  resolve_upgrade_request: "Upgrade request resolved",
-  set_pricing: "Pricing updated",
-  merqo_vendor_provision: "Vendor provisioned (merqo)",
-};
-
-function formatAction(action: string): string {
-  return ACTION_LABELS[action] ?? action;
-}
 
 function isRecord(value: Json | null): value is Record<string, Json> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -72,11 +56,7 @@ export default async function AdminActivityPage() {
         <h1 className="text-3xl font-bold tracking-tight">Activity</h1>
       </div>
 
-      <AuditLogTable
-        entries={rows.map(toEntry)}
-        formatAction={formatAction}
-        dateFormatter={(date) => formatSgtDateTime(date.toISOString())}
-      />
+      <AdminActivityLog entries={rows.map(toEntry)} />
     </main>
   );
 }
