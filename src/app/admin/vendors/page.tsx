@@ -1,11 +1,9 @@
-import { DataTable, type DataTableColumn } from "@merqo/ui";
 import { requireAdmin } from "@/lib/admin";
 import { listVendors, listPendingUpgradeRequests } from "@/lib/admin-data";
 import { formatSgtDateTime } from "@/lib/format";
-import { Badge } from "@/components/ui/badge";
 import { ElevatedCard } from "@/components/elevated-card";
-import { VendorProToggle } from "@/app/admin/vendors/vendor-pro-toggle";
 import { ResolveUpgradeRequestButton } from "@/app/admin/vendors/resolve-upgrade-request-button";
+import { VendorsTable } from "@/app/admin/vendors/vendors-table";
 
 export const revalidate = 0;
 
@@ -16,40 +14,6 @@ export default async function AdminVendorsPage() {
     listVendors(),
     listPendingUpgradeRequests(),
   ]);
-
-  type VendorRow = (typeof vendors)[number];
-
-  const columns: DataTableColumn<VendorRow>[] = [
-    {
-      header: "Vendor",
-      cell: (v) => <span className="font-medium">{v.email ?? "—"}</span>,
-    },
-    {
-      header: "Programs",
-      cell: (v) => <span className="tabular-nums">{v.program_count}</span>,
-      className: "text-right",
-    },
-    {
-      header: "Tier",
-      cell: (v) =>
-        v.is_pro ? (
-          <Badge variant="gold">Pro</Badge>
-        ) : (
-          <Badge variant="outline">Free</Badge>
-        ),
-    },
-    {
-      header: "Pro",
-      cell: (v) => (
-        <VendorProToggle
-          vendorId={v.vendor_id}
-          email={v.email}
-          isPro={v.is_pro}
-        />
-      ),
-      className: "text-right",
-    },
-  ];
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-5 py-8">
@@ -99,11 +63,7 @@ export default async function AdminVendorsPage() {
         </p>
       ) : (
         <ElevatedCard className="overflow-x-auto">
-          <DataTable
-            rows={vendors}
-            columns={columns}
-            getRowKey={(v) => v.vendor_id}
-          />
+          <VendorsTable rows={vendors} />
         </ElevatedCard>
       )}
     </main>

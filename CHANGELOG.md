@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `/admin/activity` and `/admin/vendors` returned HTTP 500: both are
+  `async` Server Components that passed function props (`formatAction`/
+  `dateFormatter`, and the `DataTable` `columns` cell renderers + `getRowKey`)
+  straight to `@merqo/ui` components, which ship as Client Components — a
+  boundary React can't serialize a function across. `next build` didn't
+  catch it because both routes are dynamic (`revalidate = 0`), never
+  prerendered. Each `@merqo/ui` render is now extracted into a small
+  `"use client"` wrapper that owns the callbacks
+  (`src/app/admin/activity/activity-log.tsx`,
+  `src/app/admin/vendors/vendors-table.tsx`); the pages pass only
+  serializable data.
+
 ### Changed
 
 - `@merqo/ui` bumped to v0.22.1 (TS2742 declaration-emit fix): the activity
