@@ -13,7 +13,7 @@ several (`admin-data.test.ts`, `admin.test.ts`, `cards.test.ts`,
 - `admin-data.test.ts` — `listProgramsOverview`/`listVendors`/`listPendingUpgradeRequests`/`platformTotals`/`recentActivity`/`getProgramDetail`: each function's happy path plus its error-throwing path, mocking `createServiceClient`'s `.from()` chain and `auth.admin.listUsers`
 - `admin.test.ts` — `isAdmin`: true/false on presence/absence of an `admins` row; `requireAdmin`: returns `{user}` for a signed-in admin, 404s (via `next/navigation`'s `notFound()`) when signed out or signed in but not an admin
 - `build-plant-config.test.ts` — `buildPlantConfig`: derives five named growth stages from a single visits-to-bloom knob
-- `build-program-fields.test.ts` — `buildProgramFields`: per-type (stamp/lucky/plant/wheel/scratch) program field construction, including a vendor-picked segment `color` threading through to the built config (unset segments leave it unset)
+- `build-program-fields.test.ts` — `buildProgramFields`: per-type (stamp/lucky/plant/wheel/scratch) program field construction, including a vendor-picked segment `color` threading through to the built config (unset segments leave it unset); the cup-variant stage-name assertion expects "Half Full" at the 50% threshold, not "Quarter Full"
 - `cards.test.ts` — `listCards`: fetches a vendor's cards for one program, optional phone search, mocks `createServerClient`
 - `customers.test.ts` — `aggregateCustomers`: merges one customer's cards across programs into a single row
 - `engine/`

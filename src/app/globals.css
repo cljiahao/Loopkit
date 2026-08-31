@@ -133,6 +133,7 @@
   --animate-flame-spark-pop: flame-spark-pop 1.4s ease-in infinite;
   --animate-flame-smoke-drift: flame-smoke-drift 4.5s ease-out infinite;
   --animate-flame-spark-fade: flame-spark-fade 1.6s ease-in-out infinite;
+  --animate-plant-sway: plant-sway 4s ease-in-out infinite;
 }
 
 @keyframes stamp-pop {
@@ -285,6 +286,16 @@
   100% {
     opacity: 0;
     transform: scaleY(0.7);
+  }
+}
+
+@keyframes plant-sway {
+  0%,
+  100% {
+    transform: rotate(-2deg);
+  }
+  50% {
+    transform: rotate(2deg);
   }
 }
 

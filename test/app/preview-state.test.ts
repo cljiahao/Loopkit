@@ -63,6 +63,8 @@ describe("buildPreviewProgress", () => {
       totalStages: 5,
       wilting: false,
       variant: "plant",
+      filled: 0,
+      total: 6,
     });
   });
 
@@ -79,6 +81,8 @@ describe("buildPreviewProgress", () => {
       totalStages: 5,
       wilting: false,
       variant: "plant",
+      filled: 2,
+      total: 6,
     });
   });
 
@@ -143,6 +147,8 @@ describe("buildPreviewProgress", () => {
       totalStages: 5,
       wilting: false,
       variant: "plant",
+      filled: 2,
+      total: 6,
     });
   });
 
@@ -169,6 +175,8 @@ describe("buildPreviewProgress", () => {
       totalStages: 5,
       wilting: false,
       variant: "cup",
+      filled: 0,
+      total: 6,
     });
   });
 
@@ -186,6 +194,8 @@ describe("buildPreviewProgress", () => {
       totalStages: 5,
       wilting: false,
       variant: "cup",
+      filled: 2,
+      total: 6,
     });
   });
 });

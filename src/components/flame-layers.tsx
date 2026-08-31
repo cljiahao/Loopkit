@@ -142,7 +142,7 @@ function StageGroup({
       className="motion-safe:transition-transform"
       style={{
         transformBox: "fill-box",
-        transformOrigin: "50% 50%",
+        transformOrigin: "50% 100%",
         transform: isActive ? "scale(1)" : "scale(0)",
         transitionTimingFunction: TRANSITION_EASE,
         transitionDuration: `${durationMs}ms`,
@@ -571,9 +571,9 @@ export function FlameLayers({
     <div className={cn("flex flex-col items-center gap-1", className)}>
       <div
         data-flame-stage={stage}
-        className="flex size-32 flex-col items-center justify-end gap-1 pb-1"
+        className="flex size-[166px] flex-col items-center justify-end gap-1 pb-1"
       >
-        <svg viewBox="0 0 100 100" aria-hidden="true" className="size-28">
+        <svg viewBox="0 0 100 100" aria-hidden="true" className="size-[146px]">
           <defs>
             <linearGradient id={logGradId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#9c7248" />

@@ -541,12 +541,14 @@ describe("ServeCustomer", () => {
         view: {
           kind: "plant",
           stage: 2,
-          stageName: "Quarter Full",
+          stageName: "Half Full",
           totalStages: 5,
           wilting: false,
           variant: "cup",
+          filled: 4,
+          total: 8,
         },
-        label: "Quarter Full",
+        label: "Half Full — 4/8",
         rewardReady: false,
       },
     });

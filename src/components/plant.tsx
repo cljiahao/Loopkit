@@ -323,9 +323,12 @@ export function Plant({
       <g
         style={{
           transformOrigin: "50px 74px",
-          transform: wilting ? "rotate(9deg)" : "none",
+          transform: wilting ? "rotate(9deg)" : undefined,
         }}
-        className="motion-safe:transition-transform motion-safe:duration-500"
+        className={cn(
+          "motion-safe:transition-transform motion-safe:duration-500",
+          !wilting && "motion-safe:animate-plant-sway",
+        )}
       >
         <line
           x1="50"

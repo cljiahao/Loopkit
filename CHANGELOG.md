@@ -43,6 +43,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Split into a static positioning `<g>` wrapping the animated one. Separately,
   `FlameLayers`' icon rendered at roughly half the size of `Cup`/`Plant` on
   the same card (`size-16`/`size-14` vs. their `size-32`) — resized to match.
+- Second fast-follow round on the same redesign: `FlameLayers`' stage
+  transitions pivoted at each shape's own center, reading as popping
+  outward rather than rising from the logs — now pivots at its own
+  bounding-box bottom instead, so a stage change grows/shrinks bottom-up.
+  `Plant` had no idle motion at all
+  (the reference design's sway never made it into the port) — added a
+  `motion-safe:` ±2° sway, suppressed while wilting. `Cup` and
+  `FlameLayers` still read visibly smaller than intended even at matched
+  box sizes — both bumped 30% (`size-32`→`size-[166px]` for `Cup`;
+  `size-32`/`size-28`→`size-[166px]`/`size-[146px]` for `FlameLayers`).
+  The cup variant's 50%-progress stage was named "Quarter Full" — renamed
+  to "Half Full" (`program-config.ts`'s `CUP_STAGE_NAMES`; the thresholds
+  themselves were always even quarters, only the label was wrong). Plant/
+  Cup also had no visible progress counter, unlike `FlameLayers`' own
+  `"{stageName} — {filled}/{total}"` — `plantStrategy.progress()` now
+  reports the same `filled`/`total` shape, surfaced through the existing
+  shared `label`/`progress.label` line both card views already render.
 - `/admin/activity` and `/admin/vendors` returned HTTP 500: both are
   `async` Server Components that passed function props (`formatAction`/
   `dateFormatter`, and the `DataTable` `columns` cell renderers + `getRowKey`)

@@ -55,9 +55,13 @@ export const plantStrategy: Strategy<PlantConfig, PlantState> = {
     const g = decayedGrowth(state, config, now);
     const idx = stageIndexFor(g, config.stages);
     const wilting = g < state.growth;
+    const total = bloomThreshold(config);
+    const filled = Math.min(Math.max(Math.round(g), 0), total);
     return {
       stage: config.stages[idx].name,
-      label: wilting ? "Wilting — visit to revive it" : config.stages[idx].name,
+      label: wilting
+        ? "Wilting — visit to revive it"
+        : `${config.stages[idx].name} — ${filled}/${total}`,
       view: {
         kind: "plant",
         stage: idx,
@@ -65,6 +69,8 @@ export const plantStrategy: Strategy<PlantConfig, PlantState> = {
         totalStages: config.stages.length,
         wilting,
         variant: config.variant ?? "plant",
+        filled,
+        total,
       },
       rewardReady: state.bloomed ?? g >= bloomThreshold(config),
     };

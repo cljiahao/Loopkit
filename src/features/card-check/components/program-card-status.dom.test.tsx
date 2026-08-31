@@ -32,6 +32,8 @@ function baseCard(overrides: Partial<CardStatus>): CardStatus {
       totalStages: 5,
       wilting: false,
       variant: "cup",
+      filled: 1,
+      total: 4,
     },
     ...overrides,
   } as CardStatus;
@@ -220,6 +222,8 @@ describe("ProgramCardStatus cup variant", () => {
             totalStages: 5,
             wilting: false,
             variant: "plant",
+            filled: 1,
+            total: 4,
           },
         })}
         phone="+6591234567"

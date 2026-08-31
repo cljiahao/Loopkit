@@ -120,7 +120,7 @@ describe("buildProgramFields", () => {
       stages: [
         { name: "Empty", threshold: 0 },
         { name: "Sip", threshold: 2 },
-        { name: "Quarter Full", threshold: 4 },
+        { name: "Half Full", threshold: 4 },
         { name: "Nearly Full", threshold: 6 },
         { name: "Full", threshold: 8 },
       ],

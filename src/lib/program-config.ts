@@ -31,7 +31,7 @@ export const segmentInputSchema = z.object({
 export type SegmentInput = z.infer<typeof segmentInputSchema>;
 
 const PLANT_STAGE_NAMES = ["Seed", "Sprout", "Leafing", "Budding", "Bloom"];
-const CUP_STAGE_NAMES = ["Empty", "Sip", "Quarter Full", "Nearly Full", "Full"];
+const CUP_STAGE_NAMES = ["Empty", "Sip", "Half Full", "Nearly Full", "Full"];
 
 // Derive a Plant/Cup program's config from the single vendor-facing knob
 // (visits to bloom/fill): five stages at even quarters up to the top
