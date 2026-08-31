@@ -2,6 +2,17 @@
 
 Date: 2026-07-11
 
+**Removed 2026-09-01.** This was loopkit's only vendor sign-in path that
+diverged from every sibling kit (qkit/paykit/stockkit/merqo all ship only
+Google OAuth + email/password) — kept as history, not current behavior.
+Reconsidered on review: the anonymous-Supabase-session mechanism this spec
+chose has no account-recovery story (no password, no email, tied to one
+browser's session) for what is a business owner's primary sign-in method,
+not a disposable customer flow. Removed the UI entry point
+(`login-form.tsx`), the backing action (`src/features/auth/api/actions.ts`,
+deleted), and its dedicated tests; `loopkit.vendors.phone`/`.name` stay in
+the schema (still written by `/profile`, unrelated to this flow specifically).
+
 ## Problem
 
 `/login` (`src/app/login/page.tsx`) only offers two vendor sign-in paths:

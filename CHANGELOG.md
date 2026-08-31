@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- The `/login` page's "Continue with name & phone" vendor onboarding option
+  — an anonymous-Supabase-session sign-in path unique to loopkit (every
+  sibling kit ships only Google OAuth + email/password) with no account
+  recovery story for what is a business owner's primary sign-in, not a
+  disposable customer flow. `/login` now matches qkit's reference login
+  pattern exactly.
+
 ### Changed
 
 - Redesigned the three "reward-mechanic" progress visuals — Cup, Plant/

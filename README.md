@@ -12,7 +12,10 @@ sign-in link, no CTA band above it) and its `BackToTop` button matches
 the cross-kit landing-page parity pass. In production, the Supabase auth
 cookie is scoped to
 `.merqo.io` (`NEXT_PUBLIC_AUTH_COOKIE_DOMAIN`, `src/lib/supabase/`), so
-signing in on one Merqo kit signs you in on the rest. `admin_audit`'s
+signing in on one Merqo kit signs you in on the rest. `/login` now offers
+only Google OAuth and email/password, matching every sibling kit — a
+name+phone anonymous-session onboarding option unique to loopkit was
+removed (`src/features/auth/README.md`). `admin_audit`'s
 coverage now extends past `/admin` (merqo's own `/api/merqo/vendor-provision`
 write is recorded too, attributed via a `merqo_system` sentinel), it's now
 readable via the `/admin/activity` tab (`@merqo/ui`'s shared `AuditLogTable`
