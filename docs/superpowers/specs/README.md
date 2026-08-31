@@ -24,7 +24,7 @@ below.
 - `2026-07-11-qr-model-customer-identity-design.md`
 - `2026-07-11-stats-expansion-design.md`
 - `2026-07-11-vendor-identity-profile-ui-design.md`
-- `2026-07-11-vendor-phone-onboarding-design.md`
+- `2026-07-11-vendor-phone-onboarding-design.md` — "Vendor phone-OTP onboarding": a third `/login` sign-in path (name+phone, anonymous Supabase session) alongside Google OAuth and email/password. **Removed 2026-09-01** — no account-recovery story for a business owner's primary sign-in; kept here as history.
 - `2026-07-14-activity-table-design.md`
 - `2026-07-14-counter-page-universal-scan-design.md`
 - `2026-07-14-cross-kit-nav-standardization-design.md`
