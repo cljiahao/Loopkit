@@ -3,101 +3,113 @@ import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { FlameLayers } from "@/components/flame-layers";
 
+const LAYERS = ["ember", "spark", "small", "medium", "large"] as const;
+
 describe("FlameLayers", () => {
-  it("renders the Ember stage label with no flame icon", () => {
-    const { container } = render(
-      <FlameLayers filled={0} total={10} stage={0} stageName="Ember" />,
-    );
-    expect(screen.getByText("Ember — 0/10")).toBeInTheDocument();
-    expect(container.querySelectorAll("svg")).toHaveLength(0);
-  });
-
-  it("shows a dim coal dot at the Ember stage", () => {
-    const { container } = render(
-      <FlameLayers filled={0} total={10} stage={0} stageName="Ember" />,
-    );
-    expect(container.querySelector("[data-flame-coal]")).toBeInTheDocument();
-  });
-
-  it("renders a single low-opacity flame icon at the Spark stage", () => {
-    const { container } = render(
-      <FlameLayers filled={2} total={10} stage={1} stageName="Spark" />,
-    );
-    const icons = container.querySelectorAll("svg");
-    expect(icons).toHaveLength(1);
-    expect(icons[0].getAttribute("class")).toContain("text-amber-400/50");
-  });
-
-  it("renders three layered flame icons from Small Fire onward", () => {
-    const { container } = render(
+  it("renders the stage label and count for every stage", () => {
+    render(
       <FlameLayers filled={4} total={10} stage={2} stageName="Small Fire" />,
     );
-    expect(container.querySelectorAll("svg")).toHaveLength(3);
+    expect(screen.getByText("Small Fire — 4/10")).toBeInTheDocument();
   });
 
-  it("renders the Medium Fire stage label and count", () => {
-    render(
+  it("carries the data-flame-stage hook on the layout wrapper", () => {
+    const { container } = render(
       <FlameLayers filled={7} total={10} stage={3} stageName="Medium Fire" />,
     );
-    expect(screen.getByText("Medium Fire — 7/10")).toBeInTheDocument();
-  });
-
-  it("renders the Full Campfire stage label, 3 flame icons, and a 3rd log", () => {
-    const { container } = render(
-      <FlameLayers
-        filled={10}
-        total={10}
-        stage={4}
-        stageName="Full Campfire"
-      />,
-    );
-    expect(screen.getByText("Full Campfire — 10/10")).toBeInTheDocument();
-    expect(container.querySelectorAll("svg")).toHaveLength(3);
-    expect(container.querySelectorAll("[data-flame-log]")).toHaveLength(3);
-  });
-
-  it("shows only 2 logs before the Full Campfire stage", () => {
-    const { container } = render(
-      <FlameLayers filled={2} total={10} stage={1} stageName="Spark" />,
-    );
-    expect(container.querySelectorAll("[data-flame-log]")).toHaveLength(2);
-  });
-
-  it("grows the flame icon size across stages", () => {
-    const small = render(
-      <FlameLayers filled={4} total={10} stage={2} stageName="Small Fire" />,
-    );
-    const big = render(
-      <FlameLayers
-        filled={10}
-        total={10}
-        stage={4}
-        stageName="Full Campfire"
-      />,
-    );
     expect(
-      small.container.querySelector("svg")?.getAttribute("class"),
-    ).toContain("size-8");
-    expect(big.container.querySelector("svg")?.getAttribute("class")).toContain(
-      "size-14",
-    );
+      container.querySelector('[data-flame-stage="3"]'),
+    ).toBeInTheDocument();
   });
 
-  it("gates the flicker animation on motion-safe and only while a flame is lit", () => {
+  it("renders a single SVG with all 5 stage layers always present", () => {
+    const { container } = render(
+      <FlameLayers filled={0} total={10} stage={0} stageName="Ember" />,
+    );
+    expect(container.querySelectorAll("svg")).toHaveLength(1);
+    LAYERS.forEach((layer) => {
+      expect(
+        container.querySelector(`[data-flame-layer="${layer}"]`),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("scales only the current stage's layer to full size, the rest to 0", () => {
+    const { container } = render(
+      <FlameLayers filled={7} total={10} stage={3} stageName="Medium Fire" />,
+    );
+    LAYERS.forEach((layer, index) => {
+      const el = container.querySelector(`[data-flame-layer="${layer}"]`);
+      expect(el).toHaveStyle({
+        transform: index === 3 ? "scale(1)" : "scale(0)",
+      });
+    });
+  });
+
+  it("shows the ember coal hook only at the Ember stage", () => {
     const ember = render(
       <FlameLayers filled={0} total={10} stage={0} stageName="Ember" />,
     );
     expect(
-      ember.container
-        .querySelector("[data-flame-stage]")
-        ?.querySelector(".motion-safe\\:animate-flame-flicker"),
-    ).not.toBeInTheDocument();
+      ember.container.querySelector("[data-flame-coal]"),
+    ).toBeInTheDocument();
 
     const spark = render(
       <FlameLayers filled={2} total={10} stage={1} stageName="Spark" />,
     );
     expect(
-      spark.container.querySelector(".motion-safe\\:animate-flame-flicker"),
+      spark.container.querySelector("[data-flame-coal]"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("always draws exactly 2 crossed logs, at every stage", () => {
+    const ember = render(
+      <FlameLayers filled={0} total={10} stage={0} stageName="Ember" />,
+    );
+    expect(ember.container.querySelectorAll("[data-flame-log]")).toHaveLength(
+      2,
+    );
+
+    const full = render(
+      <FlameLayers
+        filled={10}
+        total={10}
+        stage={4}
+        stageName="Full Campfire"
+      />,
+    );
+    expect(full.container.querySelectorAll("[data-flame-log]")).toHaveLength(2);
+  });
+
+  it("grows a Small/Medium/Large stage change with no delay on the incoming layer, but a delay on the outgoing one", () => {
+    const { container } = render(
+      <FlameLayers filled={7} total={10} stage={3} stageName="Medium Fire" />,
+    );
+    const incoming = container.querySelector('[data-flame-layer="medium"]');
+    const outgoing = container.querySelector('[data-flame-layer="small"]');
+    expect(incoming).toHaveStyle({ transitionDelay: "0ms" });
+    expect(outgoing).toHaveStyle({ transitionDelay: "300ms" });
+  });
+
+  it("uses a plain no-delay crossfade for the Full Campfire -> Ember redemption jump", () => {
+    const { container } = render(
+      <FlameLayers filled={0} total={10} stage={0} stageName="Ember" />,
+    );
+    const large = container.querySelector('[data-flame-layer="large"]');
+    expect(large).toHaveStyle({ transitionDelay: "0ms" });
+  });
+
+  it("gates both the idle flame flicker and the stage-transition scale behind motion-safe", () => {
+    const { container } = render(
+      <FlameLayers filled={4} total={10} stage={2} stageName="Small Fire" />,
+    );
+    expect(
+      container.querySelector(".motion-safe\\:animate-flame-flicker-outer"),
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector(
+        `[data-flame-layer="small"].motion-safe\\:transition-transform`,
+      ),
     ).toBeInTheDocument();
   });
 });

@@ -95,7 +95,11 @@ behind a collapsed "Theme · {current}" submenu (matching the existing
 "Switch products"/"Get help" pattern) instead of three always-expanded
 radio options. Bumped again to v0.20.0: the vendor stats page's tile now
 wraps `@merqo/ui`'s new shared `StatTile`/`DeltaPill` content instead of a
-fully local implementation, no visible change. See `CHANGELOG.md` for the latest changes, including deduplication of the
+fully local implementation, no visible change. Cup, Plant/Sprout, and
+Flame Club's progress visuals were redesigned as hand-drawn SVG art with
+real stage-to-stage growth transitions, replacing the earlier flat-shape/
+icon-cluster placeholders (`src/components/README.md`). See `CHANGELOG.md`
+for the latest changes, including deduplication of the
 shared bearer-auth and Merqo-RPC-call helpers, the addition of
 templateCentral 5.13.0's comment-hygiene enforcement layer, and a fix
 restoring card/background contrast (both modes) after the Sealing Wax

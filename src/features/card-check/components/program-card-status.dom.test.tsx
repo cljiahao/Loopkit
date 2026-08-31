@@ -203,9 +203,9 @@ describe("ProgramCardStatus cup variant", () => {
     const { container } = render(
       <ProgramCardStatus card={baseCard({})} phone="+6591234567" />,
     );
-    // Cup renders a stroked, unfilled outline path; Plant's shapes are always filled.
+    // Cup renders a persistent coffee ellipse; Plant has no such hook.
     expect(
-      container.querySelector('path[fill="none"][stroke="currentColor"]'),
+      container.querySelector('[data-cup-coffee="true"]'),
     ).toBeInTheDocument();
   });
 
@@ -226,7 +226,7 @@ describe("ProgramCardStatus cup variant", () => {
       />,
     );
     expect(
-      container.querySelector('path[fill="none"][stroke="currentColor"]'),
+      container.querySelector('[data-cup-coffee="true"]'),
     ).not.toBeInTheDocument();
   });
 });

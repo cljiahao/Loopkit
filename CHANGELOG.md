@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Redesigned the three "reward-mechanic" progress visuals — Cup, Plant/
+  Sprout, and Flame Club — with hand-drawn SVG art replacing the previous
+  flat-shape/lucide-icon placeholders, plus real stage-to-stage growth
+  transitions (as opposed to plain crossfades):
+  - `Cup` is now a 3/4-perspective "looking down into the mug" illustration
+    (gradient-filled shell, elliptical rim, translucent rim-shadow, a
+    hand-traced pitcher pouring milk at the penultimate stage, a latte-art
+    flourish at Full) with one persistent coffee ellipse whose geometry and
+    gradient stops are set per stage and left to the browser to interpolate,
+    so the surface genuinely rises/widens in place and the espresso→latte
+    tone blends continuously.
+  - `Plant` now keeps growing across all 5 stages (previously froze after
+    Leafing), with 5 persistent leaf slots (never swapped, so leaves don't
+    flash/replace across stages) and, at the final stage, one of 4 flower
+    types — tulip, daisy, sakura, or pansy — deterministically selected by a
+    new optional `seed` prop (hashed, not random) so a given customer's
+    flower stays the same across visits instead of changing on every reload.
+  - `FlameLayers` replaces its stacked `lucide-react` `Flame` icons with a
+    hand-built campfire (coal bed → coal mound+ghost-flames → candle lick →
+    3-tongue fan → large lick with rising sparks/smoke), each stage its own
+    gradient-stopped shape; Ember↔Spark and the Full-Campfire→Ember
+    redemption jump crossfade in sync, while Small→Medium→Large instead
+    holds the old flame at full size while the new one grows, only shrinking
+    the old one away after a delay once the new one has visibly grown past
+    it.
+
 ### Fixed
 
 - `/admin/activity` and `/admin/vendors` returned HTTP 500: both are

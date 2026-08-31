@@ -488,6 +488,7 @@ export function ServeCustomer({
                 stage={result.view.stage}
                 totalStages={result.view.totalStages}
                 wilting={result.view.wilting}
+                seed={result.phone}
                 className="size-24 shrink-0"
               />
             )}

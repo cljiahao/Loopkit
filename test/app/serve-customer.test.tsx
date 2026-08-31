@@ -563,7 +563,7 @@ describe("ServeCustomer", () => {
     await user.click(screen.getByRole("button", { name: "Look up" }));
     await waitFor(() =>
       expect(
-        container.querySelector('path[fill="none"][stroke="currentColor"]'),
+        container.querySelector('[data-cup-coffee="true"]'),
       ).toBeInTheDocument(),
     );
   });
