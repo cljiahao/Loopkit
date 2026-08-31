@@ -2,16 +2,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { stampTourSeen } from "./tour-prefs";
 
-const { eqMock, updateMock, fromMock } = vi.hoisted(() => ({
-  eqMock: vi.fn(),
-  updateMock: vi.fn(),
+const { upsertMock, fromMock } = vi.hoisted(() => ({
+  upsertMock: vi.fn(),
   fromMock: vi.fn(),
 }));
 
 beforeEach(() => {
-  eqMock.mockReset().mockResolvedValue({ error: null });
-  updateMock.mockReset().mockReturnValue({ eq: eqMock });
-  fromMock.mockReset().mockReturnValue({ update: updateMock });
+  upsertMock.mockReset().mockResolvedValue({ error: null });
+  fromMock.mockReset().mockReturnValue({ upsert: upsertMock });
 });
 
 function fakeSupabase() {
@@ -19,18 +17,18 @@ function fakeSupabase() {
 }
 
 describe("stampTourSeen", () => {
-  it("stamps tour_seen_at on the vendor's own row", async () => {
+  it("upserts tour_seen_at on the vendor's own row", async () => {
     await stampTourSeen(fakeSupabase(), "v1");
 
     expect(fromMock).toHaveBeenCalledWith("vendors");
-    expect(updateMock).toHaveBeenCalledWith({
+    expect(upsertMock).toHaveBeenCalledWith({
+      vendor_id: "v1",
       tour_seen_at: expect.any(String),
     });
-    expect(eqMock).toHaveBeenCalledWith("vendor_id", "v1");
   });
 
-  it("logs but does not throw when the update fails", async () => {
-    eqMock.mockResolvedValue({ error: { message: "RLS denied" } });
+  it("logs but does not throw when the upsert fails", async () => {
+    upsertMock.mockResolvedValue({ error: { message: "RLS denied" } });
     const consoleError = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
@@ -42,5 +40,18 @@ describe("stampTourSeen", () => {
       "RLS denied",
     );
     consoleError.mockRestore();
+  });
+
+  it("stamps a vendor who has no row yet — an update would silently no-op here", async () => {
+    // loopkit.vendors is created lazily (first /profile save); a vendor who
+    // lands on the dashboard without ever visiting /profile has no row.
+    // upsert must still succeed in that case, matching what the vendors_own
+    // RLS policy's WITH CHECK allows on insert (vendor_id = auth.uid()).
+    await stampTourSeen(fakeSupabase(), "v-no-row-yet");
+
+    expect(upsertMock).toHaveBeenCalledWith({
+      vendor_id: "v-no-row-yet",
+      tour_seen_at: expect.any(String),
+    });
   });
 });

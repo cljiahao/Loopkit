@@ -101,7 +101,9 @@ real stage-to-stage growth transitions, replacing the earlier flat-shape/
 icon-cluster placeholders (`src/components/README.md`), plus two
 fast-follow rounds fixing Plant's leaf positioning/Flame's icon size, then
 Flame's grow direction, Plant's idle sway, Cup/Flame's on-screen scale, a
-mislabeled cup stage, and Plant/Cup's missing progress counter. See
+mislabeled cup stage, and Plant/Cup's missing progress counter, plus a fix
+for the dashboard onboarding tour re-triggering on every load for any
+vendor who'd never visited `/profile` (`src/lib/README.md`). See
 `CHANGELOG.md`
 for the latest changes, including deduplication of the
 shared bearer-auth and Merqo-RPC-call helpers, the addition of
