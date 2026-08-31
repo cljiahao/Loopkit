@@ -86,6 +86,7 @@ export function ProgramCardStatus({
               stage={view.stage}
               totalStages={view.totalStages}
               wilting={view.wilting}
+              seed={`${phone}:${card.programId}`}
             />
           )}
         </div>
