@@ -36,6 +36,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Dashboard onboarding tour re-triggered on every single dashboard load,
+  even after a vendor's account was months old — `stampTourSeen` (`src/lib/
+tour-prefs.ts`) used `.update()` against `loopkit.vendors`, but that table
+  is created lazily (a vendor's first `/profile` save is their first write
+  there), so any vendor who never visited `/profile` had no row to update.
+  The update matched zero rows and returned no error, silently persisting
+  nothing. Switched to `.upsert()`, matching the fix paykit already shipped
+  for the identical "starts with no row" shape on its own `vendor_prefs`
+  table.
 - Two bugs in the redesign above: `Plant`'s leaf slots rendered pinned to
   the SVG's top-left corner instead of their stem position — a `transform`
   attribute (positioning) and a CSS `transform` (the pop-in scale) can't
