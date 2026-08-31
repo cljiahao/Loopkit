@@ -34,11 +34,14 @@ Client-side card-check UI.
   in `localStorage`); renders `LuckyBox` for a `kind: "lucky"` view instead
   of falling through to the generic stamp-dots view; its outer container is
   now `@/components/card-shell.tsx`'s `CardShell` (idle holographic sheen +
-  pointer-tilt), replacing a plain `<div>`.
+  pointer-tilt), replacing a plain `<div>`. Passes `Plant` a `seed={`${phone}
+  :${card.programId}`}` so a given customer's bloom type (see `Plant`'s own
+  README entry) stays stable across visits instead of defaulting to tulip.
 - `program-card-status.dom.test.tsx` — jsdom tests for `ProgramCardStatus`:
   verifies `PointsBar` vs `StampDots` renders per `view.variant` on a
   `"dots"` view, and `Cup` vs `Plant` renders per `view.variant` on a
-  `"plant"` view
+  `"plant"` view (via `Cup`'s `data-cup-coffee` hook, not an implementation
+  detail of its old stroked-outline shape)
 - `birthday-field.tsx` — `BirthdayField({vendorId, phone})`: optional,
   self-entered birthday (plain native `<select>`s for month/day, not the
   shadcn `Select` — Radix's pointer-event/`scrollIntoView` needs have no

@@ -17,7 +17,7 @@ Supabase clients and `@/lib` collaborators mocked via `vi.mock`/`vi.hoisted`.
 - `resolve-upgrade-request-action.test.ts` — admin action resolving an upgrade request: grants Pro (upsert), marks the request resolved
 - `save-customer-notify-settings-action.test.ts` — `saveCustomerNotifySettingsAction`: upserts `vendor_notify_settings.customer_telegram_notify_enabled` true/false depending on the submitted checkbox state (an unchecked checkbox submits no field at all, resolving to `false`), returns a generic error without throwing when the upsert fails
 - `save-program-action.test.ts` — `saveProgramAction`: create/update dispatch, free/Pro entitlement gate, RPC call shape
-- `serve-customer.test.tsx` — jsdom: the `/c` customer card view — stamp/record-visit/lookup/redeem-plant flows end to end
+- `serve-customer.test.tsx` — jsdom: the `/c` customer card view — stamp/record-visit/lookup/redeem-plant flows end to end (the cup-variant plant lookup asserts via `Cup`'s `data-cup-coffee` hook, not an implementation detail of its old stroked-outline shape)
 - `set-vendor-pro-action.test.ts` — admin action toggling a vendor's Pro flag: upsert/delete on `vendor_pro`
 
 ## Parent
