@@ -571,9 +571,9 @@ export function FlameLayers({
     <div className={cn("flex flex-col items-center gap-1", className)}>
       <div
         data-flame-stage={stage}
-        className="flex size-16 flex-col items-center justify-end gap-1 pb-1"
+        className="flex size-32 flex-col items-center justify-end gap-1 pb-1"
       >
-        <svg viewBox="0 0 100 100" aria-hidden="true" className="size-14">
+        <svg viewBox="0 0 100 100" aria-hidden="true" className="size-28">
           <defs>
             <linearGradient id={logGradId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#9c7248" />

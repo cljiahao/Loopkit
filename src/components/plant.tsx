@@ -369,29 +369,34 @@ export function Plant({
         {LEAF_SLOTS.map((leaf, i) => {
           const visible = i < leavesVisibleCount;
           return (
-            <g
-              key={i}
-              data-plant-leaf="true"
-              style={{ transformOrigin: `50px ${leaf.y}px` }}
-              className={cn(
-                GROWTH_TRANSITION,
-                visible ? "opacity-100 scale-100" : "opacity-0 scale-0",
-              )}
-            >
-              <path
-                d={leafPath(leaf.w, leaf.h)}
-                transform={`rotate(${leaf.angle})`}
-                fill="currentColor"
-              />
-              <line
-                x1="0"
-                y1="-2"
-                x2="0"
-                y2={-leaf.h + 2}
-                stroke="black"
-                strokeWidth="0.5"
-                opacity="0.18"
-              />
+            // Positioning (SVG `transform`) and the pop-in animation (CSS
+            // `transform: scale()`) must live on separate elements — a CSS
+            // transform on an SVG element replaces its transform attribute
+            // outright rather than composing with it.
+            <g key={i} transform={`translate(50, ${leaf.y})`}>
+              <g
+                data-plant-leaf="true"
+                style={{ transformBox: "fill-box", transformOrigin: "50% 50%" }}
+                className={cn(
+                  GROWTH_TRANSITION,
+                  visible ? "opacity-100 scale-100" : "opacity-0 scale-0",
+                )}
+              >
+                <path
+                  d={leafPath(leaf.w, leaf.h)}
+                  transform={`rotate(${leaf.angle})`}
+                  fill="currentColor"
+                />
+                <line
+                  x1="0"
+                  y1="-2"
+                  x2="0"
+                  y2={-leaf.h + 2}
+                  stroke="black"
+                  strokeWidth="0.5"
+                  opacity="0.18"
+                />
+              </g>
             </g>
           );
         })}

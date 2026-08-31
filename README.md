@@ -98,7 +98,8 @@ wraps `@merqo/ui`'s new shared `StatTile`/`DeltaPill` content instead of a
 fully local implementation, no visible change. Cup, Plant/Sprout, and
 Flame Club's progress visuals were redesigned as hand-drawn SVG art with
 real stage-to-stage growth transitions, replacing the earlier flat-shape/
-icon-cluster placeholders (`src/components/README.md`). See `CHANGELOG.md`
+icon-cluster placeholders (`src/components/README.md`), plus a fast-follow
+fixing Plant's leaf positioning and Flame's icon size. See `CHANGELOG.md`
 for the latest changes, including deduplication of the
 shared bearer-auth and Merqo-RPC-call helpers, the addition of
 templateCentral 5.13.0's comment-hygiene enforcement layer, and a fix

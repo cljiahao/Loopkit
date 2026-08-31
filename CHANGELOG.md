@@ -36,6 +36,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- Two bugs in the redesign above: `Plant`'s leaf slots rendered pinned to
+  the SVG's top-left corner instead of their stem position — a `transform`
+  attribute (positioning) and a CSS `transform` (the pop-in scale) can't
+  coexist on the same SVG element, and the leaf group had only the latter.
+  Split into a static positioning `<g>` wrapping the animated one. Separately,
+  `FlameLayers`' icon rendered at roughly half the size of `Cup`/`Plant` on
+  the same card (`size-16`/`size-14` vs. their `size-32`) — resized to match.
 - `/admin/activity` and `/admin/vendors` returned HTTP 500: both are
   `async` Server Components that passed function props (`formatAction`/
   `dateFormatter`, and the `DataTable` `columns` cell renderers + `getRowKey`)
