@@ -35,6 +35,8 @@ describe("PreviewCard", () => {
         totalStages: 5,
         wilting: false,
         variant: "plant",
+        filled: 1,
+        total: 4,
       },
       rewardReady: false,
     };
@@ -112,6 +114,8 @@ describe("PreviewCard", () => {
         totalStages: 5,
         wilting: false,
         variant: "cup",
+        filled: 1,
+        total: 4,
       },
       rewardReady: false,
     };

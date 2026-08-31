@@ -12,7 +12,7 @@ strategies and their dispatch layer.
 - `index.test.ts` — `getProgress` dispatch: computes stamp/plant/chance progress views from a program's `config`/`state` blob
 - `lucky.test.ts` — `luckyStrategy`: probability roll, cooldown, and pity-ceiling guaranteed win; `progress()` returns a `kind: "lucky"` view (`visitsSinceWin`/`pityCeiling`)
 - `plant-apply-visit.test.ts` — `applyVisit`/`getProgress` for `type: "plant"` programs end to end through the dispatch layer
-- `plant.test.ts` — `plantStrategy`: stage thresholds, growth, decay-after-grace-period, redeem carryover, and how many reward thresholds a visit crossed
+- `plant.test.ts` — `plantStrategy`: stage thresholds, growth, decay-after-grace-period, redeem carryover, how many reward thresholds a visit crossed, the cup variant's "Empty/Sip/Half Full/Nearly Full/Full" stage names, and `progress()`'s `filled`/`total` counter fields (rounded growth vs. the bloom threshold)
 - `stamp.test.ts` — `stampStrategy`: stamp counting, `dots`/`flame`/`points` view variants, `points_per_visit` increment
 - `threshold.test.ts` — `countThresholdCrossings`: multiples of `required` crossed between two counter values, including multi-threshold jumps
 

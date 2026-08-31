@@ -279,6 +279,8 @@ describe("redeemPlantAction returns fresh progress", () => {
         totalStages: 5,
         wilting: false,
         variant: "plant",
+        filled: 0,
+        total: 8,
       });
       expect(res.progress.rewardReady).toBe(false);
     }

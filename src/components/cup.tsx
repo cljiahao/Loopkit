@@ -114,7 +114,7 @@ export function Cup({
     <svg
       viewBox="-10 -60 110 170"
       aria-hidden="true"
-      className={cn("size-32", className)}
+      className={cn("size-[166px]", className)}
     >
       <defs>
         <radialGradient id={saucerGrad} cx="40%" cy="30%" r="80%">

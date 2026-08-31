@@ -41,7 +41,9 @@ Client-side card-check UI.
   verifies `PointsBar` vs `StampDots` renders per `view.variant` on a
   `"dots"` view, and `Cup` vs `Plant` renders per `view.variant` on a
   `"plant"` view (via `Cup`'s `data-cup-coffee` hook, not an implementation
-  detail of its old stroked-outline shape)
+  detail of its old stroked-outline shape); its plant/cup view fixtures
+  include the `filled`/`total` counter fields `ProgressView`'s plant kind
+  now carries
 - `birthday-field.tsx` — `BirthdayField({vendorId, phone})`: optional,
   self-entered birthday (plain native `<select>`s for month/day, not the
   shadcn `Select` — Radix's pointer-event/`scrollIntoView` needs have no

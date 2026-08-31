@@ -184,7 +184,7 @@ describe("plantStrategy", () => {
 });
 
 describe("plantStrategy cup variant", () => {
-  it("cup variant names stages Empty/Sip/Quarter Full/Nearly Full/Full at the same thresholds as plant", () => {
+  it("cup variant names stages Empty/Sip/Half Full/Nearly Full/Full at the same thresholds as plant", () => {
     const plantCfg = buildPlantConfig(8, "free kopi", "plant");
     const cupCfg = buildPlantConfig(8, "free kopi", "cup");
     expect(plantCfg.stages.map((s) => s.threshold)).toEqual(
@@ -193,7 +193,7 @@ describe("plantStrategy cup variant", () => {
     expect(cupCfg.stages.map((s) => s.name)).toEqual([
       "Empty",
       "Sip",
-      "Quarter Full",
+      "Half Full",
       "Nearly Full",
       "Full",
     ]);
@@ -220,7 +220,7 @@ describe("plantStrategy cup variant", () => {
       new Date("2026-07-07T00:00:00Z"),
     );
     expect(p.view).toMatchObject({ kind: "plant", variant: "cup" });
-    expect(p.stage).toBe("Quarter Full");
+    expect(p.stage).toBe("Half Full");
   });
 
   it("progress() defaults to plant variant when config.variant is absent", () => {
