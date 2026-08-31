@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { vendorPhoneOnboardAction } from "../api/actions";
 import { Wordmark } from "@/components/landing/wordmark";
 import { ElevatedCard } from "@/components/elevated-card";
 import { GoogleMark } from "./google-mark";
@@ -26,16 +25,6 @@ export function LoginForm() {
     searchParams.get("mode") === "signup" ? "signup" : "signin",
   );
   const { pending: busy, run } = useAsyncAction();
-  const [showPhoneOnboard, setShowPhoneOnboard] = useState(false);
-  const [vendorName, setVendorName] = useState("");
-  const [vendorPhone, setVendorPhone] = useState("");
-  // The name+phone onboarding sub-flow (spec:
-  // 2026-07-11-vendor-phone-onboarding-design.md) keeps its own hand-rolled
-  // submit/error state rather than moving onto react-hook-form: it isn't a
-  // validated email/password form, and folding it into the same resolver
-  // risks changing its (deliberately unverified) behavior.
-  const [phoneBusy, setPhoneBusy] = useState(false);
-  const [phoneError, setPhoneError] = useState<string | null>(null);
   // Set once we've emailed the user and are waiting on their click:
   // "signup" = confirm the new account, "reset" = choose a new password.
   const [sent, setSent] = useState<{
@@ -52,10 +41,6 @@ export function LoginForm() {
 
   const isSignin = mode === "signin";
   const submitLabel = isSignin ? "Sign in" : "Create account";
-  // Every submit surface (Google, phone-onboard toggle/submit, email form,
-  // forgot-password) shares one disabled state, same as before the refactor —
-  // only one of these flows can be in flight at a time.
-  const anyBusy = busy || phoneBusy;
 
   function signInWithGoogle() {
     return run(async () => {
@@ -70,33 +55,6 @@ export function LoginForm() {
       // On success the browser navigates to Google; only an early error lands here.
       if (error) toast.error(error.message);
     });
-  }
-
-  async function submitPhoneOnboard(e: React.FormEvent) {
-    e.preventDefault();
-    setPhoneBusy(true);
-    setPhoneError(null);
-    const supabase = createClient();
-    const { error: anonError } = await supabase.auth.signInAnonymously();
-    if (anonError) {
-      setPhoneError(anonError.message);
-      setPhoneBusy(false);
-      return;
-    }
-    try {
-      const result = await vendorPhoneOnboardAction(vendorName, vendorPhone);
-      if (result.error) {
-        setPhoneError(result.error);
-        return;
-      }
-      router.push("/dashboard");
-      router.refresh();
-      await navigatingAway();
-    } catch {
-      setPhoneError("Something went wrong. Try again.");
-    } finally {
-      setPhoneBusy(false);
-    }
   }
 
   function onSubmit(data: LoginInput) {
@@ -246,76 +204,12 @@ export function LoginForm() {
               type="button"
               variant="outline"
               onClick={signInWithGoogle}
-              disabled={anyBusy}
+              disabled={busy}
               className="mt-7 h-12 w-full gap-2.5 rounded-xl text-[0.95rem] font-medium"
             >
               <GoogleMark />
               Continue with Google
             </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowPhoneOnboard((v) => !v)}
-              disabled={anyBusy}
-              className="mt-2.5 h-12 w-full gap-2.5 rounded-xl text-[0.95rem] font-medium"
-            >
-              Continue with name & phone
-            </Button>
-
-            {showPhoneOnboard && (
-              <form onSubmit={submitPhoneOnboard} className="mt-5 space-y-5">
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="vendor-name"
-                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    Your name or business
-                  </Label>
-                  <Input
-                    id="vendor-name"
-                    required
-                    placeholder="Kopi Corner"
-                    className="h-11 rounded-xl"
-                    value={vendorName}
-                    onChange={(e) => setVendorName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="vendor-phone"
-                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
-                  >
-                    Phone number
-                  </Label>
-                  <Input
-                    id="vendor-phone"
-                    type="tel"
-                    required
-                    placeholder="9123 4567"
-                    className="h-11 rounded-xl"
-                    value={vendorPhone}
-                    onChange={(e) => setVendorPhone(e.target.value)}
-                  />
-                </div>
-                {phoneError && (
-                  <p
-                    role="alert"
-                    className="text-sm font-medium text-destructive"
-                  >
-                    {phoneError}
-                  </p>
-                )}
-                <Button
-                  type="submit"
-                  size="lg"
-                  className="h-12 w-full rounded-xl text-base font-semibold"
-                  disabled={anyBusy}
-                >
-                  {phoneBusy ? "Please wait…" : "Continue"}
-                </Button>
-              </form>
-            )}
 
             <div className="my-6 flex items-center gap-3">
               <span className="h-px flex-1 bg-border" />
@@ -364,7 +258,7 @@ export function LoginForm() {
                     <button
                       type="button"
                       onClick={sendReset}
-                      disabled={anyBusy}
+                      disabled={busy}
                       className="text-xs font-semibold text-primary underline-offset-4 hover:underline disabled:opacity-50"
                     >
                       Forgot password?
@@ -396,7 +290,7 @@ export function LoginForm() {
                 type="submit"
                 size="lg"
                 className="h-12 w-full rounded-xl text-base font-semibold"
-                disabled={anyBusy}
+                disabled={busy}
               >
                 {busy ? "Please wait…" : submitLabel}
               </Button>

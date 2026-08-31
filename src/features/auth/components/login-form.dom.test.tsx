@@ -4,25 +4,19 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";
 
-const {
-  routerPush,
-  routerRefresh,
-  searchParamsValue,
-  vendorPhoneOnboardActionMock,
-  authMock,
-} = vi.hoisted(() => ({
-  routerPush: vi.fn(),
-  routerRefresh: vi.fn(),
-  searchParamsValue: { current: "" },
-  vendorPhoneOnboardActionMock: vi.fn().mockResolvedValue({}),
-  authMock: {
-    signInWithOAuth: vi.fn().mockResolvedValue({ error: null }),
-    signInAnonymously: vi.fn().mockResolvedValue({ error: null }),
-    signUp: vi.fn().mockResolvedValue({ data: { session: {} }, error: null }),
-    signInWithPassword: vi.fn().mockResolvedValue({ error: null }),
-    resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
-  },
-}));
+const { routerPush, routerRefresh, searchParamsValue, authMock } = vi.hoisted(
+  () => ({
+    routerPush: vi.fn(),
+    routerRefresh: vi.fn(),
+    searchParamsValue: { current: "" },
+    authMock: {
+      signInWithOAuth: vi.fn().mockResolvedValue({ error: null }),
+      signUp: vi.fn().mockResolvedValue({ data: { session: {} }, error: null }),
+      signInWithPassword: vi.fn().mockResolvedValue({ error: null }),
+      resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
+    },
+  }),
+);
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: routerPush, refresh: routerRefresh }),
@@ -31,10 +25,6 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/lib/supabase/client", () => ({
   createClient: () => ({ auth: authMock }),
-}));
-
-vi.mock("../api/actions", () => ({
-  vendorPhoneOnboardAction: vendorPhoneOnboardActionMock,
 }));
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
@@ -46,11 +36,9 @@ describe("LoginForm", () => {
     vi.clearAllMocks();
     searchParamsValue.current = "";
     authMock.signInWithOAuth.mockResolvedValue({ error: null });
-    authMock.signInAnonymously.mockResolvedValue({ error: null });
     authMock.signUp.mockResolvedValue({ data: { session: {} }, error: null });
     authMock.signInWithPassword.mockResolvedValue({ error: null });
     authMock.resetPasswordForEmail.mockResolvedValue({ error: null });
-    vendorPhoneOnboardActionMock.mockResolvedValue({});
   });
 
   it("renders the sign-in form by default", () => {
@@ -201,91 +189,6 @@ describe("LoginForm", () => {
 
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith("Email already registered"),
-    );
-  });
-
-  it("toggles the phone-onboard form and submits it", async () => {
-    const user = userEvent.setup();
-    render(<LoginForm />);
-    await user.click(
-      screen.getByRole("button", { name: "Continue with name & phone" }),
-    );
-
-    await user.type(
-      screen.getByLabelText("Your name or business"),
-      "Kopi Corner",
-    );
-    await user.type(screen.getByLabelText("Phone number"), "91234567");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-
-    await waitFor(() => expect(authMock.signInAnonymously).toHaveBeenCalled());
-    expect(vendorPhoneOnboardActionMock).toHaveBeenCalledWith(
-      "Kopi Corner",
-      "91234567",
-    );
-    expect(routerPush).toHaveBeenCalledWith("/dashboard");
-  });
-
-  it("shows an error when the anonymous session for phone onboarding fails", async () => {
-    authMock.signInAnonymously.mockResolvedValue({
-      error: { message: "Anon sign-in disabled" },
-    });
-    const user = userEvent.setup();
-    render(<LoginForm />);
-    await user.click(
-      screen.getByRole("button", { name: "Continue with name & phone" }),
-    );
-    await user.type(
-      screen.getByLabelText("Your name or business"),
-      "Kopi Corner",
-    );
-    await user.type(screen.getByLabelText("Phone number"), "91234567");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Anon sign-in disabled",
-    );
-    expect(vendorPhoneOnboardActionMock).not.toHaveBeenCalled();
-  });
-
-  it("shows a phone-onboard error without navigating away", async () => {
-    vendorPhoneOnboardActionMock.mockResolvedValue({
-      error: "Enter a valid Singapore phone number.",
-    });
-    const user = userEvent.setup();
-    render(<LoginForm />);
-    await user.click(
-      screen.getByRole("button", { name: "Continue with name & phone" }),
-    );
-    await user.type(
-      screen.getByLabelText("Your name or business"),
-      "Kopi Corner",
-    );
-    await user.type(screen.getByLabelText("Phone number"), "123");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Enter a valid Singapore phone number.",
-    );
-    expect(routerPush).not.toHaveBeenCalled();
-  });
-
-  it("shows a generic error when the phone-onboard action throws", async () => {
-    vendorPhoneOnboardActionMock.mockRejectedValue(new Error("network down"));
-    const user = userEvent.setup();
-    render(<LoginForm />);
-    await user.click(
-      screen.getByRole("button", { name: "Continue with name & phone" }),
-    );
-    await user.type(
-      screen.getByLabelText("Your name or business"),
-      "Kopi Corner",
-    );
-    await user.type(screen.getByLabelText("Phone number"), "91234567");
-    await user.click(screen.getByRole("button", { name: "Continue" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Something went wrong. Try again.",
     );
   });
 
