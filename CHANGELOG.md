@@ -17,6 +17,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Redesigned `Wheel` and `ScratchCard` to match the Cup/Sprout/Flame Club
+  pass below — the real physics-based spin and real SVG scratch-texture
+  masking were already right, the gap was visual craft:
+  - `Wheel` gains a static gold housing ring and hub (radial gradients,
+    never rotate with the disc, like a real wheel's frame), gold wedge
+    dividers instead of background-colored gaps, a small wax-seal dot
+    marking each reward wedge near the rim (so win/lose reads as more
+    than the emerald/rose color pairing), a static radial glare plus a
+    restrained drop-shadow, and a gold-gradient SVG pointer replacing the
+    flat CSS border-triangle.
+  - `ScratchCard`'s cover gains a real foil texture (a metallic-fleck
+    pattern plus one static diagonal sheen, masked under the same reveal
+    strokes as the base gradient) instead of a flat two-stop gradient, an
+    embossed card frame (inset highlight + drop shadow) instead of a
+    plain border, and the same wax-seal dot marking a reward reveal.
 - Redesigned the three "reward-mechanic" progress visuals — Cup, Plant/
   Sprout, and Flame Club — with hand-drawn SVG art replacing the previous
   flat-shape/lucide-icon placeholders, plus real stage-to-stage growth
