@@ -72,10 +72,9 @@ describe("PreviewCard", () => {
         rewardText="Free item"
       />,
     );
-    // FlameLayers renders its own "{stageName} — {filled}/{total}" text
-    // alongside the identical progress.label below it, so both instances
-    // are expected here.
-    expect(screen.getAllByText("Medium Fire — 7/10")).toHaveLength(2);
+    // Only progress.label (below the card) renders this text now —
+    // FlameLayers used to duplicate it internally, fixed 2026-09-02.
+    expect(screen.getAllByText("Medium Fire — 7/10")).toHaveLength(1);
   });
 
   it("renders the wheel for a chance view with variant wheel", () => {
