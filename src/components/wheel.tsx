@@ -242,9 +242,7 @@ export function Wheel({
     <div className={cn("relative inline-block size-32", className)}>
       <svg viewBox="0 0 100 100" aria-hidden="true" className="size-32">
         <defs>
-          {/* Static housing ring + hub read as metal (antique-brass, the
-              theme's own gold token), not a flat stroke — a spin wheel's
-              frame is a real physical part, not a UI border. */}
+          {/* Housing ring + hub read as metal, not a flat UI stroke. */}
           <radialGradient id={rimGradId} cx="35%" cy="30%" r="75%">
             <stop offset="0%" stopColor="#fbe8b8" />
             <stop offset="55%" stopColor="var(--color-gold)" />
@@ -261,8 +259,7 @@ export function Wheel({
               stopColor="color-mix(in oklch, var(--color-gold) 55%, black)"
             />
           </radialGradient>
-          {/* Static glare — a real light source doesn't spin with the
-              disc, so this sits outside the rotor group below. */}
+          {/* Static glare — doesn't rotate with the disc below. */}
           <radialGradient id={glossId} cx="42%" cy="18%" r="75%">
             <stop offset="0%" stopColor="white" stopOpacity="0.32" />
             <stop offset="55%" stopColor="white" stopOpacity="0.05" />
@@ -309,11 +306,8 @@ export function Wheel({
             const midRad = (midAngle * Math.PI) / 180;
             const tx = 50 + 30 * Math.cos(midRad);
             const ty = 50 + 30 * Math.sin(midRad);
-            // A wax-seal medallion, not just a color, marks a reward wedge
-            // — win/lose should read even to someone who can't tell
-            // emerald from rose apart. Tucked in near the rim, past where
-            // the label's own radial run ends, so it reads as a corner
-            // accent rather than colliding with the text.
+            // Wax-seal marks a reward wedge beyond color alone. Sits past
+            // the label's radial run so it doesn't collide with the text.
             const sx = 50 + 45 * Math.cos(midRad);
             const sy = 50 + 45 * Math.sin(midRad);
             const rewardTextClass = segment.reward
@@ -340,10 +334,8 @@ export function Wheel({
                           ? "fill-emerald-500 dark:fill-emerald-400"
                           : "fill-rose-400/70 dark:fill-rose-500/60",
                       })}
-                  // Gold dividers instead of a background-colored gap —
-                  // reads as inlaid metal between wedges (real contrast,
-                  // not just a seam) and ties the disc to the rim's own
-                  // gold housing.
+                  // Gold dividers, not a background-colored gap — real
+                  // contrast, ties to the rim's own gold housing.
                   stroke="var(--color-gold)"
                   strokeWidth="0.5"
                 />
@@ -390,10 +382,8 @@ export function Wheel({
         <circle cx="48.6" cy="48.6" r="0.9" fill="white" opacity="0.55" />
       </svg>
       <div
-        // z-10: sits above the win/lose result overlay below, which is a
-        // full inset-0 circle and would otherwise paint over the pointer's
-        // lower half the moment a result shows (the pointer's own -top-1.5
-        // offset only clears the top of that circle, not all of it).
+        // z-10: the result overlay below is a full circle that would
+        // otherwise paint over the pointer's lower half.
         className="absolute inset-x-0 -top-1.5 z-10 flex justify-center"
         style={{ filter: "drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.4))" }}
       >

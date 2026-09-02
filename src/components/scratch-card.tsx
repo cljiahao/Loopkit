@@ -65,10 +65,8 @@ export function ScratchCard({
   return (
     <div
       className={cn(
-        // An embossed foil-packet edge (a soft inner top highlight plus a
-        // real drop shadow) instead of a plain flat border — the card
-        // should read as a physical object sitting on the counter, not a
-        // pasted-on rectangle.
+        // Embossed edge (inner highlight + drop shadow), not a flat
+        // border — reads as a physical card, not a pasted rectangle.
         "relative h-28 w-48 overflow-hidden rounded-xl border border-gold/25 shadow-[0_3px_10px_-3px_rgb(0_0_0_/_0.35),inset_0_1px_0_0_rgb(255_255_255_/_0.06)]",
         className,
       )}
@@ -119,14 +117,9 @@ export function ScratchCard({
                 stopOpacity="0.7"
               />
             </linearGradient>
-            {/* A convincing foil texture is what actually reads as
-                "premium physical surface" here, more than the reward text
-                underneath — a flat single-color cover reads cheap by
-                comparison. Fine metallic flecks plus one static diagonal
-                sheen (not animated — a real foil catches light from a
-                fixed angle, it doesn't sweep) layer under the same reveal
-                mask as the base gradient, so all three vanish together as
-                the strokes cut through. */}
+            {/* Metallic flecks + one static diagonal sheen (not animated,
+                a real foil doesn't sweep), under the same reveal mask as
+                the base gradient — a flat cover reads cheap. */}
             <pattern
               id={`${maskId}-foil`}
               width="5"
