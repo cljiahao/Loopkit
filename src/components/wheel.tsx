@@ -390,7 +390,11 @@ export function Wheel({
         <circle cx="48.6" cy="48.6" r="0.9" fill="white" opacity="0.55" />
       </svg>
       <div
-        className="absolute inset-x-0 -top-1.5 flex justify-center"
+        // z-10: sits above the win/lose result overlay below, which is a
+        // full inset-0 circle and would otherwise paint over the pointer's
+        // lower half the moment a result shows (the pointer's own -top-1.5
+        // offset only clears the top of that circle, not all of it).
+        className="absolute inset-x-0 -top-1.5 z-10 flex justify-center"
         style={{ filter: "drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.4))" }}
       >
         <svg width="16" height="15" viewBox="0 0 16 15" aria-hidden="true">
