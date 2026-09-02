@@ -95,12 +95,7 @@ export function ProgramCardStatus({
     if (view?.kind === "flame") {
       return (
         <div className="flex flex-col items-center gap-2">
-          <FlameLayers
-            filled={view.filled}
-            total={view.total}
-            stage={view.stage}
-            stageName={view.stageName}
-          />
+          <FlameLayers stage={view.stage} />
         </div>
       );
     }

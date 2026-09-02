@@ -17,6 +17,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Setup preview now defaults Flame Club, Sprout, and Cup to 5/5 (was a
+  mixed 5/6/10) so every growth-card preview opens fully bloomed; Flame
+  Club also dropped `FlameLayers`' own internal stage/count label, which
+  duplicated the one line the caller (`PreviewCard` / `ProgramCardStatus`)
+  already renders below the card.
 - Redesigned the three "reward-mechanic" progress visuals — Cup, Plant/
   Sprout, and Flame Club — with hand-drawn SVG art replacing the previous
   flat-shape/lucide-icon placeholders, plus real stage-to-stage growth

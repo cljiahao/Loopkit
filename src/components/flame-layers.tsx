@@ -550,16 +550,10 @@ function LargeFlameComposite({
 }
 
 export function FlameLayers({
-  filled,
-  total,
   stage,
-  stageName,
   className,
 }: {
-  filled: number;
-  total: number;
   stage: number;
-  stageName: string;
   className?: string;
 }) {
   const id = useId();
@@ -643,9 +637,6 @@ export function FlameLayers({
           </StageGroup>
         </svg>
       </div>
-      <p className="font-mono text-sm font-semibold text-gold-accent">
-        {stageName} — {filled}/{total}
-      </p>
     </div>
   );
 }
