@@ -249,8 +249,8 @@ export function SetupForm({
     setVariant(nextVariant ?? "dots");
     setName("");
     setRewardText("");
-    setStampsRequired(style === "points" ? 500 : 10);
-    setVisitsToBloom(6);
+    setStampsRequired(style === "points" ? 500 : style === "flame" ? 5 : 10);
+    setVisitsToBloom(5);
     setWinPercent(20);
     setPityCeiling(style === "lucky" ? 8 : undefined);
     setHeadStartPercent(20);
@@ -536,13 +536,13 @@ export function SetupForm({
                     required
                     min={4}
                     max={20}
-                    placeholder="6"
+                    placeholder="5"
                     value={visitsToBloom}
                     onChange={(e) => setVisitsToBloom(Number(e.target.value))}
                     className="h-11 rounded-xl"
                   />
                   <div className="flex gap-1.5">
-                    {[6, 10, 15].map((n) => (
+                    {[5, 10, 15].map((n) => (
                       <button
                         key={n}
                         type="button"

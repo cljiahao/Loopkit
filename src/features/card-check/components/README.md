@@ -37,6 +37,9 @@ Client-side card-check UI.
   pointer-tilt), replacing a plain `<div>`. Passes `Plant` a `seed={`${phone}
   :${card.programId}`}` so a given customer's bloom type (see `Plant`'s own
   README entry) stays stable across visits instead of defaulting to tulip.
+  Its flame branch now passes `FlameLayers` only `stage` — the component
+  dropped `filled`/`total`/`stageName`, which duplicated the `{card.label}`
+  line this component already renders below the card.
 - `program-card-status.dom.test.tsx` — jsdom tests for `ProgramCardStatus`:
   verifies `PointsBar` vs `StampDots` renders per `view.variant` on a
   `"dots"` view, and `Cup` vs `Plant` renders per `view.variant` on a

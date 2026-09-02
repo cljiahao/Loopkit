@@ -66,14 +66,7 @@ export function PreviewCard({
       );
     }
     if (view.kind === "flame") {
-      return (
-        <FlameLayers
-          filled={view.filled}
-          total={view.total}
-          stage={view.stage}
-          stageName={view.stageName}
-        />
-      );
+      return <FlameLayers stage={view.stage} />;
     }
     if (view.kind === "chance") {
       if (view.variant === "wheel") {
