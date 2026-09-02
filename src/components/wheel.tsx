@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 // Real constant-angular-deceleration ("friction") kinematics, computed and
@@ -80,6 +80,7 @@ export function Wheel({
   onSettled?: (result: { won: boolean }) => void;
   className?: string;
 }) {
+  const uid = useId().replace(/:/g, "");
   const count = segments.length;
   const anglePerSegment = 360 / count;
   const landedIndex = landedId
@@ -232,11 +233,65 @@ export function Wheel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spinning, landedIndex, anglePerSegment, reducedMotion]);
 
+  const rimGradId = `${uid}-rim`;
+  const hubGoldId = `${uid}-hub-gold`;
+  const glossId = `${uid}-gloss`;
+  const shadowId = `${uid}-shadow`;
+
   return (
     <div className={cn("relative inline-block size-32", className)}>
       <svg viewBox="0 0 100 100" aria-hidden="true" className="size-32">
+        <defs>
+          {/* Static housing ring + hub read as metal (antique-brass, the
+              theme's own gold token), not a flat stroke — a spin wheel's
+              frame is a real physical part, not a UI border. */}
+          <radialGradient id={rimGradId} cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stopColor="#fbe8b8" />
+            <stop offset="55%" stopColor="var(--color-gold)" />
+            <stop
+              offset="100%"
+              stopColor="color-mix(in oklch, var(--color-gold) 55%, black)"
+            />
+          </radialGradient>
+          <radialGradient id={hubGoldId} cx="35%" cy="30%" r="75%">
+            <stop offset="0%" stopColor="#fff7e0" />
+            <stop offset="55%" stopColor="var(--color-gold)" />
+            <stop
+              offset="100%"
+              stopColor="color-mix(in oklch, var(--color-gold) 55%, black)"
+            />
+          </radialGradient>
+          {/* Static glare — a real light source doesn't spin with the
+              disc, so this sits outside the rotor group below. */}
+          <radialGradient id={glossId} cx="42%" cy="18%" r="75%">
+            <stop offset="0%" stopColor="white" stopOpacity="0.32" />
+            <stop offset="55%" stopColor="white" stopOpacity="0.05" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+          <filter id={shadowId} x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow
+              dx="0"
+              dy="1.2"
+              stdDeviation="1.4"
+              floodColor="black"
+              floodOpacity="0.32"
+            />
+          </filter>
+        </defs>
+
+        <circle
+          cx="50"
+          cy="50"
+          r="49"
+          fill="none"
+          stroke={`url(#${rimGradId})`}
+          strokeWidth="2.4"
+          filter={`url(#${shadowId})`}
+        />
+
         <g
           data-testid="wheel-rotor"
+          filter={`url(#${shadowId})`}
           style={{
             transformOrigin: "50px 50px",
             transform: `rotate(${angle}deg)`,
@@ -254,6 +309,13 @@ export function Wheel({
             const midRad = (midAngle * Math.PI) / 180;
             const tx = 50 + 30 * Math.cos(midRad);
             const ty = 50 + 30 * Math.sin(midRad);
+            // A wax-seal medallion, not just a color, marks a reward wedge
+            // — win/lose should read even to someone who can't tell
+            // emerald from rose apart. Tucked in near the rim, past where
+            // the label's own radial run ends, so it reads as a corner
+            // accent rather than colliding with the text.
+            const sx = 50 + 45 * Math.cos(midRad);
+            const sy = 50 + 45 * Math.sin(midRad);
             const rewardTextClass = segment.reward
               ? "fill-white"
               : "fill-rose-950/70 dark:fill-white/80";
@@ -278,8 +340,12 @@ export function Wheel({
                           ? "fill-emerald-500 dark:fill-emerald-400"
                           : "fill-rose-400/70 dark:fill-rose-500/60",
                       })}
-                  stroke="var(--background)"
-                  strokeWidth="0.6"
+                  // Gold dividers instead of a background-colored gap —
+                  // reads as inlaid metal between wedges (real contrast,
+                  // not just a seam) and ties the disc to the rim's own
+                  // gold housing.
+                  stroke="var(--color-gold)"
+                  strokeWidth="0.5"
                 />
                 <text
                   x={tx}
@@ -300,14 +366,48 @@ export function Wheel({
                 >
                   {segment.label}
                 </text>
+                {segment.reward && (
+                  <circle
+                    cx={sx}
+                    cy={sy}
+                    r="1.7"
+                    fill="var(--color-gold)"
+                    stroke="white"
+                    strokeOpacity="0.7"
+                    strokeWidth="0.3"
+                  />
+                )}
               </g>
             );
           })}
         </g>
-        <circle cx="50" cy="50" r="4" className="fill-primary" />
+
+        {/* Static glare sits above the rotor but never rotates with it. */}
+        <circle cx="50" cy="50" r="47.5" fill={`url(#${glossId})`} />
+
+        <circle cx="50" cy="50" r="6" fill={`url(#${hubGoldId})`} />
+        <circle cx="50" cy="50" r="3.4" className="fill-primary" />
+        <circle cx="48.6" cy="48.6" r="0.9" fill="white" opacity="0.55" />
       </svg>
-      <div className="absolute inset-x-0 -top-1 flex justify-center">
-        <div className="size-0 border-x-8 border-t-8 border-x-transparent border-t-primary" />
+      <div
+        className="absolute inset-x-0 -top-1.5 flex justify-center"
+        style={{ filter: "drop-shadow(0 1px 1.5px rgb(0 0 0 / 0.4))" }}
+      >
+        <svg width="16" height="15" viewBox="0 0 16 15" aria-hidden="true">
+          <defs>
+            <linearGradient id={`${uid}-pointer`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#fbe8b8" />
+              <stop offset="100%" stopColor="var(--color-gold)" />
+            </linearGradient>
+          </defs>
+          <polygon
+            points="8,15 0,1 16,1"
+            fill={`url(#${uid}-pointer)`}
+            stroke="var(--color-background)"
+            strokeWidth="0.75"
+            strokeLinejoin="round"
+          />
+        </svg>
       </div>
       {/* The result overlay lives ON the wheel itself, not a corner badge
           disconnected from the thing that just happened — same "overlay
@@ -317,7 +417,7 @@ export function Wheel({
           aria-hidden="true"
           data-testid="wheel-result"
           className={cn(
-            "pointer-events-none absolute inset-0 flex items-center justify-center rounded-full text-sm font-bold shadow-lg",
+            "pointer-events-none absolute inset-0 flex items-center justify-center gap-1 rounded-full text-sm font-bold shadow-lg",
             result.won
               ? "bg-gold/90 text-gold-foreground"
               : "bg-background/85 text-muted-foreground",

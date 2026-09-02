@@ -65,7 +65,11 @@ export function ScratchCard({
   return (
     <div
       className={cn(
-        "relative h-28 w-48 overflow-hidden rounded-xl border",
+        // An embossed foil-packet edge (a soft inner top highlight plus a
+        // real drop shadow) instead of a plain flat border — the card
+        // should read as a physical object sitting on the counter, not a
+        // pasted-on rectangle.
+        "relative h-28 w-48 overflow-hidden rounded-xl border border-gold/25 shadow-[0_3px_10px_-3px_rgb(0_0_0_/_0.35),inset_0_1px_0_0_rgb(255_255_255_/_0.06)]",
         className,
       )}
     >
@@ -77,10 +81,18 @@ export function ScratchCard({
       >
         <p
           className={cn(
-            "text-sm font-semibold",
+            "flex items-center gap-1.5 text-sm font-semibold",
             reward ? "text-gold-accent" : "text-muted-foreground",
           )}
         >
+          {/* A wax-seal dot marks a win, same motif as the reward wedges
+              on Wheel — win/lose reads as more than a color/tone swap. */}
+          {reward && (
+            <span
+              aria-hidden="true"
+              className="size-1.5 shrink-0 rounded-full bg-gold ring-1 ring-white/60"
+            />
+          )}
           {label}
         </p>
       </div>
@@ -106,6 +118,47 @@ export function ScratchCard({
                 stopColor="var(--color-primary)"
                 stopOpacity="0.7"
               />
+            </linearGradient>
+            {/* A convincing foil texture is what actually reads as
+                "premium physical surface" here, more than the reward text
+                underneath — a flat single-color cover reads cheap by
+                comparison. Fine metallic flecks plus one static diagonal
+                sheen (not animated — a real foil catches light from a
+                fixed angle, it doesn't sweep) layer under the same reveal
+                mask as the base gradient, so all three vanish together as
+                the strokes cut through. */}
+            <pattern
+              id={`${maskId}-foil`}
+              width="5"
+              height="5"
+              patternUnits="userSpaceOnUse"
+              patternTransform="rotate(12)"
+            >
+              <circle
+                cx="1.1"
+                cy="1.1"
+                r="0.45"
+                fill="white"
+                fillOpacity="0.16"
+              />
+              <circle
+                cx="3.4"
+                cy="3.2"
+                r="0.3"
+                fill="white"
+                fillOpacity="0.1"
+              />
+            </pattern>
+            <linearGradient
+              id={`${maskId}-sheen`}
+              x1="0%"
+              y1="100%"
+              x2="38%"
+              y2="0%"
+            >
+              <stop offset="30%" stopColor="white" stopOpacity="0" />
+              <stop offset="46%" stopColor="white" stopOpacity="0.16" />
+              <stop offset="62%" stopColor="white" stopOpacity="0" />
             </linearGradient>
             {/* Roughens each stroke's edge into a torn/scratched texture
                 instead of a perfectly smooth round-capped line — a clean
@@ -168,6 +221,22 @@ export function ScratchCard({
             width="100"
             height="60"
             fill={`url(#${maskId}-grad)`}
+            mask={`url(#${maskId})`}
+          />
+          <rect
+            x="0"
+            y="0"
+            width="100"
+            height="60"
+            fill={`url(#${maskId}-foil)`}
+            mask={`url(#${maskId})`}
+          />
+          <rect
+            x="0"
+            y="0"
+            width="100"
+            height="60"
+            fill={`url(#${maskId}-sheen)`}
             mask={`url(#${maskId})`}
           />
           <text
