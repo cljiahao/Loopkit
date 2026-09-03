@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- Scratch Card programs now get a real drag-to-scratch reveal and a vendor
+  choice of 3 cover materials:
+  - `ScratchCard` gains a `coverStyle?: "foil" | "wax" | "ticket"` prop
+    (default `"foil"`) — brushed gold foil, a sealing-wax panel with an
+    embossed medallion, or a charcoal ticket stub with a dashed center line
+    and corner folds. Vendors pick one in `/setup` (a new "Scratch cover"
+    section, scratch-only) via `scratch_cover_style`, stored in the
+    program's existing `config` JSONB (no migration needed) and threaded
+    through `ChanceConfig`/`ProgressView` to both the setup preview and the
+    real customer card.
+  - For the real customer card specifically, `ScratchCard` now also mounts
+    a `<canvas>` layer over the existing SVG-stroke reveal: real
+    `pointerdown`/`pointermove`-driven erasing (`globalCompositeOperation:
+"destination-out"`, a soft radial brush), auto-settling once ~55% is
+    cleared. This is a strict progressive enhancement, not a replacement —
+    `getContext("2d")` is feature-detected, and whenever it's unavailable
+    (jsdom, which is why the SVG strokes stay the fully-tested fallback
+    path) or the reveal is caller-managed (the setup preview never mounts
+    it at all), the existing SVG strokes do the entire job unchanged.
+
 ### Removed
 
 - The `/login` page's "Continue with name & phone" vendor onboarding option
@@ -62,6 +84,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     holds the old flame at full size while the new one grows, only shrinking
     the old one away after a delay once the new one has visibly grown past
     it.
+
+### Fixed
+
+- `ScratchCard`'s cover had a real opacity leak — the base gradient faded to
+  65% black at one corner via `stopOpacity`, translucent enough that the
+  win/lose label underneath was visible as a silhouette before scratching.
+  Now a fully opaque two-stop gradient.
+- The real customer card (`ProgramCardStatus`) never actually played a
+  scratch animation: it mounts `ScratchCard` with `revealed` already `true`
+  (the roll happens server-side at scan time) and never passed a
+  `scratching` prop, so the card snapped straight to the fully revealed
+  state on load. `scratching` is now optional — left unset, `ScratchCard`
+  drives its own covered→scratching→revealed sequence off `revealed` alone
+  (mirrors how `Wheel` already owns its spin from just `landedId`), so
+  customers now get the same reveal beat Wheel customers get. The setup
+  preview (`usePreviewAnimation`) is unaffected — it already passes an
+  explicit `scratching` boolean every render, which keeps that call site
+  fully caller-managed exactly as before.
 
 ### Fixed
 

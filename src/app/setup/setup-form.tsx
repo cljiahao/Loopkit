@@ -26,9 +26,11 @@ import {
   Coffee,
   Star,
   Heart,
+  Ticket,
 } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { StampMarkPreset } from "@/components/stamp-dots";
+import type { ScratchCoverStyle } from "@/lib/program-config";
 import {
   FAMILIES,
   familyOf,
@@ -128,6 +130,7 @@ export function SetupForm({
     }[];
     variant?: string;
     stamp_mark?: { mode?: string; preset?: string };
+    scratch_cover_style?: string;
   };
 
   const [variant, setVariant] = useState<
@@ -182,6 +185,9 @@ export function SetupForm({
   const [pityCeiling, setPityCeiling] = useState<number | undefined>(
     config.pity_ceiling,
   );
+  const [scratchCoverStyle, setScratchCoverStyle] = useState<ScratchCoverStyle>(
+    (config.scratch_cover_style as ScratchCoverStyle | undefined) ?? "foil",
+  );
 
   const [segments, setSegments] = useState<SegmentInput[]>(
     config.segments?.map((s) => ({
@@ -235,6 +241,7 @@ export function SetupForm({
     pointsPerVisit,
     stampMarkMode,
     stampMarkPreset,
+    scratchCoverStyle,
   });
 
   // Sets the type plus its sensible numeric defaults, and always resets
@@ -255,6 +262,7 @@ export function SetupForm({
     setPityCeiling(style === "lucky" ? 8 : undefined);
     setHeadStartPercent(20);
     setPointsPerVisit(10);
+    setScratchCoverStyle("foil");
   }
 
   // Clicking a family either completes the pick immediately (Lucky Tap has
@@ -883,6 +891,33 @@ export function SetupForm({
                 )}
               </Section>
             )}
+
+          {type === "scratch" && (
+            <Section
+              icon={<Ticket className="size-4" />}
+              title="Scratch cover"
+              description="What the customer scratches through to reveal their prize."
+            >
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                value={scratchCoverStyle}
+                onValueChange={(v) =>
+                  v && setScratchCoverStyle(v as ScratchCoverStyle)
+                }
+                className="justify-start"
+              >
+                <ToggleGroupItem value="foil">Gold foil</ToggleGroupItem>
+                <ToggleGroupItem value="wax">Sealing wax</ToggleGroupItem>
+                <ToggleGroupItem value="ticket">Ticket stub</ToggleGroupItem>
+              </ToggleGroup>
+              <input
+                type="hidden"
+                name="scratch_cover_style"
+                value={scratchCoverStyle}
+              />
+            </Section>
+          )}
 
           <Section
             icon={<SlidersHorizontal className="size-4" />}

@@ -87,6 +87,7 @@ export function PreviewCard({
           reward={
             view.segments.find((s) => s.id === view.landedId)?.reward ?? false
           }
+          coverStyle={view.coverStyle}
         />
       );
     }

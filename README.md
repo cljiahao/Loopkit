@@ -116,6 +116,11 @@ rebrand had accidentally collapsed them to the same color, plus follow-up
 passes that widened both deltas further. Flame/Sprout/Cup's setup preview
 now defaults to 5/5 (was a mixed 5/6/10), and Flame Club's own layer
 dropped its duplicate stage/count label (`src/components/README.md`).
+Scratch Card programs get a real drag-to-scratch canvas reveal (a
+progressive enhancement over the existing SVG strokes, which stay the
+fallback whenever a 2D context isn't available) and a vendor choice of 3
+cover materials — gold foil, sealing wax, or a ticket stub — picked at
+`/setup` (`src/components/README.md`, `src/lib/README.md`).
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
