@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen } from "@testing-library/react";
-import { ScratchCard } from "./scratch-card";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { ScratchCard, type ScratchCoverStyle } from "./scratch-card";
 
 function mockMatchMedia(reducedMotion: boolean) {
   window.matchMedia = vi.fn().mockImplementation((query: string) => ({
@@ -10,6 +10,66 @@ function mockMatchMedia(reducedMotion: boolean) {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
   })) as unknown as typeof window.matchMedia;
+}
+
+// Minimal CanvasRenderingContext2D stand-in — jsdom has none. Fully-
+// transparent getImageData so one scratch crosses SETTLE_FRACTION.
+function makeFakeCtx() {
+  return {
+    globalCompositeOperation: "source-over",
+    fillStyle: "",
+    strokeStyle: "",
+    lineWidth: 1,
+    font: "",
+    textAlign: "start",
+    textBaseline: "alphabetic",
+    scale: vi.fn(),
+    clearRect: vi.fn(),
+    fillRect: vi.fn(),
+    createLinearGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+    createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
+    arc: vi.fn(),
+    fill: vi.fn(),
+    setLineDash: vi.fn(),
+    fillText: vi.fn(),
+    getImageData: vi.fn(() => ({
+      data: new Uint8ClampedArray(4 * 200).fill(0),
+    })),
+  } as unknown as CanvasRenderingContext2D;
+}
+
+function mountWithCanvasContext(coverStyle?: ScratchCoverStyle) {
+  mockMatchMedia(false);
+  const ctx = makeFakeCtx();
+  const getContextSpy = vi
+    .spyOn(HTMLCanvasElement.prototype, "getContext")
+    .mockReturnValue(ctx);
+  const result = render(
+    <ScratchCard
+      revealed={true}
+      label="Free kopi"
+      reward={true}
+      coverStyle={coverStyle}
+    />,
+  );
+  const canvas = screen.getByTestId("scratch-canvas") as HTMLCanvasElement;
+  canvas.getBoundingClientRect = () =>
+    ({
+      left: 0,
+      top: 0,
+      width: 192,
+      height: 112,
+      right: 192,
+      bottom: 112,
+      x: 0,
+      y: 0,
+      toJSON: () => "",
+    }) as DOMRect;
+  return { ctx, canvas, getContextSpy, ...result };
 }
 
 describe("ScratchCard", () => {
@@ -174,6 +234,40 @@ describe("ScratchCard", () => {
       />,
     );
     expect(screen.queryByTestId("scratch-canvas")).not.toBeInTheDocument();
+  });
+
+  // Exercises the real 2D-context path via a fake CanvasRenderingContext2D —
+  // everything that stays untested when jsdom's own `getContext` throws
+  // (the case every other test in this file runs under).
+  describe("real drag-to-scratch canvas (2D context available)", () => {
+    it("draws the cover art and switches from the SVG fallback to the canvas", () => {
+      const { ctx, canvas, getContextSpy } = mountWithCanvasContext();
+      expect(ctx.fillRect).toHaveBeenCalled();
+      expect(canvas.className).not.toContain("hidden");
+      expect(screen.queryByTestId("scratch-overlay")).not.toBeInTheDocument();
+      getContextSpy.mockRestore();
+    });
+
+    it.each(["foil", "wax", "ticket"] as const)(
+      "draws the %s cover's own texture and label",
+      (coverStyle) => {
+        const { ctx, getContextSpy } = mountWithCanvasContext(coverStyle);
+        expect(ctx.fillText).toHaveBeenCalled();
+        getContextSpy.mockRestore();
+      },
+    );
+
+    it("scratching enough of the canvas commits the reveal early, and cleanup removes the listeners on unmount", () => {
+      const { canvas, unmount, getContextSpy } = mountWithCanvasContext();
+      fireEvent.pointerDown(canvas, { clientX: 50, clientY: 50 });
+      fireEvent.pointerMove(canvas, { clientX: 60, clientY: 60 });
+      fireEvent.pointerUp(window);
+
+      expect(screen.getByTestId("scratch-reveal-shine")).toBeInTheDocument();
+      expect(screen.queryByTestId("scratch-overlay")).not.toBeInTheDocument();
+      unmount();
+      getContextSpy.mockRestore();
+    });
   });
 
   describe("coverStyle", () => {

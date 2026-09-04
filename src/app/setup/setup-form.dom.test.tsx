@@ -475,6 +475,33 @@ describe("SetupForm type picker", () => {
     expect(JSON.parse(submitted.get("segments") as string)).toHaveLength(2);
   });
 
+  it("Scratch Card style shows the cover picker and submits the chosen style", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Chance Card" }));
+    await user.click(screen.getByRole("button", { name: "Scratch Card" }));
+    await goToBasics(user);
+    await user.type(screen.getByLabelText("Card name"), "Lucky scratch");
+    await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await goToRules(user);
+
+    expect(screen.getByText("Scratch cover")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Sealing wax" }));
+    await user.click(screen.getByRole("button", { name: "Create card" }));
+
+    expect(saveMock).toHaveBeenCalled();
+    const submitted = saveMock.mock.calls[0][1] as FormData;
+    expect(submitted.get("type")).toBe("scratch");
+    expect(submitted.get("scratch_cover_style")).toBe("wax");
+  });
+
   it("stamp quick-pick chips set stamps required", async () => {
     const user = userEvent.setup();
     render(
