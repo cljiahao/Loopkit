@@ -1,6 +1,8 @@
 import { z } from "zod";
 import type { PlantConfig } from "@/lib/engine/plant";
-import type { ChanceConfig } from "@/lib/engine/chance";
+import type { ChanceConfig, ScratchCoverStyle } from "@/lib/engine/chance";
+
+export type { ScratchCoverStyle };
 
 // Pure program-config builders and their supporting types — deliberately
 // kept free of any server-only import (no @/lib/supabase/server, no
@@ -74,6 +76,8 @@ export function buildChanceConfig(
   segments: SegmentInput[],
   pityCeiling: number | undefined,
   rewardText: string,
+  // Scratch-only; ignored for wheel programs.
+  scratchCoverStyle?: ScratchCoverStyle,
 ): ChanceConfig {
   return {
     variant,
@@ -87,6 +91,7 @@ export function buildChanceConfig(
     pity_ceiling: pityCeiling,
     cooldown_visits: 0,
     reward_text: rewardText,
+    scratch_cover_style: variant === "scratch" ? scratchCoverStyle : undefined,
   };
 }
 

@@ -39,7 +39,12 @@ Client-side card-check UI.
   README entry) stays stable across visits instead of defaulting to tulip.
   Its flame branch now passes `FlameLayers` only `stage` — the component
   dropped `filled`/`total`/`stageName`, which duplicated the `{card.label}`
-  line this component already renders below the card.
+  line this component already renders below the card. Its scratch branch
+  now also passes `ScratchCard` a `coverStyle={view.coverStyle}` — the
+  vendor's chosen scratch cover material (`"foil" | "wax" | "ticket"`, from
+  `src/lib/engine/chance.ts`'s `ScratchCoverStyle`; ignored by the wheel
+  branch, defaults to `"foil"` on `ScratchCard`'s own side for programs
+  saved before this field existed).
 - `program-card-status.dom.test.tsx` — jsdom tests for `ProgramCardStatus`:
   verifies `PointsBar` vs `StampDots` renders per `view.variant` on a
   `"dots"` view, and `Cup` vs `Plant` renders per `view.variant` on a

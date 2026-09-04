@@ -10,12 +10,18 @@ export type ChanceSegment = {
   // when absent (e.g. programs saved before this field existed).
   color?: string;
 };
+// Scratch-only vendor choice of cover material — ignored by the wheel
+// variant. Optional so programs saved before this field existed still
+// resolve (ScratchCard itself defaults to "foil" when undefined).
+export type ScratchCoverStyle = "foil" | "wax" | "ticket";
+
 export type ChanceConfig = {
   variant: "wheel" | "scratch";
   segments: ChanceSegment[];
   pity_ceiling?: number;
   cooldown_visits: number;
   reward_text: string;
+  scratch_cover_style?: ScratchCoverStyle;
 };
 export type ChanceState = {
   visits_since_win: number;
@@ -61,6 +67,7 @@ export function makeChanceStrategy(
             color: s.color,
           })),
           landedId: state.landed_segment_id,
+          coverStyle: config.scratch_cover_style,
         },
         rewardReady: false,
       };

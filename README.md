@@ -116,6 +116,11 @@ rebrand had accidentally collapsed them to the same color, plus follow-up
 passes that widened both deltas further. Flame/Sprout/Cup's setup preview
 now defaults to 5/5 (was a mixed 5/6/10), and Flame Club's own layer
 dropped its duplicate stage/count label (`src/components/README.md`).
+Scratch Card programs get a real drag-to-scratch canvas reveal (a
+progressive enhancement over the existing SVG strokes, which stay the
+fallback whenever a 2D context isn't available) and a vendor choice of 3
+cover materials — gold foil, sealing wax, or a ticket stub — picked at
+`/setup` (`src/components/README.md`, `src/lib/README.md`).
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
@@ -326,10 +331,11 @@ out-of-scope roadmap items.
 - Plans/specs: `docs/superpowers/`
 - Release history: `CHANGELOG.md`
 - Dependency security overrides (force-patched transitive CVEs, each
-  scoped/commented with its advisory ID, e.g. nanoid GHSA-2v37-7h3g-55p8):
-  `pnpm-workspace.yaml`. `pnpm audit --prod --audit-level=high` is CI's hard
-  gate (`security.yml`) — bump the relevant floor there when a new advisory
-  lands rather than waiting on the upstream package to update.
+  scoped/commented with its advisory ID, e.g. browserslist
+  GHSA-c83g-rgw3-j3cx): `pnpm-workspace.yaml`. `pnpm audit --prod
+--audit-level=high` is CI's hard gate (`security.yml`) — bump the
+  relevant floor there when a new advisory lands rather than waiting on
+  the upstream package to update.
 
 See `AGENTS.md` for full engineering rules, harness details, and skills.
 

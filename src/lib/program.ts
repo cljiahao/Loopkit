@@ -155,6 +155,10 @@ export const saveProgramSchema = z
         emptyToUndefined,
         z.coerce.number().int().min(2).max(20).optional(),
       ),
+      scratch_cover_style: z.preprocess(
+        emptyToUndefined,
+        z.enum(["foil", "wax", "ticket"]).optional(),
+      ),
       expiry_days: expiryDaysSchema,
     }),
   ])
@@ -246,6 +250,7 @@ export function buildProgramFields(data: SaveProgramInput): {
       data.segments,
       data.pity_ceiling,
       data.reward_text,
+      data.type === "scratch" ? data.scratch_cover_style : undefined,
     ) as Json,
   };
 }

@@ -40,6 +40,9 @@ export type ProgressView =
         color?: string;
       }[];
       landedId: string | null;
+      // Scratch-only vendor choice of cover material; ignored by the wheel
+      // variant. See `ScratchCoverStyle` (src/lib/engine/chance.ts).
+      coverStyle?: "foil" | "wax" | "ticket";
     }
   | {
       kind: "lucky";

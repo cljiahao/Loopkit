@@ -114,6 +114,7 @@ export function ProgramCardStatus({
                 view.segments.find((s) => s.id === view.landedId)?.reward ??
                 false
               }
+              coverStyle={view.coverStyle}
             />
           )}
         </div>
