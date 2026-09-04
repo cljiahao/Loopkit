@@ -1,8 +1,9 @@
 import { z } from "zod";
 import type { PlantConfig } from "@/lib/engine/plant";
 import type { ChanceConfig, ScratchCoverStyle } from "@/lib/engine/chance";
+import type { StampVisualStyle } from "@/lib/engine/stamp";
 
-export type { ScratchCoverStyle };
+export type { ScratchCoverStyle, StampVisualStyle };
 
 // Pure program-config builders and their supporting types — deliberately
 // kept free of any server-only import (no @/lib/supabase/server, no

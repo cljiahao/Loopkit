@@ -131,6 +131,91 @@ describe("SetupForm live preview", () => {
     expect(submitted.get("stamp_mark_mode")).toBe("preset");
     expect(submitted.get("stamp_mark_preset")).toBe("star");
   });
+
+  it("defaults to Classic dots and submits an empty stamp_color when untouched", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await goToBasics(user);
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await goToRules(user);
+    await user.click(screen.getByRole("button", { name: "Create card" }));
+
+    expect(saveMock).toHaveBeenCalled();
+    const submitted = saveMock.mock.calls[0][1] as FormData;
+    expect(submitted.get("stamp_style")).toBe("dots");
+    expect(submitted.get("stamp_color")).toBe("");
+  });
+
+  it("picking Wax seal style submits stamp_style, ungated by 'Show advanced options'", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await goToBasics(user);
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await goToRules(user);
+
+    expect(screen.getByText("Stamp style")).toBeInTheDocument();
+    await user.click(screen.getByRole("radio", { name: "Wax seal" }));
+    await user.click(screen.getByRole("button", { name: "Create card" }));
+
+    expect(saveMock).toHaveBeenCalled();
+    const submitted = saveMock.mock.calls[0][1] as FormData;
+    expect(submitted.get("stamp_style")).toBe("seal");
+  });
+
+  // A longer explicit timeout: this test's round trip through 2 style
+  // picks plus 2 rounds of name/reward typing runs well within the default
+  // 5000ms alone, but the full suite under coverage instrumentation slows
+  // every test enough to make that ceiling flaky specifically here — the
+  // single heaviest sequence of real userEvent interactions in this file.
+  it("resets stamp_style to Classic dots when a new type is picked", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await goToBasics(user);
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    await goToRules(user);
+    await user.click(screen.getByRole("radio", { name: "Wax seal" }));
+    await user.click(screen.getByRole("button", { name: "← Back" }));
+    await user.click(screen.getByRole("button", { name: "← Back" }));
+
+    // Points Club never renders the Stamp style Section at all (its own
+    // variant === "dots" scoping gate) — switching to it and back to a
+    // plain Stamp Card confirms pickStyle()'s reset without needing to
+    // fill in Points Club's own Basics/Rules fields at all.
+    await user.click(screen.getByRole("button", { name: "Points Club" }));
+    await user.click(screen.getByRole("button", { name: "Stamp Card" }));
+    await user.click(screen.getByRole("button", { name: "Next: Basics" }));
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    await user.type(screen.getByLabelText("Reward"), "Free kopi");
+    await user.click(screen.getByRole("button", { name: "Next: Rules" }));
+    await user.click(screen.getByRole("button", { name: "Create card" }));
+
+    expect(saveMock).toHaveBeenCalled();
+    const submitted = saveMock.mock.calls[0][1] as FormData;
+    expect(submitted.get("stamp_style")).toBe("dots");
+  }, 15000);
 });
 
 describe("SetupForm birthday bonus toggle", () => {

@@ -139,6 +139,8 @@ export function ProgramCardStatus({
           filled={view.filled}
           total={view.total}
           mark={resolveStampMark(view, vendorAvatarUrl)}
+          style={view.style}
+          color={view.color}
         />
       );
     }

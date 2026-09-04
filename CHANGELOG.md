@@ -8,6 +8,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Stamp Card programs get a vendor choice of 5 stamp skins and an accent
+  color, free for every vendor with no Pro gate:
+  - `StampDots` gains a `style?: "dots" | "seal" | "ink" | "punch" | "charm"`
+    prop (default `"dots"`, unchanged from before this feature) and an
+    optional `color?: string` hex accent — classic dots, a pressed wax-seal
+    dome, a rotated ink-stamp ring, a die-cut punch hole, or a small brass
+    coin, each still layering the vendor's existing preset-icon/photo mark
+    choice on top. The reward stamp always stays gold, untouched by the
+    color picker. Vendors pick both in `/setup` (a new "Stamp style"
+    section, shown only for plain-dot stamp cards) via
+    `stamp_style`/`stamp_color`, stored in the program's existing `config`
+    JSONB (no migration needed) and threaded through `StampConfig`/
+    `ProgressView` to both the setup preview and the real customer card.
+  - Deliberately not Pro-gated: 3 direct competitors (Loopy Loyalty,
+    Stamp Me, Stampet) were researched before building — none gate a
+    mechanic's card type by tier, and none monetize customization this
+    granular either.
 - Scratch Card programs now get a real drag-to-scratch reveal and a vendor
   choice of 3 cover materials:
   - `ScratchCard` gains a `coverStyle?: "foil" | "wax" | "ticket"` prop

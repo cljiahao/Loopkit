@@ -3,6 +3,7 @@ import {
   buildPlantConfig,
   type ProgramType,
   type ScratchCoverStyle,
+  type StampVisualStyle,
 } from "@/lib/program-config";
 import { getProgress, type CardLike, type ProgramLike } from "@/lib/engine";
 import type { Progress } from "@/lib/engine/types";
@@ -28,6 +29,8 @@ export type PreviewInput = {
   stampMarkMode: "dot" | "preset" | "photo";
   stampMarkPreset: "gift" | "coffee" | "star" | "heart";
   scratchCoverStyle?: ScratchCoverStyle;
+  stampStyle?: StampVisualStyle;
+  stampColor?: string;
 };
 
 // Mirrors enroll_card's seed math (supabase/migrations/0014_loopkit_head_start.sql)
@@ -69,6 +72,8 @@ export function buildPreviewProgram(
           mode: input.stampMarkMode,
           preset: input.stampMarkPreset,
         },
+        stamp_style: input.stampStyle,
+        stamp_color: input.stampColor,
       },
     };
   }

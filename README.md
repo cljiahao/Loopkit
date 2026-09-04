@@ -120,7 +120,12 @@ Scratch Card programs get a real drag-to-scratch canvas reveal (a
 progressive enhancement over the existing SVG strokes, which stay the
 fallback whenever a 2D context isn't available) and a vendor choice of 3
 cover materials — gold foil, sealing wax, or a ticket stub — picked at
-`/setup` (`src/components/README.md`, `src/lib/README.md`).
+`/setup` (`src/components/README.md`, `src/lib/README.md`). Stamp Card
+programs likewise get a vendor choice of 5 stamp skins (classic dots, wax
+seal, ink stamp, punch hole, charm) and an accent color, free for every
+vendor with no Pro gate — none of loopkit's 3 researched competitors gate
+either a mechanic's card type or customization this granular
+(`src/components/README.md`, `CHANGELOG.md`).
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view

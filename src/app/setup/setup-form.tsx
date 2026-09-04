@@ -27,9 +27,13 @@ import {
   Star,
   Heart,
   Ticket,
+  Palette,
 } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { StampMarkPreset } from "@/components/stamp-dots";
+import type {
+  StampMarkPreset,
+  StampVisualStyle,
+} from "@/components/stamp-dots";
 import type { ScratchCoverStyle } from "@/lib/program-config";
 import {
   FAMILIES,
@@ -55,6 +59,12 @@ type SegmentInput = {
 // what the swatch displays before that, not a value silently written into
 // form state.
 const DEFAULT_SEGMENT_COLOR = { reward: "#10b981", loss: "#fb7185" };
+
+// Shown in the stamp color picker's swatch until a vendor actually picks
+// one — matches the antique-brass gold StampDots falls back to on its own
+// when no color is saved at all (same "swatch default, not a silently
+// written value" convention as DEFAULT_SEGMENT_COLOR above).
+const DEFAULT_STAMP_COLOR = "#c9a36a";
 
 const labelClass =
   "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
@@ -131,6 +141,8 @@ export function SetupForm({
     variant?: string;
     stamp_mark?: { mode?: string; preset?: string };
     scratch_cover_style?: string;
+    stamp_style?: string;
+    stamp_color?: string;
   };
 
   const [variant, setVariant] = useState<
@@ -188,6 +200,12 @@ export function SetupForm({
   const [scratchCoverStyle, setScratchCoverStyle] = useState<ScratchCoverStyle>(
     (config.scratch_cover_style as ScratchCoverStyle | undefined) ?? "foil",
   );
+  const [stampStyle, setStampStyle] = useState<StampVisualStyle>(
+    (config.stamp_style as StampVisualStyle | undefined) ?? "dots",
+  );
+  const [stampColor, setStampColor] = useState<string | undefined>(
+    config.stamp_color,
+  );
 
   const [segments, setSegments] = useState<SegmentInput[]>(
     config.segments?.map((s) => ({
@@ -242,6 +260,8 @@ export function SetupForm({
     stampMarkMode,
     stampMarkPreset,
     scratchCoverStyle,
+    stampStyle,
+    stampColor,
   });
 
   // Sets the type plus its sensible numeric defaults, and always resets
@@ -263,6 +283,8 @@ export function SetupForm({
     setHeadStartPercent(20);
     setPointsPerVisit(10);
     setScratchCoverStyle("foil");
+    setStampStyle("dots");
+    setStampColor(undefined);
   }
 
   // Clicking a family either completes the pick immediately (Lucky Tap has
@@ -891,6 +913,44 @@ export function SetupForm({
                 )}
               </Section>
             )}
+
+          {type === "stamp" && variant === "dots" && (
+            <Section
+              icon={<Palette className="size-4" />}
+              title="Stamp style"
+              description="What each stamp looks like, and its accent color."
+            >
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                value={stampStyle}
+                onValueChange={(v) => v && setStampStyle(v as StampVisualStyle)}
+                className="flex-wrap justify-start"
+              >
+                <ToggleGroupItem value="dots">Classic dots</ToggleGroupItem>
+                <ToggleGroupItem value="seal">Wax seal</ToggleGroupItem>
+                <ToggleGroupItem value="ink">Ink stamp</ToggleGroupItem>
+                <ToggleGroupItem value="punch">Punch hole</ToggleGroupItem>
+                <ToggleGroupItem value="charm">Charm trail</ToggleGroupItem>
+              </ToggleGroup>
+              <div className="flex items-center gap-2">
+                <ColorPicker
+                  label="Stamp color"
+                  value={stampColor ?? DEFAULT_STAMP_COLOR}
+                  onChange={setStampColor}
+                />
+                <span className="text-xs text-muted-foreground">
+                  Accent color — the reward stamp always stays gold.
+                </span>
+              </div>
+              <input type="hidden" name="stamp_style" value={stampStyle} />
+              <input
+                type="hidden"
+                name="stamp_color"
+                value={stampColor ?? ""}
+              />
+            </Section>
+          )}
 
           {type === "scratch" && (
             <Section
