@@ -67,6 +67,7 @@ below.
 - `2026-08-16-vendor-telegram-connect-design.md` — "Vendor Telegram Connect (Phase A2) — Design": retires loopkit's own Telegram bot (Phase A) in favor of merqo's shared one; `notifyRedemptionOnTelegram` now calls merqo's `notify-vendor` endpoint. Deletion-heavy spec; no data carries over, already-linked vendors must reconnect.
 - `2026-08-16-shared-plan-comparison-table-design.md` — "Shared Plan Comparison Table — Design": loopkit's migration onto qkit's new `@merqo/ui` `PlanComparisonTable` component — loopkit's existing 2-tier, boolean/string feature data needs zero reshaping to fit it.
 - `2026-08-20-host-referral-mechanic-design.md` — "Host/Couple-Facing Referral Mechanic — Design": credit-routing on an existing program (not a sixth engine `type`) rewarding a wedding/event host — every distinct guest who joins via the host's `/c?ref=` link bumps the host one stamp/visit; `vendor_join_referred`/`apply_referral_credit` (migration `0040`) plus `/dashboard/referrals`.
+- `2026-09-04-points-club-reward-shop-design.md` — "Points Club Reward Shop": supersedes `2026-07-15-points-club-design.md`'s single-threshold redemption for new programs with 2 vendor-picked modes — a multi-item reward catalog the customer self-service picks from (each pick becomes its own scannable voucher, `reward_vouchers.voucher_token` mirroring `cards.card_token`'s exact shape) or a fixed points→dollars payment-offset rate the vendor applies at the register. Architecture only — `PointsBar`'s own visual redesign is a deferred follow-up pass.
 
 ## Parent
 
