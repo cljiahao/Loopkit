@@ -97,6 +97,17 @@ export const saveProgramSchema = z
         emptyToUndefined,
         z.enum(["gift", "coffee", "star", "heart"]).optional(),
       ),
+      stamp_style: z.preprocess(
+        emptyToUndefined,
+        z.enum(["dots", "seal", "ink", "punch", "charm"]).optional(),
+      ),
+      stamp_color: z.preprocess(
+        emptyToUndefined,
+        z
+          .string()
+          .regex(/^#[0-9a-fA-F]{6}$/)
+          .optional(),
+      ),
       expiry_days: expiryDaysSchema,
       reward_expiry_days: rewardExpiryDaysSchema,
       birthday_bonus_enabled: z.preprocess(
@@ -210,6 +221,8 @@ export function buildProgramFields(data: SaveProgramInput): {
           mode: data.stamp_mark_mode ?? "dot",
           preset: data.stamp_mark_preset,
         },
+        stamp_style: data.stamp_style,
+        stamp_color: data.stamp_color,
       },
     };
   }

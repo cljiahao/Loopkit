@@ -216,6 +216,19 @@ describe("buildPreviewProgram", () => {
     });
   });
 
+  it("stamp: style/color flow into the built program's config", () => {
+    const program = buildPreviewProgram({
+      ...base,
+      type: "stamp",
+      stampStyle: "seal",
+      stampColor: "#8a2436",
+    });
+    expect(program.config).toMatchObject({
+      stamp_style: "seal",
+      stamp_color: "#8a2436",
+    });
+  });
+
   it("stamp: variant flame flows into the built program's config", () => {
     const program = buildPreviewProgram({
       ...base,

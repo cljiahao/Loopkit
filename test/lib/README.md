@@ -25,7 +25,7 @@ several (`admin-data.test.ts`, `admin.test.ts`, `cards.test.ts`,
 - `program-access.test.ts` — `currentProgram`/`canCreateProgram`/`getEntitlement`: free/Pro program-count gating; its `Program` fixture includes `birthday_bonus_enabled` (migration `0041`)
 - `program-config.test.ts` — `segmentWinPercent`/`overallWinPercent`: each segment's rounded win-% share of total weight, the reward-only overall percentage, and the zero-total-weight edge case for both
 - `program-health.test.ts` — `programHealth`: "new"/"quiet"/"active" triage from customer count, age, last activity
-- `program.test.ts` — `programInputSchema`/`canPrepProgram`/`getEntitlement`: program validation and tier caps
+- `program.test.ts` — `programInputSchema`/`canPrepProgram`/`getEntitlement`: program validation and tier caps; also covers `saveProgramSchema`/`buildProgramFields`'s stamp branch for `stamp_mark_mode`/`stamp_mark_preset` and the newer `stamp_style`/`stamp_color` (5 `StampVisualStyle`s, a `#rrggbb`-only hex), each carried into `config` unchanged or left `undefined` when blank
 - `qr.test.ts` — `qrSvg`: renders a valid `<svg>…</svg>` string for a token
 - `save-program-schema.test.ts` — `saveProgramSchema`: discriminated-union Zod validation per program type
 - `stats.test.ts` — `classifyActivity`/`bucketVisitsByDay`/`computeCardStats`/`pctChange`/`avgDaysBetweenVisits`: stats aggregation pipeline; `countExpiredVouchers`: queries `reward_vouchers` scoped to the given programs/status/30-day window, returns 0 without querying when there are no programs, throws on a query error

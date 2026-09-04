@@ -44,7 +44,13 @@ Client-side card-check UI.
   vendor's chosen scratch cover material (`"foil" | "wax" | "ticket"`, from
   `src/lib/engine/chance.ts`'s `ScratchCoverStyle`; ignored by the wheel
   branch, defaults to `"foil"` on `ScratchCard`'s own side for programs
-  saved before this field existed).
+  saved before this field existed). Its stamp/dots branch now also passes
+  `StampDots` a `style={view.style}`/`color={view.color}` — the vendor's
+  chosen stamp skin (`"dots" | "seal" | "ink" | "punch" | "charm"`, from
+  `src/lib/engine/stamp.ts`'s `StampVisualStyle`, plain-dots-only, free for
+  every vendor) and accent hex; both default to `StampDots`'s own fallback
+  (`"dots"` / the built-in gold) for programs saved before these fields
+  existed.
 - `program-card-status.dom.test.tsx` — jsdom tests for `ProgramCardStatus`:
   verifies `PointsBar` vs `StampDots` renders per `view.variant` on a
   `"dots"` view, and `Cup` vs `Plant` renders per `view.variant` on a

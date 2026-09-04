@@ -201,6 +201,100 @@ describe("saveProgramSchema stamp_mark", () => {
   });
 });
 
+describe("saveProgramSchema stamp_style/stamp_color", () => {
+  it("accepts a stamp program with a style and a hex color", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+      stamp_style: "seal",
+      stamp_color: "#8a2436",
+    });
+    expect(result.success).toBe(true);
+    if (result.success && result.data.type === "stamp") {
+      expect(result.data.stamp_style).toBe("seal");
+      expect(result.data.stamp_color).toBe("#8a2436");
+    }
+  });
+
+  it("defaults both to undefined when left blank", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+      stamp_style: "",
+      stamp_color: "",
+    });
+    expect(result.success).toBe(true);
+    if (result.success && result.data.type === "stamp") {
+      expect(result.data.stamp_style).toBeUndefined();
+      expect(result.data.stamp_color).toBeUndefined();
+    }
+  });
+
+  it("rejects an unknown style", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+      stamp_style: "glitter",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a color that isn't a 6-digit hex", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+      stamp_color: "red",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("buildProgramFields stamp_style/stamp_color", () => {
+  it("carries the chosen style/color into config", () => {
+    const parsed = saveProgramSchema.parse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+      stamp_style: "punch",
+      stamp_color: "#8a2436",
+    });
+    const { config } = buildProgramFields(parsed);
+    expect(
+      (config as { stamp_style?: unknown; stamp_color?: unknown }).stamp_style,
+    ).toBe("punch");
+    expect(
+      (config as { stamp_style?: unknown; stamp_color?: unknown }).stamp_color,
+    ).toBe("#8a2436");
+  });
+
+  it("leaves both undefined when unset", () => {
+    const parsed = saveProgramSchema.parse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+    });
+    const { config } = buildProgramFields(parsed);
+    expect((config as { stamp_style?: unknown }).stamp_style).toBeUndefined();
+    expect((config as { stamp_color?: unknown }).stamp_color).toBeUndefined();
+  });
+});
+
 describe("buildProgramFields stamp_mark", () => {
   it("defaults config.stamp_mark to mode 'dot' when unset", () => {
     const parsed = saveProgramSchema.parse({

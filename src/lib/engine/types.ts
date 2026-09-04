@@ -11,6 +11,8 @@ export type ProgressView =
       variant?: "dots" | "points";
       markMode?: "dot" | "preset" | "photo";
       markPreset?: "gift" | "coffee" | "star" | "heart";
+      style?: "dots" | "seal" | "ink" | "punch" | "charm";
+      color?: string;
     }
   | {
       kind: "flame";

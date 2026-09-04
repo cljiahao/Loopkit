@@ -286,3 +286,43 @@ describe("stampStrategy stamp_mark passthrough", () => {
     });
   });
 });
+
+describe("stampStrategy stamp_style/stamp_color passthrough", () => {
+  it("carries style/color from config into the dots view", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 2, reward_count: 0 },
+      {
+        stamps_required: 5,
+        reward_text: "free kopi",
+        stamp_style: "seal",
+        stamp_color: "#8a2436",
+      },
+      now,
+    );
+    expect(p.view).toMatchObject({ style: "seal", color: "#8a2436" });
+  });
+
+  it("leaves style/color undefined when absent from config", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 2, reward_count: 0 },
+      cfg,
+      now,
+    );
+    expect(p.view).toMatchObject({ style: undefined, color: undefined });
+  });
+
+  it("drops style/color for the points variant, which never renders StampDots", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 40, reward_count: 0 },
+      {
+        stamps_required: 100,
+        reward_text: "free kopi",
+        variant: "points" as const,
+        stamp_style: "seal",
+        stamp_color: "#8a2436",
+      },
+      now,
+    );
+    expect(p.view).toMatchObject({ style: undefined, color: undefined });
+  });
+});
