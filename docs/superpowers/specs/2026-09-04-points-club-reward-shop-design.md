@@ -17,6 +17,39 @@ one reward everyone gets"), and separately, a vendor can instead choose to
 let points directly offset a customer's payment — two different
 redemption philosophies, vendor-picked once per program.
 
+## Competitive research
+
+Checked 3 loyalty products before finalizing the redemption model —
+Kangaroo Rewards, Stamped.io (e-commerce checkout loyalty, a different
+category — Shopify/BigCommerce stores, not physical-shop QR), and
+Stampet (physical-shop QR loyalty, loopkit's closest comp; not to be
+confused with Stamped.io despite the name).
+
+- **Multi-item reward catalogs at different point costs are a real,
+  established pattern** — both Kangaroo ("redemption catalogs") and
+  Stamped.io (per-reward `Points to Redeem`, up to 2 decimal places)
+  confirm this. Validates catalog mode's shape directly.
+- **One real divergence**: both Stampet ("rewards you choose, redeemed
+  with one tap at the counter," same QR staff already scan to award
+  points) and Stamped.io (staff clicks "Redeem Reward" for the customer
+  from a dashboard, catalog shown live at that moment) lean
+  **staff-facilitated, at-the-counter, off the one existing card** — not
+  a customer pre-selecting a reward in advance and holding a separately
+  generated voucher/QR, which is what Section A below does.
+  **Decision: keep the pre-selected voucher design.** It was the user's
+  own explicit call, not a default worth walking back to match the
+  market — it reuses `card_token`'s already-proven pattern rather than
+  new anti-fraud machinery, and it supports several picked rewards
+  sitting pending at once, including while the vendor's own device can't
+  look anything up live. Simpler-but-more-limited stayed the road not
+  taken here, deliberately.
+- Stamped.io's "variable discount redeemable in multiples" reward type is
+  a hybrid the closer competitors don't cleanly split into two program
+  _modes_ the way this spec does (catalog vs. offset, chosen once at
+  setup) — worth naming as a real alternate framing, but the
+  program-level split stays simpler to build and reason about than a
+  per-reward-type hybrid, and still covers the same ground.
+
 ## Decisions (from brainstorming)
 
 - **Redemption mode is fixed per program at setup**: `"catalog"` or
