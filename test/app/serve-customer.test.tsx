@@ -611,4 +611,55 @@ describe("ServeCustomer", () => {
       ).toBeInTheDocument(),
     );
   });
+
+  it("shows the offset apply form instead of RedeemButton for an offset-mode points program", async () => {
+    stampMock.mockResolvedValue({
+      success: true,
+      card: { id: "c1", phone: "+6591234567", stamp_count: 250 },
+      rewardReady: true,
+    });
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="stamp"
+        stampsRequired={100}
+        rewardText="unused"
+        pointsRedemptionMode="offset"
+      />,
+    );
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Add stamp" }));
+    expect(await screen.findByLabelText("Points to apply")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Redeem" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows no redeem control for a catalog-mode points program (customer redeems via their own voucher)", async () => {
+    stampMock.mockResolvedValue({
+      success: true,
+      card: { id: "c1", phone: "+6591234567", stamp_count: 250 },
+      rewardReady: true,
+    });
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="stamp"
+        stampsRequired={100}
+        rewardText="unused"
+        pointsRedemptionMode="catalog"
+      />,
+    );
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Add stamp" }));
+    expect(
+      await screen.findByText(/redeems their picked reward/i),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Points to apply")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Redeem" }),
+    ).not.toBeInTheDocument();
+  });
 });
