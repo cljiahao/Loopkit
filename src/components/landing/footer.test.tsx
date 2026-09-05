@@ -20,5 +20,13 @@ describe("Footer", () => {
     expect(
       screen.getByRole("link", { name: "Vendor sign in →" }),
     ).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("link", { name: "Terms" })).toHaveAttribute(
+      "href",
+      "/legal/terms",
+    );
+    expect(screen.getByRole("link", { name: "Privacy" })).toHaveAttribute(
+      "href",
+      "/legal/privacy",
+    );
   });
 });

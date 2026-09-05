@@ -47,7 +47,11 @@ design.md` §3): `loopkit.vendors` (shared profile, for-all self policy),
   its own `'adjust'` event with the reason, a large negative delta clamps
   at 0 rather than going negative, a zero delta/blank reason/nonexistent
   card each throw their own distinct error without mutating anything, and
-  Vendor B cannot adjust Vendor A's program.
+  Vendor B cannot adjust Vendor A's program. 94 assertions total: a
+  `legal_check_state` block (migration `0043`) adds 4 — RLS is enabled with
+  zero policies, and both `anon` and `authenticated` are rejected on a
+  direct `SELECT` (service-role-only, same shape as the retired
+  `telegram_link_tokens` table).
 
 ## Parent
 
