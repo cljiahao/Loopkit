@@ -1,9 +1,18 @@
 import { z } from "zod";
 import type { PlantConfig } from "@/lib/engine/plant";
 import type { ChanceConfig, ScratchCoverStyle } from "@/lib/engine/chance";
-import type { StampVisualStyle } from "@/lib/engine/stamp";
+import type {
+  StampVisualStyle,
+  PointsRedemptionMode,
+  PointsOffsetRate,
+} from "@/lib/engine/stamp";
 
-export type { ScratchCoverStyle, StampVisualStyle };
+export type {
+  ScratchCoverStyle,
+  StampVisualStyle,
+  PointsRedemptionMode,
+  PointsOffsetRate,
+};
 
 // Pure program-config builders and their supporting types — deliberately
 // kept free of any server-only import (no @/lib/supabase/server, no
@@ -32,6 +41,17 @@ export const segmentInputSchema = z.object({
     .optional(),
 });
 export type SegmentInput = z.infer<typeof segmentInputSchema>;
+
+// Form-side shape for one Points Club catalog item — no `id` here, same
+// as SegmentInput: buildProgramFields assigns a fresh id server-side
+// (crypto.randomUUID()), mirroring buildChanceConfig's segment ids.
+export const pointsCatalogItemInputSchema = z.object({
+  label: z.string().trim().min(1).max(40),
+  cost: z.coerce.number().int().min(1).max(100000),
+});
+export type PointsCatalogItemInput = z.infer<
+  typeof pointsCatalogItemInputSchema
+>;
 
 const PLANT_STAGE_NAMES = ["Seed", "Sprout", "Leafing", "Budding", "Bloom"];
 const CUP_STAGE_NAMES = ["Empty", "Sip", "Half Full", "Nearly Full", "Full"];
