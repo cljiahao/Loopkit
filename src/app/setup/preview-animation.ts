@@ -53,6 +53,9 @@ export function usePreviewAnimation(input: PreviewInput): {
     scratchCoverStyle,
     stampStyle,
     stampColor,
+    pointsRedemptionMode,
+    pointsCatalog,
+    pointsOffsetRate,
   } = input;
 
   // Every field is part of the "recipe" — any edit (including name, which
@@ -76,6 +79,9 @@ export function usePreviewAnimation(input: PreviewInput): {
     scratchCoverStyle,
     stampStyle,
     stampColor,
+    pointsRedemptionMode,
+    pointsCatalog,
+    pointsOffsetRate,
   ]);
 
   const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion);
