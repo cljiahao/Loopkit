@@ -37,14 +37,40 @@ vi.mock("@/app/dashboard/scan-button", () => ({
   ScanButton: ({
     onResolved,
   }: {
-    onResolved: (result: { phone: string; programId: string }) => void;
+    onResolved: (
+      result:
+        | { kind: "card"; phone: string; programId: string }
+        | {
+            kind: "voucher";
+            phone: string;
+            voucherToken: string;
+            rewardText: string;
+          },
+    ) => void;
   }) => (
-    <button
-      type="button"
-      onClick={() => onResolved({ phone: "+6591234567", programId: "p2" })}
-    >
-      Mock scan
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() =>
+          onResolved({ kind: "card", phone: "+6591234567", programId: "p2" })
+        }
+      >
+        Mock scan
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onResolved({
+            kind: "voucher",
+            phone: "+6591234567",
+            voucherToken: "tok123",
+            rewardText: "Free drink",
+          })
+        }
+      >
+        Scan voucher
+      </button>
+    </>
   ),
 }));
 
@@ -258,6 +284,22 @@ describe("ServeCustomer", () => {
       "/dashboard/counter?p=p2&phone=%2B6591234567",
     );
     expect(stampMock).not.toHaveBeenCalled();
+  });
+
+  it("routes a voucher scan to the redeem-voucher screen instead of stamping this program", async () => {
+    const user = userEvent.setup();
+    render(
+      <ServeCustomer
+        programId="p1"
+        type="stamp"
+        stampsRequired={10}
+        rewardText="Free kopi"
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Scan voucher" }));
+    expect(routerPush).toHaveBeenCalledWith(
+      "/dashboard/redeem-voucher?token=tok123",
+    );
   });
 
   it("fills and submits in place when the scanned card matches the current program", async () => {

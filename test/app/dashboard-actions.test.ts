@@ -56,6 +56,8 @@ import {
   lookupAction,
   redeemAction,
   redeemPlantAction,
+  applyPointsOffsetAction,
+  resolveTokenAction,
 } from "@/app/dashboard/actions";
 import { buildPlantConfig } from "@/lib/program";
 
@@ -415,5 +417,128 @@ describe("redeemAction customer notify vendor toggle", () => {
       "+6591234567",
       expect.stringContaining("Reward redeemed"),
     );
+  });
+});
+
+describe("stampAction rewardReady for points redemption modes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireVendorMock.mockResolvedValue({ user: { id: "v1" } });
+    maybeSingleMock.mockResolvedValue({ data: null, error: null });
+  });
+
+  it("catalog mode: rewardReady only once the balance covers the cheapest item", async () => {
+    getProgramByIdMock.mockResolvedValue({
+      ...program,
+      config: {
+        variant: "points",
+        redemption_mode: "catalog",
+        catalog: [{ id: "a", label: "Free drink", cost: 100 }],
+      },
+    });
+    rpcMock.mockResolvedValue({
+      data: { id: "c1", phone: "+6591234567", stamp_count: 50 },
+      error: null,
+    });
+    const notReady = await stampAction(
+      form({ program_id: "p1", phone: "91234567" }),
+    );
+    expect(notReady.success && notReady.rewardReady).toBe(false);
+
+    rpcMock.mockResolvedValue({
+      data: { id: "c1", phone: "+6591234567", stamp_count: 100 },
+      error: null,
+    });
+    const ready = await stampAction(
+      form({ program_id: "p1", phone: "91234567" }),
+    );
+    expect(ready.success && ready.rewardReady).toBe(true);
+  });
+});
+
+describe("applyPointsOffsetAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireVendorMock.mockResolvedValue({ user: { id: "v1" } });
+  });
+
+  it("deducts points and returns the dollar figure", async () => {
+    rpcMock.mockResolvedValue({
+      data: [{ id: "c1", phone: "+6591234567", stamp_count: 150, dollars: 1 }],
+      error: null,
+    });
+    const res = await applyPointsOffsetAction(
+      form({ card_id: "c1", points: "100" }),
+    );
+    expect(rpcMock).toHaveBeenCalledWith("apply_points_offset", {
+      p_card: "c1",
+      p_points: 100,
+    });
+    expect(res).toEqual({
+      success: true,
+      phone: "+6591234567",
+      stampCount: 150,
+      dollars: 1,
+    });
+  });
+
+  it("rejects a non-integer or non-positive amount without a DB call", async () => {
+    const res = await applyPointsOffsetAction(
+      form({ card_id: "c1", points: "0" }),
+    );
+    expect(res.success).toBe(false);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("resolveTokenAction falls back to a voucher lookup", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireVendorMock.mockResolvedValue({ user: { id: "v1" } });
+  });
+
+  it("resolves a card token as before", async () => {
+    rpcMock.mockResolvedValue({
+      data: [{ phone: "+6591234567", program_id: "p1" }],
+      error: null,
+    });
+    const res = await resolveTokenAction(form({ token: "cardtok" }));
+    expect(res).toEqual({
+      success: true,
+      kind: "card",
+      phone: "+6591234567",
+      programId: "p1",
+    });
+  });
+
+  it("falls back to voucher_by_token on a card miss", async () => {
+    rpcMock.mockImplementation((name: string) => {
+      if (name === "card_by_token")
+        return Promise.resolve({ data: [], error: null });
+      return Promise.resolve({
+        data: [
+          {
+            phone: "+6591234567",
+            reward_text: "Free drink",
+            program_id: "p1",
+          },
+        ],
+        error: null,
+      });
+    });
+    const res = await resolveTokenAction(form({ token: "vouchtok" }));
+    expect(res).toEqual({
+      success: true,
+      kind: "voucher",
+      phone: "+6591234567",
+      voucherToken: "vouchtok",
+      rewardText: "Free drink",
+    });
+  });
+
+  it("errors when neither a card nor a voucher matches", async () => {
+    rpcMock.mockResolvedValue({ data: [], error: null });
+    const res = await resolveTokenAction(form({ token: "nope" }));
+    expect(res.success).toBe(false);
   });
 });

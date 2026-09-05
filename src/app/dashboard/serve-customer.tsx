@@ -363,15 +363,21 @@ export function ServeCustomer({
         <ScanButton
           label="Scan a QR instead"
           variant="link"
-          onResolved={({ phone, programId: scannedProgramId }) => {
-            if (scannedProgramId !== programId) {
+          onResolved={(result) => {
+            if (result.kind === "voucher") {
               router.push(
-                `/dashboard/counter?p=${scannedProgramId}&phone=${encodeURIComponent(phone)}`,
+                `/dashboard/redeem-voucher?token=${encodeURIComponent(result.voucherToken)}`,
+              );
+              return;
+            }
+            if (result.programId !== programId) {
+              router.push(
+                `/dashboard/counter?p=${result.programId}&phone=${encodeURIComponent(result.phone)}`,
               );
               return;
             }
             if (phoneRef.current) {
-              phoneRef.current.value = phone;
+              phoneRef.current.value = result.phone;
               formRef.current?.requestSubmit();
             }
           }}

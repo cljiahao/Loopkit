@@ -14,9 +14,15 @@ export function ScanAndRoute() {
       <p className="text-sm font-medium">Scan a customer to stamp or redeem.</p>
       <ScanButton
         label="Scan a customer"
-        onResolved={({ phone, programId }) => {
+        onResolved={(result) => {
+          if (result.kind === "voucher") {
+            router.push(
+              `/dashboard/redeem-voucher?token=${encodeURIComponent(result.voucherToken)}`,
+            );
+            return;
+          }
           router.push(
-            `/dashboard/counter?p=${programId}&phone=${encodeURIComponent(phone)}`,
+            `/dashboard/counter?p=${result.programId}&phone=${encodeURIComponent(result.phone)}`,
           );
         }}
       />
