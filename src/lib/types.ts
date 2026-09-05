@@ -164,6 +164,7 @@ export interface Database {
           expires_at: string | null;
           redeemed_at: string | null;
           status: string;
+          voucher_token: string;
           updated_at: string;
         };
         Insert: {
@@ -175,6 +176,7 @@ export interface Database {
           expires_at?: string | null;
           redeemed_at?: string | null;
           status?: string;
+          voucher_token?: string;
           updated_at?: string;
         };
         Update: {
@@ -186,6 +188,7 @@ export interface Database {
           expires_at?: string | null;
           redeemed_at?: string | null;
           status?: string;
+          voucher_token?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -619,6 +622,7 @@ export interface Database {
           replaced_by_stamp_count: number | null;
           voucher_expires_at: string | null;
           vendor_avatar_url: string | null;
+          active_vouchers: Json;
         }[];
       };
       vendor_join_referred: {
@@ -719,6 +723,34 @@ export interface Database {
       redeem_oldest_voucher: {
         Args: { p_card: string };
         Returns: void;
+      };
+      voucher_by_token: {
+        Args: { p_token: string };
+        Returns: {
+          program_id: string;
+          card_id: string;
+          voucher_id: string;
+          phone: string;
+          reward_text: string;
+          status: string;
+        }[];
+      };
+      redeem_voucher_by_token: {
+        Args: { p_token: string };
+        Returns: Database["loopkit"]["Tables"]["reward_vouchers"]["Row"];
+      };
+      select_points_reward: {
+        Args: { p_program: string; p_phone: string; p_item_id: string };
+        Returns: Database["loopkit"]["Tables"]["reward_vouchers"]["Row"];
+      };
+      apply_points_offset: {
+        Args: { p_card: string; p_points: number };
+        Returns: {
+          id: string;
+          phone: string;
+          stamp_count: number;
+          dollars: number;
+        }[];
       };
     };
     Enums: Record<string, never>;
