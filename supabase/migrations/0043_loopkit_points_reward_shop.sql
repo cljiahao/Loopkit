@@ -183,8 +183,9 @@ grant execute on function loopkit.apply_points_offset(uuid, int) to authenticate
 -- vendor_join gains active_vouchers (jsonb array) alongside the existing
 -- scalar voucher_expires_at — catalog mode can have several simultaneously
 -- pending vouchers, not just the one Stamp/Plant's single-fixed-reward
--- model needs. Same DROP-then-CREATE-OR-REPLACE requirement as prior
--- RETURNS TABLE column additions (0016, 0018, 0027).
+-- model needs. Also restores vendor_avatar_url (0031), which this rebuild
+-- had dropped. Same DROP-then-CREATE-OR-REPLACE requirement as prior
+-- RETURNS TABLE column additions (0016, 0018, 0027, 0031).
 drop function if exists loopkit.vendor_join(uuid, text);
 
 create or replace function loopkit.vendor_join(p_vendor uuid, p_phone text)
@@ -193,7 +194,7 @@ returns table (
   stamp_count int, card_token text, reward_text text, stamps_required int,
   expiry_days int, cycle_started_at timestamptz, active boolean,
   replaced_by_name text, replaced_by_stamp_count int,
-  voucher_expires_at timestamptz, active_vouchers jsonb
+  voucher_expires_at timestamptz, vendor_avatar_url text, active_vouchers jsonb
 )
 language plpgsql security definer set search_path = '' as $$
 declare v_program record;
@@ -220,6 +221,7 @@ begin
            r.name, nc.stamp_count,
            (select min(rv.expires_at) from loopkit.reward_vouchers rv
               where rv.card_id = c.id and rv.status = 'active' and rv.expires_at is not null),
+           (select u.raw_user_meta_data->>'avatar_url' from auth.users u where u.id = p_vendor),
            (select coalesce(jsonb_agg(jsonb_build_object(
                 'id', rv.id, 'voucher_token', rv.voucher_token,
                 'reward_text', rv.reward_text, 'expires_at', rv.expires_at

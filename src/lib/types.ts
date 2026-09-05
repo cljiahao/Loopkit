@@ -164,8 +164,8 @@ export interface Database {
           expires_at: string | null;
           redeemed_at: string | null;
           status: string;
-          voucher_token: string;
           updated_at: string;
+          voucher_token: string | null;
         };
         Insert: {
           id?: string;
@@ -176,8 +176,8 @@ export interface Database {
           expires_at?: string | null;
           redeemed_at?: string | null;
           status?: string;
-          voucher_token?: string;
           updated_at?: string;
+          voucher_token?: string | null;
         };
         Update: {
           id?: string;
@@ -188,8 +188,8 @@ export interface Database {
           expires_at?: string | null;
           redeemed_at?: string | null;
           status?: string;
-          voucher_token?: string;
           updated_at?: string;
+          voucher_token?: string | null;
         };
         Relationships: [];
       };
