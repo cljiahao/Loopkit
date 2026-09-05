@@ -328,3 +328,126 @@ describe("buildProgramFields stamp_mark", () => {
     });
   });
 });
+
+describe("saveProgramSchema points redemption fields", () => {
+  it("accepts a catalog-mode points program", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: "500",
+      reward_text: "unused",
+      head_start: "false",
+      variant: "points",
+      redemption_mode: "catalog",
+      catalog: JSON.stringify([
+        { label: "Free drink", cost: 100 },
+        { label: "Free meal", cost: 300 },
+      ]),
+    });
+    expect(result.success).toBe(true);
+    if (result.success && result.data.type === "stamp") {
+      expect(result.data.redemption_mode).toBe("catalog");
+      expect(result.data.catalog).toHaveLength(2);
+    }
+  });
+
+  it("accepts an offset-mode points program", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: "500",
+      reward_text: "unused",
+      head_start: "false",
+      variant: "points",
+      redemption_mode: "offset",
+      offset_rate_points: "100",
+      offset_rate_dollars: "1",
+    });
+    expect(result.success).toBe(true);
+    if (result.success && result.data.type === "stamp") {
+      expect(result.data.redemption_mode).toBe("offset");
+      expect(result.data.offset_rate_points).toBe(100);
+      expect(result.data.offset_rate_dollars).toBe(1);
+    }
+  });
+
+  it("rejects a catalog with fewer than 2 items", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: "500",
+      reward_text: "unused",
+      head_start: "false",
+      variant: "points",
+      redemption_mode: "catalog",
+      catalog: JSON.stringify([{ label: "Free drink", cost: 100 }]),
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("buildProgramFields points redemption modes", () => {
+  it("catalog mode: assigns each item a fresh id and sets stamps_required to the highest cost", () => {
+    const parsed = saveProgramSchema.parse({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: "500",
+      reward_text: "unused",
+      head_start: "false",
+      variant: "points",
+      redemption_mode: "catalog",
+      catalog: JSON.stringify([
+        { label: "Free drink", cost: 100 },
+        { label: "Free meal", cost: 300 },
+      ]),
+    });
+    const { config, stampsRequired } = buildProgramFields(parsed);
+    const c = config as {
+      redemption_mode?: string;
+      catalog?: { id: string; label: string; cost: number }[];
+    };
+    expect(c.redemption_mode).toBe("catalog");
+    expect(c.catalog).toHaveLength(2);
+    expect(c.catalog?.every((item) => typeof item.id === "string")).toBe(true);
+    expect(stampsRequired).toBe(300);
+  });
+
+  it("offset mode: builds config.offset_rate and sets stamps_required to the rate's points", () => {
+    const parsed = saveProgramSchema.parse({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: "500",
+      reward_text: "unused",
+      head_start: "false",
+      variant: "points",
+      redemption_mode: "offset",
+      offset_rate_points: "100",
+      offset_rate_dollars: "1",
+    });
+    const { config, stampsRequired } = buildProgramFields(parsed);
+    expect((config as { offset_rate?: unknown }).offset_rate).toEqual({
+      points: 100,
+      dollars: 1,
+    });
+    expect(stampsRequired).toBe(100);
+  });
+
+  it("leaves redemption_mode/catalog/offset_rate undefined for a non-points stamp program", () => {
+    const parsed = saveProgramSchema.parse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+    });
+    const { config } = buildProgramFields(parsed);
+    const c = config as {
+      redemption_mode?: unknown;
+      catalog?: unknown;
+      offset_rate?: unknown;
+    };
+    expect(c.redemption_mode).toBeUndefined();
+    expect(c.catalog).toBeUndefined();
+    expect(c.offset_rate).toBeUndefined();
+  });
+});

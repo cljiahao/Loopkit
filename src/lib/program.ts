@@ -5,6 +5,7 @@ import type { Json } from "@/lib/types";
 import {
   buildChanceConfig,
   buildPlantConfig,
+  pointsCatalogItemInputSchema,
   segmentInputSchema,
   type ProgramType,
   type SegmentInput,
@@ -108,6 +109,22 @@ export const saveProgramSchema = z
           .regex(/^#[0-9a-fA-F]{6}$/)
           .optional(),
       ),
+      redemption_mode: z.preprocess(
+        emptyToUndefined,
+        z.enum(["catalog", "offset"]).optional(),
+      ),
+      catalog: z.preprocess(
+        parseSegments,
+        z.array(pointsCatalogItemInputSchema).min(2).max(6).optional(),
+      ),
+      offset_rate_points: z.preprocess(
+        emptyToUndefined,
+        z.coerce.number().int().min(1).max(100000).optional(),
+      ),
+      offset_rate_dollars: z.preprocess(
+        emptyToUndefined,
+        z.coerce.number().min(0.01).max(100000).optional(),
+      ),
       expiry_days: expiryDaysSchema,
       reward_expiry_days: rewardExpiryDaysSchema,
       birthday_bonus_enabled: z.preprocess(
@@ -190,6 +207,82 @@ export const saveProgramSchema = z
 
 export type SaveProgramInput = z.infer<typeof saveProgramSchema>;
 
+type StampProgramInput = Extract<SaveProgramInput, { type: "stamp" }>;
+type StampCatalog = { id: string; label: string; cost: number }[];
+type StampOffsetRate = { points: number; dollars: number };
+
+function buildStampCatalog(data: StampProgramInput): StampCatalog | undefined {
+  if (data.variant !== "points" || data.redemption_mode !== "catalog") {
+    return undefined;
+  }
+  return data.catalog?.map((item) => ({ ...item, id: crypto.randomUUID() }));
+}
+
+function buildStampOffsetRate(
+  data: StampProgramInput,
+): StampOffsetRate | undefined {
+  if (data.variant !== "points" || data.redemption_mode !== "offset") {
+    return undefined;
+  }
+  if (!data.offset_rate_points || !data.offset_rate_dollars) {
+    return undefined;
+  }
+  return { points: data.offset_rate_points, dollars: data.offset_rate_dollars };
+}
+
+// stamps_required stays not-null on the row, but neither new points mode
+// has a single meaningful target — a server-computed fallback (never the
+// client-submitted value, which the UI hides for both modes) matches how
+// pity_ceiling already backs stampsRequired for Wheel/Scratch below.
+function computeStampsRequired(
+  data: StampProgramInput,
+  catalog: StampCatalog | undefined,
+  offsetRate: StampOffsetRate | undefined,
+): number {
+  const isCatalog =
+    data.variant === "points" && data.redemption_mode === "catalog";
+  const isOffset =
+    data.variant === "points" && data.redemption_mode === "offset";
+  if (isCatalog) return Math.max(...(catalog?.map((item) => item.cost) ?? [1]));
+  if (isOffset) return offsetRate?.points ?? data.stamps_required;
+  return data.stamps_required;
+}
+
+function buildStampProgramFields(data: StampProgramInput): {
+  type: string;
+  stampsRequired: number;
+  config: Json;
+  headStart: boolean;
+  headStartPercent: number;
+} {
+  const catalog = buildStampCatalog(data);
+  const offsetRate = buildStampOffsetRate(data);
+  const stampsRequired = computeStampsRequired(data, catalog, offsetRate);
+
+  return {
+    type: "stamp",
+    stampsRequired,
+    headStart: data.head_start,
+    headStartPercent: data.head_start_percent ?? 20,
+    config: {
+      stamps_required: stampsRequired,
+      reward_text: data.reward_text,
+      variant: data.variant ?? "dots",
+      points_per_visit: data.points_per_visit ?? 1,
+      stamp_mark: {
+        mode: data.stamp_mark_mode ?? "dot",
+        preset: data.stamp_mark_preset,
+      },
+      stamp_style: data.stamp_style,
+      stamp_color: data.stamp_color,
+      redemption_mode:
+        data.variant === "points" ? data.redemption_mode : undefined,
+      catalog,
+      offset_rate: offsetRate,
+    },
+  };
+}
+
 // A card's stamps_required column is NOT NULL and 2..20; lucky/wheel/scratch
 // programs reuse the pity ceiling (defaulting to 10 when left unset) and
 // plant programs reuse visits-to-bloom to satisfy it. The type-specific
@@ -207,24 +300,7 @@ export function buildProgramFields(data: SaveProgramInput): {
   headStartPercent: number;
 } {
   if (data.type === "stamp") {
-    return {
-      type: "stamp",
-      stampsRequired: data.stamps_required,
-      headStart: data.head_start,
-      headStartPercent: data.head_start_percent ?? 20,
-      config: {
-        stamps_required: data.stamps_required,
-        reward_text: data.reward_text,
-        variant: data.variant ?? "dots",
-        points_per_visit: data.points_per_visit ?? 1,
-        stamp_mark: {
-          mode: data.stamp_mark_mode ?? "dot",
-          preset: data.stamp_mark_preset,
-        },
-        stamp_style: data.stamp_style,
-        stamp_color: data.stamp_color,
-      },
-    };
+    return buildStampProgramFields(data);
   }
   if (data.type === "lucky") {
     return {
