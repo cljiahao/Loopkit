@@ -12,6 +12,7 @@ import { ScratchCard } from "@/components/scratch-card";
 import { FlameLayers } from "@/components/flame-layers";
 import { StampDots } from "@/components/stamp-dots";
 import { PointsBar } from "@/components/points-bar";
+import { PointsCatalogPicker } from "./points-catalog-picker";
 import { LuckyBox } from "@/components/lucky-box";
 import { CardShell } from "@/components/card-shell";
 import { Button } from "@/components/ui/button";
@@ -49,6 +50,10 @@ export function ProgramCardStatus({
   // UX elsewhere on this page — there's no customer auth to key a
   // server-side "dismissed" flag off of.
   const [noticeOpen, setNoticeOpen] = useState(false);
+
+  const [freshVouchers, setFreshVouchers] = useState<
+    { id: string; rewardText: string; qr: string }[]
+  >([]);
 
   useEffect(() => {
     if (card.active || !card.replacedByName) return;
@@ -132,6 +137,21 @@ export function ProgramCardStatus({
     }
     if (view?.kind === "dots") {
       if (view.variant === "points") {
+        if (view.redemptionMode === "catalog") {
+          return (
+            <div className="flex w-full flex-col items-center gap-3">
+              <PointsBar filled={view.filled} total={view.total} />
+              <PointsCatalogPicker
+                programId={card.programId}
+                phone={phone}
+                items={(view.catalog ?? []).filter((item) => item.affordable)}
+                onSelected={(voucher) =>
+                  setFreshVouchers((prev) => [...prev, voucher])
+                }
+              />
+            </div>
+          );
+        }
         return <PointsBar filled={view.filled} total={view.total} />;
       }
       return (
@@ -194,6 +214,25 @@ export function ProgramCardStatus({
             dangerouslySetInnerHTML={{ __html: card.qr }}
           />
           <p className="text-xs text-muted-foreground">Show this to the shop</p>
+        </div>
+      )}
+      {(card.activeVouchers.length > 0 || freshVouchers.length > 0) && (
+        <div className="w-full space-y-2 border-t pt-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Your rewards
+          </p>
+          {[...card.activeVouchers, ...freshVouchers].map((v) => (
+            <div
+              key={v.id}
+              className="flex flex-col items-center gap-1.5 rounded-xl border p-2"
+            >
+              <p className="text-xs font-medium">{v.rewardText}</p>
+              <div
+                className="w-full max-w-[120px] rounded-lg border bg-white p-2 [&_svg]:h-auto [&_svg]:w-full"
+                dangerouslySetInnerHTML={{ __html: v.qr }}
+              />
+            </div>
+          ))}
         </div>
       )}
       <AlertDialog open={regenOpen} onOpenChange={setRegenOpen}>

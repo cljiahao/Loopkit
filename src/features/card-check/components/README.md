@@ -50,14 +50,28 @@ Client-side card-check UI.
   `src/lib/engine/stamp.ts`'s `StampVisualStyle`, plain-dots-only, free for
   every vendor) and accent hex; both default to `StampDots`'s own fallback
   (`"dots"` / the built-in gold) for programs saved before these fields
-  existed.
+  existed. Its points branch now renders `PointsCatalogPicker` (catalog
+  mode, filtered to affordable items) below the unchanged `PointsBar`, plus
+  a new "Your rewards" section listing every pending voucher's own QR — the
+  card's own `activeVouchers` (from `checkStatusAction`) plus any picked
+  this session (local `freshVouchers` state, since a freshly-created
+  voucher isn't in `card.activeVouchers` until the next full page fetch).
+- `points-catalog-picker.tsx` — `PointsCatalogPicker`: renders nothing when
+  passed an empty (already-filtered-to-affordable) item list; each button
+  opens an `AlertDialog` confirm before calling `selectPointsRewardAction`,
+  reports the new voucher's `{id, rewardText, qr}` back to its caller.
+- `points-catalog-picker.dom.test.tsx` — jsdom tests for
+  `PointsCatalogPicker`: renders nothing for an empty item list, and
+  confirms a redeem dialog then reports the new voucher on success.
 - `program-card-status.dom.test.tsx` — jsdom tests for `ProgramCardStatus`:
   verifies `PointsBar` vs `StampDots` renders per `view.variant` on a
   `"dots"` view, and `Cup` vs `Plant` renders per `view.variant` on a
   `"plant"` view (via `Cup`'s `data-cup-coffee` hook, not an implementation
   detail of its old stroked-outline shape); its plant/cup view fixtures
   include the `filled`/`total` counter fields `ProgressView`'s plant kind
-  now carries
+  now carries; also covers a catalog-mode points card (renders only the
+  affordable catalog buttons) and a card with pending `activeVouchers`
+  (renders a "Your rewards" section with each voucher's own QR)
 - `birthday-field.tsx` — `BirthdayField({vendorId, phone})`: optional,
   self-entered birthday (plain native `<select>`s for month/day, not the
   shadcn `Select` — Radix's pointer-event/`scrollIntoView` needs have no
