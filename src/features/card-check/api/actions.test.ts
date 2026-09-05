@@ -6,7 +6,11 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("@/lib/qr", () => ({ qrSvg: vi.fn(async () => "<svg></svg>") }));
 
-import { checkStatusAction, setCustomerBirthdayAction } from "./actions";
+import {
+  checkStatusAction,
+  setCustomerBirthdayAction,
+  selectPointsRewardAction,
+} from "./actions";
 import { STATUS_IDLE } from "../types";
 import { buildPlantConfig } from "@/lib/program-config";
 
@@ -254,5 +258,86 @@ describe("setCustomerBirthdayAction", () => {
     });
     expect(consoleError).toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+});
+
+describe("checkStatusAction surfaces active_vouchers", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("renders each active voucher's own QR", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          ...baseRow,
+          config: { variant: "points", redemption_mode: "catalog" },
+          active_vouchers: [
+            {
+              id: "v1",
+              voucher_token: "vtok1",
+              reward_text: "Free drink",
+              expires_at: null,
+            },
+          ],
+        },
+      ],
+      error: null,
+    });
+    const result = await checkStatusAction(
+      STATUS_IDLE,
+      formData({ phone: "91234567", vendor: "vend1" }),
+    );
+    expect(result.status).toBe("found");
+    expect(result.cards?.[0].activeVouchers).toHaveLength(1);
+    expect(result.cards?.[0].activeVouchers[0].rewardText).toBe("Free drink");
+    expect(result.cards?.[0].activeVouchers[0].qr).toContain("<svg");
+  });
+
+  it("defaults to an empty array for a non-points card", async () => {
+    rpcMock.mockResolvedValue({ data: [baseRow], error: null });
+    const result = await checkStatusAction(
+      STATUS_IDLE,
+      formData({ phone: "91234567", vendor: "vend1" }),
+    );
+    expect(result.cards?.[0].activeVouchers).toEqual([]);
+  });
+});
+
+describe("selectPointsRewardAction", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns the new voucher's id/reward text/qr on success", async () => {
+    rpcMock.mockResolvedValue({
+      data: { id: "v2", voucher_token: "vtok2", reward_text: "Free meal" },
+      error: null,
+    });
+    const res = await selectPointsRewardAction(
+      formData({ phone: "91234567", program: "p1", item_id: "b" }),
+    );
+    expect(rpcMock).toHaveBeenCalledWith("select_points_reward", {
+      p_program: "p1",
+      p_phone: "+6591234567",
+      p_item_id: "b",
+    });
+    expect(res).toEqual({
+      success: true,
+      id: "v2",
+      phone: "+6591234567",
+      rewardText: "Free meal",
+      qr: expect.stringContaining("<svg"),
+    });
+  });
+
+  it("surfaces a friendly message when the balance is too low", async () => {
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { message: "insufficient_points" },
+    });
+    const res = await selectPointsRewardAction(
+      formData({ phone: "91234567", program: "p1", item_id: "b" }),
+    );
+    expect(res).toEqual({
+      success: false,
+      error: "Not enough points for that reward yet.",
+    });
   });
 });

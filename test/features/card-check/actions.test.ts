@@ -146,6 +146,7 @@ describe("checkStatusAction", () => {
           active: true,
           replacedByName: null,
           carriedOverCount: null,
+          activeVouchers: [],
         },
       ],
     });

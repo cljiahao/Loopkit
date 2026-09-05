@@ -17,7 +17,9 @@ opt a Stamp program into granting a bonus stamp on it (migration `0041`).
 - `components/`
 - `index.ts` — barrel re-exporting `CheckForm`
 - `types.ts` — shared `CardStatus`/`StatusState` types and the
-  `STATUS_IDLE` constant
+  `STATUS_IDLE` constant. `CardStatus.activeVouchers` (Points Club catalog
+  mode only, empty array for every other mechanic) lists each currently
+  active voucher's own id/reward text/expiry/pre-rendered QR
 
 ## Connectivity
 

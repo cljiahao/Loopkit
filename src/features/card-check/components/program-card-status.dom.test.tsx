@@ -84,6 +84,7 @@ describe("ProgramCardStatus points variant", () => {
       active: true,
       replacedByName: null,
       carriedOverCount: null,
+      activeVouchers: [],
     };
     const { container } = render(
       <ProgramCardStatus
