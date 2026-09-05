@@ -497,6 +497,43 @@ export async function redeemAction(formData: FormData): Promise<CardResult> {
   };
 }
 
+const VOUCHER_ERROR_COPY: Record<string, string> = {
+  already_redeemed: "This reward has already been redeemed.",
+  expired: "This reward has expired.",
+};
+
+// Vendor scan/confirm redemption for one catalog-mode reward voucher —
+// distinct from redeemAction, which still redeems Stamp/Plant's single
+// fixed reward via the oldest-active-voucher path.
+export async function redeemVoucherAction(
+  formData: FormData,
+): Promise<ActionResult<{ rewardText: string }>> {
+  await requireVendor();
+
+  const token = String(formData.get("token") ?? "").trim();
+  if (!token) {
+    return { success: false, error: "Missing code." };
+  }
+
+  const supabase = await createServerClient();
+  const { data: voucher, error } = await supabase.rpc(
+    "redeem_voucher_by_token",
+    { p_token: token },
+  );
+  if (error || !voucher) {
+    console.error("redeem_voucher_by_token failed", error);
+    return {
+      success: false,
+      error:
+        VOUCHER_ERROR_COPY[error?.message ?? ""] ??
+        "Something went wrong. Try again.",
+    };
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true, rewardText: voucher.reward_text };
+}
+
 // Vendor-initiated at the register for an offset-mode Points Club
 // program: deducts p_points from the scanned card's balance and returns
 // the dollar figure for the vendor to apply manually at their own

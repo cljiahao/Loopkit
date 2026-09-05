@@ -370,6 +370,35 @@ export async function getProgramById(id: string): Promise<Program | null> {
   return data;
 }
 
+export type VoucherLookup = {
+  programId: string;
+  cardId: string;
+  voucherId: string;
+  phone: string;
+  rewardText: string;
+  status: string;
+};
+
+// Vendor-owned read for the redeem-voucher scan screen — voucher_by_token
+// is owner-gated (see migration 0043), so this only ever resolves a
+// voucher for a program the signed-in vendor owns.
+export async function getVoucherByToken(
+  token: string,
+): Promise<VoucherLookup | null> {
+  const supabase = await createServerClient();
+  const { data } = await supabase.rpc("voucher_by_token", { p_token: token });
+  const row = data?.[0];
+  if (!row) return null;
+  return {
+    programId: row.program_id,
+    cardId: row.card_id,
+    voucherId: row.voucher_id,
+    phone: row.phone,
+    rewardText: row.reward_text,
+    status: row.status,
+  };
+}
+
 // Pure: pick the current program — the requested id when the vendor owns it,
 // else the first program, else null (no programs yet).
 export function currentProgram(

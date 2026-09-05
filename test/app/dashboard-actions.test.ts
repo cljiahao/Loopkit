@@ -58,6 +58,7 @@ import {
   redeemPlantAction,
   applyPointsOffsetAction,
   resolveTokenAction,
+  redeemVoucherAction,
 } from "@/app/dashboard/actions";
 import { buildPlantConfig } from "@/lib/program";
 
@@ -540,5 +541,48 @@ describe("resolveTokenAction falls back to a voucher lookup", () => {
     rpcMock.mockResolvedValue({ data: [], error: null });
     const res = await resolveTokenAction(form({ token: "nope" }));
     expect(res.success).toBe(false);
+  });
+});
+
+describe("redeemVoucherAction", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireVendorMock.mockResolvedValue({ user: { id: "v1" } });
+  });
+
+  it("redeems the voucher and returns the reward text", async () => {
+    rpcMock.mockResolvedValue({
+      data: { id: "v1", reward_text: "Free drink", status: "redeemed" },
+      error: null,
+    });
+    const res = await redeemVoucherAction(form({ token: "tok123" }));
+    expect(rpcMock).toHaveBeenCalledWith("redeem_voucher_by_token", {
+      p_token: "tok123",
+    });
+    expect(res).toEqual({ success: true, rewardText: "Free drink" });
+  });
+
+  it("surfaces a friendly message for an already-redeemed voucher", async () => {
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { message: "already_redeemed" },
+    });
+    const res = await redeemVoucherAction(form({ token: "tok123" }));
+    expect(res).toEqual({
+      success: false,
+      error: "This reward has already been redeemed.",
+    });
+  });
+
+  it("surfaces a friendly message for an expired voucher", async () => {
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { message: "expired" },
+    });
+    const res = await redeemVoucherAction(form({ token: "tok123" }));
+    expect(res).toEqual({
+      success: false,
+      error: "This reward has expired.",
+    });
   });
 });

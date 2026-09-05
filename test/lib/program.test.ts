@@ -1,10 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+const { rpcMock } = vi.hoisted(() => ({ rpcMock: vi.fn() }));
+vi.mock("@/lib/supabase/server", () => ({
+  createServerClient: vi.fn(async () => ({ rpc: rpcMock })),
+}));
+
 import {
   programInputSchema,
   saveProgramSchema,
   canPrepProgram,
   getEntitlement,
   buildProgramFields,
+  getVoucherByToken,
 } from "@/lib/program";
 
 describe("programInputSchema", () => {
@@ -383,6 +390,42 @@ describe("saveProgramSchema points redemption fields", () => {
       catalog: JSON.stringify([{ label: "Free drink", cost: 100 }]),
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("getVoucherByToken", () => {
+  it("returns the resolved voucher row", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          program_id: "p1",
+          card_id: "c1",
+          voucher_id: "v1",
+          phone: "+6591234567",
+          reward_text: "Free drink",
+          status: "active",
+        },
+      ],
+      error: null,
+    });
+    const result = await getVoucherByToken("tok123");
+    expect(rpcMock).toHaveBeenCalledWith("voucher_by_token", {
+      p_token: "tok123",
+    });
+    expect(result).toEqual({
+      programId: "p1",
+      cardId: "c1",
+      voucherId: "v1",
+      phone: "+6591234567",
+      rewardText: "Free drink",
+      status: "active",
+    });
+  });
+
+  it("returns null when no voucher matches", async () => {
+    rpcMock.mockResolvedValue({ data: [], error: null });
+    const result = await getVoucherByToken("nope");
+    expect(result).toBeNull();
   });
 });
 
