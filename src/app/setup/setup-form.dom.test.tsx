@@ -362,7 +362,7 @@ describe("SetupForm type picker", () => {
     expect(
       screen.queryByRole("button", { name: "← Back" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Points required")).toBeInTheDocument();
+    expect(screen.getByLabelText("Points per visit")).toBeInTheDocument();
   });
 
   it("clicking Chance Card shows Spin the Wheel, Scratch Card, and Lucky Tap styles", async () => {
@@ -446,12 +446,8 @@ describe("SetupForm type picker", () => {
     );
     await user.click(screen.getByRole("button", { name: "Points Club" }));
     await goToBasics(user);
-    expect(screen.getByText("Points required")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Points required")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Points per visit")).toBeInTheDocument();
-
-    const stampsInput = screen.getByLabelText("Points required");
-    await user.clear(stampsInput);
-    await user.type(stampsInput, "500");
 
     const perVisitInput = screen.getByLabelText("Points per visit");
     await user.clear(perVisitInput);
@@ -466,8 +462,67 @@ describe("SetupForm type picker", () => {
     const submitted = saveMock.mock.calls[0][1] as FormData;
     expect(submitted.get("type")).toBe("stamp");
     expect(submitted.get("variant")).toBe("points");
-    expect(submitted.get("stamps_required")).toBe("500");
+    // Submitted via the new hidden input (Step 3) — buildProgramFields
+    // (Task 5) recomputes the real value server-side for both new modes,
+    // so this raw client-submitted number is no longer meaningful; only
+    // that the form still successfully submits *something* here matters.
+    expect(submitted.get("stamps_required")).toBeTruthy();
     expect(submitted.get("points_per_visit")).toBe("20");
+  });
+
+  it("Points Club defaults to catalog mode, hides stamps_required, and submits the catalog", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    // Points Club is a single-style family (like Stamp Card) — one click
+    // completes selection immediately, no style sub-step.
+    await user.click(screen.getByRole("button", { name: "Points Club" }));
+    await goToBasics(user);
+
+    expect(screen.queryByLabelText("Points required")).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText("Card name"), "Coffee Points");
+    await user.type(screen.getByLabelText("Reward"), "unused");
+    await goToRules(user);
+
+    expect(screen.getByText("Points redemption")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Create card" }));
+
+    expect(saveMock).toHaveBeenCalled();
+    const submitted = saveMock.mock.calls[0][1] as FormData;
+    expect(submitted.get("redemption_mode")).toBe("catalog");
+    expect(JSON.parse(submitted.get("catalog") as string)).toHaveLength(2);
+  });
+
+  it("picking Payment offset submits the rate instead of a catalog", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Points Club" }));
+    await goToBasics(user);
+    await user.type(screen.getByLabelText("Card name"), "Coffee Points");
+    await user.type(screen.getByLabelText("Reward"), "unused");
+    await goToRules(user);
+
+    await user.click(screen.getByRole("radio", { name: "Points = cash" }));
+    await user.click(screen.getByRole("button", { name: "Create card" }));
+
+    expect(saveMock).toHaveBeenCalled();
+    const submitted = saveMock.mock.calls[0][1] as FormData;
+    expect(submitted.get("redemption_mode")).toBe("offset");
+    expect(submitted.get("offset_rate_points")).toBe("100");
+    expect(submitted.get("offset_rate_dollars")).toBe("1");
   });
 
   it("Fill the Cup style saves type=plant with variant=cup and the fill-specific label", async () => {

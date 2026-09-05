@@ -28,13 +28,18 @@ import {
   Heart,
   Ticket,
   Palette,
+  Coins,
 } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type {
   StampMarkPreset,
   StampVisualStyle,
 } from "@/components/stamp-dots";
-import type { ScratchCoverStyle } from "@/lib/program-config";
+import type {
+  ScratchCoverStyle,
+  PointsRedemptionMode,
+  PointsCatalogItemInput,
+} from "@/lib/program-config";
 import {
   FAMILIES,
   familyOf,
@@ -95,6 +100,11 @@ const DEFAULT_SEGMENTS: SegmentInput[] = [
   { label: "Free item", weight: 1, is_reward: true },
 ];
 
+const DEFAULT_POINTS_CATALOG: PointsCatalogItemInput[] = [
+  { label: "Free drink", cost: 100 },
+  { label: "Free meal", cost: 300 },
+];
+
 export function SetupForm({
   program,
   isEdit,
@@ -143,6 +153,9 @@ export function SetupForm({
     scratch_cover_style?: string;
     stamp_style?: string;
     stamp_color?: string;
+    redemption_mode?: string;
+    catalog?: { id?: string; label?: string; cost?: number }[];
+    offset_rate?: { points?: number; dollars?: number };
   };
 
   const [variant, setVariant] = useState<
@@ -206,6 +219,20 @@ export function SetupForm({
   const [stampColor, setStampColor] = useState<string | undefined>(
     config.stamp_color,
   );
+  const [pointsRedemptionMode, setPointsRedemptionMode] =
+    useState<PointsRedemptionMode>(
+      (config.redemption_mode as PointsRedemptionMode | undefined) ?? "catalog",
+    );
+  const [pointsCatalog, setPointsCatalog] = useState<PointsCatalogItemInput[]>(
+    (config.catalog as PointsCatalogItemInput[] | undefined) ??
+      DEFAULT_POINTS_CATALOG,
+  );
+  const [offsetRatePoints, setOffsetRatePoints] = useState(
+    (config.offset_rate as { points?: number } | undefined)?.points ?? 100,
+  );
+  const [offsetRateDollars, setOffsetRateDollars] = useState(
+    (config.offset_rate as { dollars?: number } | undefined)?.dollars ?? 1,
+  );
 
   const [segments, setSegments] = useState<SegmentInput[]>(
     config.segments?.map((s) => ({
@@ -262,6 +289,16 @@ export function SetupForm({
     scratchCoverStyle,
     stampStyle,
     stampColor,
+    pointsRedemptionMode:
+      variant === "points" ? pointsRedemptionMode : undefined,
+    pointsCatalog:
+      variant === "points" && pointsRedemptionMode === "catalog"
+        ? pointsCatalog
+        : undefined,
+    pointsOffsetRate:
+      variant === "points" && pointsRedemptionMode === "offset"
+        ? { points: offsetRatePoints, dollars: offsetRateDollars }
+        : undefined,
   });
 
   // Sets the type plus its sensible numeric defaults, and always resets
@@ -285,6 +322,10 @@ export function SetupForm({
     setScratchCoverStyle("foil");
     setStampStyle("dots");
     setStampColor(undefined);
+    setPointsRedemptionMode("catalog");
+    setPointsCatalog(DEFAULT_POINTS_CATALOG);
+    setOffsetRatePoints(100);
+    setOffsetRateDollars(1);
   }
 
   // Clicking a family either completes the pick immediately (Lucky Tap has
@@ -313,6 +354,23 @@ export function SetupForm({
 
   function removeSegment(index: number) {
     setSegments((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function updatePointsCatalogItem(
+    index: number,
+    patch: Partial<PointsCatalogItemInput>,
+  ) {
+    setPointsCatalog((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, ...patch } : item)),
+    );
+  }
+
+  function addPointsCatalogItem() {
+    setPointsCatalog((prev) => [...prev, { label: "New reward", cost: 100 }]);
+  }
+
+  function removePointsCatalogItem(index: number) {
+    setPointsCatalog((prev) => prev.filter((_, i) => i !== index));
   }
 
   // Rendered twice below (mobile inline, desktop sticky) rather than
@@ -474,47 +532,52 @@ export function SetupForm({
                     className="h-11 rounded-xl"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="stamps_required" className={labelClass}>
-                    {variant === "flame"
-                      ? "Visits for full blaze"
-                      : variant === "points"
-                        ? "Points required"
-                        : "Stamps required"}
-                  </Label>
-                  <Input
-                    id="stamps_required"
+                {variant === "points" ? (
+                  <input
+                    type="hidden"
                     name="stamps_required"
-                    type="number"
-                    required
-                    min={2}
-                    max={variant === "points" ? 100000 : 20}
-                    placeholder={variant === "points" ? "500" : "10"}
                     value={stampsRequired}
-                    onChange={(e) => setStampsRequired(Number(e.target.value))}
-                    className="h-11 rounded-xl"
                   />
-                  <div className="flex gap-1.5">
-                    {(variant === "points"
-                      ? [100, 500, 1000]
-                      : [5, 10, 15]
-                    ).map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setStampsRequired(n)}
-                        className={cn(
-                          "h-7 rounded-lg border px-2.5 text-xs font-semibold transition-colors",
-                          stampsRequired === n
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "bg-card text-muted-foreground hover:bg-muted/50",
-                        )}
-                      >
-                        {n}
-                      </button>
-                    ))}
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="stamps_required" className={labelClass}>
+                      {variant === "flame"
+                        ? "Visits for full blaze"
+                        : "Stamps required"}
+                    </Label>
+                    <Input
+                      id="stamps_required"
+                      name="stamps_required"
+                      type="number"
+                      required
+                      min={2}
+                      max={20}
+                      placeholder="10"
+                      value={stampsRequired}
+                      onChange={(e) =>
+                        setStampsRequired(Number(e.target.value))
+                      }
+                      className="h-11 rounded-xl"
+                    />
+                    <div className="flex gap-1.5">
+                      {[5, 10, 15].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setStampsRequired(n)}
+                          className={cn(
+                            "h-7 rounded-lg border px-2.5 text-xs font-semibold transition-colors",
+                            stampsRequired === n
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "bg-card text-muted-foreground hover:bg-muted/50",
+                          )}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
                 {variant === "points" && (
                   <div className="space-y-2">
                     <Label htmlFor="points_per_visit" className={labelClass}>
@@ -948,6 +1011,134 @@ export function SetupForm({
                 type="hidden"
                 name="stamp_color"
                 value={stampColor ?? ""}
+              />
+            </Section>
+          )}
+
+          {type === "stamp" && variant === "points" && (
+            <Section
+              icon={<Coins className="size-4" />}
+              title="Points redemption"
+              description="How a customer spends their points once they have enough."
+            >
+              <ToggleGroup
+                type="single"
+                variant="outline"
+                value={pointsRedemptionMode}
+                onValueChange={(v) =>
+                  v && setPointsRedemptionMode(v as PointsRedemptionMode)
+                }
+                className="justify-start"
+              >
+                <ToggleGroupItem value="catalog">
+                  Reward catalog
+                </ToggleGroupItem>
+                <ToggleGroupItem value="offset">Points = cash</ToggleGroupItem>
+              </ToggleGroup>
+
+              {pointsRedemptionMode === "catalog" ? (
+                <div className="space-y-2">
+                  {pointsCatalog.map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 rounded-xl border p-2"
+                    >
+                      <Input
+                        type="text"
+                        required
+                        maxLength={40}
+                        value={item.label}
+                        onChange={(e) =>
+                          updatePointsCatalogItem(i, { label: e.target.value })
+                        }
+                        placeholder="Reward"
+                        className="h-11 flex-1 rounded-xl"
+                      />
+                      <Input
+                        type="number"
+                        required
+                        min={1}
+                        max={100000}
+                        value={item.cost}
+                        onChange={(e) =>
+                          updatePointsCatalogItem(i, {
+                            cost: Number(e.target.value),
+                          })
+                        }
+                        aria-label="Point cost"
+                        className="h-11 w-24 rounded-xl"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePointsCatalogItem(i)}
+                        disabled={pointsCatalog.length <= 2}
+                        className="h-11 shrink-0 rounded-xl border px-3 text-xs font-semibold text-muted-foreground hover:bg-muted/50 disabled:opacity-40"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addPointsCatalogItem}
+                    disabled={pointsCatalog.length >= 6}
+                    className="h-11 w-full rounded-xl border text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted/50 disabled:opacity-40"
+                  >
+                    Add reward
+                  </button>
+                  <input
+                    type="hidden"
+                    name="catalog"
+                    value={JSON.stringify(pointsCatalog)}
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    required
+                    min={1}
+                    max={100000}
+                    value={offsetRatePoints}
+                    onChange={(e) =>
+                      setOffsetRatePoints(Number(e.target.value))
+                    }
+                    aria-label="Points"
+                    className="h-11 w-24 rounded-xl"
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    points =
+                  </span>
+                  <Input
+                    type="number"
+                    required
+                    min={0.01}
+                    step={0.01}
+                    max={100000}
+                    value={offsetRateDollars}
+                    onChange={(e) =>
+                      setOffsetRateDollars(Number(e.target.value))
+                    }
+                    aria-label="Dollars off"
+                    className="h-11 w-24 rounded-xl"
+                  />
+                  <span className="text-sm text-muted-foreground">off</span>
+                  <input
+                    type="hidden"
+                    name="offset_rate_points"
+                    value={offsetRatePoints}
+                  />
+                  <input
+                    type="hidden"
+                    name="offset_rate_dollars"
+                    value={offsetRateDollars}
+                  />
+                </div>
+              )}
+              <input
+                type="hidden"
+                name="redemption_mode"
+                value={pointsRedemptionMode}
               />
             </Section>
           )}
