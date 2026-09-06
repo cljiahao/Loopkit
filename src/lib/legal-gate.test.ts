@@ -1,10 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { LEGAL_VERSIONS } from "@merqo/ui";
 
+const { redirectMock } = vi.hoisted(() => ({ redirectMock: vi.fn() }));
+
 vi.mock("@/lib/supabase/server", () => ({ createServiceClient: vi.fn() }));
+vi.mock("next/navigation", () => ({ redirect: redirectMock }));
 
 const { createServiceClient } = await import("@/lib/supabase/server");
-import { checkLegalAcceptance } from "./legal-gate";
+import {
+  checkLegalAcceptance,
+  requireCurrentLegalAcceptance,
+} from "./legal-gate";
 
 const originalFetch = global.fetch;
 
@@ -30,6 +36,7 @@ beforeEach(() => {
   process.env.MERQO_BASE_URL = "https://merqo.example.com";
   process.env.MERQO_CUSTOMER_SECRET = "test-secret";
   vi.mocked(createServiceClient).mockReset();
+  redirectMock.mockReset();
   global.fetch = originalFetch;
 });
 
@@ -145,5 +152,40 @@ describe("checkLegalAcceptance", () => {
 
     expect(await checkLegalAcceptance("vendor@example.com")).toBe(false);
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("requireCurrentLegalAcceptance", () => {
+  it("is a no-op when email is null or undefined", async () => {
+    const fetchSpy = vi.fn();
+    global.fetch = fetchSpy as never;
+
+    await requireCurrentLegalAcceptance(null);
+    await requireCurrentLegalAcceptance(undefined);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(redirectMock).not.toHaveBeenCalled();
+  });
+
+  it("redirects to /legal/accept when acceptance is not current", async () => {
+    const { client } = clientWith({
+      cached: { checked_at: new Date().toISOString(), is_current: false },
+    });
+    vi.mocked(createServiceClient).mockResolvedValue(client as never);
+
+    await requireCurrentLegalAcceptance("vendor@example.com");
+
+    expect(redirectMock).toHaveBeenCalledWith("/legal/accept");
+  });
+
+  it("does not redirect when acceptance is current", async () => {
+    const { client } = clientWith({
+      cached: { checked_at: new Date().toISOString(), is_current: true },
+    });
+    vi.mocked(createServiceClient).mockResolvedValue(client as never);
+
+    await requireCurrentLegalAcceptance("vendor@example.com");
+
+    expect(redirectMock).not.toHaveBeenCalled();
   });
 });

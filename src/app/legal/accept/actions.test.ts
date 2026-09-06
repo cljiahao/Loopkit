@@ -227,4 +227,34 @@ describe("acceptLegalTerms", () => {
 
     expect(redirectMock).toHaveBeenCalledWith("/dashboard/plan");
   });
+
+  it("falls back to x-real-ip when x-forwarded-for is absent", async () => {
+    getUserMock.mockResolvedValue({
+      data: { user: { id: "u1", email: "vendor@business.sg" } },
+    });
+    headersMock.mockResolvedValue(
+      new Headers({ "x-real-ip": "198.51.100.7", "user-agent": REAL_UA }),
+    );
+    const fetchSpy = okFetch();
+    global.fetch = fetchSpy as never;
+
+    await acceptLegalTerms(formData("/dashboard"));
+
+    const bodies = fetchSpy.mock.calls.map((c) => JSON.parse(c[1].body));
+    expect(bodies[0].ip).toBe("198.51.100.7");
+  });
+
+  it('falls back to "unknown" when neither IP header is present', async () => {
+    getUserMock.mockResolvedValue({
+      data: { user: { id: "u1", email: "vendor@business.sg" } },
+    });
+    headersMock.mockResolvedValue(new Headers({ "user-agent": REAL_UA }));
+    const fetchSpy = okFetch();
+    global.fetch = fetchSpy as never;
+
+    await acceptLegalTerms(formData("/dashboard"));
+
+    const bodies = fetchSpy.mock.calls.map((c) => JSON.parse(c[1].body));
+    expect(bodies[0].ip).toBe("unknown");
+  });
 });

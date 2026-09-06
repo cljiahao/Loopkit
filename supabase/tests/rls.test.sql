@@ -647,7 +647,7 @@ select throws_ok(
 
 reset role;
 
--- ── legal_check_state (0043): service-role-only TTL cache, no client access ──
+-- ── legal_check_state (0044): service-role-only TTL cache, no client access ──
 -- Same shape as pricing/telegram_link_tokens: RLS on, zero policies, only the
 -- service-role client (src/lib/legal-gate.ts) touches it.
 select ok(

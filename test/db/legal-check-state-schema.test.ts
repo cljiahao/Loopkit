@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
-// Cheap guard against silent drift in the hand-written 0043 migration —
+// Cheap guard against silent drift in the hand-written 0044 migration —
 // regex presence checks only. Real behavior (RLS enabled, zero policies,
 // anon/authenticated both rejected) is covered by supabase/tests/rls.test.sql
 // (pgTAP, run against real Postgres in CI's "db" job).
