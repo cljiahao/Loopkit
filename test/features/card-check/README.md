@@ -10,7 +10,8 @@ client and `qrSvg` mocked via `vi.mock`/`vi.hoisted`.
 - `actions.test.ts` — `checkStatusAction`: rejects an invalid phone or a
   missing vendor without calling the RPC, calls `vendor_join` with the
   normalized phone, returns one card per row (using `stamp_count`, not the
-  state blob), handles multiple programs at once, marks a card inactive
+  state blob) including `vendor_join`'s `active_vouchers` as each card's
+  `activeVouchers`, handles multiple programs at once, marks a card inactive
   without dropping it when its program is no longer active, surfaces a
   retired card's replacement name and carried-over stamp count, reports
   `expired` once a card's expiry window has elapsed, reports `"none"` when
