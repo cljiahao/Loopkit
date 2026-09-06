@@ -24,6 +24,7 @@ function baseCard(overrides: Partial<CardStatus>): CardStatus {
     active: true,
     replacedByName: null,
     carriedOverCount: null,
+    activeVouchers: [],
     qr: null,
     view: {
       kind: "plant",
@@ -84,6 +85,7 @@ describe("ProgramCardStatus points variant", () => {
       active: true,
       replacedByName: null,
       carriedOverCount: null,
+      activeVouchers: [],
     };
     const { container } = render(
       <ProgramCardStatus
@@ -232,5 +234,83 @@ describe("ProgramCardStatus cup variant", () => {
     expect(
       container.querySelector('[data-cup-coffee="true"]'),
     ).not.toBeInTheDocument();
+  });
+});
+
+describe("ProgramCardStatus points catalog mode", () => {
+  it("shows the reward catalog for a points card in catalog mode", () => {
+    render(
+      <ProgramCardStatus
+        card={{
+          programId: "p1",
+          name: "Coffee Points",
+          label: "150 points",
+          view: {
+            kind: "dots",
+            filled: 150,
+            total: 300,
+            variant: "points",
+            redemptionMode: "catalog",
+            catalog: [
+              { id: "a", label: "Free drink", cost: 100, affordable: true },
+              { id: "b", label: "Free meal", cost: 300, affordable: false },
+            ],
+          },
+          rewardReady: true,
+          reward_text: "unused",
+          qr: "",
+          expired: false,
+          active: true,
+          replacedByName: null,
+          carriedOverCount: null,
+          activeVouchers: [],
+        }}
+        phone="+6591234567"
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /free drink/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /free meal/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders each pending voucher's own QR under Your rewards", () => {
+    render(
+      <ProgramCardStatus
+        card={{
+          programId: "p1",
+          name: "Coffee Points",
+          label: "50 points",
+          view: {
+            kind: "dots",
+            filled: 50,
+            total: 300,
+            variant: "points",
+            redemptionMode: "catalog",
+            catalog: [],
+          },
+          rewardReady: false,
+          reward_text: "unused",
+          qr: "",
+          expired: false,
+          active: true,
+          replacedByName: null,
+          carriedOverCount: null,
+          activeVouchers: [
+            {
+              id: "v1",
+              rewardText: "Free drink",
+              expiresAt: null,
+              qr: "<svg>mock</svg>",
+            },
+          ],
+        }}
+        phone="+6591234567"
+      />,
+    );
+    expect(screen.getByText("Your rewards")).toBeInTheDocument();
+    expect(screen.getByText("Free drink")).toBeInTheDocument();
   });
 });

@@ -77,7 +77,16 @@ export async function stampAction(formData: FormData): Promise<CardResult> {
   return {
     success: true,
     card: { id: card.id, phone: card.phone, stamp_count: card.stamp_count },
-    rewardReady: rewardReady(card.stamp_count, program.stamps_required),
+    rewardReady: getProgress(
+      {
+        type: program.type,
+        config: program.config,
+        stamps_required: program.stamps_required,
+        reward_text: program.reward_text,
+      },
+      { state: {}, stamp_count: card.stamp_count, reward_count: 0 },
+      new Date(),
+    ).rewardReady,
   };
 }
 
@@ -295,9 +304,19 @@ export async function regenerateCardAction(
 
 // Resolve a scanned card_token to its phone via the owner-gated card_by_token
 // RPC. Identifies only — the phone flows into the existing stamp/play action.
-export async function resolveTokenAction(
-  formData: FormData,
-): Promise<ActionResult<{ phone: string; programId: string }>> {
+// A card-token miss falls back to voucher_by_token: the same QR surface now
+// also carries Points Club voucher tokens minted at catalog redemption.
+export async function resolveTokenAction(formData: FormData): Promise<
+  ActionResult<
+    | { kind: "card"; phone: string; programId: string }
+    | {
+        kind: "voucher";
+        phone: string;
+        voucherToken: string;
+        rewardText: string;
+      }
+  >
+> {
   await requireVendor();
   const token = String(formData.get("token") ?? "").trim();
   if (!token) return { success: false, error: "No code scanned." };
@@ -310,9 +329,35 @@ export async function resolveTokenAction(
     console.error("card_by_token failed", error.message);
     return { success: false, error: "Couldn't read that code." };
   }
-  const row = data?.[0];
-  if (!row) return { success: false, error: "That card isn't for this shop." };
-  return { success: true, phone: row.phone, programId: row.program_id };
+  const cardRow = data?.[0];
+  if (cardRow) {
+    return {
+      success: true,
+      kind: "card",
+      phone: cardRow.phone,
+      programId: cardRow.program_id,
+    };
+  }
+
+  const { data: voucherData, error: voucherError } = await supabase.rpc(
+    "voucher_by_token",
+    { p_token: token },
+  );
+  if (voucherError) {
+    console.error("voucher_by_token failed", voucherError.message);
+    return { success: false, error: "Couldn't read that code." };
+  }
+  const voucherRow = voucherData?.[0];
+  if (!voucherRow) {
+    return { success: false, error: "That card isn't for this shop." };
+  }
+  return {
+    success: true,
+    kind: "voucher",
+    phone: voucherRow.phone,
+    voucherToken: token,
+    rewardText: voucherRow.reward_text,
+  };
 }
 
 type LookupResult = ActionResult<{ card: StampCard; progress: Progress }>;
@@ -449,6 +494,83 @@ export async function redeemAction(formData: FormData): Promise<CardResult> {
     success: true,
     card: { id: card.id, phone: card.phone, stamp_count: card.stamp_count },
     rewardReady: false,
+  };
+}
+
+const VOUCHER_ERROR_COPY: Record<string, string> = {
+  already_redeemed: "This reward has already been redeemed.",
+  expired: "This reward has expired.",
+};
+
+// Vendor scan/confirm redemption for one catalog-mode reward voucher —
+// distinct from redeemAction, which still redeems Stamp/Plant's single
+// fixed reward via the oldest-active-voucher path.
+export async function redeemVoucherAction(
+  formData: FormData,
+): Promise<ActionResult<{ rewardText: string }>> {
+  await requireVendor();
+
+  const token = String(formData.get("token") ?? "").trim();
+  if (!token) {
+    return { success: false, error: "Missing code." };
+  }
+
+  const supabase = await createServerClient();
+  const { data: voucher, error } = await supabase.rpc(
+    "redeem_voucher_by_token",
+    { p_token: token },
+  );
+  if (error || !voucher) {
+    console.error("redeem_voucher_by_token failed", error);
+    return {
+      success: false,
+      error:
+        VOUCHER_ERROR_COPY[error?.message ?? ""] ??
+        "Something went wrong. Try again.",
+    };
+  }
+
+  revalidatePath("/dashboard");
+  return { success: true, rewardText: voucher.reward_text };
+}
+
+// Vendor-initiated at the register for an offset-mode Points Club
+// program: deducts p_points from the scanned card's balance and returns
+// the dollar figure for the vendor to apply manually at their own
+// register — loopkit never touches payment processing.
+export async function applyPointsOffsetAction(
+  formData: FormData,
+): Promise<
+  ActionResult<{ phone: string; stampCount: number; dollars: number }>
+> {
+  await requireVendor();
+
+  const cardId = String(formData.get("card_id") ?? "").trim();
+  if (!cardId) {
+    return { success: false, error: "Missing card." };
+  }
+  const points = Number(formData.get("points"));
+  if (!Number.isInteger(points) || points <= 0) {
+    return { success: false, error: "Enter a whole number of points." };
+  }
+
+  const supabase = await createServerClient();
+  const { data, error } = await supabase.rpc("apply_points_offset", {
+    p_card: cardId,
+    p_points: points,
+  });
+  const row = data?.[0];
+  if (error || !row) {
+    console.error("apply_points_offset failed", error);
+    return { success: false, error: "Something went wrong. Try again." };
+  }
+
+  revalidatePath("/dashboard");
+  return {
+    success: true,
+    phone: row.phone,
+    stampCount: row.stamp_count,
+    dollars: row.dollars,
   };
 }
 

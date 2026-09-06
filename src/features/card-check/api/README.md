@@ -19,24 +19,37 @@ Server-side card-check logic: the public `"use server"` actions behind
   next state via the TS engine's `applyVisit` and finishes it through
   `apply_referral_credit` — wrapped so a failure there never affects
   `checkStatusAction`'s own result, the guest's own join having already
-  succeeded by that point. `regenerateCardAction`: reissues one program's
-  card via the `regenerate_card` RPC for a lost or expired card, same
-  phone-as-identity trust model, acting on one program at a time (invoked
-  per-card from the check-form's card list). `setCustomerBirthdayAction`:
-  optional, self-entered birthday for the birthday-bonus feature (migration
-  `0041`) — same anonymous, phone-scoped trust model as the two actions
-  above; calls `loopkit.set_customer_birthday`, which only ever UPDATEs an
+  succeeded by that point. It also builds each card's `activeVouchers` from
+  `vendor_join`'s `active_vouchers` jsonb column (Points Club catalog mode
+  only, empty array otherwise), pre-rendering each voucher's own QR
+  (`qrSvg(voucher_token)`) the same way the card's own `qr` field already
+  works. `regenerateCardAction`: reissues one program's card via the
+  `regenerate_card` RPC for a lost or expired card, same phone-as-identity
+  trust model, acting on one program at a time (invoked per-card from the
+  check-form's card list). `setCustomerBirthdayAction`: optional,
+  self-entered birthday for the birthday-bonus feature (migration `0041`)
+  — same anonymous, phone-scoped trust model as the two actions above;
+  calls `loopkit.set_customer_birthday`, which only ever UPDATEs an
   existing `loopkit.customers` row for the exact `(vendor, phone)` pair,
-  never creates one
+  never creates one. `selectPointsRewardAction`: customer self-service
+  catalog pick, same trust model — calls the `select_points_reward` RPC
+  (migration `0043`, re-derives cost/label server-side) and returns the
+  newly-minted voucher's id/reward text/QR, or a friendly
+  "not enough points" message when the RPC reports `insufficient_points`
 - `actions.test.ts` — vitest tests for `checkStatusAction`'s referral path:
   dispatches to `vendor_join` vs. `vendor_join_referred` based on whether
   `ref` is present, calls `apply_referral_credit` only for a pending
   non-stamp credit (never for an already-credited stamp-type row), and logs
   (without throwing or changing the result) when the finish call fails.
-  `setCustomerBirthdayAction` tests: submits the normalized phone and
-  numeric month/day, rejects an invalid phone/missing vendor/out-of-range
-  month or day without calling the RPC, and surfaces a friendly error on
-  RPC failure
+  `checkStatusAction` active-vouchers tests: each `active_vouchers` row
+  becomes an `activeVouchers` entry with its own rendered QR, and a
+  non-points card gets an empty array. `setCustomerBirthdayAction` tests:
+  submits the normalized phone and numeric month/day, rejects an invalid
+  phone/missing vendor/out-of-range month or day without calling the RPC,
+  and surfaces a friendly error on RPC failure. `selectPointsRewardAction`
+  tests: returns the new voucher's id/reward text/QR on success, and
+  surfaces "Not enough points for that reward yet." when the RPC errors
+  with `insufficient_points`
 
 ## Connectivity
 

@@ -25,6 +25,7 @@ type VendorJoinRow = {
   replaced_by_name: string | null;
   replaced_by_stamp_count: number | null;
   vendor_avatar_url: string | null;
+  active_vouchers: unknown;
   // Only ever set by vendor_join_referred, not plain vendor_join — see
   // ReferralCredit below.
   referral_credit?: unknown;
@@ -182,6 +183,23 @@ export async function checkStatusAction(
         row.cycle_started_at != null &&
         isCardExpired(row.cycle_started_at, row.expiry_days, new Date());
 
+      const rawVouchers = Array.isArray(row.active_vouchers)
+        ? (row.active_vouchers as {
+            id: string;
+            voucher_token: string;
+            reward_text: string;
+            expires_at: string | null;
+          }[])
+        : [];
+      const activeVouchers = await Promise.all(
+        rawVouchers.map(async (v) => ({
+          id: v.id,
+          rewardText: v.reward_text,
+          expiresAt: v.expires_at,
+          qr: await qrSvg(v.voucher_token),
+        })),
+      );
+
       return {
         programId: row.program_id,
         name: row.name,
@@ -197,6 +215,7 @@ export async function checkStatusAction(
           row.replaced_by_stamp_count && row.replaced_by_stamp_count > 0
             ? row.replaced_by_stamp_count
             : null,
+        activeVouchers,
       };
     }),
   );
@@ -280,4 +299,52 @@ export async function setCustomerBirthdayAction(
   }
 
   return { success: true };
+}
+
+// Customer self-service catalog pick — same anonymous, phone-scoped trust
+// model as regenerateCardAction/setCustomerBirthdayAction. The RPC
+// re-derives cost/label from the program's own config server-side (see
+// migration 0043) — nothing here is trusted from the client beyond which
+// item id was tapped.
+export async function selectPointsRewardAction(
+  formData: FormData,
+): Promise<
+  ActionResult<{ id: string; phone: string; rewardText: string; qr: string }>
+> {
+  const normalized = normalizePhone(String(formData.get("phone") ?? ""));
+  if (!normalized.ok) {
+    return { success: false, error: "Enter a valid Singapore phone number." };
+  }
+  const programId = String(formData.get("program") ?? "");
+  if (!programId) {
+    return { success: false, error: "Missing program." };
+  }
+  const itemId = String(formData.get("item_id") ?? "");
+  if (!itemId) {
+    return { success: false, error: "Missing reward." };
+  }
+
+  const supabase = await createServerClient();
+  const { data: voucher, error } = await supabase.rpc("select_points_reward", {
+    p_program: programId,
+    p_phone: normalized.phone,
+    p_item_id: itemId,
+  });
+  if (error || !voucher) {
+    console.error("select_points_reward failed", error);
+    const message =
+      error?.message === "insufficient_points"
+        ? "Not enough points for that reward yet."
+        : "Something went wrong. Try again.";
+    return { success: false, error: message };
+  }
+
+  const qr = await qrSvg(voucher.voucher_token ?? "");
+  return {
+    success: true,
+    id: voucher.id,
+    phone: normalized.phone,
+    rewardText: voucher.reward_text,
+    qr,
+  };
 }

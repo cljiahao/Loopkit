@@ -326,3 +326,122 @@ describe("stampStrategy stamp_style/stamp_color passthrough", () => {
     expect(p.view).toMatchObject({ style: undefined, color: undefined });
   });
 });
+
+describe("stampStrategy points catalog mode", () => {
+  const catalogCfg = {
+    stamps_required: 300,
+    reward_text: "unused",
+    variant: "points" as const,
+    redemption_mode: "catalog" as const,
+    catalog: [
+      { id: "a", label: "Free drink", cost: 100 },
+      { id: "b", label: "Free meal", cost: 300 },
+    ],
+  };
+
+  it("rewardReady is true once the balance covers the cheapest item", () => {
+    const notReady = stampStrategy.progress(
+      { stamp_count: 50, reward_count: 0 },
+      catalogCfg,
+      now,
+    );
+    expect(notReady.rewardReady).toBe(false);
+    const ready = stampStrategy.progress(
+      { stamp_count: 100, reward_count: 0 },
+      catalogCfg,
+      now,
+    );
+    expect(ready.rewardReady).toBe(true);
+  });
+
+  it("marks each catalog item's affordable flag against the current balance", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 150, reward_count: 0 },
+      catalogCfg,
+      now,
+    );
+    expect(p.view).toMatchObject({
+      redemptionMode: "catalog",
+      catalog: [
+        { id: "a", label: "Free drink", cost: 100, affordable: true },
+        { id: "b", label: "Free meal", cost: 300, affordable: false },
+      ],
+    });
+  });
+
+  it("labels the view with the raw balance, not a filled/total fraction", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 150, reward_count: 0 },
+      catalogCfg,
+      now,
+    );
+    expect(p.label).toBe("150 points");
+  });
+});
+
+describe("stampStrategy points offset mode", () => {
+  const offsetCfg = {
+    stamps_required: 100,
+    reward_text: "unused",
+    variant: "points" as const,
+    redemption_mode: "offset" as const,
+    offset_rate: { points: 100, dollars: 1 },
+  };
+
+  it("rewardReady is true once the balance is above zero", () => {
+    const empty = stampStrategy.progress(
+      { stamp_count: 0, reward_count: 0 },
+      offsetCfg,
+      now,
+    );
+    expect(empty.rewardReady).toBe(false);
+    const some = stampStrategy.progress(
+      { stamp_count: 1, reward_count: 0 },
+      offsetCfg,
+      now,
+    );
+    expect(some.rewardReady).toBe(true);
+  });
+
+  it("computes offsetValue from the balance and the configured rate", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 250, reward_count: 0 },
+      offsetCfg,
+      now,
+    );
+    expect(p.view).toMatchObject({
+      redemptionMode: "offset",
+      offsetRate: { points: 100, dollars: 1 },
+      offsetValue: 2.5,
+    });
+  });
+
+  it("never carries a catalog for offset mode", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 250, reward_count: 0 },
+      offsetCfg,
+      now,
+    );
+    expect(p.view).toMatchObject({ catalog: undefined });
+  });
+});
+
+describe("stampStrategy points, no redemption_mode set (leaves new fields undefined)", () => {
+  it("leaves redemptionMode/catalog/offsetRate/offsetValue undefined", () => {
+    const p = stampStrategy.progress(
+      { stamp_count: 40, reward_count: 0 },
+      {
+        stamps_required: 100,
+        reward_text: "free kopi",
+        variant: "points" as const,
+      },
+      now,
+    );
+    expect(p.view).toMatchObject({
+      redemptionMode: undefined,
+      catalog: undefined,
+      offsetRate: undefined,
+      offsetValue: undefined,
+    });
+  });
+});

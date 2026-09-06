@@ -1,10 +1,17 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+const { rpcMock } = vi.hoisted(() => ({ rpcMock: vi.fn() }));
+vi.mock("@/lib/supabase/server", () => ({
+  createServerClient: vi.fn(async () => ({ rpc: rpcMock })),
+}));
+
 import {
   programInputSchema,
   saveProgramSchema,
   canPrepProgram,
   getEntitlement,
   buildProgramFields,
+  getVoucherByToken,
 } from "@/lib/program";
 
 describe("programInputSchema", () => {
@@ -326,5 +333,164 @@ describe("buildProgramFields stamp_mark", () => {
       mode: "preset",
       preset: "gift",
     });
+  });
+});
+
+describe("saveProgramSchema points redemption fields", () => {
+  it("accepts a catalog-mode points program", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: "500",
+      reward_text: "unused",
+      head_start: "false",
+      variant: "points",
+      redemption_mode: "catalog",
+      catalog: JSON.stringify([
+        { label: "Free drink", cost: 100 },
+        { label: "Free meal", cost: 300 },
+      ]),
+    });
+    expect(result.success).toBe(true);
+    if (result.success && result.data.type === "stamp") {
+      expect(result.data.redemption_mode).toBe("catalog");
+      expect(result.data.catalog).toHaveLength(2);
+    }
+  });
+
+  it("accepts an offset-mode points program", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: "500",
+      reward_text: "unused",
+      head_start: "false",
+      variant: "points",
+      redemption_mode: "offset",
+      offset_rate_points: "100",
+      offset_rate_dollars: "1",
+    });
+    expect(result.success).toBe(true);
+    if (result.success && result.data.type === "stamp") {
+      expect(result.data.redemption_mode).toBe("offset");
+      expect(result.data.offset_rate_points).toBe(100);
+      expect(result.data.offset_rate_dollars).toBe(1);
+    }
+  });
+
+  it("rejects a catalog with fewer than 2 items", () => {
+    const result = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: "500",
+      reward_text: "unused",
+      head_start: "false",
+      variant: "points",
+      redemption_mode: "catalog",
+      catalog: JSON.stringify([{ label: "Free drink", cost: 100 }]),
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("getVoucherByToken", () => {
+  it("returns the resolved voucher row", async () => {
+    rpcMock.mockResolvedValue({
+      data: [
+        {
+          program_id: "p1",
+          card_id: "c1",
+          voucher_id: "v1",
+          phone: "+6591234567",
+          reward_text: "Free drink",
+          status: "active",
+        },
+      ],
+      error: null,
+    });
+    const result = await getVoucherByToken("tok123");
+    expect(rpcMock).toHaveBeenCalledWith("voucher_by_token", {
+      p_token: "tok123",
+    });
+    expect(result).toEqual({
+      programId: "p1",
+      cardId: "c1",
+      voucherId: "v1",
+      phone: "+6591234567",
+      rewardText: "Free drink",
+      status: "active",
+    });
+  });
+
+  it("returns null when no voucher matches", async () => {
+    rpcMock.mockResolvedValue({ data: [], error: null });
+    const result = await getVoucherByToken("nope");
+    expect(result).toBeNull();
+  });
+});
+
+describe("buildProgramFields points redemption modes", () => {
+  it("catalog mode: assigns each item a fresh id and sets stamps_required to the highest cost", () => {
+    const parsed = saveProgramSchema.parse({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: "500",
+      reward_text: "unused",
+      head_start: "false",
+      variant: "points",
+      redemption_mode: "catalog",
+      catalog: JSON.stringify([
+        { label: "Free drink", cost: 100 },
+        { label: "Free meal", cost: 300 },
+      ]),
+    });
+    const { config, stampsRequired } = buildProgramFields(parsed);
+    const c = config as {
+      redemption_mode?: string;
+      catalog?: { id: string; label: string; cost: number }[];
+    };
+    expect(c.redemption_mode).toBe("catalog");
+    expect(c.catalog).toHaveLength(2);
+    expect(c.catalog?.every((item) => typeof item.id === "string")).toBe(true);
+    expect(stampsRequired).toBe(300);
+  });
+
+  it("offset mode: builds config.offset_rate and sets stamps_required to the rate's points", () => {
+    const parsed = saveProgramSchema.parse({
+      type: "stamp",
+      name: "Coffee Points",
+      stamps_required: "500",
+      reward_text: "unused",
+      head_start: "false",
+      variant: "points",
+      redemption_mode: "offset",
+      offset_rate_points: "100",
+      offset_rate_dollars: "1",
+    });
+    const { config, stampsRequired } = buildProgramFields(parsed);
+    expect((config as { offset_rate?: unknown }).offset_rate).toEqual({
+      points: 100,
+      dollars: 1,
+    });
+    expect(stampsRequired).toBe(100);
+  });
+
+  it("leaves redemption_mode/catalog/offset_rate undefined for a non-points stamp program", () => {
+    const parsed = saveProgramSchema.parse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free kopi",
+      head_start: "false",
+    });
+    const { config } = buildProgramFields(parsed);
+    const c = config as {
+      redemption_mode?: unknown;
+      catalog?: unknown;
+      offset_rate?: unknown;
+    };
+    expect(c.redemption_mode).toBeUndefined();
+    expect(c.catalog).toBeUndefined();
+    expect(c.offset_rate).toBeUndefined();
   });
 });

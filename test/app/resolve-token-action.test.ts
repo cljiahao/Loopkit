@@ -30,6 +30,7 @@ describe("resolveTokenAction", () => {
     const res = await resolveTokenAction(fd("tok"));
     expect(res).toEqual({
       success: true,
+      kind: "card",
       phone: "+6591234567",
       programId: "p",
     });

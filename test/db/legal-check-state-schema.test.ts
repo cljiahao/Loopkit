@@ -7,11 +7,11 @@ import path from "node:path";
 // anon/authenticated both rejected) is covered by supabase/tests/rls.test.sql
 // (pgTAP, run against real Postgres in CI's "db" job).
 const sql = readFileSync(
-  path.join(process.cwd(), "supabase/migrations/0043_legal_check_state.sql"),
+  path.join(process.cwd(), "supabase/migrations/0044_legal_check_state.sql"),
   "utf8",
 );
 
-describe("0043_legal_check_state.sql", () => {
+describe("0044_legal_check_state.sql", () => {
   it("creates the table keyed by email", () => {
     expect(sql).toMatch(/create table loopkit\.legal_check_state/i);
     expect(sql).toMatch(/email\s+TEXT\s+PRIMARY KEY/);

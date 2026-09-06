@@ -12,6 +12,7 @@ import {
   regenerateCardAction,
 } from "@/app/dashboard/actions";
 import { RedeemButton } from "@/app/dashboard/redeem-button";
+import { PointsOffsetForm } from "@/app/dashboard/points-offset-form";
 import { ScanButton } from "@/app/dashboard/scan-button";
 import { Plant } from "@/components/plant";
 import { Cup } from "@/components/cup";
@@ -95,6 +96,41 @@ function luckyResultMessage(
   return <p className="mt-1 text-sm text-muted-foreground">{result.label}</p>;
 }
 
+// Reward-ready redemption control for a stamp-mode result — three mutually
+// exclusive shapes (offset apply form, catalog no-op note, or the classic
+// RedeemButton) kept in one place so the caller's JSX has no nested ternary.
+function RedemptionControl({
+  mode,
+  card,
+  stampsRequired,
+  onOffsetApplied,
+  onRedeemed,
+}: {
+  mode?: "catalog" | "offset";
+  card: StampCard;
+  stampsRequired: number;
+  onOffsetApplied: (card: StampCard, dollars: number) => void;
+  onRedeemed: (card: StampCard) => void;
+}) {
+  if (mode === "offset") {
+    return <PointsOffsetForm card={card} onApplied={onOffsetApplied} />;
+  }
+  if (mode === "catalog") {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Customer redeems their picked reward from their own card.
+      </p>
+    );
+  }
+  return (
+    <RedeemButton
+      card={card}
+      stampsRequired={stampsRequired}
+      onRedeemed={onRedeemed}
+    />
+  );
+}
+
 const ACTION_COPY: Record<string, { idle: string; pending: string }> = {
   lucky: { idle: "Play", pending: "Playing…" },
   plant: { idle: "Water", pending: "Watering…" },
@@ -109,12 +145,14 @@ export function ServeCustomer({
   stampsRequired,
   rewardText,
   initialPhone,
+  pointsRedemptionMode,
 }: {
   programId: string;
   type: string;
   stampsRequired: number;
   rewardText: string;
   initialPhone?: string;
+  pointsRedemptionMode?: "catalog" | "offset";
 }) {
   const router = useRouter();
   const { pending, run } = useAsyncAction();
@@ -363,15 +401,21 @@ export function ServeCustomer({
         <ScanButton
           label="Scan a QR instead"
           variant="link"
-          onResolved={({ phone, programId: scannedProgramId }) => {
-            if (scannedProgramId !== programId) {
+          onResolved={(result) => {
+            if (result.kind === "voucher") {
               router.push(
-                `/dashboard/counter?p=${scannedProgramId}&phone=${encodeURIComponent(phone)}`,
+                `/dashboard/redeem-voucher?token=${encodeURIComponent(result.voucherToken)}`,
+              );
+              return;
+            }
+            if (result.programId !== programId) {
+              router.push(
+                `/dashboard/counter?p=${result.programId}&phone=${encodeURIComponent(result.phone)}`,
               );
               return;
             }
             if (phoneRef.current) {
-              phoneRef.current.value = phone;
+              phoneRef.current.value = result.phone;
               formRef.current?.requestSubmit();
             }
           }}
@@ -437,9 +481,18 @@ export function ServeCustomer({
               <p className="text-sm font-semibold text-gold-accent">
                 Reward ready!
               </p>
-              <RedeemButton
+              <RedemptionControl
+                mode={pointsRedemptionMode}
                 card={result.card}
                 stampsRequired={stampsRequired}
+                onOffsetApplied={(next) =>
+                  setResult({
+                    mode: "stamp",
+                    phone: next.phone,
+                    card: next,
+                    rewardReady: next.stamp_count > 0,
+                  })
+                }
                 onRedeemed={(next) =>
                   setResult({
                     mode: "stamp",

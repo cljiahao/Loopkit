@@ -60,6 +60,7 @@ describe("CheckForm", () => {
           active: true,
           replacedByName: null,
           carriedOverCount: null,
+          activeVouchers: [],
         },
       ],
     });

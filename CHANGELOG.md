@@ -16,6 +16,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `/login` redirect. Accepting records the vendor's legal name, timestamp,
   and IP with merqo (not stored locally) via merqo's `POST
 /api/merqo/legal-accept`, alongside the browser's user agent.
+- Points Club programs become a real accumulate-then-spend reward shop, in
+  two vendor-chosen redemption modes:
+  - **Catalog mode**: a vendor defines fixed-point reward items; a customer
+    with enough points redeems one for a voucher (a `voucher_token` mirroring
+    `cards.card_token`), scanned and confirmed at the counter on a new
+    `/dashboard/redeem-voucher` screen.
+  - **Offset mode**: points are spent as a dollar discount at checkout via
+    a new `applyPointsOffsetAction` on the vendor counter.
+  - Migration `0043_loopkit_points_reward_shop.sql` adds voucher tokens and
+    4 RPCs (`voucher_by_token`, `redeem_voucher_by_token`,
+    `select_points_reward`, `apply_points_offset`). `checkStatusAction` now
+    surfaces a customer's active vouchers; `resolveTokenAction` returns a
+    discriminated union so a scanned voucher routes to the new redeem
+    screen instead of the card flow.
 - Stamp Card programs get a vendor choice of 5 stamp skins and an accent
   color, free for every vendor with no Pro gate:
   - `StampDots` gains a `style?: "dots" | "seal" | "ink" | "punch" | "charm"`

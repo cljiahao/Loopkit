@@ -1,4 +1,4 @@
--- supabase/migrations/0043_legal_check_state.sql
+-- supabase/migrations/0044_legal_check_state.sql
 -- Local TTL cache for "has this email's legal-doc acceptance been confirmed
 -- current recently?". loopkit does not own the acceptance record — merqo does
 -- (merqo.legal_acceptances) — so confirming currency means an HTTP call to

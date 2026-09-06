@@ -24,6 +24,9 @@ export default async function CounterPage({ searchParams }: CounterPageProps) {
   if (!program) redirect("/dashboard");
 
   const badge = PROGRAM_TYPE_BADGE[program.type] ?? PROGRAM_TYPE_BADGE.stamp;
+  const config = (program.config ?? {}) as {
+    redemption_mode?: "catalog" | "offset";
+  };
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -46,6 +49,7 @@ export default async function CounterPage({ searchParams }: CounterPageProps) {
         stampsRequired={program.stamps_required}
         rewardText={program.reward_text}
         initialPhone={phone}
+        pointsRedemptionMode={config.redemption_mode}
       />
     </div>
   );
