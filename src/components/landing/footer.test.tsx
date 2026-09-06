@@ -29,4 +29,12 @@ describe("Footer", () => {
       "/legal/privacy",
     );
   });
+
+  it("links to the About page", () => {
+    render(<Footer />);
+    expect(screen.getByRole("link", { name: "About" })).toHaveAttribute(
+      "href",
+      "/about",
+    );
+  });
 });

@@ -10,6 +10,7 @@ customer, and admin surfaces.
 
 - `actions/`
 - `admin/`
+- `about/` — `AboutPage`, the public "Why Merqo" page: `@merqo/ui`'s shared `AboutMerqo` component (the qkit origin story, one source reused by every kit's own `/about`), wrapped in loopkit's own `Nav`/`Footer` with a "Back to loopkit" CTA
 - `api/`
 - `apple-icon.tsx` — 180×180 Apple touch icon, generated at request time via `next/og`'s `ImageResponse` from `@/lib/brand-icon`'s shared mark — no static asset
 - `auth/`

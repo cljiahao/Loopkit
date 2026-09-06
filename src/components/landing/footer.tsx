@@ -15,6 +15,9 @@ export function Footer() {
         </Link>
         <span>Loyalty for Singapore&rsquo;s small vendors.</span>
         <span className="text-xs">© 2026 loopkit · a Merqo kit</span>
+        <Link href="/about" className="hover:text-foreground">
+          About
+        </Link>
         <LegalFooterLinks />
         <Link href="/login" className="hover:text-foreground">
           Vendor sign in →
