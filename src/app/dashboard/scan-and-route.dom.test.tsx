@@ -14,14 +14,40 @@ vi.mock("@/app/dashboard/scan-button", () => ({
     onResolved,
   }: {
     label?: string;
-    onResolved: (result: { phone: string; programId: string }) => void;
+    onResolved: (
+      result:
+        | { kind: "card"; phone: string; programId: string }
+        | {
+            kind: "voucher";
+            phone: string;
+            voucherToken: string;
+            rewardText: string;
+          },
+    ) => void;
   }) => (
-    <button
-      type="button"
-      onClick={() => onResolved({ phone: "+6591234567", programId: "p9" })}
-    >
-      {label}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={() =>
+          onResolved({ kind: "card", phone: "+6591234567", programId: "p9" })
+        }
+      >
+        {label}
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onResolved({
+            kind: "voucher",
+            phone: "+6591234567",
+            voucherToken: "tok123",
+            rewardText: "Free drink",
+          })
+        }
+      >
+        Scan voucher
+      </button>
+    </>
   ),
 }));
 
@@ -41,6 +67,15 @@ describe("ScanAndRoute", () => {
     await user.click(screen.getByRole("button", { name: "Scan a customer" }));
     expect(routerPush).toHaveBeenCalledWith(
       "/dashboard/counter?p=p9&phone=%2B6591234567",
+    );
+  });
+
+  it("routes a voucher scan to the redeem-voucher screen", async () => {
+    const user = userEvent.setup();
+    render(<ScanAndRoute />);
+    await user.click(screen.getByRole("button", { name: "Scan voucher" }));
+    expect(routerPush).toHaveBeenCalledWith(
+      "/dashboard/redeem-voucher?token=tok123",
     );
   });
 });

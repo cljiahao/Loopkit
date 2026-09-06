@@ -2038,7 +2038,29 @@ git commit -m "feat(points): route a scanned voucher to its own redeem screen"
 
 - [ ] **Step 1: Write the failing tests**
 
-Add to `test/lib/program.test.ts`:
+`test/lib/program.test.ts` currently has no `vi.mock` at all (it only tests pure functions — `programInputSchema`, `saveProgramSchema`, `canPrepProgram`, `getEntitlement`, `buildProgramFields`). `getVoucherByToken` is this file's first test needing a DB call, so add the mock block first, right after the existing plain imports at the top of the file:
+
+```ts
+import { describe, it, expect, vi } from "vitest";
+
+const { rpcMock } = vi.hoisted(() => ({ rpcMock: vi.fn() }));
+vi.mock("@/lib/supabase/server", () => ({
+  createServerClient: vi.fn(async () => ({ rpc: rpcMock })),
+}));
+
+import {
+  programInputSchema,
+  saveProgramSchema,
+  canPrepProgram,
+  getEntitlement,
+  buildProgramFields,
+  getVoucherByToken,
+} from "@/lib/program";
+```
+
+(This replaces the file's existing `import { describe, it, expect } from "vitest";` and existing `import {...} from "@/lib/program";` lines — the mock must be declared before the `@/lib/program` import for `vi.mock` hoisting to take effect, same ordering `dashboard-actions.test.ts` already uses.)
+
+Then add, anywhere in the file:
 
 ```ts
 describe("getVoucherByToken", () => {
@@ -2077,8 +2099,6 @@ describe("getVoucherByToken", () => {
   });
 });
 ```
-
-_(This requires `program.test.ts`'s existing `rpcMock`/`createServerClient` mock setup — check the top of that file first; if `program.ts`'s own tests don't already mock `@/lib/supabase/server`, add the same `vi.mock` block `test/app/dashboard-actions.test.ts` uses, scoped to this file.)_
 
 Add to `test/app/dashboard-actions.test.ts`:
 

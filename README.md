@@ -330,6 +330,24 @@ read-compute-persist shape `recordVisitAction` uses for a vendor-triggered
 visit. VIP tiers, birthday rewards, and wallet passes are separate,
 out-of-scope roadmap items.
 
+Points Club becomes a real accumulate-then-spend reward shop (migration
+`0043_loopkit_points_reward_shop.sql`, `docs/superpowers/plans/2026-09-04-points-club-reward-shop.md`),
+in a vendor-chosen redemption mode per program: **catalog** mode lets a
+vendor define fixed-point reward items; once a customer has enough points,
+`selectPointsRewardAction` calls `select_points_reward`, which spends the
+points and mints a `reward_vouchers` row carrying its own `voucher_token`
+(mirroring `cards.card_token`) — the customer's card view shows it as a
+pending voucher (`checkStatusAction`'s `activeVouchers`, sourced from
+`vendor_join`'s new `active_vouchers` column) until a vendor scans it on
+the new `/dashboard/redeem-voucher` screen, which calls `voucher_by_token`/
+`redeem_voucher_by_token`. **Offset** mode skips the voucher step entirely:
+a vendor spends a customer's points as a dollar discount right at the
+counter via `applyPointsOffsetAction` (`apply_points_offset`). Scanning a
+customer's QR resolves through the same `resolveTokenAction` either mode
+uses for a normal card — it now returns a discriminated union so a scanned
+voucher token routes straight to `/dashboard/redeem-voucher` instead of the
+regular card-serving flow.
+
 ## Docs
 
 - Deploy runbook: `docs/DEPLOY.md`

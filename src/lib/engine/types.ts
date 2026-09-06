@@ -13,6 +13,15 @@ export type ProgressView =
       markPreset?: "gift" | "coffee" | "star" | "heart";
       style?: "dots" | "seal" | "ink" | "punch" | "charm";
       color?: string;
+      redemptionMode?: "catalog" | "offset";
+      catalog?: {
+        id: string;
+        label: string;
+        cost: number;
+        affordable: boolean;
+      }[];
+      offsetRate?: { points: number; dollars: number };
+      offsetValue?: number;
     }
   | {
       kind: "flame";

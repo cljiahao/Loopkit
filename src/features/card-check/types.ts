@@ -15,6 +15,16 @@ export type CardStatus = {
   active: boolean;
   replacedByName: string | null;
   carriedOverCount: number | null;
+  // Points Club catalog mode only — every other mechanic gets an empty
+  // array. Each entry is its own scannable voucher (voucher_token,
+  // rendered here as pre-generated QR svg, same convention as the main
+  // card's own `qr` field above).
+  activeVouchers: {
+    id: string;
+    rewardText: string;
+    expiresAt: string | null;
+    qr: string;
+  }[];
 };
 
 export type StatusState = {

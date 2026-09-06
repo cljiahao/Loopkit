@@ -229,6 +229,26 @@ describe("buildPreviewProgram", () => {
     });
   });
 
+  it("stamp: points redemption fields flow into the built program's config", () => {
+    const program = buildPreviewProgram({
+      ...base,
+      type: "stamp",
+      variant: "points",
+      pointsRedemptionMode: "catalog",
+      pointsCatalog: [
+        { label: "Free drink", cost: 100 },
+        { label: "Free meal", cost: 300 },
+      ],
+    });
+    expect(program.config).toMatchObject({
+      redemption_mode: "catalog",
+      catalog: [
+        { label: "Free drink", cost: 100 },
+        { label: "Free meal", cost: 300 },
+      ],
+    });
+  });
+
   it("stamp: variant flame flows into the built program's config", () => {
     const program = buildPreviewProgram({
       ...base,

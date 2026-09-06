@@ -4,6 +4,9 @@ import {
   type ProgramType,
   type ScratchCoverStyle,
   type StampVisualStyle,
+  type PointsRedemptionMode,
+  type PointsOffsetRate,
+  type PointsCatalogItemInput,
 } from "@/lib/program-config";
 import { getProgress, type CardLike, type ProgramLike } from "@/lib/engine";
 import type { Progress } from "@/lib/engine/types";
@@ -31,6 +34,9 @@ export type PreviewInput = {
   scratchCoverStyle?: ScratchCoverStyle;
   stampStyle?: StampVisualStyle;
   stampColor?: string;
+  pointsRedemptionMode?: PointsRedemptionMode;
+  pointsCatalog?: PointsCatalogItemInput[];
+  pointsOffsetRate?: PointsOffsetRate;
 };
 
 // Mirrors enroll_card's seed math (supabase/migrations/0014_loopkit_head_start.sql)
@@ -74,6 +80,16 @@ export function buildPreviewProgram(
         },
         stamp_style: input.stampStyle,
         stamp_color: input.stampColor,
+        redemption_mode:
+          input.variant === "points" ? input.pointsRedemptionMode : undefined,
+        catalog:
+          input.pointsRedemptionMode === "catalog"
+            ? input.pointsCatalog
+            : undefined,
+        offset_rate:
+          input.pointsRedemptionMode === "offset"
+            ? input.pointsOffsetRate
+            : undefined,
       },
     };
   }

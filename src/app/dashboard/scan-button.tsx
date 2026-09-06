@@ -16,7 +16,16 @@ export function ScanButton({
    * secondary text trigger for contexts where scanning isn't the primary
    * mechanic (e.g. above the phone-entry form on the Counter page). */
   variant?: "button" | "link";
-  onResolved: (result: { phone: string; programId: string }) => void;
+  onResolved: (
+    result:
+      | { kind: "card"; phone: string; programId: string }
+      | {
+          kind: "voucher";
+          phone: string;
+          voucherToken: string;
+          rewardText: string;
+        },
+  ) => void;
 }) {
   const [open, setOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -40,7 +49,7 @@ export function ScanButton({
             fd.set("token", result.getText());
             const res = await resolveTokenAction(fd);
             if (res.success) {
-              onResolved({ phone: res.phone, programId: res.programId });
+              onResolved(res);
               setOpen(false);
             } else {
               toast.error(res.error);
