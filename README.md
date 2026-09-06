@@ -363,10 +363,13 @@ policies). A vendor whose acceptance is missing or older than `@merqo/ui`'s
 `POST /api/merqo/legal-accept` once per doc type (`terms`, `privacy`) with
 the vendor's IP and user agent, then primes the local cache and redirects
 onward. `/legal/terms` and `/legal/privacy` render `@merqo/ui`'s shared
-`<LegalDocument>` content and are also linked from the landing footer. As
-of `@merqo/ui` v0.24.0, acceptance no longer collects a typed legal name —
-just the agree checkbox — since a plain ToS/Privacy clickwrap doesn't need
-a signatory name for evidentiary strength beyond the record above.
+`<LegalDocument>` content (now with a "← Back" button) and are also linked
+from the landing footer. As of `@merqo/ui` v0.25.0, acceptance no longer
+collects a typed legal name — just the agree checkbox — since a plain
+ToS/Privacy clickwrap doesn't need a signatory name for evidentiary
+strength beyond the record above. `/about` renders that same release's
+shared `AboutMerqo` component (the qkit origin story, one source reused
+by every kit's own `/about` page), linked from the landing `Nav`/`Footer`.
 
 ## Docs
 
