@@ -361,10 +361,12 @@ by a local TTL cache, `loopkit.legal_check_state` (migration
 policies). A vendor whose acceptance is missing or older than `@merqo/ui`'s
 `LEGAL_VERSIONS` is redirected to `/legal/accept`, which posts to merqo's
 `POST /api/merqo/legal-accept` once per doc type (`terms`, `privacy`) with
-the vendor's legal name, IP, and user agent, then primes the local cache
-and redirects onward. `/legal/terms` and `/legal/privacy` render
-`@merqo/ui`'s shared `<LegalDocument>` content and are also linked from the
-landing footer.
+the vendor's IP and user agent, then primes the local cache and redirects
+onward. `/legal/terms` and `/legal/privacy` render `@merqo/ui`'s shared
+`<LegalDocument>` content and are also linked from the landing footer. As
+of `@merqo/ui` v0.24.0, acceptance no longer collects a typed legal name —
+just the agree checkbox — since a plain ToS/Privacy clickwrap doesn't need
+a signatory name for evidentiary strength beyond the record above.
 
 ## Docs
 
