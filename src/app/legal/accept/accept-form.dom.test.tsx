@@ -6,23 +6,13 @@ vi.mock("@merqo/ui", () => ({
   TermsAcceptanceCheckbox: (props: {
     checked: boolean;
     onCheckedChange: (checked: boolean) => void;
-    legalName: string;
-    onLegalNameChange: (value: string) => void;
   }) => (
-    <div>
-      <input
-        type="checkbox"
-        aria-label="I accept the terms"
-        checked={props.checked}
-        onChange={(e) => props.onCheckedChange(e.target.checked)}
-      />
-      <input
-        type="text"
-        aria-label="Legal name"
-        value={props.legalName}
-        onChange={(e) => props.onLegalNameChange(e.target.value)}
-      />
-    </div>
+    <input
+      type="checkbox"
+      aria-label="I accept the terms"
+      checked={props.checked}
+      onChange={(e) => props.onCheckedChange(e.target.checked)}
+    />
   ),
 }));
 vi.mock("./actions", () => ({ acceptLegalTerms: vi.fn() }));
@@ -37,27 +27,12 @@ describe("AcceptForm", () => {
     ).toBeInTheDocument();
   });
 
-  it("disables Continue until both the checkbox and legal name are filled", () => {
+  it("disables Continue until the checkbox is checked", () => {
     render(<AcceptForm next="/dashboard" />);
     const submit = screen.getByRole("button", { name: /continue/i });
     expect(submit).toBeDisabled();
 
     fireEvent.click(screen.getByLabelText("I accept the terms"));
-    expect(submit).toBeDisabled();
-
-    fireEvent.change(screen.getByLabelText("Legal name"), {
-      target: { value: "Jane Vendor" },
-    });
     expect(submit).toBeEnabled();
-  });
-
-  it("keeps Continue disabled when the legal name is only whitespace", () => {
-    render(<AcceptForm next="/dashboard" />);
-    fireEvent.click(screen.getByLabelText("I accept the terms"));
-    fireEvent.change(screen.getByLabelText("Legal name"), {
-      target: { value: "   " },
-    });
-
-    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
   });
 });

@@ -13,9 +13,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   acceptance gate: a vendor whose acceptance is missing or older than
   merqo's current `LEGAL_VERSIONS` is redirected to `/legal/accept` before
   reaching the dashboard, matching the pattern already used for the
-  `/login` redirect. Accepting records the vendor's legal name, timestamp,
-  and IP with merqo (not stored locally) via merqo's `POST
-/api/merqo/legal-accept`, alongside the browser's user agent.
+  `/login` redirect. Accepting records the timestamp and IP/user-agent
+  with merqo (not stored locally) via merqo's `POST
+/api/merqo/legal-accept`.
+
+### Changed
+
+- Dropped the required typed legal-name field from the acceptance
+  checkbox — a plain ToS/Privacy clickwrap doesn't need a signatory name
+  for evidentiary strength beyond the existing (vendor_email, auth_uid,
+  doc_type, doc_version, ip, user_agent, timestamp) record merqo already
+  keeps. `@merqo/ui` bumped to `v0.24.0` (`TermsAcceptanceCheckbox` no
+  longer takes `legalName`/`onLegalNameChange`).
 - Points Club programs become a real accumulate-then-spend reward shop, in
   two vendor-chosen redemption modes:
   - **Catalog mode**: a vendor defines fixed-point reward items; a customer
