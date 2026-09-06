@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `/about` — a public "Why Merqo" page: `@merqo/ui`'s shared `AboutMerqo`
+  component (the qkit origin story, one source reused by every kit's own
+  `/about`), linked from the landing `Nav` and `Footer`.
 - Legal Terms of Service and Privacy Policy pages (`/legal/terms`,
   `/legal/privacy`), linked from the footer, plus a session-level
   acceptance gate: a vendor whose acceptance is missing or older than
@@ -23,8 +26,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   checkbox — a plain ToS/Privacy clickwrap doesn't need a signatory name
   for evidentiary strength beyond the existing (vendor_email, auth_uid,
   doc_type, doc_version, ip, user_agent, timestamp) record merqo already
-  keeps. `@merqo/ui` bumped to `v0.24.0` (`TermsAcceptanceCheckbox` no
-  longer takes `legalName`/`onLegalNameChange`).
+  keeps. `@merqo/ui` bumped to `v0.25.0` (`TermsAcceptanceCheckbox` no
+  longer takes `legalName`/`onLegalNameChange`; a pre-lawyer-review
+  legal-wording pass and a "← Back" button landed on `/legal/*` pages;
+  the new `AboutMerqo` component above also shipped in this bump).
 - Points Club programs become a real accumulate-then-spend reward shop, in
   two vendor-chosen redemption modes:
   - **Catalog mode**: a vendor defines fixed-point reward items; a customer

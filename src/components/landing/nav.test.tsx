@@ -11,4 +11,12 @@ describe("Nav", () => {
     expect(header).toHaveClass("px-5", "py-4", "backdrop-blur-md");
     expect(screen.getByText("loopkit home")).toBeInTheDocument();
   });
+
+  it("links to the About page", () => {
+    render(<Nav />);
+    expect(screen.getByRole("link", { name: "About" })).toHaveAttribute(
+      "href",
+      "/about",
+    );
+  });
 });
