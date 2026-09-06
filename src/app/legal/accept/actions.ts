@@ -1,6 +1,7 @@
 "use server";
 
 import { createHash } from "node:crypto";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createServerClient, createServiceClient } from "@/lib/supabase/server";
 import { safeRedirectPath } from "@/lib/safe-redirect";
@@ -10,6 +11,19 @@ const DOC_TYPES = ["terms", "privacy"] as const;
 
 function sha256(input: string): string {
   return createHash("sha256").update(input).digest("hex");
+}
+
+/**
+ * Best-effort client IP from the standard forwarding headers. NOT trusted
+ * (client-spoofable behind a permissive proxy) — this is an audit field on
+ * the acceptance record, not an authz signal.
+ */
+function clientIp(hdrs: Headers): string {
+  return (
+    hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    hdrs.get("x-real-ip") ||
+    "unknown"
+  );
 }
 
 function merqoBaseUrl(): string {
@@ -29,6 +43,10 @@ function merqoBaseUrl(): string {
  *
  * On success the local `legal_check_state` TTL cache is primed to
  * `is_current = true` so the very next gated render doesn't re-hit merqo.
+ *
+ * `legal_name`/`ip`/`user_agent` are the real values from this request (the
+ * vendor's own browser submission), forwarded to merqo as the acceptance
+ * record's audit fields.
  */
 export async function acceptLegalTerms(formData: FormData): Promise<void> {
   const supabase = await createServerClient();
@@ -46,6 +64,15 @@ export async function acceptLegalTerms(formData: FormData): Promise<void> {
     throw new Error("MERQO_CUSTOMER_SECRET is not configured");
   }
 
+  const legalName = String(formData.get("legal_name") || "").trim();
+  if (!legalName) {
+    throw new Error("legal_name is required");
+  }
+
+  const reqHeaders = await headers();
+  const ip = clientIp(reqHeaders);
+  const userAgent = reqHeaders.get("user-agent") || "unknown";
+
   for (const docType of DOC_TYPES) {
     const res = await fetch(`${merqoBaseUrl()}/api/merqo/legal-accept`, {
       method: "POST",
@@ -60,6 +87,9 @@ export async function acceptLegalTerms(formData: FormData): Promise<void> {
         doc_version: LEGAL_VERSIONS[docType],
         doc_sha256: sha256(getLegalDocSource(docType)),
         kit_slug: "loopkit",
+        legal_name: legalName,
+        ip,
+        user_agent: userAgent,
       }),
       signal: AbortSignal.timeout(5000),
     });
