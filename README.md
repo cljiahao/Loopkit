@@ -348,6 +348,24 @@ uses for a normal card — it now returns a discriminated union so a scanned
 voucher token routes straight to `/dashboard/redeem-voucher` instead of the
 regular card-serving flow.
 
+A signed-in vendor is gated on having accepted merqo's current Terms of
+Service and Privacy Policy before reaching `/dashboard`/`/setup`:
+`requireCurrentLegalAcceptance` (`src/lib/legal-gate.ts`) is wired into
+`requireVendor` (`src/features/auth/api/require-vendor.ts`), loopkit's
+single vendor-gate entry point, so there's no second call site to wire.
+loopkit owns no acceptance record itself — merqo does
+(`merqo.legal_acceptances`) — so the gate calls merqo's `GET
+/api/merqo/legal-status`, throttled to once per 5 minutes per vendor email
+by a local TTL cache, `loopkit.legal_check_state` (migration
+`0044_legal_check_state.sql`, service-role-only, zero client-facing RLS
+policies). A vendor whose acceptance is missing or older than `@merqo/ui`'s
+`LEGAL_VERSIONS` is redirected to `/legal/accept`, which posts to merqo's
+`POST /api/merqo/legal-accept` once per doc type (`terms`, `privacy`) with
+the vendor's legal name, IP, and user agent, then primes the local cache
+and redirects onward. `/legal/terms` and `/legal/privacy` render
+`@merqo/ui`'s shared `<LegalDocument>` content and are also linked from the
+landing footer.
+
 ## Docs
 
 - Deploy runbook: `docs/DEPLOY.md`

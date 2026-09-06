@@ -23,6 +23,7 @@ substitute for running the migration against real Postgres.
 - `hardening-schema.test.ts` — checks migration `0008_loopkit_hardening.sql` (stamp-progress read fix, free/Pro limit, active-only enroll)
 - `head-start-percent-schema.test.ts` — checks migration `0024_loopkit_head_start_percent.sql` (`head_start_percent` column)
 - `head-start-schema.test.ts` — checks migration `0014_loopkit_head_start.sql` (`head_start` column)
+- `legal-check-state-schema.test.ts` — checks migration `0044_legal_check_state.sql` (`legal_check_state` table shape, RLS enabled with zero policies, `service_role`-only grant)
 - `multiprogram-schema.test.ts` — checks migration `0007_loopkit_multiprogram.sql` (drops one-program-per-vendor constraint, adds `vendor_pro`)
 - `points-per-visit-schema.test.ts` — checks migration `0026_loopkit_points_per_visit.sql` (`points_per_visit` config, widened `stamps_required` range)
 - `program-replacement-schema.test.ts` — checks migration `0016_loopkit_program_replacement.sql` (`replaced_by` self-reference)

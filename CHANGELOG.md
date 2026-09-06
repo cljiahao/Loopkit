@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Legal Terms of Service and Privacy Policy pages (`/legal/terms`,
+  `/legal/privacy`), linked from the footer, plus a session-level
+  acceptance gate: a vendor whose acceptance is missing or older than
+  merqo's current `LEGAL_VERSIONS` is redirected to `/legal/accept` before
+  reaching the dashboard, matching the pattern already used for the
+  `/login` redirect. Accepting records the vendor's legal name, timestamp,
+  and IP with merqo (not stored locally) via merqo's `POST
+/api/merqo/legal-accept`, alongside the browser's user agent.
 - Points Club programs become a real accumulate-then-spend reward shop, in
   two vendor-chosen redemption modes:
   - **Catalog mode**: a vendor defines fixed-point reward items; a customer

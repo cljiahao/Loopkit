@@ -7,12 +7,13 @@
 -- §3): loopkit.vendors (shared profile, for-all self policy), loopkit.upgrade_requests
 -- (vendor-insert/select-own + admin-select-all), loopkit.feedback (self-insert-only),
 -- loopkit.vendor_notify_settings (for-all own-row, same shape as vendors),
--- loopkit.referral_hosts (own-row create/read, no update/delete grant), and a
--- functional suite for vendor_join_referred/apply_referral_credit.
+-- loopkit.referral_hosts (own-row create/read, no update/delete grant), a
+-- functional suite for vendor_join_referred/apply_referral_credit, and
+-- loopkit.legal_check_state (service-role-only, no client access).
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(90);
+select plan(94);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -643,6 +644,39 @@ select set_config('request.jwt.claims',
 select throws_ok(
   $$ select * from loopkit.adjust_stamp('00000000-0000-0000-0000-100000000001', '+6590000001', 1, 'not mine') $$,
   'not authorized', 'vendor B cannot adjust vendor A''s program');
+
+reset role;
+
+-- ── legal_check_state (0044): service-role-only TTL cache, no client access ──
+-- Same shape as pricing/telegram_link_tokens: RLS on, zero policies, only the
+-- service-role client (src/lib/legal-gate.ts) touches it.
+select ok(
+  (select relrowsecurity from pg_class where oid = 'loopkit.legal_check_state'::regclass),
+  'RLS on legal_check_state');
+select is(
+  (select count(*)::int from pg_policies
+   where schemaname = 'loopkit' and tablename = 'legal_check_state'),
+  0, 'legal_check_state has no RLS policies (service-role-only)');
+
+set local role anon;
+select set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
+select throws_ok(
+  $$ select 1 from loopkit.legal_check_state limit 1 $$,
+  null,
+  'anon cannot SELECT legal_check_state directly');
+
+reset role;
+set local role authenticated;
+select set_config(
+  'request.jwt.claims',
+  json_build_object('sub', '00000000-0000-0000-0000-00000000000a', 'role', 'authenticated')::text,
+  true);
+select throws_ok(
+  $$ select 1 from loopkit.legal_check_state limit 1 $$,
+  null,
+  'authenticated cannot SELECT legal_check_state directly');
+
+reset role;
 
 select * from finish();
 rollback;
