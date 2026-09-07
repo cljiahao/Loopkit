@@ -106,8 +106,10 @@ fast-follow rounds fixing Plant's leaf positioning/Flame's icon size, then
 Flame's grow direction, Plant's idle sway, Cup/Flame's on-screen scale, a
 mislabeled cup stage, and Plant/Cup's missing progress counter, plus a fix
 for the dashboard onboarding tour re-triggering on every load for any
-vendor who'd never visited `/profile` (`src/lib/README.md`). See
-`CHANGELOG.md`
+vendor who'd never visited `/profile` (`src/lib/README.md`). The tour's
+Customers step now also states explicitly that scanning the shop QR
+only joins a customer to a program, it doesn't add a stamp by itself.
+See `CHANGELOG.md`
 for the latest changes, including deduplication of the
 shared bearer-auth and Merqo-RPC-call helpers, the addition of
 templateCentral 5.13.0's comment-hygiene enforcement layer, and a fix

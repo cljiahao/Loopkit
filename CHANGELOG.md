@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Onboarding tour's Customers step now says explicitly that scanning the
+  shop QR only joins a customer to a program, it doesn't add a stamp by
+  itself — a vendor could otherwise assume the scan itself was the
+  scan-to-earn step, since the tour never connected the QR step to the
+  separate vendor-side "search and add a stamp" step.
+
 ### Added
 
 - `/about` — a public "Why Merqo" page: `@merqo/ui`'s shared `AboutMerqo`
