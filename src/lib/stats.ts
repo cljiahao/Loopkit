@@ -188,6 +188,90 @@ export function cardsNearReward(
   return { oneAway, twoAway };
 }
 
+// Epoch ms of 00:00 on the 1st of nowMs's calendar month, in SGT (UTC+8).
+export function sgtMonthStart(nowMs: number): number {
+  const sgt = new Date(nowMs + 8 * 60 * 60 * 1000);
+  return (
+    Date.UTC(sgt.getUTCFullYear(), sgt.getUTCMonth(), 1) - 8 * 60 * 60 * 1000
+  );
+}
+
+// The spec's "Regular": a card with 2 or more lifetime activity events AND an
+// event in the last 30 days. Both conditions, not either.
+export function countRegulars(
+  activityEvents: StatsEvent[],
+  nowMs: number,
+): number {
+  const cutoff30 = nowMs - 30 * MS_PER_DAY;
+  const byCard = new Map<string, { total: number; recent: boolean }>();
+  for (const e of activityEvents) {
+    const t = Date.parse(e.created_at);
+    if (!Number.isFinite(t)) continue;
+    const cur = byCard.get(e.card_id) ?? { total: 0, recent: false };
+    cur.total += 1;
+    if (t >= cutoff30) cur.recent = true;
+    byCard.set(e.card_id, cur);
+  }
+  let n = 0;
+  for (const c of byCard.values()) if (c.total >= 2 && c.recent) n += 1;
+  return n;
+}
+
+// Cards created since the 1st of the current SGT month.
+export function countNewThisMonth(
+  cards: { created_at: string }[],
+  nowMs: number,
+): number {
+  const monthStart = sgtMonthStart(nowMs);
+  return cards.filter((c) => Date.parse(c.created_at) >= monthStart).length;
+}
+
+export type OverviewCard = {
+  id: string;
+  program_id: string;
+  stamp_count: number;
+  created_at: string;
+};
+
+// Impure shell for the dashboard Overview's raw reads. Issues its own
+// cards + stamp_events query (an independent query, not shared with
+// getVendorStats, whose public shape stays unchanged) and returns the
+// classified event arrays plus the per-card fields the Overview helpers need
+// (program_id, stamp_count, created_at). RLS scopes both reads to the
+// signed-in vendor, same as getVendorStats.
+export async function getVendorOverviewInputs(programIds: string[]): Promise<{
+  activityEvents: StatsEvent[];
+  rewardEvents: StatsEvent[];
+  cards: OverviewCard[];
+}> {
+  if (programIds.length === 0) {
+    return { activityEvents: [], rewardEvents: [], cards: [] };
+  }
+  const supabase = await createServerClient();
+
+  const { data: cards, error: cardsError } = await supabase
+    .from("cards")
+    .select("id,program_id,stamp_count,created_at")
+    .in("program_id", programIds);
+  if (cardsError) {
+    throw new Error(`getVendorOverviewInputs: ${cardsError.message}`);
+  }
+
+  const cardIds = (cards ?? []).map((c) => c.id);
+  let events: StatsEvent[] = [];
+  if (cardIds.length > 0) {
+    const { data, error } = await supabase
+      .from("stamp_events")
+      .select("card_id,kind,payload,created_at")
+      .in("card_id", cardIds);
+    if (error) throw new Error(`getVendorOverviewInputs: ${error.message}`);
+    events = data ?? [];
+  }
+
+  const { activityEvents, rewardEvents } = classifyActivity(events);
+  return { activityEvents, rewardEvents, cards: cards ?? [] };
+}
+
 // Pure card-level aggregation. `activityEvents`/`rewardEvents` are the
 // already-classified arrays from `classifyActivity` — this function does no
 // kind filtering itself.

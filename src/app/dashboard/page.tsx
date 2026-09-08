@@ -1,88 +1,177 @@
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import {
-  listPrograms,
-  isPro,
-  canCreateProgram,
-  getEntitlement,
-  applyDueCutovers,
-} from "@/lib/program";
 import { requireVendor } from "@/features/auth";
-import { qrSvg } from "@/lib/qr";
-import { ProgramCard } from "@/app/dashboard/program-card";
-import { NewProgramTile } from "@/app/dashboard/new-program-tile";
-import { ShopQrBlock } from "@/app/dashboard/shop-qr-block";
-import { ScanAndRoute } from "@/app/dashboard/scan-and-route";
-import { shouldShowQr } from "@/app/dashboard/dashboard-view";
+import { listPrograms, applyDueCutovers } from "@/lib/program";
+import { getVendorProfile } from "@/lib/vendor";
+import {
+  getVendorStats,
+  getVendorOverviewInputs,
+  countExpiredVouchers,
+  returnRate90d,
+  regularsGoneQuiet,
+  cardsNearReward,
+  countRegulars,
+  countNewThisMonth,
+} from "@/lib/stats";
+import { listActivity } from "@/lib/activity";
+import { formatSgtDate } from "@/lib/format";
+import {
+  buildOverviewModel,
+  buildOverviewPrograms,
+  pickServeDefault,
+} from "@/app/dashboard/dashboard-view";
+import { ServeCta } from "@/app/dashboard/serve-cta";
+import { Briefing } from "@/app/dashboard/overview/briefing";
+import { BaseStrip } from "@/app/dashboard/overview/base-strip";
+import { VisitsTrend } from "@/app/dashboard/overview/visits-trend";
+import { WorthALook } from "@/app/dashboard/overview/worth-a-look";
+import { RecentActivity } from "@/app/dashboard/overview/recent-activity";
+import { RewardCostPanel } from "@/app/dashboard/overview/reward-cost-panel";
+import { YourPrograms } from "@/app/dashboard/overview/your-programs";
+import { ElevatedCard } from "@/components/elevated-card";
 
 export default async function DashboardPage() {
-  const { user } = await requireVendor();
+  await requireVendor();
   await applyDueCutovers();
 
   const programs = await listPrograms();
-  // True first run — no programs of any kind yet. A vendor who has
-  // programs but paused all of them is NOT redirected (see the empty-state
-  // branch below): redirecting them away from their own dashboard would be
-  // a surprising dead end, not a "go set up" nudge.
+  // True first run: no programs of any kind yet. Keep the original redirect.
   if (programs.length === 0) redirect("/setup");
 
-  const activePrograms = programs.filter((prog) => prog.active);
+  const programIds = programs.map((p) => p.id);
+  const nowMs = new Date().getTime();
 
-  const pro = await isPro();
+  const [stats, expiredUnclaimed, activity, inputs, profile] =
+    await Promise.all([
+      getVendorStats(programIds),
+      countExpiredVouchers(programIds),
+      listActivity({ programIds, limit: 6, offset: 0 }),
+      getVendorOverviewInputs(programIds),
+      getVendorProfile(),
+    ]);
 
-  // The QR must encode an absolute URL — a host-less path is unscannable. Fall
-  // back to the request host when NEXT_PUBLIC_BASE_URL is unset.
-  const h = await headers();
-  const origin =
-    process.env.NEXT_PUBLIC_BASE_URL ??
-    `https://${h.get("x-forwarded-host") ?? h.get("host")}`;
-  const cardLink = `${origin}/c?v=${user.id}`;
-  const cardQr = await qrSvg(cardLink);
+  const vendorName = profile.name;
 
-  const canCreate = canCreateProgram(
-    getEntitlement(pro),
-    activePrograms.length,
+  const near = programs.reduce(
+    (acc, program) => {
+      const programCards = inputs.cards.filter(
+        (c) => c.program_id === program.id,
+      );
+      const n = cardsNearReward(programCards, program.stamps_required);
+      return {
+        oneAway: acc.oneAway + n.oneAway,
+        twoAway: acc.twoAway + n.twoAway,
+      };
+    },
+    { oneAway: 0, twoAway: 0 },
+  );
+
+  const overviewPrograms = buildOverviewPrograms(
+    programs,
+    inputs.cards,
+    inputs.activityEvents,
+    inputs.rewardEvents,
+    nowMs,
+  );
+
+  const model = buildOverviewModel({
+    nowMs,
+    vendorName: vendorName ?? "",
+    stats,
+    vendorReturnRate: returnRate90d(inputs.activityEvents, nowMs),
+    regularsCount: countRegulars(inputs.activityEvents, nowMs),
+    newThisMonth: countNewThisMonth(inputs.cards, nowMs),
+    goneQuiet: regularsGoneQuiet(inputs.activityEvents, nowMs).count,
+    near,
+    expiredUnclaimed,
+    programs: overviewPrograms,
+    serveDefaultProgramId: pickServeDefault(
+      programs,
+      inputs.cards,
+      inputs.activityEvents,
+      nowMs,
+    ),
+  });
+
+  const programIdByName = Object.fromEntries(
+    programs.map((p) => [p.name, p.id]),
+  );
+  const twoZone = programs.length >= 2;
+  const heading = vendorName
+    ? `${model.greeting}, ${vendorName}`
+    : model.greeting;
+
+  const head = (
+    <div
+      data-tour="shop-qr"
+      className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+    >
+      <div>
+        <h1 className="font-display text-2xl font-semibold tracking-tight">
+          {heading}
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {vendorName ? `${vendorName} · ` : ""}
+          {formatSgtDate(new Date(nowMs).toISOString())}
+        </p>
+      </div>
+      <ServeCta
+        defaultProgramId={model.serveDefaultProgramId}
+        programIds={programIds}
+      />
+    </div>
+  );
+
+  if (stats.enrolled === 0) {
+    return (
+      <div className="mx-auto flex max-w-[46rem] flex-col gap-6">
+        {head}
+        <ElevatedCard className="p-6">
+          <p className="text-sm text-muted-foreground">
+            No customers yet. Share your join QR from the Counter to start
+            enrolling.
+          </p>
+        </ElevatedCard>
+      </div>
+    );
+  }
+
+  const main = (
+    <div className="flex min-w-0 flex-col gap-6">
+      <Briefing text={model.briefing} />
+      <BaseStrip
+        stats={model.baseStats}
+        redemptionRatePct={model.redemptionRatePct}
+        returnRatePct={model.returnRatePct}
+      />
+      <VisitsTrend
+        bars7={model.trend.bars7}
+        bars14={model.trend.bars14}
+        deltaVsLastWeek={model.trend.deltaVsLastWeek}
+      />
+      <WorthALook items={model.worthALook} />
+      <RecentActivity rows={activity.rows} programIdByName={programIdByName} />
+    </div>
+  );
+
+  const rail = (
+    <div className="flex min-w-0 flex-col gap-6">
+      <RewardCostPanel cost={model.cost} />
+      <YourPrograms programs={model.programs} />
+    </div>
   );
 
   return (
-    <div className="space-y-6">
-      {!shouldShowQr(activePrograms.length) ? (
-        <div
-          className="rounded-2xl border border-dashed bg-card p-6 text-center text-sm text-muted-foreground"
-          data-tour="shop-qr"
-        >
-          None of your programs are active right now.{" "}
-          <a href="/setup" className="font-medium text-primary hover:underline">
-            Manage them in Setup
-          </a>{" "}
-          to reactivate one.
+    <div className="mx-auto flex max-w-[46rem] flex-col gap-6 lg:max-w-none">
+      {head}
+      {twoZone ? (
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start lg:gap-8">
+          {main}
+          {rail}
         </div>
       ) : (
         <>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch">
-            <div className="min-w-0 sm:flex-[1.4]" data-tour="shop-qr">
-              <ShopQrBlock
-                qrSvgMarkup={cardQr}
-                link={cardLink}
-                programNames={activePrograms.map((prog) => prog.name)}
-              />
-            </div>
-            <div className="min-w-0 sm:flex-1">
-              <ScanAndRoute />
-            </div>
-          </div>
-
-          <div>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-              Your programs
-            </h2>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {activePrograms.map((prog) => (
-                <ProgramCard key={prog.id} program={prog} />
-              ))}
-              <NewProgramTile canCreate={canCreate} />
-            </div>
-          </div>
+          {main}
+          {rail}
         </>
       )}
     </div>

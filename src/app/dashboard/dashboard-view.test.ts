@@ -1,30 +1,17 @@
 import { describe, expect, it } from "vitest";
 import {
-  shouldShowQr,
   buildGreeting,
   buildBriefing,
   splitTrend,
   buildBaseStats,
   buildCostView,
   buildOverviewModel,
+  buildOverviewPrograms,
+  pickServeDefault,
   type OverviewProgram,
   type BuildOverviewInput,
 } from "@/app/dashboard/dashboard-view";
 import type { ProgramStats } from "@/lib/stats";
-
-describe("shouldShowQr", () => {
-  it("hides the shop QR block when there are zero active programs", () => {
-    // Regression guard: the QR block invites customers to scan and join
-    // "your programs" — it must not render alongside the "none of your
-    // programs are active" empty state (dashboard/page.tsx).
-    expect(shouldShowQr(0)).toBe(false);
-  });
-
-  it("shows the shop QR block when at least one program is active", () => {
-    expect(shouldShowQr(1)).toBe(true);
-    expect(shouldShowQr(3)).toBe(true);
-  });
-});
 
 describe("buildGreeting", () => {
   // SGT is UTC+8 with no DST. nowMs picked so SGT hour is unambiguous.
@@ -203,7 +190,6 @@ const input = (over: Partial<BuildOverviewInput> = {}): BuildOverviewInput => ({
   goneQuiet: 6,
   near: { oneAway: 4, twoAway: 0 },
   expiredUnclaimed: 8,
-  recentActivity: [],
   programs: [program()],
   serveDefaultProgramId: "p1",
   ...over,
@@ -244,5 +230,79 @@ describe("buildOverviewModel", () => {
     expect(m.programs).toHaveLength(1);
     expect(m.serveDefaultProgramId).toBe("p1");
     expect(m.cost.knownCostCents).toBe(400);
+  });
+});
+
+const NOW = Date.UTC(2026, 8, 20, 6, 0, 0); // 2026-09-20 14:00 SGT
+const ago = (days: number) => new Date(NOW - days * 86400000).toISOString();
+
+describe("buildOverviewPrograms", () => {
+  const programs = [
+    {
+      id: "p1",
+      name: "Stamp Card",
+      type: "stamp",
+      reward_text: "kopi",
+      reward_cost_cents: 80,
+    },
+    {
+      id: "p2",
+      name: "Sprout",
+      type: "plant",
+      reward_text: "cake",
+      reward_cost_cents: null,
+    },
+  ];
+  const cards = [
+    { id: "c1", program_id: "p1", created_at: ago(50) },
+    { id: "c2", program_id: "p1", created_at: ago(10) },
+    { id: "c3", program_id: "p2", created_at: ago(5) },
+  ];
+  const activity = [
+    { card_id: "c1", kind: "stamp", created_at: ago(40) },
+    { card_id: "c1", kind: "stamp", created_at: ago(3) },
+    { card_id: "c2", kind: "stamp", created_at: ago(2) },
+  ];
+  const rewards = [
+    { card_id: "c1", kind: "redeem", created_at: ago(2) }, // this month
+    { card_id: "c3", kind: "redeem", created_at: ago(40) }, // last month
+  ];
+
+  it("computes per-program return rate, reward fields and rewards this month", () => {
+    const out = buildOverviewPrograms(programs, cards, activity, rewards, NOW);
+    expect(out[0]).toMatchObject({
+      id: "p1",
+      rewardText: "kopi",
+      rewardCostCents: 80,
+      rewardsThisMonth: 1,
+    });
+    expect(out[0].returnRate).toBeGreaterThan(0);
+    expect(out[1]).toMatchObject({
+      rewardCostCents: null,
+      rewardsThisMonth: 0,
+      returnRate: null,
+    });
+  });
+});
+
+describe("pickServeDefault", () => {
+  const programs = [{ id: "p1" }, { id: "p2" }];
+  const cards = [
+    { id: "c1", program_id: "p1", created_at: ago(1) },
+    { id: "c2", program_id: "p2", created_at: ago(1) },
+    { id: "c3", program_id: "p2", created_at: ago(1) },
+  ];
+
+  it("picks the program with the most 30-day-active cards", () => {
+    const activity = [
+      { card_id: "c1", kind: "stamp", created_at: ago(2) },
+      { card_id: "c2", kind: "stamp", created_at: ago(2) },
+      { card_id: "c3", kind: "stamp", created_at: ago(2) },
+    ];
+    expect(pickServeDefault(programs, cards, activity, NOW)).toBe("p2");
+  });
+
+  it("falls back to the first program when there is no recent activity", () => {
+    expect(pickServeDefault(programs, cards, [], NOW)).toBe("p1");
   });
 });

@@ -2,15 +2,8 @@
 // composition logic has fast, unmocked test coverage without rendering the
 // whole async server component (Supabase/auth dependencies).
 
-import type { ProgramStats } from "@/lib/stats";
-import type { VendorActivityRow } from "@/lib/activity";
-
-// The shop QR block invites customers to scan and join "your programs", so it
-// must never render when there are no active programs to join, or it
-// contradicts the empty-state message telling the vendor none are active.
-export function shouldShowQr(activeProgramCount: number): boolean {
-  return activeProgramCount > 0;
-}
+import { returnRate90d, sgtMonthStart, type ProgramStats } from "@/lib/stats";
+import { MS_PER_DAY } from "@/lib/utils";
 
 // SGT (UTC+8, no DST). Pure: the caller passes nowMs, never the wall clock.
 export function buildGreeting(nowMs: number): string {
@@ -193,7 +186,6 @@ export type BuildOverviewInput = {
   goneQuiet: number;
   near: { oneAway: number; twoAway: number };
   expiredUnclaimed: number;
-  recentActivity: VendorActivityRow[];
   programs: OverviewProgram[];
   serveDefaultProgramId: string;
 };
@@ -248,6 +240,86 @@ function buildWorthALook(
     { kind: "two-away", count: near.twoAway },
   ];
   return items.filter((i) => i.count > 0);
+}
+
+type RawEvent = { card_id: string; kind: string; created_at: string };
+type OverviewCardLike = {
+  id: string;
+  program_id: string;
+  created_at: string;
+};
+type ProgramLike = {
+  id: string;
+  name: string;
+  type: string;
+  reward_text: string;
+  reward_cost_cents?: number | null;
+};
+
+// Per-program rows for "Your programs" and the cost breakdown: return rate,
+// reward text/cost, and rewards redeemed since the 1st of the month.
+export function buildOverviewPrograms(
+  programs: ProgramLike[],
+  cards: OverviewCardLike[],
+  activityEvents: RawEvent[],
+  rewardEvents: RawEvent[],
+  nowMs: number,
+): OverviewProgram[] {
+  const monthStart = sgtMonthStart(nowMs);
+  const programOfCard = new Map(cards.map((c) => [c.id, c.program_id]));
+  const rewardsByProgram = new Map<string, number>();
+  for (const e of rewardEvents) {
+    if (Date.parse(e.created_at) < monthStart) continue;
+    const pid = programOfCard.get(e.card_id);
+    if (pid) rewardsByProgram.set(pid, (rewardsByProgram.get(pid) ?? 0) + 1);
+  }
+  return programs.map((p) => {
+    const cardIds = new Set(
+      cards.filter((c) => c.program_id === p.id).map((c) => c.id),
+    );
+    const evs = activityEvents.filter((e) => cardIds.has(e.card_id));
+    return {
+      id: p.id,
+      name: p.name,
+      type: p.type,
+      returnRate: returnRate90d(evs, nowMs),
+      rewardText: p.reward_text,
+      rewardCostCents: p.reward_cost_cents ?? null,
+      rewardsThisMonth: rewardsByProgram.get(p.id) ?? 0,
+    };
+  });
+}
+
+// The program the Serve CTA and program rows default to on first use: the one
+// with the most cards active in the last 30 days, else the first program.
+export function pickServeDefault(
+  programs: { id: string }[],
+  cards: OverviewCardLike[],
+  activityEvents: RawEvent[],
+  nowMs: number,
+): string {
+  const fallback = programs[0]?.id ?? "";
+  const cutoff = nowMs - 30 * MS_PER_DAY;
+  const programOfCard = new Map(cards.map((c) => [c.id, c.program_id]));
+  const activeByProgram = new Map<string, Set<string>>();
+  for (const e of activityEvents) {
+    if (Date.parse(e.created_at) < cutoff) continue;
+    const pid = programOfCard.get(e.card_id);
+    if (!pid) continue;
+    const set = activeByProgram.get(pid) ?? new Set<string>();
+    set.add(e.card_id);
+    activeByProgram.set(pid, set);
+  }
+  let best = fallback;
+  let bestN = -1;
+  for (const p of programs) {
+    const n = activeByProgram.get(p.id)?.size ?? 0;
+    if (n > bestN) {
+      bestN = n;
+      best = p.id;
+    }
+  }
+  return best;
 }
 
 // Wires Tasks 1 to 4 together into the single object dashboard/page.tsx renders.

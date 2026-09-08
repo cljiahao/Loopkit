@@ -22,9 +22,9 @@ const exampleProgressLabel = stampStrategy.progress(
 const DESKTOP: TourStep[] = [
   {
     element: sel("shop-qr"),
-    title: "Your shop QR",
+    title: "Your dashboard",
     description:
-      "Welcome to Loopkit. Put this QR code at your counter. Customers scan it once to join every active program you run." +
+      "Welcome to Loopkit. This is your daily view: who your regulars are, how often they come back, and what the rewards cost. Tap Serve a customer to stamp a card at the counter." +
       `<div class="tour-example"><div class="tour-example-label">Example card</div><div class="tour-example-row" style="margin-top:0.35rem"><strong>${exampleProgressLabel}</strong></div></div>`,
   },
   {
