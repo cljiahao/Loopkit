@@ -5,7 +5,12 @@ import {
   buildBriefing,
   splitTrend,
   buildBaseStats,
+  buildCostView,
+  buildOverviewModel,
+  type OverviewProgram,
+  type BuildOverviewInput,
 } from "@/app/dashboard/dashboard-view";
+import type { ProgramStats } from "@/lib/stats";
 
 describe("shouldShowQr", () => {
   it("hides the shop QR block when there are zero active programs", () => {
@@ -122,5 +127,122 @@ describe("buildBaseStats", () => {
     for (const s of stats) {
       expect(`${s.label}${s.title}${s.body}${s.hint}`).not.toContain("—");
     }
+  });
+});
+
+const program = (over: Partial<OverviewProgram> = {}): OverviewProgram => ({
+  id: "p1",
+  name: "Stamp Card",
+  type: "stamp",
+  returnRate: 0.6,
+  rewardText: "free kopi",
+  rewardCostCents: 80,
+  rewardsThisMonth: 5,
+  ...over,
+});
+
+describe("buildCostView", () => {
+  it("sums known cost as unit cents times redeemed, per program", () => {
+    const view = buildCostView(
+      [
+        program({ id: "a", rewardCostCents: 80, rewardsThisMonth: 5 }),
+        program({ id: "b", rewardCostCents: null, rewardsThisMonth: 2 }),
+      ],
+      8,
+      { oneAway: 3, twoAway: 4 },
+    );
+    expect(view.rewardsThisMonth).toBe(7);
+    expect(view.knownCostCents).toBe(400);
+    expect(view.programsMissingCost).toBe(1);
+    expect(view.expiredUnclaimed).toBe(8);
+    expect(view.pendingReturnSoon).toBe(7);
+    expect(view.perProgram).toHaveLength(2);
+    expect(view.perProgram[0].lineCents).toBe(400);
+    expect(view.perProgram[1].lineCents).toBeNull();
+  });
+  it("does not count a missing cost when nothing was redeemed", () => {
+    const view = buildCostView(
+      [program({ rewardCostCents: null, rewardsThisMonth: 0 })],
+      0,
+      { oneAway: 0, twoAway: 0 },
+    );
+    expect(view.programsMissingCost).toBe(0);
+  });
+});
+
+const stats = (over: Partial<ProgramStats> = {}): ProgramStats => ({
+  enrolled: 50,
+  newThisWeek: 3,
+  visitsTotal: 400,
+  visits30d: 90,
+  visitsByDay: Array.from({ length: 30 }, (_, i) => ({
+    date: `2026-09-${String(i + 1).padStart(2, "0")}`,
+    count: i,
+  })),
+  rewardsTotal: 20,
+  rewards30d: 6,
+  redemptionRate: 0.4,
+  repeatVisitRate: 0.5,
+  active: 30,
+  lapsed: 20,
+  avgVisitsPerCustomer: 8,
+  visitsDelta: null,
+  rewardsDelta: null,
+  activeDelta: null,
+  avgDaysBetweenVisits: 9,
+  ...over,
+});
+
+const input = (over: Partial<BuildOverviewInput> = {}): BuildOverviewInput => ({
+  nowMs: Date.UTC(2026, 8, 8, 6, 0, 0),
+  vendorName: "Kopi Corner",
+  stats: stats(),
+  vendorReturnRate: 0.55,
+  regularsCount: 41,
+  newThisMonth: 9,
+  goneQuiet: 6,
+  near: { oneAway: 4, twoAway: 0 },
+  expiredUnclaimed: 8,
+  recentActivity: [],
+  programs: [program()],
+  serveDefaultProgramId: "p1",
+  ...over,
+});
+
+describe("buildOverviewModel", () => {
+  it("assembles greeting, briefing, base stats, trend", () => {
+    const m = buildOverviewModel(input());
+    expect(m.greeting).toBe(buildGreeting(input().nowMs));
+    expect(m.briefing).toContain("41 regulars");
+    expect(m.baseStats).toHaveLength(4);
+    expect(m.trend.bars7).toHaveLength(7);
+    expect(m.redemptionRatePct).toBe(40);
+    expect(m.returnRatePct).toBe(55);
+  });
+  it("null vendor return rate stays null", () => {
+    expect(
+      buildOverviewModel(input({ vendorReturnRate: null })).returnRatePct,
+    ).toBeNull();
+  });
+  it("worthALook keeps only non-zero items, gone-quiet first", () => {
+    const m = buildOverviewModel(
+      input({ goneQuiet: 6, near: { oneAway: 4, twoAway: 0 } }),
+    );
+    expect(m.worthALook).toEqual([
+      { kind: "gone-quiet", count: 6 },
+      { kind: "one-away", count: 4 },
+    ]);
+  });
+  it("omits worthALook items that are zero", () => {
+    const m = buildOverviewModel(
+      input({ goneQuiet: 0, near: { oneAway: 0, twoAway: 2 } }),
+    );
+    expect(m.worthALook).toEqual([{ kind: "two-away", count: 2 }]);
+  });
+  it("passes programs and serve default through", () => {
+    const m = buildOverviewModel(input({ serveDefaultProgramId: "p1" }));
+    expect(m.programs).toHaveLength(1);
+    expect(m.serveDefaultProgramId).toBe("p1");
+    expect(m.cost.knownCostCents).toBe(400);
   });
 });

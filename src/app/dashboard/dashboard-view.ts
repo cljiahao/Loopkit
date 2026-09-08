@@ -1,9 +1,11 @@
-// Pure composition helpers for dashboard/page.tsx. Extracted so the
-// zero-active-programs branching (which decides whether the shop QR block
-// renders) has fast, unmocked test coverage without needing to render the
-// whole async server component (Supabase/auth/qr dependencies).
+// Pure view-model helpers for dashboard/page.tsx. Extracted so the page's
+// composition logic has fast, unmocked test coverage without rendering the
+// whole async server component (Supabase/auth dependencies).
 
-// The shop QR block invites customers to scan and join "your programs" — it
+import type { ProgramStats } from "@/lib/stats";
+import type { VendorActivityRow } from "@/lib/activity";
+
+// The shop QR block invites customers to scan and join "your programs", so it
 // must never render when there are no active programs to join, or it
 // contradicts the empty-state message telling the vendor none are active.
 export function shouldShowQr(activeProgramCount: number): boolean {
@@ -134,4 +136,143 @@ export function buildBriefing(
     s += cadenceShiftClause(d, avgDaysPrevPeriod);
   }
   return s + ".";
+}
+
+export type OverviewProgram = {
+  id: string;
+  name: string;
+  type: string;
+  // returnRate90d for this program, 0..1, null when not enough data
+  returnRate: number | null;
+  rewardText: string;
+  rewardCostCents: number | null;
+  // reward events for this program since the 1st of the month
+  rewardsThisMonth: number;
+};
+
+export type WorthALookItem =
+  | { kind: "gone-quiet"; count: number }
+  | { kind: "one-away"; count: number }
+  | { kind: "two-away"; count: number };
+
+export type CostView = {
+  rewardsThisMonth: number;
+  knownCostCents: number;
+  programsMissingCost: number;
+  expiredUnclaimed: number;
+  pendingReturnSoon: number;
+  perProgram: {
+    name: string;
+    rewardText: string;
+    unitCents: number | null;
+    redeemed: number;
+    lineCents: number | null;
+  }[];
+};
+
+export type OverviewModel = {
+  greeting: string;
+  briefing: string;
+  baseStats: BaseStat[];
+  redemptionRatePct: number;
+  returnRatePct: number | null;
+  trend: TrendView;
+  worthALook: WorthALookItem[];
+  cost: CostView;
+  programs: OverviewProgram[];
+  serveDefaultProgramId: string;
+};
+
+export type BuildOverviewInput = {
+  nowMs: number;
+  vendorName: string;
+  stats: ProgramStats;
+  vendorReturnRate: number | null;
+  regularsCount: number;
+  newThisMonth: number;
+  goneQuiet: number;
+  near: { oneAway: number; twoAway: number };
+  expiredUnclaimed: number;
+  recentActivity: VendorActivityRow[];
+  programs: OverviewProgram[];
+  serveDefaultProgramId: string;
+};
+
+// The vendor P&L view: rewards redeemed this month and what they cost, plus
+// breakage (expired unclaimed) and the near-certain visits still pending.
+export function buildCostView(
+  programs: OverviewProgram[],
+  expiredUnclaimed: number,
+  near: { oneAway: number; twoAway: number },
+): CostView {
+  let rewardsThisMonth = 0;
+  let knownCostCents = 0;
+  let programsMissingCost = 0;
+  const perProgram = programs.map((p) => {
+    rewardsThisMonth += p.rewardsThisMonth;
+    const lineCents =
+      p.rewardCostCents === null
+        ? null
+        : p.rewardCostCents * p.rewardsThisMonth;
+    if (lineCents !== null) knownCostCents += lineCents;
+    if (p.rewardCostCents === null && p.rewardsThisMonth > 0) {
+      programsMissingCost += 1;
+    }
+    return {
+      name: p.name,
+      rewardText: p.rewardText,
+      unitCents: p.rewardCostCents,
+      redeemed: p.rewardsThisMonth,
+      lineCents,
+    };
+  });
+  return {
+    rewardsThisMonth,
+    knownCostCents,
+    programsMissingCost,
+    expiredUnclaimed,
+    pendingReturnSoon: near.oneAway + near.twoAway,
+    perProgram,
+  };
+}
+
+// The "Worth a look" action rows: gone-quiet regulars first, then one-away,
+// then two-away. Any count of 0 is dropped.
+function buildWorthALook(
+  goneQuiet: number,
+  near: { oneAway: number; twoAway: number },
+): WorthALookItem[] {
+  const items: WorthALookItem[] = [
+    { kind: "gone-quiet", count: goneQuiet },
+    { kind: "one-away", count: near.oneAway },
+    { kind: "two-away", count: near.twoAway },
+  ];
+  return items.filter((i) => i.count > 0);
+}
+
+// Wires Tasks 1 to 4 together into the single object dashboard/page.tsx renders.
+export function buildOverviewModel(input: BuildOverviewInput): OverviewModel {
+  return {
+    greeting: buildGreeting(input.nowMs),
+    briefing: buildBriefing(
+      input.regularsCount,
+      input.stats.avgDaysBetweenVisits,
+      null,
+    ),
+    baseStats: buildBaseStats({
+      active: input.regularsCount,
+      newThisMonth: input.newThisMonth,
+      lapsed: input.stats.lapsed,
+    }),
+    redemptionRatePct: Math.round(input.stats.redemptionRate * 100),
+    returnRatePct:
+      input.vendorReturnRate === null
+        ? null
+        : Math.round(input.vendorReturnRate * 100),
+    trend: splitTrend(input.stats.visitsByDay),
+    worthALook: buildWorthALook(input.goneQuiet, input.near),
+    cost: buildCostView(input.programs, input.expiredUnclaimed, input.near),
+    programs: input.programs,
+    serveDefaultProgramId: input.serveDefaultProgramId,
+  };
 }
