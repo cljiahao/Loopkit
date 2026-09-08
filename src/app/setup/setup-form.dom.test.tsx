@@ -873,3 +873,56 @@ describe("SetupForm reward expiry field", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("SetupForm reward cost field", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("shows the reward-cost field for a stamp card in edit mode", () => {
+    render(
+      <SetupForm
+        program={stampProgram}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    expect(
+      screen.getByLabelText("Reward cost (SGD, optional)"),
+    ).toBeInTheDocument();
+  });
+
+  it("prefills the input in dollars from reward_cost_cents", () => {
+    render(
+      <SetupForm
+        program={{ ...stampProgram, reward_cost_cents: 150 }}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    expect(screen.getByLabelText("Reward cost (SGD, optional)")).toHaveValue(
+      1.5,
+    );
+  });
+
+  it("submits reward_cost_dollars on save", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={stampProgram}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await user.type(
+      screen.getByLabelText("Reward cost (SGD, optional)"),
+      "2.4",
+    );
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(saveMock).toHaveBeenCalled();
+    const submitted = saveMock.mock.calls[0][1] as FormData;
+    expect(submitted.get("reward_cost_dollars")).toBe("2.4");
+  });
+});

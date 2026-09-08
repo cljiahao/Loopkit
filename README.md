@@ -133,8 +133,10 @@ Overview, Counter and Customers rebuilt around the vendor's real questions
 (are regulars still coming, what is the reward liability costing me, who to
 act on today), split into 5 sub-plans. First slice landed: three pure
 `stats.ts` helpers (`returnRate90d`, `regularsGoneQuiet`, `cardsNearReward`)
-for the new Overview, no UI wiring yet (`src/lib/README.md`). Sub-plan 5
-landed too: the vendor Customers list has segment chips (all, reward ready,
+for the new Overview, no UI wiring yet (`src/lib/README.md`). Sub-plan 2
+landed: stamp programs now carry an optional reward cost (SGD, migration
+0045), edited from the program form, for the Overview cost view. Sub-plan 5
+landed: the vendor Customers list has segment chips (all, reward ready,
 new this week, not seen 30d+), a sort control (last visit, longest away,
 closest to reward), and a Serve action on every row that opens that
 customer at the counter (`src/app/dashboard/customers/README.md`).
