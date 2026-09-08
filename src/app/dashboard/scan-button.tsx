@@ -25,8 +25,8 @@ export function ScanButton({
   label?: string;
   /** Second line, hero variant only. */
   sublabel?: string;
-  /** "button" — full-width primary trigger (default). "link" — small
-   * secondary text trigger. "hero" — the large cornered scan target that is
+  /** "button" (default): full-width primary trigger. "link": small
+   * secondary text trigger. "hero": the large cornered scan target that is
    * the primary action on the Counter page. */
   variant?: "button" | "link" | "hero";
   onResolved: (result: ScanResolved) => void;

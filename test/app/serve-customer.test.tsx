@@ -33,8 +33,8 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: vi.fn(), push: routerPush }),
 }));
 
-vi.mock("@/app/dashboard/scan-button", () => ({
-  ScanButton: ({
+vi.mock("@/app/dashboard/counter/scan-hero", () => ({
+  ScanHero: ({
     onResolved,
   }: {
     onResolved: (
@@ -76,12 +76,19 @@ vi.mock("@/app/dashboard/scan-button", () => ({
 
 import { ServeCustomer } from "@/app/dashboard/serve-customer";
 
+const shop = {
+  shopName: "Kopi Corner",
+  shopJoinQrSvg: "<svg></svg>",
+  shopJoinLink: "https://loopkit.app/c?v=v1",
+};
+
 describe("ServeCustomer", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("renders the phone input, primary action, and Look up", () => {
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="stamp"
         stampsRequired={10}
@@ -104,6 +111,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="stamp"
         stampsRequired={10}
@@ -129,6 +137,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="stamp"
         stampsRequired={10}
@@ -154,6 +163,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="stamp"
         stampsRequired={10}
@@ -180,6 +190,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="stamp"
         stampsRequired={10}
@@ -198,6 +209,7 @@ describe("ServeCustomer", () => {
   it("labels the primary action per type", () => {
     const { rerender } = render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="lucky"
         stampsRequired={5}
@@ -207,6 +219,7 @@ describe("ServeCustomer", () => {
     expect(screen.getByRole("button", { name: "Play" })).toBeInTheDocument();
     rerender(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="plant"
         stampsRequired={8}
@@ -227,6 +240,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="lucky"
         stampsRequired={5}
@@ -254,6 +268,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="lucky"
         stampsRequired={5}
@@ -273,6 +288,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="stamp"
         stampsRequired={10}
@@ -290,6 +306,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="stamp"
         stampsRequired={10}
@@ -311,6 +328,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p2"
         type="stamp"
         stampsRequired={10}
@@ -342,6 +360,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="plant"
         stampsRequired={8}
@@ -369,6 +388,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="lucky"
         stampsRequired={5}
@@ -387,6 +407,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="lucky"
         stampsRequired={5}
@@ -423,6 +444,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="plant"
         stampsRequired={8}
@@ -460,6 +482,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="plant"
         stampsRequired={8}
@@ -494,6 +517,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="wheel"
         stampsRequired={1}
@@ -528,6 +552,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="scratch"
         stampsRequired={1}
@@ -552,6 +577,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="stamp"
         stampsRequired={10}
@@ -597,6 +623,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     const { container } = render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="plant"
         stampsRequired={8}
@@ -621,6 +648,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="stamp"
         stampsRequired={100}
@@ -645,6 +673,7 @@ describe("ServeCustomer", () => {
     const user = userEvent.setup();
     render(
       <ServeCustomer
+        {...shop}
         programId="p1"
         type="stamp"
         stampsRequired={100}

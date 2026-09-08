@@ -3,7 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { redirect } from "next/navigation";
 
-vi.mock("@/features/auth", () => ({ requireVendor: vi.fn(async () => ({})) }));
+vi.mock("@/features/auth", () => ({
+  requireVendor: vi.fn(async () => ({ user: { id: "v1" } })),
+}));
 vi.mock("@/lib/program", () => ({
   listPrograms: vi.fn(async () => [
     {
@@ -36,6 +38,13 @@ vi.mock("@/lib/program", () => ({
   currentProgram: (programs: { id: string }[], id?: string) =>
     programs.find((p) => p.id === id) ?? null,
 }));
+vi.mock("next/headers", () => ({
+  headers: vi.fn(async () => new Map([["host", "loopkit.test"]])),
+}));
+vi.mock("@/lib/vendor", () => ({
+  getVendorProfile: vi.fn(async () => ({ name: "Kopi Corner" })),
+}));
+vi.mock("@/lib/qr", () => ({ qrSvg: vi.fn(async () => "<svg></svg>") }));
 vi.mock("next/navigation", () => ({
   // Mirrors Next.js's real redirect(): it throws to halt render, so callers
   // that don't expect a return value (like CounterPage) stop executing right
