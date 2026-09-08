@@ -15,6 +15,10 @@ import {
   regularsGoneQuiet,
   cardsNearReward,
   countExpiredVouchers,
+  sgtMonthStart,
+  countRegulars,
+  countNewThisMonth,
+  getVendorOverviewInputs,
 } from "@/lib/stats";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -417,6 +421,90 @@ describe("cardsNearReward", () => {
   it("handles a small threshold where two-away is stamp_count 1", () => {
     const cards = [{ stamp_count: 2 }, { stamp_count: 1 }, { stamp_count: 0 }];
     expect(cardsNearReward(cards, 3)).toEqual({ oneAway: 1, twoAway: 1 });
+  });
+});
+
+describe("sgtMonthStart", () => {
+  it("returns 00:00 SGT on the 1st of the month", () => {
+    // 2026-07-10 12:00 SGT -> 2026-07-01 00:00 SGT == 2026-06-30 16:00 UTC
+    expect(sgtMonthStart(now)).toBe(Date.UTC(2026, 5, 30, 16, 0, 0));
+  });
+});
+
+describe("countRegulars", () => {
+  it("needs 2+ lifetime events AND one in the last 30 days", () => {
+    const events = [
+      // c1: 2 events, one recent -> regular
+      { card_id: "c1", kind: "stamp", created_at: iso(40) },
+      { card_id: "c1", kind: "stamp", created_at: iso(2) },
+      // c2: 3 events but all old -> not a regular
+      { card_id: "c2", kind: "stamp", created_at: iso(90) },
+      { card_id: "c2", kind: "stamp", created_at: iso(80) },
+      { card_id: "c2", kind: "stamp", created_at: iso(70) },
+      // c3: 1 recent event -> not a regular
+      { card_id: "c3", kind: "stamp", created_at: iso(1) },
+    ];
+    expect(countRegulars(events, now)).toBe(1);
+  });
+});
+
+describe("countNewThisMonth", () => {
+  it("counts cards created on or after the 1st of the SGT month", () => {
+    const cards = [
+      { created_at: iso(2) },
+      { created_at: iso(8) },
+      { created_at: iso(40) },
+    ];
+    // now is 2026-07-10 12:00 SGT; the 1st is ~9.5 days ago
+    expect(countNewThisMonth(cards, now)).toBe(2);
+  });
+});
+
+describe("getVendorOverviewInputs", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns empty arrays without querying when there are no programs", async () => {
+    const result = await getVendorOverviewInputs([]);
+    expect(result).toEqual({
+      activityEvents: [],
+      rewardEvents: [],
+      cards: [],
+    });
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("classifies the fetched events and passes cards through", async () => {
+    const cardsBuilder = {
+      select: vi.fn(() => cardsBuilder),
+      in: vi.fn(() =>
+        Promise.resolve({
+          data: [
+            { id: "c1", program_id: "p1", stamp_count: 3, created_at: iso(1) },
+          ],
+          error: null,
+        }),
+      ),
+    };
+    const eventsBuilder = {
+      select: vi.fn(() => eventsBuilder),
+      in: vi.fn(() =>
+        Promise.resolve({
+          data: [
+            { card_id: "c1", kind: "stamp", created_at: iso(1) },
+            { card_id: "c1", kind: "redeem", created_at: iso(1) },
+          ],
+          error: null,
+        }),
+      ),
+    };
+    fromMock.mockImplementation((table: string) =>
+      table === "cards" ? cardsBuilder : eventsBuilder,
+    );
+
+    const result = await getVendorOverviewInputs(["p1"]);
+    expect(result.cards).toHaveLength(1);
+    expect(result.activityEvents).toHaveLength(1);
+    expect(result.rewardEvents).toHaveLength(1);
   });
 });
 

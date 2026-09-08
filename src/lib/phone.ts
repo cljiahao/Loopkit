@@ -8,3 +8,11 @@ export function normalizePhone(
   if (!/^[3689]\d{7}$/.test(local)) return { ok: false };
   return { ok: true, phone: `+65${local}` };
 }
+
+// Vendor-facing partial mask for dashboard lists: keeps the first 4 local
+// digits, masks the rest. Format-tolerant ("+6591234567" or "91234567").
+export function maskPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 8) return phone;
+  return `${digits.slice(-8, -4)} ****`;
+}
