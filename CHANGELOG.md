@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- The Counter is scan-first: a large scan target is the primary action,
+  manual phone entry collapses into a fallback, the active card starts
+  empty, and a vendor can add a new customer or print a shop join poster
+  inline. A missing `?p=` now routes to the busiest active program instead
+  of bouncing to the dashboard, the last-worked program is remembered per
+  device, and the most recent stamp has a one-level Undo.
 - Onboarding tour's Customers step now says explicitly that scanning the
   shop QR only joins a customer to a program, it doesn't add a stamp by
   itself — a vendor could otherwise assume the scan itself was the

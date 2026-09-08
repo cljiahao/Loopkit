@@ -14,7 +14,7 @@ several (`admin-data.test.ts`, `admin.test.ts`, `cards.test.ts`,
 - `admin.test.ts` — `isAdmin`: true/false on presence/absence of an `admins` row; `requireAdmin`: returns `{user}` for a signed-in admin, 404s (via `next/navigation`'s `notFound()`) when signed out or signed in but not an admin
 - `build-plant-config.test.ts` — `buildPlantConfig`: derives five named growth stages from a single visits-to-bloom knob
 - `build-program-fields.test.ts` — `buildProgramFields`: per-type (stamp/lucky/plant/wheel/scratch) program field construction, including a vendor-picked segment `color` threading through to the built config (unset segments leave it unset); the cup-variant stage-name assertion expects "Half Full" at the 50% threshold, not "Quarter Full"
-- `cards.test.ts` — `listCards`: fetches a vendor's cards for one program, optional phone search, mocks `createServerClient`
+- `cards.test.ts` — `listCards`: fetches a vendor's cards for one program, optional phone search, mocks `createServerClient`; `activeCardCountsByProgram`: counts cards touched in the last 30 days per program (empty result for no programs, tallies by `program_id`), backing the Counter's busiest-program default
 - `customer-segments.test.ts` — `customerSegments`/`filterBySegment`/`sortCustomers`/`segmentCounts` at the day boundaries (new is `>=` 7 days, lapsed is `<` 30 days, half-open), progress sort with `null` gaps last, no-mutation, and `parseSegment`/`parseSort` defaulting on unknown input
 - `customers.test.ts` — `aggregateCustomers`: merges one customer's cards across programs into a single row, and derives `rewardReady`, `bestGap`, `firstSeenAt`, and the most-recent card's program
 - `engine/`

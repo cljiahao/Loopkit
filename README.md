@@ -139,7 +139,10 @@ landed: stamp programs now carry an optional reward cost (SGD, migration
 landed: the vendor Customers list has segment chips (all, reward ready,
 new this week, not seen 30d+), a sort control (last visit, longest away,
 closest to reward), and a Serve action on every row that opens that
-customer at the counter (`src/app/dashboard/customers/README.md`).
+customer at the counter (`src/app/dashboard/customers/README.md`). Sub-plan
+4 landed: the Counter is scan-first with an empty active card, inline
+new-customer, and a printable join poster
+(`src/app/dashboard/counter/README.md`).
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view

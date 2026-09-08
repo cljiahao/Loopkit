@@ -32,3 +32,26 @@ export async function listCards(
   if (error) throw new Error(`listCards: ${error.message}`);
   return data ?? [];
 }
+
+const ACTIVE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
+
+// Cards touched in the last 30 days, counted per program. Drives the
+// Counter's first-visit default (the busiest program). RLS scopes the read.
+export async function activeCardCountsByProgram(
+  programIds: string[],
+): Promise<Record<string, number>> {
+  if (programIds.length === 0) return {};
+  const supabase = await createServerClient();
+  const cutoff = new Date(Date.now() - ACTIVE_WINDOW_MS).toISOString();
+  const { data, error } = await supabase
+    .from("cards")
+    .select("program_id")
+    .in("program_id", programIds)
+    .gte("updated_at", cutoff);
+  if (error) throw new Error(`activeCardCountsByProgram: ${error.message}`);
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    counts[row.program_id] = (counts[row.program_id] ?? 0) + 1;
+  }
+  return counts;
+}

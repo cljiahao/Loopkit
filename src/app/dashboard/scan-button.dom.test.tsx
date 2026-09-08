@@ -20,6 +20,22 @@ describe("ScanButton", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the hero variant as a large cornered target with a sub line", () => {
+    render(
+      <ScanButton
+        variant="hero"
+        label="Scan the customer's card"
+        sublabel="Camera opens when you tap"
+        onResolved={vi.fn()}
+      />,
+    );
+    const target = screen.getByRole("button", {
+      name: /scan the customer's card/i,
+    });
+    expect(target.className).toContain("border-dashed");
+    expect(screen.getByText("Camera opens when you tap")).toBeInTheDocument();
+  });
+
   it("passes a voucher-kind result straight through to onResolved", async () => {
     const { resolveTokenAction } = await import("@/app/dashboard/actions");
     vi.mocked(resolveTokenAction).mockResolvedValue({
