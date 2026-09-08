@@ -10,125 +10,84 @@ import {
   lookupAction,
   redeemPlantAction,
   regenerateCardAction,
+  adjustStampAction,
 } from "@/app/dashboard/actions";
-import { RedeemButton } from "@/app/dashboard/redeem-button";
-import { PointsOffsetForm } from "@/app/dashboard/points-offset-form";
-import { ScanButton } from "@/app/dashboard/scan-button";
-import { Plant } from "@/components/plant";
-import { Cup } from "@/components/cup";
-import { Wheel } from "@/components/wheel";
-import { ScratchCard } from "@/components/scratch-card";
+import type { ScanResolved } from "@/app/dashboard/scan-button";
+import { ScanHero } from "@/app/dashboard/counter/scan-hero";
+import { CounterActions } from "@/app/dashboard/counter/counter-actions";
+import { ActiveCard } from "@/app/dashboard/counter/active-card";
+import type { ServeResult } from "@/app/dashboard/counter/serve-result";
+import {
+  ServedStrip,
+  type ServedEntry,
+} from "@/app/dashboard/counter/served-strip";
+import { useServedStrip } from "@/app/dashboard/counter/use-served-strip";
 import { RewardCelebration } from "@/components/reward-celebration";
 import type { StampCard } from "@/app/dashboard/card";
+import type { Progress } from "@/lib/engine/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
-type PlantView = {
-  kind: "plant";
-  stage: number;
-  stageName: string;
-  totalStages: number;
-  wilting: boolean;
-  variant: "plant" | "cup";
-};
-
-type ChanceView = {
-  kind: "chance";
-  variant: "wheel" | "scratch";
-  segments: { id: string; label: string; reward: boolean }[];
-  landedId: string | null;
-};
-
-type ServeResult =
-  | { mode: "stamp"; phone: string; card: StampCard; rewardReady: boolean }
-  | {
-      mode: "lucky";
-      phone: string;
-      played: boolean;
-      won: boolean;
-      label: string;
-    }
-  | {
-      mode: "plant";
-      phone: string;
-      view: PlantView;
-      label: string;
-      rewardReady: boolean;
-      rewardUnlocked: boolean;
-    }
-  | {
-      mode: "chance";
-      phone: string;
-      view: ChanceView;
-      label: string;
-      wonThisTime: boolean;
-      rewardText: string;
-    };
-
-function luckyResultMessage(
-  result: Extract<ServeResult, { mode: "lucky" }>,
-  rewardText: string,
-) {
-  if (result.won) {
-    return (
-      <p className="mt-1 text-sm font-semibold text-gold-accent">
-        🎉 Won {rewardText}!
-      </p>
-    );
+// Where a resolved scan should go: redeem a voucher, hop to another
+// program's counter, or drop the phone into the manual form and submit.
+function planScan(
+  scan: ScanResolved,
+  programId: string,
+):
+  | { action: "voucher"; token: string }
+  | { action: "route"; programId: string; phone: string }
+  | { action: "fill"; phone: string } {
+  if (scan.kind === "voucher") {
+    return { action: "voucher", token: scan.voucherToken };
   }
-  if (result.played) {
-    return (
-      <p className="mt-1 text-sm text-muted-foreground">No win this time.</p>
-    );
+  if (scan.programId !== programId) {
+    return { action: "route", programId: scan.programId, phone: scan.phone };
   }
-  return <p className="mt-1 text-sm text-muted-foreground">{result.label}</p>;
+  return { action: "fill", phone: scan.phone };
 }
 
-// Reward-ready redemption control for a stamp-mode result — three mutually
-// exclusive shapes (offset apply form, catalog no-op note, or the classic
-// RedeemButton) kept in one place so the caller's JSX has no nested ternary.
-function RedemptionControl({
-  mode,
-  card,
-  stampsRequired,
-  onOffsetApplied,
-  onRedeemed,
-}: {
-  mode?: "catalog" | "offset";
-  card: StampCard;
-  stampsRequired: number;
-  onOffsetApplied: (card: StampCard, dollars: number) => void;
-  onRedeemed: (card: StampCard) => void;
-}) {
-  if (mode === "offset") {
-    return <PointsOffsetForm card={card} onApplied={onOffsetApplied} />;
+// Map a non-mutating lookup into the matching result panel. null when the
+// engine view does not fit the program type (nothing to show).
+function lookupToResult(
+  type: string,
+  card: StampCard,
+  progress: Progress,
+  rewardText: string,
+): ServeResult | null {
+  const { view, label, rewardReady } = progress;
+  if (type === "plant") {
+    if (view.kind !== "plant") return null;
+    return {
+      mode: "plant",
+      phone: card.phone,
+      view,
+      label,
+      rewardReady,
+      rewardUnlocked: false,
+    };
   }
-  if (mode === "catalog") {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Customer redeems their picked reward from their own card.
-      </p>
-    );
+  if (type === "lucky") {
+    return {
+      mode: "lucky",
+      phone: card.phone,
+      played: false,
+      won: false,
+      label,
+    };
   }
-  return (
-    <RedeemButton
-      card={card}
-      stampsRequired={stampsRequired}
-      onRedeemed={onRedeemed}
-    />
-  );
+  if (type === "wheel" || type === "scratch") {
+    if (view.kind !== "chance") return null;
+    return {
+      mode: "chance",
+      phone: card.phone,
+      view,
+      label,
+      wonThisTime: false,
+      rewardText,
+    };
+  }
+  return { mode: "stamp", phone: card.phone, card, rewardReady };
 }
 
 const ACTION_COPY: Record<string, { idle: string; pending: string }> = {
@@ -146,6 +105,9 @@ export function ServeCustomer({
   rewardText,
   initialPhone,
   pointsRedemptionMode,
+  shopName,
+  shopJoinQrSvg,
+  shopJoinLink,
 }: {
   programId: string;
   type: string;
@@ -153,11 +115,16 @@ export function ServeCustomer({
   rewardText: string;
   initialPhone?: string;
   pointsRedemptionMode?: "catalog" | "offset";
+  shopName: string;
+  shopJoinQrSvg: string;
+  shopJoinLink: string;
 }) {
   const router = useRouter();
   const { pending, run } = useAsyncAction();
   const phoneRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const { served, push: pushServed, markDone } = useServedStrip();
   const [result, setResult] = useState<ServeResult | null>(null);
   const [redeemOpen, setRedeemOpen] = useState(false);
   const [regenOpen, setRegenOpen] = useState(false);
@@ -172,7 +139,7 @@ export function ServeCustomer({
   // Each visit-recording flow is its own async step: call the server action,
   // toast + celebrate on the outcome, and store the new card state. Returns
   // whether the visit was actually recorded, so onPrimary below knows
-  // whether to reset the form (a failed/no-op attempt should leave the
+  // whether to reset the form (a failed or no-op attempt should leave the
   // scanned phone number in place for retry).
   async function handleLuckyVisit(formData: FormData): Promise<boolean> {
     const res = await recordVisitAction(formData);
@@ -193,6 +160,7 @@ export function ServeCustomer({
       won: res.rewardUnlocked,
       label: res.progress.label,
     });
+    pushServed(res.phone, res.progress.label, false);
     return true;
   }
 
@@ -204,10 +172,10 @@ export function ServeCustomer({
     }
     if (res.progress.view.kind !== "plant") return false;
     if (res.rewardUnlocked) {
-      toast.success(`🌻 ${res.phone} bloomed — ${res.reward_text} unlocked!`);
+      toast.success(`🌻 ${res.phone} bloomed, ${res.reward_text} unlocked!`);
       setCelebration({ phone: res.phone, rewardText: res.reward_text });
     } else {
-      toast(`Watered ${res.phone} — now ${res.progress.view.stageName}.`);
+      toast(`Watered ${res.phone}, now ${res.progress.view.stageName}.`);
     }
     setResult({
       mode: "plant",
@@ -217,6 +185,7 @@ export function ServeCustomer({
       rewardReady: res.progress.rewardReady,
       rewardUnlocked: res.rewardUnlocked,
     });
+    pushServed(res.phone, res.progress.label, false);
     return true;
   }
 
@@ -241,6 +210,7 @@ export function ServeCustomer({
       wonThisTime: res.rewardUnlocked,
       rewardText: res.reward_text,
     });
+    pushServed(res.phone, res.progress.label, false);
     return true;
   }
 
@@ -252,7 +222,7 @@ export function ServeCustomer({
       return false;
     }
     toast.success(
-      `Stamped ${res.card.phone} — ${res.card.stamp_count}/${stampsRequired}`,
+      `Stamped ${res.card.phone}, ${res.card.stamp_count}/${stampsRequired}`,
     );
     const wasReady =
       prevResult?.mode === "stamp" && prevResult.phone === res.card.phone
@@ -267,6 +237,15 @@ export function ServeCustomer({
       card: res.card,
       rewardReady: res.rewardReady,
     });
+    const prevCount =
+      prevResult?.mode === "stamp" && prevResult.phone === res.card.phone
+        ? prevResult.card.stamp_count
+        : res.card.stamp_count - 1;
+    pushServed(
+      res.card.phone,
+      `${prevCount} to ${res.card.stamp_count} of ${stampsRequired}`,
+      true,
+    );
     return true;
   }
 
@@ -304,46 +283,68 @@ export function ServeCustomer({
           toast.error(res.error);
           return;
         }
-        if (type === "plant") {
-          if (res.progress.view.kind !== "plant") return;
-          setResult({
-            mode: "plant",
-            phone: res.card.phone,
-            view: res.progress.view,
-            label: res.progress.label,
-            rewardReady: res.progress.rewardReady,
-            rewardUnlocked: false,
-          });
-        } else if (type === "lucky") {
-          setResult({
-            mode: "lucky",
-            phone: res.card.phone,
-            played: false,
-            won: false,
-            label: res.progress.label,
-          });
-        } else if (type === "wheel" || type === "scratch") {
-          if (res.progress.view.kind !== "chance") return;
-          setResult({
-            mode: "chance",
-            phone: res.card.phone,
-            view: res.progress.view,
-            label: res.progress.label,
-            wonThisTime: false,
-            rewardText,
-          });
-        } else {
-          setResult({
-            mode: "stamp",
-            phone: res.card.phone,
-            card: res.card,
-            rewardReady: res.progress.rewardReady,
-          });
-        }
+        const next = lookupToResult(type, res.card, res.progress, rewardText);
+        if (next) setResult(next);
       } finally {
         setLookingUp(false);
       }
     });
+  }
+
+  function handleScanResolved(scan: ScanResolved) {
+    const plan = planScan(scan, programId);
+    if (plan.action === "voucher") {
+      router.push(
+        `/dashboard/redeem-voucher?token=${encodeURIComponent(plan.token)}`,
+      );
+    } else if (plan.action === "route") {
+      router.push(
+        `/dashboard/counter?p=${plan.programId}&phone=${encodeURIComponent(plan.phone)}`,
+      );
+    } else if (phoneRef.current) {
+      detailsRef.current?.setAttribute("open", "");
+      phoneRef.current.value = plan.phone;
+      formRef.current?.requestSubmit();
+    }
+  }
+
+  function handleUndo(entry: ServedEntry) {
+    run(async () => {
+      const fd = new FormData();
+      fd.set("program_id", programId);
+      fd.set("phone", entry.phone);
+      fd.set("delta", "-1");
+      fd.set("reason", "undo");
+      const res = await adjustStampAction(fd);
+      if (!res.success) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(`Undid the last stamp for ${res.card.phone}.`);
+      markDone(entry.id);
+      setResult((cur) =>
+        cur && cur.mode === "stamp" && cur.phone === res.card.phone
+          ? {
+              mode: "stamp",
+              phone: res.card.phone,
+              card: res.card,
+              rewardReady: res.rewardReady,
+            }
+          : cur,
+      );
+      router.refresh();
+    });
+  }
+
+  function handleCreated(phone: string, card: StampCard) {
+    setResult({
+      mode: "stamp",
+      phone,
+      card,
+      rewardReady: card.stamp_count >= stampsRequired,
+    });
+    pushServed(phone, `1 of ${stampsRequired}, new card`, true);
+    router.refresh();
   }
 
   function confirmRedeemPlant() {
@@ -371,9 +372,30 @@ export function ServeCustomer({
       } else {
         setResult(null);
       }
+      pushServed(res.phone, `reward redeemed, ${rewardText}`, false);
       setRedeemOpen(false);
       router.refresh();
     });
+  }
+
+  function handleOffsetApplied(next: StampCard, dollars: number) {
+    setResult({
+      mode: "stamp",
+      phone: next.phone,
+      card: next,
+      rewardReady: next.stamp_count > 0,
+    });
+    pushServed(next.phone, `reward applied, $${dollars} off`, false);
+  }
+
+  function handleStampRedeemed(next: StampCard) {
+    setResult({
+      mode: "stamp",
+      phone: next.phone,
+      card: next,
+      rewardReady: false,
+    });
+    pushServed(next.phone, `reward redeemed, ${rewardText}`, false);
   }
 
   function confirmRegenerate() {
@@ -396,282 +418,90 @@ export function ServeCustomer({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <ScanButton
-          label="Scan a QR instead"
-          variant="link"
-          onResolved={(result) => {
-            if (result.kind === "voucher") {
-              router.push(
-                `/dashboard/redeem-voucher?token=${encodeURIComponent(result.voucherToken)}`,
-              );
-              return;
-            }
-            if (result.programId !== programId) {
-              router.push(
-                `/dashboard/counter?p=${result.programId}&phone=${encodeURIComponent(result.phone)}`,
-              );
-              return;
-            }
-            if (phoneRef.current) {
-              phoneRef.current.value = result.phone;
-              formRef.current?.requestSubmit();
-            }
-          }}
-        />
-      </div>
+    <>
+      <div className="grid gap-6 lg:grid-cols-[1.05fr_1fr]">
+        <div className="space-y-4">
+          <ScanHero onResolved={handleScanResolved} />
 
-      <form
-        ref={formRef}
-        onSubmit={onPrimary}
-        className="flex flex-wrap items-end gap-3"
-      >
-        <input type="hidden" name="program_id" value={programId} />
-        <div className="min-w-48 flex-1 space-y-2">
-          <Label
-            htmlFor="phone"
-            className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+          <CounterActions
+            programId={programId}
+            shopName={shopName}
+            shopJoinQrSvg={shopJoinQrSvg}
+            shopJoinLink={shopJoinLink}
+            onCreated={handleCreated}
+          />
+
+          <details
+            ref={detailsRef}
+            className="rounded-xl border bg-card p-4 [&_summary]:cursor-pointer"
           >
-            Customer phone
-          </Label>
-          <Input
-            ref={phoneRef}
-            id="phone"
-            name="phone"
-            type="tel"
-            required
-            placeholder="9123 4567"
-            defaultValue={initialPhone}
-            className="h-11 rounded-xl"
+            <summary className="text-sm font-medium">
+              Existing customer who can&rsquo;t scan? Enter their number
+            </summary>
+            <form
+              ref={formRef}
+              onSubmit={onPrimary}
+              className="mt-3 flex flex-wrap items-end gap-3"
+            >
+              <input type="hidden" name="program_id" value={programId} />
+              <div className="min-w-48 flex-1 space-y-2">
+                <Label
+                  htmlFor="phone"
+                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                >
+                  Customer phone
+                </Label>
+                <Input
+                  ref={phoneRef}
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  placeholder="9123 4567"
+                  defaultValue={initialPhone}
+                  className="h-11 rounded-xl"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={pending}
+                className="h-11 rounded-xl px-6 font-semibold"
+              >
+                {pending && !lookingUp ? copy.pending : copy.idle}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={pending}
+                onClick={onLookup}
+                className="h-11 rounded-xl px-5 font-semibold"
+              >
+                {lookingUp ? "Looking up…" : "Look up"}
+              </Button>
+            </form>
+          </details>
+
+          <ServedStrip entries={served} onUndo={handleUndo} />
+        </div>
+
+        <div>
+          <ActiveCard
+            result={result}
+            stampsRequired={stampsRequired}
+            rewardText={rewardText}
+            pointsRedemptionMode={pointsRedemptionMode}
+            pending={pending}
+            redeemOpen={redeemOpen}
+            onRedeemOpenChange={setRedeemOpen}
+            regenOpen={regenOpen}
+            onRegenOpenChange={setRegenOpen}
+            onConfirmRedeemPlant={confirmRedeemPlant}
+            onConfirmRegenerate={confirmRegenerate}
+            onOffsetApplied={handleOffsetApplied}
+            onRedeemed={handleStampRedeemed}
           />
         </div>
-        <Button
-          type="submit"
-          disabled={pending}
-          className="h-11 rounded-xl px-6 font-semibold"
-        >
-          {pending && !lookingUp ? copy.pending : copy.idle}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={pending}
-          onClick={onLookup}
-          className="h-11 rounded-xl px-5 font-semibold"
-        >
-          {lookingUp ? "Looking up…" : "Look up"}
-        </Button>
-      </form>
-
-      {result?.mode === "stamp" && (
-        <div
-          className={
-            result.rewardReady
-              ? "rounded-xl border border-gold bg-gold/10 p-4"
-              : "rounded-xl border bg-muted/40 p-4"
-          }
-        >
-          <p className="text-sm font-medium">{result.phone}</p>
-          <p className="mt-1 font-mono text-sm text-muted-foreground">
-            {result.card.stamp_count} / {stampsRequired} stamps
-          </p>
-          {result.rewardReady && (
-            <div className="mt-3 space-y-2">
-              <p className="text-sm font-semibold text-gold-accent">
-                Reward ready!
-              </p>
-              <RedemptionControl
-                mode={pointsRedemptionMode}
-                card={result.card}
-                stampsRequired={stampsRequired}
-                onOffsetApplied={(next) =>
-                  setResult({
-                    mode: "stamp",
-                    phone: next.phone,
-                    card: next,
-                    rewardReady: next.stamp_count > 0,
-                  })
-                }
-                onRedeemed={(next) =>
-                  setResult({
-                    mode: "stamp",
-                    phone: next.phone,
-                    card: next,
-                    rewardReady: false,
-                  })
-                }
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {result?.mode === "lucky" && (
-        <div
-          className={
-            result.won
-              ? "rounded-xl border border-gold bg-gold/10 p-4"
-              : "rounded-xl border bg-muted/40 p-4"
-          }
-        >
-          <p className="text-sm font-medium">{result.phone}</p>
-          {luckyResultMessage(result, rewardText)}
-        </div>
-      )}
-
-      {result?.mode === "plant" && (
-        <div
-          className={
-            result.rewardReady
-              ? "rounded-xl border border-gold bg-gold/10 p-4"
-              : "rounded-xl border bg-muted/40 p-4"
-          }
-        >
-          <div className="flex items-center gap-4">
-            {result.view.variant === "cup" ? (
-              <Cup
-                stage={result.view.stage}
-                totalStages={result.view.totalStages}
-                wilting={result.view.wilting}
-                className="size-24 shrink-0"
-              />
-            ) : (
-              <Plant
-                stage={result.view.stage}
-                totalStages={result.view.totalStages}
-                wilting={result.view.wilting}
-                seed={result.phone}
-                className="size-24 shrink-0"
-              />
-            )}
-            <div className="min-w-0 space-y-1">
-              <p className="text-sm font-medium">{result.phone}</p>
-              <p className="text-sm text-muted-foreground">{result.label}</p>
-              {result.rewardUnlocked && (
-                <p className="text-sm font-semibold text-gold-accent">
-                  🌻 Bloomed! {rewardText} unlocked.
-                </p>
-              )}
-            </div>
-          </div>
-          {result.rewardReady && (
-            <div className="mt-4">
-              <AlertDialog open={redeemOpen} onOpenChange={setRedeemOpen}>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="rounded-xl">
-                    Redeem
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Redeem reward?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Redeem {rewardText} for {result.phone}? Any extra growth
-                      carries over to their next plant.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={pending}>
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      disabled={pending}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        confirmRedeemPlant();
-                      }}
-                    >
-                      {pending ? "Redeeming…" : "Redeem"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          )}
-        </div>
-      )}
-
-      {result?.mode === "chance" && (
-        <div
-          className={
-            result.wonThisTime
-              ? "rounded-xl border border-gold bg-gold/10 p-4"
-              : "rounded-xl border bg-muted/40 p-4"
-          }
-        >
-          <div className="flex items-center gap-4">
-            {result.view.variant === "wheel" ? (
-              <Wheel
-                segments={result.view.segments}
-                landedId={result.view.landedId}
-                className="shrink-0"
-              />
-            ) : (
-              <ScratchCard
-                revealed={result.view.landedId !== null}
-                label={
-                  result.view.segments.find(
-                    (s) => s.id === result.view.landedId,
-                  )?.label ?? ""
-                }
-                reward={
-                  result.view.segments.find(
-                    (s) => s.id === result.view.landedId,
-                  )?.reward ?? false
-                }
-                className="shrink-0"
-              />
-            )}
-            <div className="min-w-0 space-y-1">
-              <p className="text-sm font-medium">{result.phone}</p>
-              <p className="text-sm text-muted-foreground">{result.label}</p>
-              {result.wonThisTime && (
-                <p className="text-sm font-semibold text-gold-accent">
-                  🎉 Won {result.rewardText}!
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {result && (
-        <AlertDialog open={regenOpen} onOpenChange={setRegenOpen}>
-          <AlertDialogTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="rounded-xl text-muted-foreground"
-            >
-              Regenerate card
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Regenerate this card?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Issues {result.phone} a fresh QR code and resets their progress
-                to zero — for a lost code or an expired card. Their lifetime
-                reward count is kept.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                disabled={pending}
-                onClick={(e) => {
-                  e.preventDefault();
-                  confirmRegenerate();
-                }}
-              >
-                {pending ? "Regenerating…" : "Regenerate"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      </div>
 
       <RewardCelebration
         open={celebration !== null}
@@ -681,6 +511,6 @@ export function ServeCustomer({
           if (!open) setCelebration(null);
         }}
       />
-    </div>
+    </>
   );
 }

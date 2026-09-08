@@ -17,6 +17,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Onboarding tour's first step is retitled from "Your shop QR" to "Your
   dashboard" and describes the new briefing view, since the join QR now
   lives on the Counter, not the dashboard home.
+- The Counter is scan-first: a large scan target is the primary action,
+  manual phone entry collapses into a fallback, the active card starts
+  empty, and a vendor can add a new customer or print a shop join poster
+  inline. A missing `?p=` now routes to the busiest active program instead
+  of bouncing to the dashboard, the last-worked program is remembered per
+  device, and the most recent stamp has a one-level Undo.
 - Onboarding tour's Customers step now says explicitly that scanning the
   shop QR only joins a customer to a program, it doesn't add a stamp by
   itself — a vendor could otherwise assume the scan itself was the
@@ -31,6 +37,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   on the upcoming dashboard Overview. `src/lib/money.ts` holds the
   dollars/cents conversion (`dollarsToCents`, `centsToDollars`,
   `formatSgd`).
+- The vendor Customers list has segment chips (all / reward ready / new
+  this week / not seen 30d+), a sort control (last visit / longest away /
+  closest to reward), and a Serve action on every row that opens that
+  customer at the counter.
 - `src/lib/stats.ts` gains three pure helpers for the vendor dashboard
   Overview: `returnRate90d` (share of 90-day-active customers who are
   repeat visitors), `regularsGoneQuiet` (regulars whose last visit is 21

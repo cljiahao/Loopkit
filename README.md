@@ -131,14 +131,15 @@ either a mechanic's card type or customization this granular
 underway (`docs/superpowers/specs/2026-09-08-vendor-dashboard-redesign-design.md`):
 Overview, Counter and Customers rebuilt around the vendor's real questions
 (are regulars still coming, what is the reward liability costing me, who to
-act on today), split into 5 sub-plans. First slice landed: three pure
-`stats.ts` helpers (`returnRate90d`, `regularsGoneQuiet`, `cardsNearReward`)
-for the new Overview, no UI wiring yet (`src/lib/README.md`). Sub-plan 2
-landed: stamp programs now carry an optional reward cost (SGD, migration
-0045), edited from the program form, for the Overview cost view. Sub-plan 3
-landed: `/dashboard` is now the vendor Overview (briefing, self-explaining
-base stats, visits trend, worth-a-look, reward-cost panel), replacing the
-program launcher (`src/app/dashboard/README.md`).
+act on today), split into 5 sub-plans, all now landed: pure `stats.ts`
+helpers (`returnRate90d`, `regularsGoneQuiet`, `cardsNearReward`); an
+optional per-program reward cost (SGD, migration 0045); `/dashboard`
+rebuilt as the vendor Overview (briefing, self-explaining base stats,
+7/14-day visits trend, worth-a-look, reward-cost panel); a scan-first
+Counter (empty-until-loaded active card, inline new-customer, printable
+join poster, one-level Undo); and Customers segment chips + sort + a
+per-row Serve. Phase 1 shipped ungated
+(`src/app/dashboard/{overview,counter,customers}/README.md`).
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
