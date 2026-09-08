@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- The dashboard home is now a vendor briefing (regulars and cadence, base
+  stats that explain themselves on tap, a 7/14-day visits trend, "worth a
+  look" actions, what the rewards cost this month, recent activity)
+  instead of a program launcher. The shop QR and scan-to-route blocks
+  move off the home screen; "Serve a customer" is an in-page button that
+  remembers the last program served on this device.
+- Onboarding tour's first step is retitled from "Your shop QR" to "Your
+  dashboard" and describes the new briefing view, since the join QR now
+  lives on the Counter, not the dashboard home.
 - Onboarding tour's Customers step now says explicitly that scanning the
   shop QR only joins a customer to a program, it doesn't add a stamp by
   itself — a vendor could otherwise assume the scan itself was the
@@ -26,7 +35,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Overview: `returnRate90d` (share of 90-day-active customers who are
   repeat visitors), `regularsGoneQuiet` (regulars whose last visit is 21
   to 40 days ago, worth a win-back nudge), and `cardsNearReward` (cards
-  one or two stamps short of the reward).
+  one or two stamps short of the reward). It also gains `countRegulars`,
+  `countNewThisMonth`, `sgtMonthStart` (pure) and `getVendorOverviewInputs`
+  (impure shell) feeding the new Overview.
+- `src/lib/phone.ts` gains `maskPhone`, a vendor-facing partial phone mask
+  for the Overview's recent-activity list.
 - `/about` — a public "Why Merqo" page: `@merqo/ui`'s shared `AboutMerqo`
   component (the qkit origin story, one source reused by every kit's own
   `/about`), linked from the landing `Nav` and `Footer`.

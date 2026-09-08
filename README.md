@@ -135,7 +135,10 @@ act on today), split into 5 sub-plans. First slice landed: three pure
 `stats.ts` helpers (`returnRate90d`, `regularsGoneQuiet`, `cardsNearReward`)
 for the new Overview, no UI wiring yet (`src/lib/README.md`). Sub-plan 2
 landed: stamp programs now carry an optional reward cost (SGD, migration
-0045), edited from the program form, for the Overview cost view.
+0045), edited from the program form, for the Overview cost view. Sub-plan 3
+landed: `/dashboard` is now the vendor Overview (briefing, self-explaining
+base stats, visits trend, worth-a-look, reward-cost panel), replacing the
+program launcher (`src/app/dashboard/README.md`).
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
