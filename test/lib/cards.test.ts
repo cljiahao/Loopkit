@@ -9,7 +9,11 @@ vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({ from: fromMock })),
 }));
 
-import { listCards, type CardRow } from "@/lib/cards";
+import {
+  listCards,
+  activeCardCountsByProgram,
+  type CardRow,
+} from "@/lib/cards";
 
 function makeBuilder(data: unknown, error: unknown = null) {
   const ilike = vi.fn(() => b);
@@ -71,5 +75,46 @@ describe("listCards", () => {
     fromMock.mockReturnValue(builder);
 
     await expect(listCards("p1")).rejects.toThrow();
+  });
+});
+
+function makeCountBuilder(data: unknown, error: unknown = null) {
+  const b: Record<string, unknown> = {
+    select: vi.fn(() => b),
+    in: vi.fn(() => b),
+    gte: vi.fn(() => b),
+    then: (resolve: (v: { data: unknown; error: unknown }) => unknown) =>
+      resolve({ data, error }),
+  };
+  return b;
+}
+
+describe("activeCardCountsByProgram", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns an empty map for no programs without querying", async () => {
+    const result = await activeCardCountsByProgram([]);
+    expect(result).toEqual({});
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("counts recent cards per program", async () => {
+    fromMock.mockReturnValue(
+      makeCountBuilder([
+        { program_id: "p1" },
+        { program_id: "p1" },
+        { program_id: "p2" },
+      ]),
+    );
+
+    const result = await activeCardCountsByProgram(["p1", "p2"]);
+
+    expect(result).toEqual({ p1: 2, p2: 1 });
+    expect(fromMock).toHaveBeenCalledWith("cards");
+  });
+
+  it("throws when the query errors", async () => {
+    fromMock.mockReturnValue(makeCountBuilder(null, { message: "boom" }));
+    await expect(activeCardCountsByProgram(["p1"])).rejects.toThrow();
   });
 });
