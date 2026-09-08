@@ -37,6 +37,7 @@ export interface Database {
           active: boolean;
           expiry_days: number | null;
           reward_expiry_days: number | null;
+          reward_cost_cents: number | null;
           head_start: boolean;
           replaced_by: string | null;
           carry_over_stamps: boolean;
@@ -56,6 +57,7 @@ export interface Database {
           active?: boolean;
           expiry_days?: number | null;
           reward_expiry_days?: number | null;
+          reward_cost_cents?: number | null;
           head_start?: boolean;
           replaced_by?: string | null;
           carry_over_stamps?: boolean;
@@ -75,6 +77,7 @@ export interface Database {
           active?: boolean;
           expiry_days?: number | null;
           reward_expiry_days?: number | null;
+          reward_cost_cents?: number | null;
           head_start?: boolean;
           replaced_by?: string | null;
           carry_over_stamps?: boolean;
