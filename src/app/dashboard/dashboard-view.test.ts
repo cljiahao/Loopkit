@@ -3,6 +3,7 @@ import {
   shouldShowQr,
   buildGreeting,
   buildBriefing,
+  splitTrend,
 } from "@/app/dashboard/dashboard-view";
 
 describe("shouldShowQr", () => {
@@ -54,5 +55,31 @@ describe("buildBriefing", () => {
   });
   it("handles zero regulars gracefully", () => {
     expect(buildBriefing(0, null, null)).toMatch(/No regulars yet|0 regulars/);
+  });
+});
+
+const days = (counts: number[]) =>
+  counts.map((count, i) => ({ date: `d${i}`, count }));
+
+describe("splitTrend", () => {
+  it("bars7 is the last 7 days, bars14 the last 14", () => {
+    const input = days(Array.from({ length: 30 }, (_, i) => i)); // 0..29
+    const t = splitTrend(input);
+    expect(t.bars7.map((b) => b.count)).toEqual([23, 24, 25, 26, 27, 28, 29]);
+    expect(t.bars14).toHaveLength(14);
+    expect(t.bars14[0].count).toBe(16);
+  });
+  it("deltaVsLastWeek is this-week sum minus prior-week sum", () => {
+    // last 7 all 2 (sum 14), the 7 before all 1 (sum 7) -> +7
+    const arr = Array(30).fill(0);
+    for (let i = 23; i < 30; i++) arr[i] = 2;
+    for (let i = 16; i < 23; i++) arr[i] = 1;
+    expect(splitTrend(days(arr)).deltaVsLastWeek).toBe(7);
+  });
+  it("handles a short array without throwing", () => {
+    const t = splitTrend(days([1, 2, 3]));
+    expect(t.bars7).toHaveLength(3);
+    expect(t.bars14).toHaveLength(3);
+    expect(t.deltaVsLastWeek).toBe(0); // no prior week
   });
 });

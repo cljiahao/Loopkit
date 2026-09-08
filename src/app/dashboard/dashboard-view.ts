@@ -18,6 +18,27 @@ export function buildGreeting(nowMs: number): string {
   return "Good evening";
 }
 
+export type TrendBar = { date: string; count: number };
+
+export type TrendView = {
+  bars7: TrendBar[];
+  bars14: TrendBar[];
+  deltaVsLastWeek: number;
+};
+
+// Slice the 30-day visit buckets into the two windows the trend chart shows.
+// bars7 = last 7 days, bars14 = last 14. deltaVsLastWeek = sum(last 7) minus
+// sum(the 7 before that), 0 when there is no prior week.
+export function splitTrend(visitsByDay: TrendBar[]): TrendView {
+  const sum = (a: TrendBar[]) => a.reduce((n, d) => n + d.count, 0);
+  return {
+    bars7: visitsByDay.slice(-7),
+    bars14: visitsByDay.slice(-14),
+    deltaVsLastWeek:
+      sum(visitsByDay.slice(-7)) - sum(visitsByDay.slice(-14, -7)),
+  };
+}
+
 const dayWord = (n: number) => (n === 1 ? "day" : "days");
 
 // The "N days sooner/later than last month" clause, or "" when there is no
