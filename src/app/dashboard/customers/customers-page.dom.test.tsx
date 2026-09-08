@@ -40,6 +40,11 @@ const customers: VendorCustomerRow[] = [
     totalStamps: 8,
     totalRewards: 1,
     lastSeenAt: "2026-07-10T00:00:00Z",
+    firstSeenAt: "2026-07-01T00:00:00Z",
+    rewardReady: false,
+    bestGap: 2,
+    recentProgramId: "p1",
+    recentProgramName: "Coffee Stamps",
   },
 ];
 
