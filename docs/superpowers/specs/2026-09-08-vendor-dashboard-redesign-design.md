@@ -122,8 +122,11 @@ scope here.
 - "New customer" action: cashier enters a phone, `add_stamp` creates the
   card and lands the first stamp.
 - "Shop join QR" action: shows a printable poster. The QR encodes
-  `/c?v=<vendorId>&p=<programId>` (program-specific; add `&p=` to
-  `ShopQrBlock`). Single-program vendors keep `/c?v=<vendorId>`.
+  `/c?v=<vendorId>` (vendor-wide, the same target `ShopQrBlock` uses today).
+  Program-specific join links are deferred: `vendor_join` deliberately
+  enrolls a customer into every active program at once, and changing that
+  touches the public join and referral paths. Revisit in a later phase if a
+  vendor needs a per-program poster.
 - "Undo" on the just-served strip = `adjustStampAction` with `delta: -1`,
   `reason: "undo"`. Single level, cleared on the next action or leaving the
   page. Deeper corrections go to `customers/[phone]/adjust-stamp-form`.
@@ -190,9 +193,14 @@ Each is a separate plan document, each shipping working, tested software.
   into the program-edit screen.
 - "At risk" cadence-relative segment (Phase 2).
 
-## Open questions for Clarence
+## Resolved decisions
 
-1. **Voucher expiry default**: when a reward is earned outside a program
-   edit, should `reward_vouchers.expires_at` default to 90 days or stay
-   `null` (never expires)? Currently nullable, set only where
-   `reward_expiry_days` is configured. Not blocking Plan 1; needed by Plan 3.
+1. **Voucher expiry default** (2026-09-08): a reward earned outside a
+   program edit gets `reward_vouchers.expires_at = earned_at + 90 days`
+   unless the program sets its own `reward_expiry_days` (which still wins).
+   Rationale: redemption urgency, capped vendor liability, matches the
+   win-back nudge cadence. Vendor-configurable later. The column stays
+   nullable; `null` now means "explicitly never expires", not "unset".
+2. **Phase 1 gating** (2026-09-08): the Overview / Counter / Customers
+   rebuild ships ungated. No `isPro()` checks. Gating is added in Phase 2
+   once there is real Free-vendor usage to instrument.
