@@ -28,6 +28,7 @@ substitute for running the migration against real Postgres.
 - `points-per-visit-schema.test.ts` — checks migration `0026_loopkit_points_per_visit.sql` (`points_per_visit` config, widened `stamps_required` range)
 - `program-replacement-schema.test.ts` — checks migration `0016_loopkit_program_replacement.sql` (`replaced_by` self-reference)
 - `record-visit-schema.test.ts` — checks migration `0005_loopkit_record_visit.sql` (`record_visit` SECURITY DEFINER function)
+- `reward-cost-schema.test.ts` — checks migration `0045_loopkit_reward_cost.sql` (nullable `reward_cost_cents integer`, the null-or-non-negative check, and that it adds no RLS policy)
 - `remove-streak-type-schema.test.ts` — checks migration `0025_loopkit_remove_streak_type.sql` (streak type removed from the constraint + `enroll_card`)
 - `schema.test.ts` — checks migration `0001_loopkit_core.sql` (base `programs`/`cards`/`stamp_events` schema)
 - `stamp-cap.test.ts` — checks migration `0002_loopkit_stamp_cap.sql` (stamp ceiling at `stamps_required`)

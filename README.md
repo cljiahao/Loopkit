@@ -133,7 +133,9 @@ Overview, Counter and Customers rebuilt around the vendor's real questions
 (are regulars still coming, what is the reward liability costing me, who to
 act on today), split into 5 sub-plans. First slice landed: three pure
 `stats.ts` helpers (`returnRate90d`, `regularsGoneQuiet`, `cardsNearReward`)
-for the new Overview, no UI wiring yet (`src/lib/README.md`).
+for the new Overview, no UI wiring yet (`src/lib/README.md`). Sub-plan 2
+landed: stamp programs now carry an optional reward cost (SGD, migration
+0045), edited from the program form, for the Overview cost view.
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
