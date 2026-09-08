@@ -171,6 +171,23 @@ export function regularsGoneQuiet(
   return { count: cardIds.length, cardIds };
 }
 
+// How many cards are one or two stamps short of the reward. The one-away
+// count is the hottest win the vendor has: a near-certain next visit at
+// almost zero marginal cost. A card at or past the threshold is
+// reward-ready, a separate state, and is not counted here.
+export function cardsNearReward(
+  cards: { stamp_count: number }[],
+  stampsRequired: number,
+): { oneAway: number; twoAway: number } {
+  let oneAway = 0;
+  let twoAway = 0;
+  for (const c of cards) {
+    if (c.stamp_count === stampsRequired - 1) oneAway += 1;
+    else if (c.stamp_count === stampsRequired - 2) twoAway += 1;
+  }
+  return { oneAway, twoAway };
+}
+
 // Pure card-level aggregation. `activityEvents`/`rewardEvents` are the
 // already-classified arrays from `classifyActivity` — this function does no
 // kind filtering itself.

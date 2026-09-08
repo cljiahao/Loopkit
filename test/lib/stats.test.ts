@@ -13,6 +13,7 @@ import {
   avgDaysBetweenVisits,
   returnRate90d,
   regularsGoneQuiet,
+  cardsNearReward,
   countExpiredVouchers,
 } from "@/lib/stats";
 
@@ -386,6 +387,36 @@ describe("regularsGoneQuiet", () => {
       count: 1,
       cardIds: ["c1"],
     });
+  });
+});
+
+describe("cardsNearReward", () => {
+  it("returns zeroes for no cards", () => {
+    expect(cardsNearReward([], 8)).toEqual({ oneAway: 0, twoAway: 0 });
+  });
+
+  it("counts cards exactly one and exactly two stamps short", () => {
+    const cards = [
+      { stamp_count: 7 }, // one away
+      { stamp_count: 7 }, // one away
+      { stamp_count: 6 }, // two away
+      { stamp_count: 5 }, // three away, neither
+      { stamp_count: 8 }, // reward-ready, neither
+      { stamp_count: 0 }, // fresh, neither
+    ];
+    expect(cardsNearReward(cards, 8)).toEqual({ oneAway: 2, twoAway: 1 });
+  });
+
+  it("does not count a card past the threshold", () => {
+    expect(cardsNearReward([{ stamp_count: 9 }], 8)).toEqual({
+      oneAway: 0,
+      twoAway: 0,
+    });
+  });
+
+  it("handles a small threshold where two-away is stamp_count 1", () => {
+    const cards = [{ stamp_count: 2 }, { stamp_count: 1 }, { stamp_count: 0 }];
+    expect(cardsNearReward(cards, 3)).toEqual({ oneAway: 1, twoAway: 1 });
   });
 });
 
