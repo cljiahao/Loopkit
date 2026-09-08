@@ -21,6 +21,11 @@ describe("Briefing", () => {
     expect(container.textContent).toBe("No regulars yet this month.");
   });
 
+  it("renders a single-word text with no leading-number split", () => {
+    const { container } = render(<Briefing text="Welcome." />);
+    expect(container.textContent).toBe("Welcome.");
+  });
+
   it("has no em dash", () => {
     const { container } = render(<Briefing text="3 regulars this month." />);
     expect(container.textContent).not.toContain("—");

@@ -30,4 +30,20 @@ describe("WorthALook", () => {
     render(<WorthALook items={[{ kind: "gone-quiet", count: 1 }]} />);
     expect(screen.getByText(/1 regular has gone quiet/i)).toBeInTheDocument();
   });
+
+  it("renders the two-stamps-away row", () => {
+    render(
+      <WorthALook
+        items={[
+          { kind: "two-away", count: 3 },
+          { kind: "two-away", count: 1 },
+        ]}
+      />,
+    );
+    expect(screen.getByText(/3 are two stamps away/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 is two stamps away/i)).toBeInTheDocument();
+    expect(
+      screen.getAllByRole("link", { name: /two stamps away/i })[0],
+    ).toHaveAttribute("href", "/dashboard/customers?seg=ready");
+  });
 });
