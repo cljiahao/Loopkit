@@ -135,6 +135,42 @@ export function returnRate90d(
   return active === 0 ? null : returners / active;
 }
 
+// Cards worth a win-back nudge: 3 or more lifetime activity events (a real
+// regular, not a one-time visitor) whose latest event is 21 to 40 days ago.
+// The window is bounded on both sides: under 21 days is still recent, past
+// roughly 45 days the customer has usually churned and the nudge is low-ROI.
+// cardIds follow first-seen order in the input.
+export function regularsGoneQuiet(
+  activityEvents: StatsEvent[],
+  nowMs: number,
+): { count: number; cardIds: string[] } {
+  const earliest = nowMs - 40 * MS_PER_DAY;
+  const latestCutoff = nowMs - 21 * MS_PER_DAY;
+  const byCard = new Map<string, { total: number; latest: number }>();
+  const order: string[] = [];
+  for (const e of activityEvents) {
+    const t = Date.parse(e.created_at);
+    if (!Number.isFinite(t)) continue;
+    let cur = byCard.get(e.card_id);
+    if (!cur) {
+      cur = { total: 0, latest: 0 };
+      byCard.set(e.card_id, cur);
+      order.push(e.card_id);
+    }
+    cur.total += 1;
+    if (t > cur.latest) cur.latest = t;
+  }
+
+  const cardIds: string[] = [];
+  for (const id of order) {
+    const { total, latest } = byCard.get(id)!;
+    if (total >= 3 && latest >= earliest && latest < latestCutoff) {
+      cardIds.push(id);
+    }
+  }
+  return { count: cardIds.length, cardIds };
+}
+
 // Pure card-level aggregation. `activityEvents`/`rewardEvents` are the
 // already-classified arrays from `classifyActivity` — this function does no
 // kind filtering itself.
