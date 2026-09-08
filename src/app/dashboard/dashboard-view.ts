@@ -28,14 +28,15 @@ export type TrendView = {
 
 // Slice the 30-day visit buckets into the two windows the trend chart shows.
 // bars7 = last 7 days, bars14 = last 14. deltaVsLastWeek = sum(last 7) minus
-// sum(the 7 before that), 0 when there is no prior week.
+// sum(the 7 before that), and 0 when there is no full prior week to compare.
 export function splitTrend(visitsByDay: TrendBar[]): TrendView {
   const sum = (a: TrendBar[]) => a.reduce((n, d) => n + d.count, 0);
+  const prior = visitsByDay.slice(-14, -7);
   return {
     bars7: visitsByDay.slice(-7),
     bars14: visitsByDay.slice(-14),
     deltaVsLastWeek:
-      sum(visitsByDay.slice(-7)) - sum(visitsByDay.slice(-14, -7)),
+      prior.length < 7 ? 0 : sum(visitsByDay.slice(-7)) - sum(prior),
   };
 }
 
