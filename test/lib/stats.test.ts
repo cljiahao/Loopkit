@@ -11,6 +11,7 @@ import {
   computeCardStats,
   pctChange,
   avgDaysBetweenVisits,
+  returnRate90d,
   countExpiredVouchers,
 } from "@/lib/stats";
 
@@ -254,6 +255,64 @@ describe("avgDaysBetweenVisits", () => {
       { card_id: "c1", kind: "stamp", created_at: iso(2) },
     ];
     expect(avgDaysBetweenVisits(events)).toBe(3);
+  });
+});
+
+describe("returnRate90d", () => {
+  it("returns null when no card has an event in the last 90 days", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(120) },
+      { card_id: "c1", kind: "stamp", created_at: iso(100) },
+    ];
+    expect(returnRate90d(events, now)).toBeNull();
+  });
+
+  it("returns null for no events at all", () => {
+    expect(returnRate90d([], now)).toBeNull();
+  });
+
+  it("counts a 90-day-active card with 2+ lifetime events as a returner", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(200) },
+      { card_id: "c1", kind: "stamp", created_at: iso(10) },
+    ];
+    expect(returnRate90d(events, now)).toBe(1);
+  });
+
+  it("excludes a 90-day-active card with only one lifetime event from the numerator", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(200) },
+      { card_id: "c1", kind: "stamp", created_at: iso(10) }, // returner
+      { card_id: "c2", kind: "stamp", created_at: iso(5) }, // active, single visit
+    ];
+    expect(returnRate90d(events, now)).toBe(0.5);
+  });
+
+  it("excludes cards whose latest event is older than 90 days from the denominator", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(10) },
+      { card_id: "c1", kind: "stamp", created_at: iso(5) }, // 90d-active returner
+      { card_id: "c2", kind: "stamp", created_at: iso(150) },
+      { card_id: "c2", kind: "stamp", created_at: iso(100) }, // repeat but stale, excluded
+    ];
+    expect(returnRate90d(events, now)).toBe(1);
+  });
+
+  it("treats a card whose latest event is exactly 90 days old as active (half-open at the far edge)", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(120) },
+      { card_id: "c1", kind: "stamp", created_at: iso(90) },
+    ];
+    expect(returnRate90d(events, now)).toBe(1);
+  });
+
+  it("skips events with an unparseable created_at instead of throwing", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: "not-a-date" },
+      { card_id: "c1", kind: "stamp", created_at: iso(20) },
+      { card_id: "c1", kind: "stamp", created_at: iso(10) },
+    ];
+    expect(returnRate90d(events, now)).toBe(1);
   });
 });
 

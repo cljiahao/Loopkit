@@ -103,6 +103,38 @@ export function avgDaysBetweenVisits(
   return gapsDays.reduce((sum, g) => sum + g, 0) / gapsDays.length;
 }
 
+// Of cards active in the last 90 days (latest activity event within the
+// window), the fraction that have 2 or more lifetime activity events. This
+// is the vendor-facing "% come back" headline. The denominator is
+// 90-day-active cards, not all-time enrolled: a long-dead card is not
+// evidence the program stopped working, so it must not drag the rate down.
+// null when no card is 90-day-active (mirrors avgDaysBetweenVisits' null
+// convention: no signal, not a misleading 0).
+export function returnRate90d(
+  activityEvents: StatsEvent[],
+  nowMs: number,
+): number | null {
+  const cutoff90 = nowMs - 90 * MS_PER_DAY;
+  const byCard = new Map<string, { total: number; latest: number }>();
+  for (const e of activityEvents) {
+    const t = Date.parse(e.created_at);
+    if (!Number.isFinite(t)) continue;
+    const cur = byCard.get(e.card_id) ?? { total: 0, latest: 0 };
+    cur.total += 1;
+    if (t > cur.latest) cur.latest = t;
+    byCard.set(e.card_id, cur);
+  }
+
+  let active = 0;
+  let returners = 0;
+  for (const { total, latest } of byCard.values()) {
+    if (latest < cutoff90) continue;
+    active += 1;
+    if (total >= 2) returners += 1;
+  }
+  return active === 0 ? null : returners / active;
+}
+
 // Pure card-level aggregation. `activityEvents`/`rewardEvents` are the
 // already-classified arrays from `classifyActivity` — this function does no
 // kind filtering itself.
