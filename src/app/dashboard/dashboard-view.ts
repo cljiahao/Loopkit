@@ -40,6 +40,67 @@ export function splitTrend(visitsByDay: TrendBar[]): TrendView {
   };
 }
 
+export type BaseStat = {
+  key: "regulars" | "new" | "lapsed" | "net";
+  label: string;
+  // already sign-formatted, e.g. "+9", "-4", "38"
+  display: string;
+  tone: "plain" | "pos" | "soft";
+  title: string;
+  body: string;
+  hint: string;
+};
+
+// The 4 self-explaining base stats. Copy is verbatim from the approved
+// mockup's data-title / data-body / data-hint attributes.
+export function buildBaseStats(input: {
+  active: number;
+  newThisMonth: number;
+  lapsed: number;
+}): BaseStat[] {
+  const { active, newThisMonth, lapsed } = input;
+  const net = newThisMonth - lapsed;
+  const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
+  return [
+    {
+      key: "regulars",
+      label: "active regulars",
+      display: String(active),
+      tone: "plain",
+      title: "Active regulars",
+      body: "Visited 2 or more times, and back within the last 30 days.",
+      hint: "Your loyal base right now.",
+    },
+    {
+      key: "new",
+      label: "new this month",
+      display: signed(newThisMonth),
+      tone: newThisMonth > 0 ? "pos" : "plain",
+      title: "New this month",
+      body: "First-time cards created since the 1st.",
+      hint: "People just trying the program.",
+    },
+    {
+      key: "lapsed",
+      label: "lapsed",
+      display: lapsed === 0 ? "0" : `-${lapsed}`,
+      tone: "soft",
+      title: "Lapsed",
+      body: "Regulars not seen in 30 or more days.",
+      hint: "They were coming. Now quiet.",
+    },
+    {
+      key: "net",
+      label: "net",
+      display: signed(net),
+      tone: "plain",
+      title: "Net change",
+      body: "New cards minus lapsed regulars.",
+      hint: "Whether your base grew or shrank this month.",
+    },
+  ];
+}
+
 const dayWord = (n: number) => (n === 1 ? "day" : "days");
 
 // The "N days sooner/later than last month" clause, or "" when there is no

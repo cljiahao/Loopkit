@@ -4,6 +4,7 @@ import {
   buildGreeting,
   buildBriefing,
   splitTrend,
+  buildBaseStats,
 } from "@/app/dashboard/dashboard-view";
 
 describe("shouldShowQr", () => {
@@ -81,5 +82,45 @@ describe("splitTrend", () => {
     expect(t.bars7).toHaveLength(3);
     expect(t.bars14).toHaveLength(3);
     expect(t.deltaVsLastWeek).toBe(0); // no prior week
+  });
+});
+
+describe("buildBaseStats", () => {
+  it("returns 4 stats in order regulars, new, lapsed, net", () => {
+    const stats = buildBaseStats({ active: 38, newThisMonth: 9, lapsed: 4 });
+    expect(stats.map((s) => s.key)).toEqual([
+      "regulars",
+      "new",
+      "lapsed",
+      "net",
+    ]);
+  });
+  it("sign-formats the display strings", () => {
+    const stats = buildBaseStats({ active: 38, newThisMonth: 9, lapsed: 4 });
+    expect(stats.map((s) => s.display)).toEqual(["38", "+9", "-4", "+5"]);
+  });
+  it("net goes negative when lapsed outweighs new", () => {
+    const stats = buildBaseStats({ active: 10, newThisMonth: 2, lapsed: 6 });
+    expect(stats[3].display).toBe("-4");
+  });
+  it("new tone is pos only when positive, lapsed always soft", () => {
+    const a = buildBaseStats({ active: 1, newThisMonth: 3, lapsed: 0 });
+    expect(a[1].tone).toBe("pos");
+    expect(a[2].tone).toBe("soft");
+    const b = buildBaseStats({ active: 1, newThisMonth: 0, lapsed: 0 });
+    expect(b[1].tone).toBe("plain");
+    expect(b[1].display).toBe("0");
+  });
+  it("carries the regulars body copy verbatim from the mockup", () => {
+    const stats = buildBaseStats({ active: 1, newThisMonth: 0, lapsed: 0 });
+    expect(stats[0].body).toBe(
+      "Visited 2 or more times, and back within the last 30 days.",
+    );
+  });
+  it("has no em dash in any copy", () => {
+    const stats = buildBaseStats({ active: 5, newThisMonth: 5, lapsed: 5 });
+    for (const s of stats) {
+      expect(`${s.label}${s.title}${s.body}${s.hint}`).not.toContain("—");
+    }
   });
 });
