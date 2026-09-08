@@ -22,6 +22,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Stamp programs can carry an optional reward cost estimate (SGD), edited
+  from the program form and stored as integer cents in
+  `programs.reward_cost_cents` (migration 0045). Feeds the reward-cost view
+  on the upcoming dashboard Overview. `src/lib/money.ts` holds the
+  dollars/cents conversion (`dollarsToCents`, `centsToDollars`,
+  `formatSgd`).
+- The vendor Customers list has segment chips (all / reward ready / new
+  this week / not seen 30d+), a sort control (last visit / longest away /
+  closest to reward), and a Serve action on every row that opens that
+  customer at the counter.
 - `src/lib/stats.ts` gains three pure helpers for the vendor dashboard
   Overview: `returnRate90d` (share of 90-day-active customers who are
   repeat visitors), `regularsGoneQuiet` (regulars whose last visit is 21

@@ -8,6 +8,7 @@ import {
   prepProgramAction,
 } from "@/app/setup/actions";
 import type { Program, ProgramType } from "@/lib/program";
+import { centsToDollars } from "@/lib/money";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -1357,6 +1358,45 @@ export function SetupForm({
                 />
                 <p className="text-xs text-muted-foreground">
                   Leave blank so an earned reward never expires.
+                </p>
+              </div>
+            )}
+
+            {type === "stamp" && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor="reward_cost_dollars" className={labelClass}>
+                    Reward cost (SGD, optional)
+                  </Label>
+                  <InfoTooltip
+                    ariaLabel="What this figure is used for"
+                    trigger="tap"
+                    content={
+                      <>
+                        Roughly what one reward costs you to give away. Powers
+                        the cost view on your dashboard. Nothing is shown to
+                        customers.
+                      </>
+                    }
+                  />
+                </div>
+                <Input
+                  id="reward_cost_dollars"
+                  name="reward_cost_dollars"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  inputMode="decimal"
+                  placeholder="1.20"
+                  defaultValue={
+                    program?.reward_cost_cents != null
+                      ? centsToDollars(program.reward_cost_cents).toString()
+                      : ""
+                  }
+                  className="h-11 rounded-xl"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Leave blank if you would rather not track it.
                 </p>
               </div>
             )}

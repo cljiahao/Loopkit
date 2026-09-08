@@ -147,6 +147,50 @@ describe("saveProgramSchema reward_expiry_days", () => {
   });
 });
 
+describe("saveProgramSchema reward_cost_dollars", () => {
+  it("accepts an optional reward_cost_dollars on a stamp program and coerces it", () => {
+    const parsed = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free coffee",
+      head_start: "false",
+      reward_cost_dollars: "1.20",
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success && parsed.data.type === "stamp") {
+      expect(parsed.data.reward_cost_dollars).toBeCloseTo(1.2, 10);
+    }
+  });
+
+  it("treats a blank reward_cost_dollars as unset", () => {
+    const parsed = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free coffee",
+      head_start: "false",
+      reward_cost_dollars: "",
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success && parsed.data.type === "stamp") {
+      expect(parsed.data.reward_cost_dollars).toBeUndefined();
+    }
+  });
+
+  it("rejects a negative reward_cost_dollars", () => {
+    const parsed = saveProgramSchema.safeParse({
+      type: "stamp",
+      name: "Coffee",
+      stamps_required: "10",
+      reward_text: "Free coffee",
+      head_start: "false",
+      reward_cost_dollars: "-1",
+    });
+    expect(parsed.success).toBe(false);
+  });
+});
+
 describe("saveProgramSchema stamp_mark", () => {
   it("accepts a stamp program with a preset mark", () => {
     const result = saveProgramSchema.safeParse({
