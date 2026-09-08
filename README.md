@@ -127,7 +127,13 @@ programs likewise get a vendor choice of 5 stamp skins (classic dots, wax
 seal, ink stamp, punch hole, charm) and an accent color, free for every
 vendor with no Pro gate — none of loopkit's 3 researched competitors gate
 either a mechanic's card type or customization this granular
-(`src/components/README.md`, `CHANGELOG.md`).
+(`src/components/README.md`, `CHANGELOG.md`). A vendor-dashboard redesign is
+underway (`docs/superpowers/specs/2026-09-08-vendor-dashboard-redesign-design.md`):
+Overview, Counter and Customers rebuilt around the vendor's real questions
+(are regulars still coming, what is the reward liability costing me, who to
+act on today), split into 5 sub-plans. First slice landed: three pure
+`stats.ts` helpers (`returnRate90d`, `regularsGoneQuiet`, `cardsNearReward`)
+for the new Overview, no UI wiring yet (`src/lib/README.md`).
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
