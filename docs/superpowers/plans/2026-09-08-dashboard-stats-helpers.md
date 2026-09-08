@@ -4,7 +4,7 @@
 
 **Goal:** Add three pure functions to `src/lib/stats.ts` that the rebuilt Overview needs: a 90-day return rate, a "regulars gone quiet" list, and a "near reward" count.
 
-**Architecture:** Pure functions in the existing `stats.ts` module, alongside `avgDaysBetweenVisits` / `pctChange`. No DB access, no wall clock (caller passes `now` in ms). Tested in `test/lib/stats.test.ts` with the existing `iso(daysAgo)` fixture helper. No wiring into any page or fetch function in this plan — that is Plan 3.
+**Architecture:** Pure functions in the existing `stats.ts` module, alongside `avgDaysBetweenVisits` / `pctChange`. No DB access, no wall clock (caller passes `now` in ms). Tested in `test/lib/stats.test.ts` with the existing `iso(daysAgo)` fixture helper. No wiring into any page or fetch function in this plan that is Plan 3.
 
 **Tech Stack:** TypeScript (strict), Vitest.
 
@@ -43,18 +43,22 @@
 ### Task 1: `returnRate90d`
 
 **Files:**
+
 - Modify: `src/lib/stats.ts` (add an exported function near `avgDaysBetweenVisits`, ~line 104)
 - Test: `test/lib/stats.test.ts` (add a `describe` block, e.g. after the `avgDaysBetweenVisits` block ~line 258)
 
 **Interfaces:**
+
 - Consumes: `MS_PER_DAY` (already imported), `StatsEvent` type (already declared).
 - Produces:
+
   ```typescript
   export function returnRate90d(
     activityEvents: StatsEvent[],
     nowMs: number,
-  ): number | null
+  ): number | null;
   ```
+
   Returns the fraction (0..1) of cards active in the last 90 days that have 2+ lifetime activity events. `null` when no card is 90-day-active. Definition: a card is "90-day-active" if its most recent event is `>= nowMs - 90 * MS_PER_DAY`. Denominator is 90-day-active cards only, never all-time card count.
 
 - [ ] **Step 1: Write the failing tests**
@@ -124,7 +128,7 @@ describe("returnRate90d", () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm test -- test/lib/stats.test.ts -t "returnRate90d"`
-Expected: FAIL — `returnRate90d is not a function` / import error.
+Expected: FAIL `returnRate90d is not a function` / import error.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -186,18 +190,22 @@ git commit -m "feat(stats): add returnRate90d helper for the Overview return-rat
 ### Task 2: `regularsGoneQuiet`
 
 **Files:**
+
 - Modify: `src/lib/stats.ts` (add after `returnRate90d`)
 - Test: `test/lib/stats.test.ts` (add a `describe` block after the `returnRate90d` block)
 
 **Interfaces:**
+
 - Consumes: `MS_PER_DAY`, `StatsEvent`.
 - Produces:
+
   ```typescript
   export function regularsGoneQuiet(
     activityEvents: StatsEvent[],
     nowMs: number,
-  ): { count: number; cardIds: string[] }
+  ): { count: number; cardIds: string[] };
   ```
+
   A card qualifies when it has 3+ lifetime activity events AND its latest event is between 40 and 21 days ago: `latest >= nowMs - 40 * MS_PER_DAY` AND `latest < nowMs - 21 * MS_PER_DAY`. `cardIds` order follows first-seen order in `activityEvents`. `count === cardIds.length`.
 
 - [ ] **Step 1: Write the failing tests**
@@ -281,7 +289,7 @@ describe("regularsGoneQuiet", () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm test -- test/lib/stats.test.ts -t "regularsGoneQuiet"`
-Expected: FAIL — not a function.
+Expected: FAIL not a function.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -347,18 +355,22 @@ git commit -m "feat(stats): add regularsGoneQuiet helper for the Overview win-ba
 ### Task 3: `cardsNearReward`
 
 **Files:**
+
 - Modify: `src/lib/stats.ts` (add after `regularsGoneQuiet`)
 - Test: `test/lib/stats.test.ts` (add a `describe` block after the `regularsGoneQuiet` block)
 
 **Interfaces:**
+
 - Consumes: nothing from earlier tasks.
 - Produces:
+
   ```typescript
   export function cardsNearReward(
     cards: { stamp_count: number }[],
     stampsRequired: number,
-  ): { oneAway: number; twoAway: number }
+  ): { oneAway: number; twoAway: number };
   ```
+
   `oneAway` = count where `stamp_count === stampsRequired - 1`. `twoAway` = count where `stamp_count === stampsRequired - 2`. A card already at or past `stampsRequired` is neither (it is reward-ready, a separate state). A card at `stampsRequired - 3` or fewer is neither.
 
 - [ ] **Step 1: Write the failing tests**
@@ -400,7 +412,7 @@ describe("cardsNearReward", () => {
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run: `pnpm test -- test/lib/stats.test.ts -t "cardsNearReward"`
-Expected: FAIL — not a function.
+Expected: FAIL not a function.
 
 - [ ] **Step 3: Write the implementation**
 
@@ -447,10 +459,12 @@ git commit -m "feat(stats): add cardsNearReward helper for the Overview near-rew
 ### Task 4: Changelog and README
 
 **Files:**
+
 - Modify: `CHANGELOG.md`
 - Modify (only if its `stats.ts` line no longer fits): `src/lib/README.md`
 
 **Interfaces:**
+
 - Consumes: the three functions from Tasks 1 to 3.
 - Produces: nothing importable.
 

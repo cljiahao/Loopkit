@@ -1,4 +1,4 @@
-# Vendor dashboard redesign — design
+# Vendor dashboard redesign: design
 
 Date: 2026-09-08
 
@@ -14,15 +14,15 @@ From the vendor's point of view the questions that matter are:
 
 1. Are my regulars still coming, and how often?
 2. What is the reward liability costing me?
-3. Who do I act on today — win back a drifting regular, expect a reward-ready
+3. Who do I act on today: win back a drifting regular, expect a reward-ready
    one?
 
 A stamp is a cheap re-visit hook; a redeemed reward is real cost off the
 vendor's margin. The current dashboard celebrates activity ("reward
-unlocked") which is the *customer's* excitement, not the owner's.
+unlocked") which is the _customer's_ excitement, not the owner's.
 
-This redesign rebuilds three screens — **Overview**, **Counter**,
-**Customers** — around those three questions. `Activity` and `Referrals`
+This redesign rebuilds three screens (Overview, Counter,
+Customers) around those three questions. `Activity` and `Referrals`
 stay as-is for v1. `Stats` gets a light pass (it stays the deep view; the
 Overview is the daily briefing).
 
@@ -32,28 +32,28 @@ it is condensed below.
 
 ## Prior work this builds on
 
-- `docs/superpowers/specs/2026-07-11-stats-expansion-design.md` — added
+- `docs/superpowers/specs/2026-07-11-stats-expansion-design.md`: added
   `pctChange`, prior-period deltas, `avgDaysBetweenVisits` to `stats.ts`.
   All kept. This spec adds three more pure helpers alongside them.
-- `docs/superpowers/specs/2026-07-14-dashboard-card-revamp-design.md` — the
+- `docs/superpowers/specs/2026-07-14-dashboard-card-revamp-design.md`: the
   `ProgramCard` shape. The Overview keeps `ProgramCard` semantics (a
   clickable per-program row that routes to the Counter) but restyles the
   block.
-- `docs/superpowers/specs/2026-07-10-dashboard-nav-plan-gating-design.md` —
+- `docs/superpowers/specs/2026-07-10-dashboard-nav-plan-gating-design.md`:
   `canCreateProgram()` / Free = 1 active program. Unchanged.
 
 ## What does NOT change
 
-- The shared `@merqo/ui` `DashboardNav` — no new nav item, no divergence
+- The shared `@merqo/ui` `DashboardNav`: no new nav item, no divergence
   from the other kits. "Serve a customer" is an in-page CTA, not a route in
   the nav.
-- `stamp_events` / `cards` / `reward_vouchers` schema — every new metric is
+- `stamp_events` / `cards` / `reward_vouchers` schema: every new metric is
   computed from data `stats.ts` already fetches. The one schema addition is
   `programs.reward_cost_cents` (sub-plan 2).
 - The loyalty engine: `add_stamp`, `record_visit`, `redeem`,
   `regenerate_card`, `adjust_stamp` RPCs and the `serve-customer.tsx` result
   handlers (`handleStampVisit`, `handlePlantVisit`, `handleChanceVisit`) and
-  the `ServeResult` type. The Counter rebuild recomposes the *layout* around
+  the `ServeResult` type. The Counter rebuild recomposes the _layout_ around
   these; it does not touch the engine calls.
 - `avgDaysBetweenVisits` stays all-time and pooled (resolved 2026-07-11).
 - No new charting library. `stats/visits-chart.tsx` (the div-bar strip) is
@@ -61,12 +61,12 @@ it is condensed below.
 
 ## Global constraints
 
-- **Pin exact dependency versions** — no `^`/`~` on new or changed deps.
+- **Pin exact dependency versions**: no `^`/`~` on new or changed deps.
 - **No em dashes** in any user-facing copy or code comments. Use a period,
   comma, colon, or parentheses; split into two sentences. This applies to
   files touched by this work, including sweeping existing em dashes out of a
   file being modified (the current stats page and dashboard copy use them).
-- TypeScript strict — no `any`, no `@ts-ignore`.
+- TypeScript strict: no `any`, no `@ts-ignore`.
 - Validate all user input with Zod at every boundary (forms + server
   actions).
 - Authorization lives in RLS policies, not app code.
@@ -95,7 +95,7 @@ it is condensed below.
   open-ended: 21d is the early-warning line, past ~45d the customer is
   likely gone and low-ROI to chase.
 - **"One / two stamps away"** (Overview "Worth a look") = `stamp_count ===
-  stamps_required - 1` (the hot list) and `=== stamps_required - 2`.
+stamps_required - 1` (the hot list) and `=== stamps_required - 2`.
 - **Redemption rate** = `rewardsTotal / enrolled` (already computed). It is
   the single most-cited program-health metric and must be visible on the
   Overview.
@@ -136,17 +136,17 @@ scope here.
 loopkit Pro is **$4.99 SGD/month**. Free is fully usable. Pro unlocks:
 multiple programs, all non-stamp mechanics, premium card styles, multi-tier
 rewards, branding removal, customer Telegram nudges, Stats depth. **Phase 1
-ships ungated** — gating is added in Phase 2 once there is real usage to
+ships ungated**: gating is added in Phase 2 once there is real usage to
 instrument. No `isPro()` checks in the Overview / Counter / Customers
 rebuild.
 
 ### Layout
 
 - Overview: one centred column at `max-width` ~46rem below 1024px. At
-  >= 1024px **and** 2+ programs, a two-zone grid: the scannable read
-  (briefing, base strip, visits chart, "worth a look", recent activity) in
-  the wide column, the reference panel (reward cost, your programs) in a
-  ~20rem right rail.
+  > = 1024px **and** 2+ programs, a two-zone grid: the scannable read
+  > (briefing, base strip, visits chart, "worth a look", recent activity) in
+  > the wide column, the reference panel (reward cost, your programs) in a
+  > ~20rem right rail.
 - Visits chart: 7 bars below ~900px, 14 bars (prior week muted + current
   week + a "vs last week" delta) at >= ~900px.
 - Follow loopkit's existing `globals.css` tokens and `ElevatedCard` /
@@ -156,13 +156,13 @@ rebuild.
 
 Each is a separate plan document, each shipping working, tested software.
 
-| # | Plan | Deliverable | Depends on |
-|---|---|---|---|
-| 1 | `2026-09-08-dashboard-stats-helpers.md` | 3 pure functions in `stats.ts` (`returnRate90d`, `regularsGoneQuiet`, `cardsNearReward`) + tests | — |
-| 2 | `2026-09-08-programs-reward-cost.md` | `programs.reward_cost_cents` migration, type regen, a `rewardCostCents` field on `Program`, a small edit control | — |
-| 3 | `2026-09-08-overview-rebuild.md` | new `/dashboard` composition: briefing, base strip, visits chart, "worth a look", cost panel, recent activity, your-programs; `dashboard-view.ts` view-model assembling from `stats.ts` + plan-1 helpers + `customers.ts` | 1, 2 |
-| 4 | `2026-09-08-counter-scan-first.md` | `counter/page.tsx` + `serve-customer.tsx` recomposed: scan hero, collapsed manual fallback, empty active card, new-customer, shop-join-QR, undo, last-used-program routing | — |
-| 5 | `2026-09-08-customers-segments-sort.md` | `customers/page.tsx` + `listVendorCustomers`: segment chips (all / reward-ready / new / lapsed), sort select (last visit / longest away / closest to reward), Serve on every row | — |
+| #   | Plan                                    | Deliverable                                                                                                                                                                                                               | Depends on |
+| --- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| 1   | `2026-09-08-dashboard-stats-helpers.md` | 3 pure functions in `stats.ts` (`returnRate90d`, `regularsGoneQuiet`, `cardsNearReward`) + tests                                                                                                                          | none       |
+| 2   | `2026-09-08-programs-reward-cost.md`    | `programs.reward_cost_cents` migration, type regen, a `rewardCostCents` field on `Program`, a small edit control                                                                                                          | none       |
+| 3   | `2026-09-08-overview-rebuild.md`        | new `/dashboard` composition: briefing, base strip, visits chart, "worth a look", cost panel, recent activity, your-programs; `dashboard-view.ts` view-model assembling from `stats.ts` + plan-1 helpers + `customers.ts` | 1, 2       |
+| 4   | `2026-09-08-counter-scan-first.md`      | `counter/page.tsx` + `serve-customer.tsx` recomposed: scan hero, collapsed manual fallback, empty active card, new-customer, shop-join-QR, undo, last-used-program routing                                                | none       |
+| 5   | `2026-09-08-customers-segments-sort.md` | `customers/page.tsx` + `listVendorCustomers`: segment chips (all / reward-ready / new / lapsed), sort select (last visit / longest away / closest to reward), Serve on every row                                          | none       |
 
 ## Testing strategy
 
@@ -186,13 +186,13 @@ Each is a separate plan document, each shipping working, tested software.
 - The customer-facing `/c` view, the rotating-QR-per-visit redesign, the
   "unclaimed reward from your old card" surface (after the vendor view).
 - Activity and Referrals page redesigns.
-- Program-swap ("Replace this program" / `archived_at`) — Phase 2, folds
+- Program-swap ("Replace this program" / `archived_at`): Phase 2, folds
   into the program-edit screen.
 - "At risk" cadence-relative segment (Phase 2).
 
 ## Open questions for Clarence
 
-1. **Voucher expiry default** — when a reward is earned outside a program
+1. **Voucher expiry default**: when a reward is earned outside a program
    edit, should `reward_vouchers.expires_at` default to 90 days or stay
    `null` (never expires)? Currently nullable, set only where
    `reward_expiry_days` is configured. Not blocking Plan 1; needed by Plan 3.
