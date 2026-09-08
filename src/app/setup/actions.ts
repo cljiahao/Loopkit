@@ -14,6 +14,7 @@ import {
   getEntitlement,
 } from "@/lib/program";
 import { createServerClient } from "@/lib/supabase/server";
+import { dollarsToCents } from "@/lib/money";
 import type { Database } from "@/lib/types";
 
 type ProgramUpdate = Database["loopkit"]["Tables"]["programs"]["Update"];
@@ -53,6 +54,7 @@ export async function saveProgramAction(
     segments: formData.get("segments"),
     expiry_days: formData.get("expiry_days"),
     reward_expiry_days: formData.get("reward_expiry_days"),
+    reward_cost_dollars: formData.get("reward_cost_dollars"),
     head_start: formData.get("head_start"),
     head_start_percent: formData.get("head_start_percent"),
     variant: formData.get("variant"),
@@ -79,7 +81,13 @@ export async function saveProgramAction(
       head_start: fields.headStart,
       head_start_percent: fields.headStartPercent,
       ...(data.type === "stamp"
-        ? { birthday_bonus_enabled: data.birthday_bonus_enabled === "true" }
+        ? {
+            birthday_bonus_enabled: data.birthday_bonus_enabled === "true",
+            reward_cost_cents:
+              data.reward_cost_dollars === undefined
+                ? null
+                : dollarsToCents(data.reward_cost_dollars),
+          }
         : {}),
     };
     const { error } = await supabase
@@ -92,6 +100,7 @@ export async function saveProgramAction(
   }
 
   async function createNewProgram(): Promise<SaveProgramState> {
+    // reward_cost_cents stays null on create; the vendor sets it on first edit.
     // Pre-check the free/Pro gate for a friendly message — never trust the
     // client to have hidden the create form. The create_program RPC
     // re-enforces this in the database (SECURITY DEFINER), so a direct
