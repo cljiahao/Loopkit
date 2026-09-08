@@ -15,7 +15,8 @@ several (`admin-data.test.ts`, `admin.test.ts`, `cards.test.ts`,
 - `build-plant-config.test.ts` — `buildPlantConfig`: derives five named growth stages from a single visits-to-bloom knob
 - `build-program-fields.test.ts` — `buildProgramFields`: per-type (stamp/lucky/plant/wheel/scratch) program field construction, including a vendor-picked segment `color` threading through to the built config (unset segments leave it unset); the cup-variant stage-name assertion expects "Half Full" at the 50% threshold, not "Quarter Full"
 - `cards.test.ts` — `listCards`: fetches a vendor's cards for one program, optional phone search, mocks `createServerClient`
-- `customers.test.ts` — `aggregateCustomers`: merges one customer's cards across programs into a single row
+- `customer-segments.test.ts` — `customerSegments`/`filterBySegment`/`sortCustomers`/`segmentCounts` at the day boundaries (new is `>=` 7 days, lapsed is `<` 30 days, half-open), progress sort with `null` gaps last, no-mutation, and `parseSegment`/`parseSort` defaulting on unknown input
+- `customers.test.ts` — `aggregateCustomers`: merges one customer's cards across programs into a single row, and derives `rewardReady`, `bestGap`, `firstSeenAt`, and the most-recent card's program
 - `engine/`
 - `expiry.test.ts` — `isCardExpired`: day-elapsed check against a card's cycle start and the program's `expiry_days`
 - `loyalty.test.ts` — `rewardReady`: stamp count vs. requirement check

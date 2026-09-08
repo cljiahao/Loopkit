@@ -5,16 +5,39 @@ import { listPrograms, currentProgram } from "@/lib/program";
 import { getProgress } from "@/lib/engine";
 import { listCards } from "@/lib/cards";
 import { listVendorCustomers, type VendorCustomerRow } from "@/lib/customers";
+import {
+  parseSegment,
+  parseSort,
+  segmentCounts,
+  filterBySegment,
+  sortCustomers,
+  CUSTOMER_SEGMENTS,
+  type CustomerSegment,
+} from "@/lib/customer-segments";
 import { formatSgtDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ElevatedCard } from "@/components/elevated-card";
 import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
+import { CustomerControls } from "./customer-controls";
 
 type CustomersPageProps = {
-  searchParams: Promise<{ q?: string; p?: string }>;
+  searchParams: Promise<{
+    q?: string;
+    p?: string;
+    seg?: string;
+    sort?: string;
+  }>;
+};
+
+const SEGMENT_LABELS: Record<CustomerSegment, string> = {
+  all: "All",
+  ready: "Reward ready",
+  new: "New this week",
+  lapsed: "Not seen 30d+",
 };
 
 // Extracted so it's testable with plain props — no Supabase/auth mocking
@@ -42,12 +65,17 @@ export function VendorCustomerList({
           className="flex flex-col gap-2 p-3 text-sm"
         >
           <div className="flex items-center justify-between gap-3">
-            <Link
-              href={`/dashboard/customers/${encodeURIComponent(customer.phone)}`}
-              className="font-medium hover:underline"
-            >
-              {customer.name ?? customer.phone}
-            </Link>
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold uppercase">
+                {(customer.name ?? "#").charAt(0)}
+              </span>
+              <Link
+                href={`/dashboard/customers/${encodeURIComponent(customer.phone)}`}
+                className="truncate font-medium hover:underline"
+              >
+                {customer.name ?? customer.phone}
+              </Link>
+            </div>
             <span className="shrink-0 text-xs text-muted-foreground">
               {formatSgtDate(customer.lastSeenAt)}
             </span>
@@ -55,17 +83,40 @@ export function VendorCustomerList({
           {customer.name && (
             <p className="text-xs text-muted-foreground">{customer.phone}</p>
           )}
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap items-center gap-1">
             {customer.programNames.map((name) => (
               <Badge key={name} variant="secondary">
                 {name}
               </Badge>
             ))}
+            {customer.rewardReady ? (
+              <Badge>Ready</Badge>
+            ) : (
+              customer.bestGap !== null && (
+                <span className="text-xs text-muted-foreground">
+                  {customer.bestGap} to go
+                </span>
+              )
+            )}
           </div>
           <p className="text-xs text-muted-foreground">
             {customer.totalStamps} total stamps/visits · {customer.totalRewards}{" "}
             reward{customer.totalRewards === 1 ? "" : "s"}
           </p>
+          {customer.recentProgramId && (
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="mt-1 w-full rounded-lg"
+            >
+              <Link
+                href={`/dashboard/counter?p=${customer.recentProgramId}&phone=${encodeURIComponent(customer.phone)}`}
+              >
+                Serve
+              </Link>
+            </Button>
+          )}
         </ElevatedCard>
       ))}
     </ul>
@@ -78,7 +129,7 @@ export default async function CustomersPage({
   await requireVendor();
 
   const programs = await listPrograms();
-  const { q, p } = await searchParams;
+  const { q, p, seg: segRaw, sort: sortRaw } = await searchParams;
 
   if (!p && programs.length === 1) {
     const qSuffix = q ? `&q=${encodeURIComponent(q)}` : "";
@@ -86,7 +137,21 @@ export default async function CustomersPage({
   }
 
   if (!p) {
-    const customers = await listVendorCustomers(q);
+    const seg = parseSegment(segRaw);
+    const sort = parseSort(sortRaw);
+    const nowMs = new Date().getTime();
+    const all = await listVendorCustomers(q);
+    const counts = segmentCounts(all, nowMs);
+    const customers = sortCustomers(filterBySegment(all, seg, nowMs), sort);
+
+    const chipHref = (value: CustomerSegment) => {
+      const params = new URLSearchParams();
+      if (q) params.set("q", q);
+      params.set("seg", value);
+      params.set("sort", sort);
+      return `/dashboard/customers?${params.toString()}`;
+    };
+
     return (
       <div className="space-y-8">
         <div>
@@ -126,6 +191,26 @@ export default async function CustomersPage({
               Search
             </Button>
           </form>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {CUSTOMER_SEGMENTS.map((value) => (
+            <Link
+              key={value}
+              href={chipHref(value)}
+              aria-current={seg === value ? "page" : undefined}
+              className={cn(
+                "rounded-full border px-3 py-1 text-sm",
+                seg === value
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {SEGMENT_LABELS[value]} {counts[value]}
+            </Link>
+          ))}
+          <div className="ml-auto">
+            <CustomerControls sort={sort} preservedParams={{ q, seg }} />
+          </div>
         </div>
         <VendorCustomerList customers={customers} />
       </div>

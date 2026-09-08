@@ -133,7 +133,11 @@ Overview, Counter and Customers rebuilt around the vendor's real questions
 (are regulars still coming, what is the reward liability costing me, who to
 act on today), split into 5 sub-plans. First slice landed: three pure
 `stats.ts` helpers (`returnRate90d`, `regularsGoneQuiet`, `cardsNearReward`)
-for the new Overview, no UI wiring yet (`src/lib/README.md`).
+for the new Overview, no UI wiring yet (`src/lib/README.md`). Sub-plan 5
+landed too: the vendor Customers list has segment chips (all, reward ready,
+new this week, not seen 30d+), a sort control (last visit, longest away,
+closest to reward), and a Serve action on every row that opens that
+customer at the counter (`src/app/dashboard/customers/README.md`).
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view
