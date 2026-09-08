@@ -75,6 +75,7 @@ self-describing dated slugs; no separate description column below.
 - `2026-08-16-vendor-telegram-connect.md` — "Vendor Telegram Connect (Phase A2) Implementation Plan": deletes loopkit's own Telegram bot/tables/webhook/settings section and rewires `notifyRedemptionOnTelegram` to call merqo's `notify-vendor` endpoint. Depends on merqo's own Phase A2 plan shipping first.
 - `2026-08-16-shared-plan-comparison-table.md` — "Shared Plan Comparison Table Implementation Plan": migrates loopkit's `/dashboard/plan` page onto the shared `@merqo/ui` `PlanComparisonTable` component. Depends on qkit's own plan building and tagging it first.
 - `2026-09-04-points-club-reward-shop.md` — "Points Club Reward Shop Implementation Plan": 14 tasks turning Points Club into a real accumulate-then-spend shop — migration `0043` (a per-voucher `voucher_token` mirroring `cards.card_token`, plus `voucher_by_token`/`redeem_voucher_by_token`/`select_points_reward`/`apply_points_offset` RPCs), `stamp.ts`'s catalog/offset engine logic, the setup/customer/vendor-scan UI each side of the flow needs, and a new `/dashboard/redeem-voucher` scan-confirm screen.
+- `2026-09-08-dashboard-stats-helpers.md` — "Dashboard stats helpers Implementation Plan" (Phase 1, plan 1 of 5 for `2026-09-08-vendor-dashboard-redesign-design.md`): 4 tasks adding 3 pure functions to `src/lib/stats.ts` — `returnRate90d`, `regularsGoneQuiet`, `cardsNearReward` — with `test/lib/stats.test.ts` coverage. No page wiring (that is plan 3).
 
 ## Parent
 

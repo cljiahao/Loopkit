@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `src/lib/stats.ts` gains three pure helpers for the vendor dashboard
+  Overview: `returnRate90d` (share of 90-day-active customers who are
+  repeat visitors), `regularsGoneQuiet` (regulars whose last visit is 21
+  to 40 days ago, worth a win-back nudge), and `cardsNearReward` (cards
+  one or two stamps short of the reward).
 - `/about` — a public "Why Merqo" page: `@merqo/ui`'s shared `AboutMerqo`
   component (the qkit origin story, one source reused by every kit's own
   `/about`), linked from the landing `Nav` and `Footer`.

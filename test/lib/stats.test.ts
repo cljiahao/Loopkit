@@ -11,6 +11,9 @@ import {
   computeCardStats,
   pctChange,
   avgDaysBetweenVisits,
+  returnRate90d,
+  regularsGoneQuiet,
+  cardsNearReward,
   countExpiredVouchers,
 } from "@/lib/stats";
 
@@ -254,6 +257,166 @@ describe("avgDaysBetweenVisits", () => {
       { card_id: "c1", kind: "stamp", created_at: iso(2) },
     ];
     expect(avgDaysBetweenVisits(events)).toBe(3);
+  });
+});
+
+describe("returnRate90d", () => {
+  it("returns null when no card has an event in the last 90 days", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(120) },
+      { card_id: "c1", kind: "stamp", created_at: iso(100) },
+    ];
+    expect(returnRate90d(events, now)).toBeNull();
+  });
+
+  it("returns null for no events at all", () => {
+    expect(returnRate90d([], now)).toBeNull();
+  });
+
+  it("counts a 90-day-active card with 2+ lifetime events as a returner", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(200) },
+      { card_id: "c1", kind: "stamp", created_at: iso(10) },
+    ];
+    expect(returnRate90d(events, now)).toBe(1);
+  });
+
+  it("excludes a 90-day-active card with only one lifetime event from the numerator", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(200) },
+      { card_id: "c1", kind: "stamp", created_at: iso(10) }, // returner
+      { card_id: "c2", kind: "stamp", created_at: iso(5) }, // active, single visit
+    ];
+    expect(returnRate90d(events, now)).toBe(0.5);
+  });
+
+  it("excludes cards whose latest event is older than 90 days from the denominator", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(10) },
+      { card_id: "c1", kind: "stamp", created_at: iso(5) }, // 90d-active returner
+      { card_id: "c2", kind: "stamp", created_at: iso(150) },
+      { card_id: "c2", kind: "stamp", created_at: iso(100) }, // repeat but stale, excluded
+    ];
+    expect(returnRate90d(events, now)).toBe(1);
+  });
+
+  it("treats a card whose latest event is exactly 90 days old as active (half-open at the far edge)", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(120) },
+      { card_id: "c1", kind: "stamp", created_at: iso(90) },
+    ];
+    expect(returnRate90d(events, now)).toBe(1);
+  });
+
+  it("skips events with an unparseable created_at instead of throwing", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: "not-a-date" },
+      { card_id: "c1", kind: "stamp", created_at: iso(20) },
+      { card_id: "c1", kind: "stamp", created_at: iso(10) },
+    ];
+    expect(returnRate90d(events, now)).toBe(1);
+  });
+});
+
+describe("regularsGoneQuiet", () => {
+  it("returns an empty result for no events", () => {
+    expect(regularsGoneQuiet([], now)).toEqual({ count: 0, cardIds: [] });
+  });
+
+  it("flags a card with 3+ events whose last visit is in the 21-to-40-day window", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(50) },
+      { card_id: "c1", kind: "stamp", created_at: iso(45) },
+      { card_id: "c1", kind: "stamp", created_at: iso(30) },
+    ];
+    expect(regularsGoneQuiet(events, now)).toEqual({
+      count: 1,
+      cardIds: ["c1"],
+    });
+  });
+
+  it("excludes a card with only 2 lifetime events (not a regular)", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(45) },
+      { card_id: "c1", kind: "stamp", created_at: iso(30) },
+    ];
+    expect(regularsGoneQuiet(events, now)).toEqual({ count: 0, cardIds: [] });
+  });
+
+  it("excludes a card last seen 20 days ago (still recent, not quiet yet)", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(60) },
+      { card_id: "c1", kind: "stamp", created_at: iso(40) },
+      { card_id: "c1", kind: "stamp", created_at: iso(20) },
+    ];
+    expect(regularsGoneQuiet(events, now)).toEqual({ count: 0, cardIds: [] });
+  });
+
+  it("excludes a card last seen 50 days ago (past the window, likely gone)", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: iso(70) },
+      { card_id: "c1", kind: "stamp", created_at: iso(60) },
+      { card_id: "c1", kind: "stamp", created_at: iso(50) },
+    ];
+    expect(regularsGoneQuiet(events, now)).toEqual({ count: 0, cardIds: [] });
+  });
+
+  it("includes a card last seen exactly 40 days ago, excludes one exactly 21 days ago", () => {
+    const events = [
+      { card_id: "at40", kind: "stamp", created_at: iso(80) },
+      { card_id: "at40", kind: "stamp", created_at: iso(60) },
+      { card_id: "at40", kind: "stamp", created_at: iso(40) },
+      { card_id: "at21", kind: "stamp", created_at: iso(80) },
+      { card_id: "at21", kind: "stamp", created_at: iso(60) },
+      { card_id: "at21", kind: "stamp", created_at: iso(21) },
+    ];
+    expect(regularsGoneQuiet(events, now)).toEqual({
+      count: 1,
+      cardIds: ["at40"],
+    });
+  });
+
+  it("skips events with an unparseable created_at", () => {
+    const events = [
+      { card_id: "c1", kind: "stamp", created_at: "bad" },
+      { card_id: "c1", kind: "stamp", created_at: iso(50) },
+      { card_id: "c1", kind: "stamp", created_at: iso(45) },
+      { card_id: "c1", kind: "stamp", created_at: iso(30) },
+    ];
+    expect(regularsGoneQuiet(events, now)).toEqual({
+      count: 1,
+      cardIds: ["c1"],
+    });
+  });
+});
+
+describe("cardsNearReward", () => {
+  it("returns zeroes for no cards", () => {
+    expect(cardsNearReward([], 8)).toEqual({ oneAway: 0, twoAway: 0 });
+  });
+
+  it("counts cards exactly one and exactly two stamps short", () => {
+    const cards = [
+      { stamp_count: 7 }, // one away
+      { stamp_count: 7 }, // one away
+      { stamp_count: 6 }, // two away
+      { stamp_count: 5 }, // three away, neither
+      { stamp_count: 8 }, // reward-ready, neither
+      { stamp_count: 0 }, // fresh, neither
+    ];
+    expect(cardsNearReward(cards, 8)).toEqual({ oneAway: 2, twoAway: 1 });
+  });
+
+  it("does not count a card past the threshold", () => {
+    expect(cardsNearReward([{ stamp_count: 9 }], 8)).toEqual({
+      oneAway: 0,
+      twoAway: 0,
+    });
+  });
+
+  it("handles a small threshold where two-away is stamp_count 1", () => {
+    const cards = [{ stamp_count: 2 }, { stamp_count: 1 }, { stamp_count: 0 }];
+    expect(cardsNearReward(cards, 3)).toEqual({ oneAway: 1, twoAway: 1 });
   });
 });
 

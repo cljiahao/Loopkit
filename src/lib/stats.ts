@@ -103,6 +103,91 @@ export function avgDaysBetweenVisits(
   return gapsDays.reduce((sum, g) => sum + g, 0) / gapsDays.length;
 }
 
+// Of cards active in the last 90 days (latest activity event within the
+// window), the fraction that have 2 or more lifetime activity events. This
+// is the vendor-facing "% come back" headline. The denominator is
+// 90-day-active cards, not all-time enrolled: a long-dead card is not
+// evidence the program stopped working, so it must not drag the rate down.
+// null when no card is 90-day-active (mirrors avgDaysBetweenVisits' null
+// convention: no signal, not a misleading 0).
+export function returnRate90d(
+  activityEvents: StatsEvent[],
+  nowMs: number,
+): number | null {
+  const cutoff90 = nowMs - 90 * MS_PER_DAY;
+  const byCard = new Map<string, { total: number; latest: number }>();
+  for (const e of activityEvents) {
+    const t = Date.parse(e.created_at);
+    if (!Number.isFinite(t)) continue;
+    const cur = byCard.get(e.card_id) ?? { total: 0, latest: 0 };
+    cur.total += 1;
+    if (t > cur.latest) cur.latest = t;
+    byCard.set(e.card_id, cur);
+  }
+
+  let active = 0;
+  let returners = 0;
+  for (const { total, latest } of byCard.values()) {
+    if (latest < cutoff90) continue;
+    active += 1;
+    if (total >= 2) returners += 1;
+  }
+  return active === 0 ? null : returners / active;
+}
+
+// Cards worth a win-back nudge: 3 or more lifetime activity events (a real
+// regular, not a one-time visitor) whose latest event is 21 to 40 days ago.
+// The window is bounded on both sides: under 21 days is still recent, past
+// roughly 45 days the customer has usually churned and the nudge is low-ROI.
+// cardIds follow first-seen order in the input.
+export function regularsGoneQuiet(
+  activityEvents: StatsEvent[],
+  nowMs: number,
+): { count: number; cardIds: string[] } {
+  const earliest = nowMs - 40 * MS_PER_DAY;
+  const latestCutoff = nowMs - 21 * MS_PER_DAY;
+  const byCard = new Map<string, { total: number; latest: number }>();
+  const order: string[] = [];
+  for (const e of activityEvents) {
+    const t = Date.parse(e.created_at);
+    if (!Number.isFinite(t)) continue;
+    let cur = byCard.get(e.card_id);
+    if (!cur) {
+      cur = { total: 0, latest: 0 };
+      byCard.set(e.card_id, cur);
+      order.push(e.card_id);
+    }
+    cur.total += 1;
+    if (t > cur.latest) cur.latest = t;
+  }
+
+  const cardIds: string[] = [];
+  for (const id of order) {
+    const { total, latest } = byCard.get(id)!;
+    if (total >= 3 && latest >= earliest && latest < latestCutoff) {
+      cardIds.push(id);
+    }
+  }
+  return { count: cardIds.length, cardIds };
+}
+
+// How many cards are one or two stamps short of the reward. The one-away
+// count is the hottest win the vendor has: a near-certain next visit at
+// almost zero marginal cost. A card at or past the threshold is
+// reward-ready, a separate state, and is not counted here.
+export function cardsNearReward(
+  cards: { stamp_count: number }[],
+  stampsRequired: number,
+): { oneAway: number; twoAway: number } {
+  let oneAway = 0;
+  let twoAway = 0;
+  for (const c of cards) {
+    if (c.stamp_count === stampsRequired - 1) oneAway += 1;
+    else if (c.stamp_count === stampsRequired - 2) twoAway += 1;
+  }
+  return { oneAway, twoAway };
+}
+
 // Pure card-level aggregation. `activityEvents`/`rewardEvents` are the
 // already-classified arrays from `classifyActivity` — this function does no
 // kind filtering itself.
