@@ -2,6 +2,9 @@ import type { Strategy } from "@/lib/engine/types";
 
 export type StampVisualStyle = "dots" | "seal" | "ink" | "punch" | "charm";
 
+// The stamp accent color a program gets when the vendor never picks one.
+export const DEFAULT_STAMP_COLOR = "#c9a36a";
+
 export type PointsRedemptionMode = "catalog" | "offset";
 export type PointsCatalogItem = { id: string; label: string; cost: number };
 export type PointsOffsetRate = { points: number; dollars: number };

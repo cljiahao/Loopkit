@@ -108,6 +108,7 @@ export function ServeCustomer({
   shopName,
   shopJoinQrSvg,
   shopJoinLink,
+  showBranding = true,
 }: {
   programId: string;
   type: string;
@@ -118,6 +119,7 @@ export function ServeCustomer({
   shopName: string;
   shopJoinQrSvg: string;
   shopJoinLink: string;
+  showBranding?: boolean;
 }) {
   const router = useRouter();
   const { pending, run } = useAsyncAction();
@@ -428,6 +430,7 @@ export function ServeCustomer({
             shopName={shopName}
             shopJoinQrSvg={shopJoinQrSvg}
             shopJoinLink={shopJoinLink}
+            showBranding={showBranding}
             onCreated={handleCreated}
           />
 

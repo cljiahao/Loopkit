@@ -49,19 +49,27 @@ describe("currentProgram", () => {
 });
 
 describe("getEntitlement", () => {
-  it("free vendor gets a 1-active-program cap", () => {
+  it("free vendor gets a 1-active-program cap and stamp-only mechanics", () => {
     expect(getEntitlement(false)).toEqual({
       tier: "free",
       maxActivePrograms: 1,
       maxLiveInPlayPrograms: 2,
+      allowedFamilies: ["stamp"],
+      allowedStampStyles: ["dots"],
+      customColor: false,
+      showBranding: true,
     });
   });
 
-  it("pro vendor gets unlimited", () => {
+  it("pro vendor gets unlimited counts and every mechanic/style", () => {
     expect(getEntitlement(true)).toEqual({
       tier: "pro",
       maxActivePrograms: null,
       maxLiveInPlayPrograms: null,
+      allowedFamilies: ["stamp", "growth", "points", "chance"],
+      allowedStampStyles: ["dots", "seal", "ink", "punch", "charm"],
+      customColor: true,
+      showBranding: false,
     });
   });
 });

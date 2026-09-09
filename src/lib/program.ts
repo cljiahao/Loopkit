@@ -10,6 +10,8 @@ import {
   type ProgramType,
   type SegmentInput,
 } from "@/lib/program-config";
+import type { FamilyKey } from "@/app/setup/card-type-picker";
+import { DEFAULT_STAMP_COLOR, type StampVisualStyle } from "@/lib/engine/stamp";
 
 export type { ProgramType, SegmentInput };
 export { buildChanceConfig, buildPlantConfig };
@@ -428,23 +430,38 @@ export interface Entitlement {
   // cap. Pro is unlimited here too (it never needs the prep flow, but
   // isn't blocked from it either).
   maxLiveInPlayPrograms: number | null;
+  // Which card-type-picker families this tier may save a program as.
+  allowedFamilies: FamilyKey[];
+  // Which stamp visual styles this tier may save on a stamp-family program.
+  allowedStampStyles: StampVisualStyle[];
+  // Whether this tier may set a non-default stamp accent color.
+  customColor: boolean;
+  // Whether "via LoopKit" shows on the vendor's printable shop-join poster.
+  showBranding: boolean;
 }
 
 const FREE: Entitlement = {
   tier: "free",
   maxActivePrograms: 1,
   maxLiveInPlayPrograms: 2,
+  allowedFamilies: ["stamp"],
+  allowedStampStyles: ["dots"],
+  customColor: false,
+  showBranding: true,
 };
 const PRO: Entitlement = {
   tier: "pro",
   maxActivePrograms: null,
   maxLiveInPlayPrograms: null,
+  allowedFamilies: ["stamp", "growth", "points", "chance"],
+  allowedStampStyles: ["dots", "seal", "ink", "punch", "charm"],
+  customColor: true,
+  showBranding: false,
 };
 
 // Resolves a vendor's raw plan state (isPro's DB read) to what they can
-// actually do. Starts at one axis because program count is the only
-// thing Pro gates today — add fields here, not new ad-hoc isPro()
-// branches, when a second gate is actually needed.
+// actually do. Add fields here, not new ad-hoc isPro() branches, when
+// another gate is needed.
 export function getEntitlement(pro: boolean): Entitlement {
   return pro ? PRO : FREE;
 }
@@ -468,6 +485,29 @@ export function canPrepProgram(
   return (
     ent.maxLiveInPlayPrograms === null ||
     liveInPlayCount < ent.maxLiveInPlayPrograms
+  );
+}
+
+// Pure: whether the vendor's entitlement covers this card-type-picker family.
+export function canUseFamily(ent: Entitlement, family: FamilyKey): boolean {
+  return ent.allowedFamilies.includes(family);
+}
+
+// Pure: whether the vendor's entitlement covers this stamp visual style.
+export function canUseStampStyle(
+  ent: Entitlement,
+  style: StampVisualStyle,
+): boolean {
+  return ent.allowedStampStyles.includes(style);
+}
+
+// Pure: whether the vendor's entitlement covers this stamp accent color (unset or default always passes).
+export function canUseColor(
+  ent: Entitlement,
+  color: string | undefined,
+): boolean {
+  return (
+    ent.customColor || color === undefined || color === DEFAULT_STAMP_COLOR
   );
 }
 

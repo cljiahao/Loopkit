@@ -166,4 +166,74 @@ describe("saveProgramAction (gated create + edit)", () => {
     expect(res.error).toBeTruthy();
     expect(rpcMock).not.toHaveBeenCalled();
   });
+
+  it("blocks a free vendor creating a non-stamp mechanic", async () => {
+    listProgramsMock.mockResolvedValue([]);
+    isProMock.mockResolvedValue(false);
+
+    const res = await saveProgramAction(
+      {},
+      form({
+        type: "wheel",
+        name: "Wheel card",
+        reward_text: "Free item",
+        pity_ceiling: "10",
+        segments: JSON.stringify([
+          { label: "Try again", weight: 5, is_reward: false },
+          { label: "Free item", weight: 1, is_reward: true },
+        ]),
+      }),
+    );
+
+    expect(res.error).toMatch(/needs pro/i);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks a free vendor creating a premium stamp style or custom color", async () => {
+    listProgramsMock.mockResolvedValue([]);
+    isProMock.mockResolvedValue(false);
+
+    const styleRes = await saveProgramAction(
+      {},
+      form({ ...stampFields, stamp_style: "seal" }),
+    );
+    expect(styleRes.error).toMatch(/needs pro/i);
+
+    const colorRes = await saveProgramAction(
+      {},
+      form({ ...stampFields, stamp_color: "#112233" }),
+    );
+    expect(colorRes.error).toMatch(/needs pro/i);
+
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks a free vendor editing to a premium stamp style", async () => {
+    getProgramByIdMock.mockResolvedValue({ id: "p-edit", type: "stamp" });
+    isProMock.mockResolvedValue(false);
+
+    const res = await saveProgramAction(
+      {},
+      form({ ...stampFields, id: "p-edit", stamp_style: "charm" }),
+    );
+
+    expect(res.error).toMatch(/needs pro/i);
+    expect(updateEq).not.toHaveBeenCalled();
+  });
+
+  it("allows a Pro vendor to create any mechanic and stamp style", async () => {
+    listProgramsMock.mockResolvedValue([]);
+    isProMock.mockResolvedValue(true);
+
+    await expect(
+      saveProgramAction(
+        {},
+        form({ ...stampFields, stamp_style: "seal", stamp_color: "#112233" }),
+      ),
+    ).rejects.toThrow("REDIRECT:/dashboard?p=new-id");
+    expect(rpcMock).toHaveBeenCalledWith(
+      "create_program",
+      expect.objectContaining({ p_type: "stamp" }),
+    );
+  });
 });

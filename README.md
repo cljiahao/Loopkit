@@ -139,7 +139,7 @@ rebuilt as the vendor Overview (briefing, self-explaining base stats,
 Counter (empty-until-loaded active card, inline new-customer, printable
 join poster, one-level Undo); and Customers segment chips + sort + a
 per-row Serve. Phase 1 shipped ungated
-(`src/app/dashboard/{overview,counter,customers}/README.md`). Editing a card that customers already hold now confirms the change first, and newly earned rewards expire after 90 days unless the vendor clears that field.
+(`src/app/dashboard/{overview,counter,customers}/README.md`). Editing a card that customers already hold now confirms the change first, and newly earned rewards expire after 90 days unless the vendor clears that field. Program mechanics, stamp visual styles, custom stamp color, and the shop-poster's "via LoopKit" line are now Pro-gated (`src/lib/program.ts`'s `Entitlement`); a free vendor still previews every option, only Save is blocked server-side.
 
 Vendors run a stamp/points program from `/dashboard` (programs, cards,
 stamping, flame progress, "lucky" chance rewards); customers collect and view

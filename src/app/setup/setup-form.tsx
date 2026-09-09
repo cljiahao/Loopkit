@@ -36,12 +36,14 @@ import {
   Ticket,
   Palette,
   Coins,
+  Lock,
 } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type {
   StampMarkPreset,
   StampVisualStyle,
 } from "@/components/stamp-dots";
+import { DEFAULT_STAMP_COLOR } from "@/lib/engine/stamp";
 import type {
   ScratchCoverStyle,
   PointsRedemptionMode,
@@ -76,7 +78,6 @@ const DEFAULT_SEGMENT_COLOR = { reward: "#10b981", loss: "#fb7185" };
 // one — matches the antique-brass gold StampDots falls back to on its own
 // when no color is saved at all (same "swatch default, not a silently
 // written value" convention as DEFAULT_SEGMENT_COLOR above).
-const DEFAULT_STAMP_COLOR = "#c9a36a";
 
 const labelClass =
   "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
@@ -112,6 +113,16 @@ const DEFAULT_POINTS_CATALOG: PointsCatalogItemInput[] = [
   { label: "Free meal", cost: 300 },
 ];
 
+// A locked-option marker, not a Link: every call site already sits inside a button/toggle item.
+function ProBadge() {
+  return (
+    <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-1.5 py-0.5 text-[0.65rem] font-semibold text-primary">
+      <Lock className="size-2.5" />
+      Pro
+    </span>
+  );
+}
+
 export function SetupForm({
   program,
   isEdit,
@@ -120,6 +131,9 @@ export function SetupForm({
   prepping = false,
   vendorAvatarUrl = null,
   cardCount = 0,
+  allowedFamilies = ["stamp"],
+  allowedStampStyles = ["dots"],
+  allowedCustomColor = false,
 }: {
   program: Program | null;
   isEdit: boolean;
@@ -128,6 +142,9 @@ export function SetupForm({
   prepping?: boolean;
   vendorAvatarUrl?: string | null;
   cardCount?: number;
+  allowedFamilies?: FamilyKey[];
+  allowedStampStyles?: StampVisualStyle[];
+  allowedCustomColor?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     replacingId
@@ -442,7 +459,10 @@ export function SetupForm({
               : "bg-card hover:bg-muted/50",
           )}
         >
-          <span className="text-sm font-semibold">{family.label}</span>
+          <span className="flex w-full items-center">
+            <span className="text-sm font-semibold">{family.label}</span>
+            {!allowedFamilies.includes(family.key) && <ProBadge />}
+          </span>
           <span className="text-xs text-muted-foreground">
             {family.description}
           </span>
@@ -477,7 +497,10 @@ export function SetupForm({
                 : "bg-card hover:bg-muted/50",
             )}
           >
-            <span className="text-sm font-semibold">{style.label}</span>
+            <span className="flex w-full items-center">
+              <span className="text-sm font-semibold">{style.label}</span>
+              {!allowedFamilies.includes(familyStep) && <ProBadge />}
+            </span>
             <span className="text-xs text-muted-foreground">
               {style.description}
             </span>
@@ -1024,10 +1047,30 @@ export function SetupForm({
                 className="flex-wrap justify-start"
               >
                 <ToggleGroupItem value="dots">Classic dots</ToggleGroupItem>
-                <ToggleGroupItem value="seal">Wax seal</ToggleGroupItem>
-                <ToggleGroupItem value="ink">Ink stamp</ToggleGroupItem>
-                <ToggleGroupItem value="punch">Punch hole</ToggleGroupItem>
-                <ToggleGroupItem value="charm">Charm trail</ToggleGroupItem>
+                <ToggleGroupItem value="seal">
+                  Wax seal
+                  {!allowedStampStyles.includes("seal") && (
+                    <Lock className="ml-1 inline size-3" />
+                  )}
+                </ToggleGroupItem>
+                <ToggleGroupItem value="ink">
+                  Ink stamp
+                  {!allowedStampStyles.includes("ink") && (
+                    <Lock className="ml-1 inline size-3" />
+                  )}
+                </ToggleGroupItem>
+                <ToggleGroupItem value="punch">
+                  Punch hole
+                  {!allowedStampStyles.includes("punch") && (
+                    <Lock className="ml-1 inline size-3" />
+                  )}
+                </ToggleGroupItem>
+                <ToggleGroupItem value="charm">
+                  Charm trail
+                  {!allowedStampStyles.includes("charm") && (
+                    <Lock className="ml-1 inline size-3" />
+                  )}
+                </ToggleGroupItem>
               </ToggleGroup>
               <div className="flex items-center gap-2">
                 <ColorPicker
@@ -1037,6 +1080,7 @@ export function SetupForm({
                 />
                 <span className="text-xs text-muted-foreground">
                   Accent color — the reward stamp always stays gold.
+                  {!allowedCustomColor && " Custom colors need Pro."}
                 </span>
               </div>
               <input type="hidden" name="stamp_style" value={stampStyle} />

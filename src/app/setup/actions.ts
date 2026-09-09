@@ -11,8 +11,13 @@ import {
   isPro,
   canCreateProgram,
   canPrepProgram,
+  canUseFamily,
+  canUseStampStyle,
+  canUseColor,
   getEntitlement,
+  type SaveProgramInput,
 } from "@/lib/program";
+import { resolveFamilyAndStyle } from "@/app/setup/card-type-picker";
 import { createServerClient } from "@/lib/supabase/server";
 import { dollarsToCents } from "@/lib/money";
 import type { Database } from "@/lib/types";
@@ -21,6 +26,27 @@ type ProgramUpdate = Database["loopkit"]["Tables"]["programs"]["Update"];
 
 const UPSELL_ERROR =
   "You're on the free plan — 1 program. Ask an admin for Pro.";
+const STYLE_UPSELL_ERROR = "That card style needs Pro. Upgrade to unlock it.";
+
+// Shared by create/edit/change-type/prep: null if the mechanic/style/color is allowed, else the upsell error.
+function mechanicGateError(
+  pro: boolean,
+  data: SaveProgramInput,
+): string | null {
+  const ent = getEntitlement(pro);
+  const { family } = resolveFamilyAndStyle(
+    data.type,
+    "variant" in data ? data.variant : undefined,
+  );
+  if (!canUseFamily(ent, family)) return STYLE_UPSELL_ERROR;
+  if (data.type === "stamp") {
+    if (!canUseStampStyle(ent, data.stamp_style ?? "dots")) {
+      return STYLE_UPSELL_ERROR;
+    }
+    if (!canUseColor(ent, data.stamp_color)) return STYLE_UPSELL_ERROR;
+  }
+  return null;
+}
 
 export type SaveProgramState = { error?: string };
 
@@ -59,6 +85,8 @@ export async function saveProgramAction(
     head_start_percent: formData.get("head_start_percent"),
     variant: formData.get("variant"),
     birthday_bonus_enabled: formData.get("birthday_bonus_enabled"),
+    stamp_style: formData.get("stamp_style"),
+    stamp_color: formData.get("stamp_color"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
@@ -66,6 +94,9 @@ export async function saveProgramAction(
 
   const data = parsed.data;
   const fields = buildProgramFields(data);
+  const pro = await isPro();
+  const mechanicError = mechanicGateError(pro, data);
+  if (mechanicError) return { error: mechanicError };
   const supabase = await createServerClient();
 
   async function updateExistingProgram(): Promise<SaveProgramState> {
@@ -106,7 +137,6 @@ export async function saveProgramAction(
     // re-enforces this in the database (SECURITY DEFINER), so a direct
     // PostgREST insert can't bypass it.
     const programs = await listPrograms();
-    const pro = await isPro();
     if (
       !canCreateProgram(
         getEntitlement(pro),
@@ -176,10 +206,16 @@ export async function changeTypeAction(
     head_start: formData.get("head_start"),
     head_start_percent: formData.get("head_start_percent"),
     variant: formData.get("variant"),
+    stamp_style: formData.get("stamp_style"),
+    stamp_color: formData.get("stamp_color"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
   }
+
+  const pro = await isPro();
+  const mechanicError = mechanicGateError(pro, parsed.data);
+  if (mechanicError) return { error: mechanicError };
 
   const { type, stampsRequired, config, headStart, headStartPercent } =
     buildProgramFields(parsed.data);
@@ -275,6 +311,8 @@ export async function prepProgramAction(
     head_start: formData.get("head_start"),
     head_start_percent: formData.get("head_start_percent"),
     variant: formData.get("variant"),
+    stamp_style: formData.get("stamp_style"),
+    stamp_color: formData.get("stamp_color"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
@@ -293,6 +331,8 @@ export async function prepProgramAction(
   ) {
     return { error: PREP_UPSELL_ERROR };
   }
+  const mechanicError = mechanicGateError(pro, parsed.data);
+  if (mechanicError) return { error: mechanicError };
 
   const supabase = await createServerClient();
   const { data: created, error } = await supabase.rpc("create_program", {

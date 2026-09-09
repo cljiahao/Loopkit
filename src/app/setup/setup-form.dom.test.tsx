@@ -1023,3 +1023,70 @@ describe("SetupForm edit-impact dialog", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 });
+
+describe("SetupForm Pro gating", () => {
+  it("badges a locked family tile on Step 1 for a free vendor, none for Pro", () => {
+    const { unmount } = render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    const growthTile = screen.getByRole("button", { name: "Growth" });
+    expect(growthTile.querySelector("svg")).not.toBeNull();
+    const stampTile = screen.getByRole("button", { name: "Stamp Card" });
+    expect(stampTile.querySelector("svg")).toBeNull();
+    unmount();
+
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+        allowedFamilies={["stamp", "growth", "points", "chance"]}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Growth" }).querySelector("svg"),
+    ).toBeNull();
+  });
+
+  it("badges locked stamp styles and the custom-color note for a free vendor editing a stamp card", () => {
+    render(
+      <SetupForm
+        program={stampProgram}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+
+    const wax = screen.getByRole("radio", { name: "Wax seal" });
+    expect(wax.querySelector("svg")).not.toBeNull();
+    const dots = screen.getByRole("radio", { name: "Classic dots" });
+    expect(dots.querySelector("svg")).toBeNull();
+    expect(screen.getByText(/custom colors need pro/i)).toBeInTheDocument();
+  });
+
+  it("shows no stamp-style lock badges or custom-color note for a Pro vendor", () => {
+    render(
+      <SetupForm
+        program={stampProgram}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+        allowedStampStyles={["dots", "seal", "ink", "punch", "charm"]}
+        allowedCustomColor={true}
+      />,
+    );
+
+    const wax = screen.getByRole("radio", { name: "Wax seal" });
+    expect(wax.querySelector("svg")).toBeNull();
+    expect(
+      screen.queryByText(/custom colors need pro/i),
+    ).not.toBeInTheDocument();
+  });
+});

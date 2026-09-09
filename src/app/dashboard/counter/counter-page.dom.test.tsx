@@ -20,6 +20,9 @@ const program = (id: string, name: string) => ({
 vi.mock("@/features/auth", () => ({
   requireVendor: vi.fn(async () => ({ user: { id: "v1" } })),
 }));
+const { isProMock } = vi.hoisted(() => ({
+  isProMock: vi.fn(async () => false),
+}));
 vi.mock("@/lib/program", () => ({
   listPrograms: vi.fn(async () => [
     program("p1", "Coffee Stamps"),
@@ -27,6 +30,8 @@ vi.mock("@/lib/program", () => ({
   ]),
   currentProgram: (programs: { id: string }[], id?: string) =>
     programs.find((p) => p.id === id) ?? null,
+  isPro: isProMock,
+  getEntitlement: (pro: boolean) => ({ showBranding: !pro }),
 }));
 vi.mock("@/lib/cards", () => ({
   activeCardCountsByProgram: vi.fn(async () => ({ p1: 3, p2: 9 })),
@@ -62,6 +67,7 @@ vi.mock("@/app/dashboard/serve-customer", () => ({
       data-link={String(props.shopJoinLink)}
       data-shop={String(props.shopName)}
       data-phone={String(props.initialPhone)}
+      data-branding={String(props.showBranding)}
     />
   ),
 }));
@@ -87,9 +93,23 @@ describe("CounterPage", () => {
     expect(serve).toHaveAttribute("data-link", "https://loopkit.test/c?v=v1");
     expect(serve).toHaveAttribute("data-shop", "Kopi Corner");
     expect(serve).toHaveAttribute("data-phone", "+6591234567");
+    expect(serve).toHaveAttribute("data-branding", "true");
     expect(screen.getByTestId("remember-program")).toHaveAttribute(
       "data-id",
       "p1",
+    );
+  });
+
+  it("hides shop-join branding for a Pro vendor", async () => {
+    isProMock.mockResolvedValue(true);
+    render(
+      await CounterPage({
+        searchParams: Promise.resolve({ p: "p1" }),
+      }),
+    );
+    expect(screen.getByTestId("serve-customer")).toHaveAttribute(
+      "data-branding",
+      "false",
     );
   });
 

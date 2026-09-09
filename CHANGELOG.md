@@ -45,6 +45,18 @@ actions.ts`) pointed at a stale, dead `.vercel.app` host — confirmed by
 
 ### Added
 
+- Program mechanics, stamp visual styles, custom stamp color, and the "via
+  LoopKit" shop-poster branding are now Pro-gated (previously only program
+  count was): a free vendor may save a stamp card in its classic look only,
+  every other family (Growth/Points/Chance), premium stamp style
+  (seal/ink/punch/charm), and custom color needs Pro. The type picker and
+  stamp-style/color pickers stay fully clickable and previewable for a free
+  vendor, marked with a small "Pro" lock badge; the block happens server-side
+  on Save (`src/lib/program.ts`'s `canUseFamily`/`canUseStampStyle`/
+  `canUseColor`, enforced by every program-writing action's shared
+  `mechanicGateError`). Also fixes a real bug this surfaced: `stamp_style`/
+  `stamp_color` were never read from the submitted form, so nothing a vendor
+  picked in the Stamp style section ever saved.
 - Editing a stamp goal or reward wording on a loyalty card that customers already hold now asks the vendor to confirm, spelling out that existing stamps are kept and the goal or wording only changes going forward.
 - Stamp programs can carry an optional reward cost estimate (SGD), edited
   from the program form and stored as integer cents in
