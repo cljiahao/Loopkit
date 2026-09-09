@@ -17,6 +17,14 @@ actions.ts` to import `LEGAL_VERSIONS`/`getLegalDocSource`/`isLegalCurrent`
   from the server but X is on the client". The gate's own fail-closed
   try/catch silently swallowed this, redirecting every vendor to
   `/legal/accept` instead of surfacing the real error.
+- `merqoBaseUrl()`'s hardcoded fallback (`legal-gate.ts`, `legal/accept/
+actions.ts`) pointed at a stale, dead `.vercel.app` host — confirmed by
+  curl it 404s on every route, including `/`. merqo's real production
+  host is `www.merqo.io` (confirmed live). `MERQO_BASE_URL` was never set
+  as a Vercel env override on any kit, so this fallback has been hitting
+  a dead host in production. Fixed the literal here; the primary,
+  immediate fix is still setting `MERQO_BASE_URL` explicitly in Vercel —
+  this is defense-in-depth for whichever environment forgets it.
 
 ### Security
 
