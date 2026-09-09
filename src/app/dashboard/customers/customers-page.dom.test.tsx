@@ -94,7 +94,9 @@ describe("VendorCustomerList", () => {
     expect(screen.getByText("+6591234567")).toBeInTheDocument();
     expect(screen.getByText("Coffee Stamps")).toBeInTheDocument();
     expect(screen.getByText("Lucky Tap")).toBeInTheDocument();
-    expect(screen.getByText(/8/)).toBeInTheDocument();
+    expect(
+      screen.getByText("8 total stamps/visits · 1 reward"),
+    ).toBeInTheDocument();
   });
 
   it("falls back to phone-only when name is null", () => {
