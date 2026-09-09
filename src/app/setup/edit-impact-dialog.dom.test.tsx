@@ -54,6 +54,10 @@ describe("EditImpactDialog", () => {
       />,
     );
 
+    expect(
+      screen.getByRole("button", { name: "Save changes" }),
+    ).toHaveAttribute("type", "button");
+
     await user.click(screen.getByRole("button", { name: "Save changes" }));
     const dialog = await screen.findByRole("alertdialog");
     expect(dialog).toHaveTextContent(

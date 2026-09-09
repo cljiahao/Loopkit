@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const { saveMock } = vi.hoisted(() => ({
@@ -982,6 +982,9 @@ describe("SetupForm edit-impact dialog", () => {
     expect(dialog).toHaveTextContent(
       "3 customers have a card on this program.",
     );
+
+    fireEvent.click(screen.getByRole("button", { name: "Save the change" }));
+    await waitFor(() => expect(saveMock).toHaveBeenCalledTimes(1));
   });
 
   it("skips the dialog when the program has no cards", async () => {
@@ -1012,6 +1015,9 @@ describe("SetupForm edit-impact dialog", () => {
         cardCount={5}
       />,
     );
+    fireEvent.change(screen.getByLabelText("Card name"), {
+      target: { value: "New name" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     expect(screen.queryByRole("alertdialog")).toBeNull();

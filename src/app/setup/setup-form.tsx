@@ -281,8 +281,9 @@ export function SetupForm({
       : type === "lucky" || type === "wheel" || type === "scratch"
         ? (pityCeiling ?? 10)
         : stampsRequired;
+  const goalUsable = Number.isInteger(resolvedGoal) && resolvedGoal >= 2;
   const editImpactLines: string[] | null =
-    isEdit && program && cardCount > 0
+    isEdit && program !== null && cardCount > 0 && goalUsable
       ? (() => {
           const before: ProgramSnapshot = {
             stamps_required: program.stamps_required,

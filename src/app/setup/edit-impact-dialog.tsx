@@ -7,6 +7,7 @@ import {
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogCancel,
   AlertDialogAction,
@@ -55,11 +56,13 @@ export function EditImpactDialog({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Save this change?</AlertDialogTitle>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              {impactLines.map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-            </div>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                {impactLines.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </div>
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Keep editing</AlertDialogCancel>

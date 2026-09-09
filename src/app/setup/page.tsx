@@ -53,7 +53,9 @@ export default async function SetupPage({
   const programs = await listPrograms();
   const editing = edit ? currentProgram(programs, edit) : null;
   const isEdit = editing !== null;
-  const editingCardCount = editing ? await programCardCount(editing.id) : 0;
+  const editingCardCount = editing
+    ? await programCardCount(editing.id).catch(() => 0)
+    : 0;
   // Deliberately not currentProgram()'s fallback-to-first-program
   // semantics: an invalid/unowned migrate id must resolve to nothing, not
   // silently let a vendor migrate the wrong program.
