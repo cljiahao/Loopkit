@@ -26,6 +26,9 @@ vi.mock("@/lib/vendor", () => ({
 vi.mock("@/app/setup/actions", () => ({
   activateProgramAction: vi.fn(),
 }));
+vi.mock("@/lib/cards", () => ({
+  programCardCount: vi.fn(async () => 0),
+}));
 vi.mock("@/app/setup/setup-form", () => ({
   SetupForm: ({ isEdit }: { isEdit: boolean }) => (
     <div data-testid="setup-form">{isEdit ? "edit-mode" : "create-mode"}</div>

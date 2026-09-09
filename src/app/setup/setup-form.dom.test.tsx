@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const { saveMock } = vi.hoisted(() => ({
@@ -924,5 +924,63 @@ describe("SetupForm reward cost field", () => {
     expect(saveMock).toHaveBeenCalled();
     const submitted = saveMock.mock.calls[0][1] as FormData;
     expect(submitted.get("reward_cost_dollars")).toBe("2.4");
+  });
+});
+
+describe("SetupForm edit-impact dialog", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("confirms a stamp-goal change when customers hold cards", async () => {
+    render(
+      <SetupForm
+        program={stampProgram}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+        cardCount={3}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("Stamps required"), {
+      target: { value: "12" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    const dialog = await screen.findByRole("alertdialog");
+    expect(dialog).toHaveTextContent(
+      "3 customers have a card on this program.",
+    );
+  });
+
+  it("skips the dialog when the program has no cards", async () => {
+    render(
+      <SetupForm
+        program={stampProgram}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+        cardCount={0}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText("Stamps required"), {
+      target: { value: "12" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+  });
+
+  it("skips the dialog when nothing progress-affecting changed", async () => {
+    render(
+      <SetupForm
+        program={stampProgram}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+        cardCount={5}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 });
