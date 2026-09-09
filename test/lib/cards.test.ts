@@ -118,3 +118,54 @@ describe("activeCardCountsByProgram", () => {
     await expect(activeCardCountsByProgram(["p1"])).rejects.toThrow();
   });
 });
+
+describe("programCardCount", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns the exact count of cards for the program", async () => {
+    const builder: Record<string, unknown> = {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ count: 4, error: null }),
+      }),
+    };
+    fromMock.mockReturnValue(builder);
+
+    const { programCardCount } = await import("@/lib/cards");
+    await expect(programCardCount("prog-1")).resolves.toBe(4);
+
+    expect(fromMock).toHaveBeenCalledWith("cards");
+    const selectMock = (builder.select as ReturnType<typeof vi.fn>).mock;
+    expect(selectMock.calls[0]).toEqual(["id", { count: "exact", head: true }]);
+    const eqMock = (selectMock.results[0].value.eq as ReturnType<typeof vi.fn>)
+      .mock;
+    expect(eqMock.calls[0]).toEqual(["program_id", "prog-1"]);
+  });
+
+  it("treats a null count as 0", async () => {
+    const builder: Record<string, unknown> = {
+      select: vi.fn().mockReturnValue({
+        eq: vi.fn().mockResolvedValue({ count: null, error: null }),
+      }),
+    };
+    fromMock.mockReturnValue(builder);
+
+    const { programCardCount } = await import("@/lib/cards");
+    await expect(programCardCount("prog-1")).resolves.toBe(0);
+  });
+
+  it("throws on a query error", async () => {
+    const builder: Record<string, unknown> = {
+      select: vi.fn().mockReturnValue({
+        eq: vi
+          .fn()
+          .mockResolvedValue({ count: null, error: { message: "boom" } }),
+      }),
+    };
+    fromMock.mockReturnValue(builder);
+
+    const { programCardCount } = await import("@/lib/cards");
+    await expect(programCardCount("prog-1")).rejects.toThrow(
+      "programCardCount: boom",
+    );
+  });
+});
