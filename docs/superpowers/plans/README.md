@@ -80,6 +80,7 @@ self-describing dated slugs; no separate description column below.
 - `2026-09-08-overview-rebuild.md` — plan 3 of 5: rebuilds `/dashboard` as the vendor Overview (briefing, self-explaining base stats, 7/14-day visits trend, worth-a-look actions, reward-cost panel, recent activity, your-programs), with a `dashboard-view.ts` view-model. Depends on plans 1 and 2.
 - `2026-09-08-counter-scan-first.md` — plan 4 of 5: recomposes the Counter scan-first (large scan target hero, collapsed manual fallback, empty active card, inline new-customer, printable shop join poster, single-level undo via `adjustStampAction`, last-used-program routing). Independent.
 - `2026-09-08-customers-segments-sort.md` — plan 5 of 5: adds segment chips (all / reward ready / new / lapsed), a sort control (last visit / longest away / closest to reward), and Serve on every row to the vendor Customers list; pure `customer-segments.ts` helpers. Independent.
+- `2026-09-09-program-edit-safety.md` — post-redesign gap fill: an edit-impact confirmation `AlertDialog` before a stamp-goal or reward-wording change on a program that already has cards (Part 1, pure `program-edit-impact.ts` + client dialog, no server change), and a 90-day `create_program` reward-expiry default via migration `0046` with `null` still meaning "never" (Part 2, no backfill). 6 sequential tasks, one PR.
 
 ## Parent
 

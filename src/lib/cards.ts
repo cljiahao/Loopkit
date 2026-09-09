@@ -55,3 +55,13 @@ export async function activeCardCountsByProgram(
   }
   return counts;
 }
+
+export async function programCardCount(programId: string): Promise<number> {
+  const supabase = await createServerClient();
+  const { count, error } = await supabase
+    .from("cards")
+    .select("id", { count: "exact", head: true })
+    .eq("program_id", programId);
+  if (error) throw new Error(`programCardCount: ${error.message}`);
+  return count ?? 0;
+}

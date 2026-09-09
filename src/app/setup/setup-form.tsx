@@ -17,6 +17,12 @@ import { cn } from "@/lib/utils";
 import { usePreviewAnimation } from "@/app/setup/preview-animation";
 import { PreviewCard } from "@/app/setup/preview-card";
 import { Section } from "@/components/section";
+import { EditImpactDialog } from "@/app/setup/edit-impact-dialog";
+import {
+  isProgressAffecting,
+  describeEditImpact,
+  type ProgramSnapshot,
+} from "@/lib/program-edit-impact";
 import { InfoTooltip } from "@merqo/ui";
 import { ColorPicker } from "@/components/color-picker";
 import {
@@ -113,6 +119,7 @@ export function SetupForm({
   replacingType,
   prepping = false,
   vendorAvatarUrl = null,
+  cardCount = 0,
 }: {
   program: Program | null;
   isEdit: boolean;
@@ -120,6 +127,7 @@ export function SetupForm({
   replacingType: string | null;
   prepping?: boolean;
   vendorAvatarUrl?: string | null;
+  cardCount?: number;
 }) {
   const [state, formAction, pending] = useActionState(
     replacingId
@@ -266,6 +274,30 @@ export function SetupForm({
   const [showAdvanced, setShowAdvanced] = useState(!isCreateFlow);
   const basicsValid = name.trim().length > 0;
   const stepLabels = ["Type", "Basics", "Rules"] as const;
+
+  const resolvedGoal =
+    type === "plant"
+      ? visitsToBloom
+      : type === "lucky" || type === "wheel" || type === "scratch"
+        ? (pityCeiling ?? 10)
+        : stampsRequired;
+  const goalUsable = Number.isInteger(resolvedGoal) && resolvedGoal >= 2;
+  const editImpactLines: string[] | null =
+    isEdit && program !== null && cardCount > 0 && goalUsable
+      ? (() => {
+          const before: ProgramSnapshot = {
+            stamps_required: program.stamps_required,
+            reward_text: program.reward_text,
+          };
+          const after: ProgramSnapshot = {
+            stamps_required: resolvedGoal,
+            reward_text: rewardText,
+          };
+          return isProgressAffecting(before, after)
+            ? describeEditImpact(before, after, cardCount)
+            : null;
+        })()
+      : null;
 
   const {
     progress: previewProgress,
@@ -1353,11 +1385,14 @@ export function SetupForm({
                   min={1}
                   max={3650}
                   placeholder="Never expires"
-                  defaultValue={program?.reward_expiry_days ?? ""}
+                  defaultValue={
+                    isEdit ? (program?.reward_expiry_days ?? "") : 90
+                  }
                   className="h-11 rounded-xl"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Leave blank so an earned reward never expires.
+                  Pre-filled to 90 days. Clear the box if you want earned
+                  rewards to never expire.
                 </p>
               </div>
             )}
@@ -1407,20 +1442,26 @@ export function SetupForm({
               </p>
             ) : null}
 
-            <Button
-              type="submit"
-              size="lg"
-              disabled={pending}
-              className="h-12 w-full rounded-xl text-base font-semibold"
-            >
-              {isEdit
-                ? "Save changes"
-                : replacingId
+            {isEdit ? (
+              <EditImpactDialog
+                impactLines={editImpactLines}
+                pending={pending}
+                label="Save changes"
+              />
+            ) : (
+              <Button
+                type="submit"
+                size="lg"
+                disabled={pending}
+                className="h-12 w-full rounded-xl text-base font-semibold"
+              >
+                {replacingId
                   ? "Change type"
                   : prepping
                     ? "Save as draft"
                     : "Create card"}
-            </Button>
+              </Button>
+            )}
             {isCreateFlow && (
               <Button
                 type="button"

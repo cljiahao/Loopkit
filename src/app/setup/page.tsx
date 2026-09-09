@@ -18,6 +18,7 @@ import { ProLock } from "@/components/pro-lock";
 import { BackButton } from "@/components/back-button";
 import { cn } from "@/lib/utils";
 import { getVendorProfile } from "@/lib/vendor";
+import { programCardCount } from "@/lib/cards";
 
 const typeLabel: Record<string, string> = {
   stamp: "Stamp card",
@@ -52,6 +53,9 @@ export default async function SetupPage({
   const programs = await listPrograms();
   const editing = edit ? currentProgram(programs, edit) : null;
   const isEdit = editing !== null;
+  const editingCardCount = editing
+    ? await programCardCount(editing.id).catch(() => 0)
+    : 0;
   // Deliberately not currentProgram()'s fallback-to-first-program
   // semantics: an invalid/unowned migrate id must resolve to nothing, not
   // silently let a vendor migrate the wrong program.
@@ -269,6 +273,7 @@ export default async function SetupPage({
               replacingId={migrating ? migrating.id : null}
               replacingType={migrating ? migrating.type : null}
               vendorAvatarUrl={vendorAvatarUrl}
+              cardCount={editingCardCount}
             />
           </div>
         ) : view === "prep" ? (

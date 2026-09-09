@@ -12,6 +12,7 @@ vi.mock("@/lib/supabase/server", () => ({
 import {
   listCards,
   activeCardCountsByProgram,
+  programCardCount,
   type CardRow,
 } from "@/lib/cards";
 
@@ -89,6 +90,19 @@ function makeCountBuilder(data: unknown, error: unknown = null) {
   return b;
 }
 
+function makeExactCountBuilder(
+  count: number | null,
+  error: unknown = null,
+): Record<string, unknown> {
+  const b: Record<string, unknown> = {
+    select: vi.fn(() => b),
+    eq: vi.fn(() => b),
+    then: (resolve: (v: { count: unknown; error: unknown }) => unknown) =>
+      resolve({ count, error }),
+  };
+  return b;
+}
+
 describe("activeCardCountsByProgram", () => {
   beforeEach(() => vi.clearAllMocks());
 
@@ -116,5 +130,39 @@ describe("activeCardCountsByProgram", () => {
   it("throws when the query errors", async () => {
     fromMock.mockReturnValue(makeCountBuilder(null, { message: "boom" }));
     await expect(activeCardCountsByProgram(["p1"])).rejects.toThrow();
+  });
+});
+
+describe("programCardCount", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns the exact count of cards for the program", async () => {
+    const builder = makeExactCountBuilder(4);
+    fromMock.mockReturnValue(builder);
+
+    await expect(programCardCount("prog-1")).resolves.toBe(4);
+
+    expect(fromMock).toHaveBeenCalledWith("cards");
+    expect(builder.select).toHaveBeenCalledWith("id", {
+      count: "exact",
+      head: true,
+    });
+    expect(builder.eq).toHaveBeenCalledWith("program_id", "prog-1");
+  });
+
+  it("treats a null count as 0", async () => {
+    const builder = makeExactCountBuilder(null);
+    fromMock.mockReturnValue(builder);
+
+    await expect(programCardCount("prog-1")).resolves.toBe(0);
+  });
+
+  it("throws on a query error", async () => {
+    const builder = makeExactCountBuilder(null, { message: "boom" });
+    fromMock.mockReturnValue(builder);
+
+    await expect(programCardCount("prog-1")).rejects.toThrow(
+      "programCardCount: boom",
+    );
   });
 });

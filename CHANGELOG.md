@@ -6,31 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Changed
+### Security
 
-- The dashboard home is now a vendor briefing (regulars and cadence, base
-  stats that explain themselves on tap, a 7/14-day visits trend, "worth a
-  look" actions, what the rewards cost this month, recent activity)
-  instead of a program launcher. The shop QR and scan-to-route blocks
-  move off the home screen; "Serve a customer" is an in-page button that
-  remembers the last program served on this device.
-- Onboarding tour's first step is retitled from "Your shop QR" to "Your
-  dashboard" and describes the new briefing view, since the join QR now
-  lives on the Counter, not the dashboard home.
-- The Counter is scan-first: a large scan target is the primary action,
-  manual phone entry collapses into a fallback, the active card starts
-  empty, and a vendor can add a new customer or print a shop join poster
-  inline. A missing `?p=` now routes to the busiest active program instead
-  of bouncing to the dashboard, the last-worked program is remembered per
-  device, and the most recent stamp has a one-level Undo.
-- Onboarding tour's Customers step now says explicitly that scanning the
-  shop QR only joins a customer to a program, it doesn't add a stamp by
-  itself — a vendor could otherwise assume the scan itself was the
-  scan-to-earn step, since the tour never connected the QR step to the
-  separate vendor-side "search and add a stamp" step.
+- Bumped `next` to `16.3.4` (`eslint-config-next` to match), which pulls
+  `sharp` to `0.35.4`. Clears two critical Next.js RCE advisories
+  (GHSA-p293-qw3h-jr36 on Windows-hosted servers, GHSA-2xp9-vwfh-vxw4 in the
+  image-optimization AVIF path) and a high `sharp`/libheif advisory.
+- Dropped `output: "standalone"` from `next.config.ts`. loopkit deploys only
+  to Vercel, which does its own function bundling and does not use the
+  standalone output. Under `next` 16.3.x that config also made Vercel's
+  build finalizer look for a server trace file it no longer writes there.
 
 ### Added
 
+- Editing a stamp goal or reward wording on a loyalty card that customers already hold now asks the vendor to confirm, spelling out that existing stamps are kept and the goal or wording only changes going forward.
 - Stamp programs can carry an optional reward cost estimate (SGD), edited
   from the program form and stored as integer cents in
   `programs.reward_cost_cents` (migration 0045). Feeds the reward-cost view
@@ -64,6 +53,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Rewards a customer earns now expire 90 days after being granted by default. A vendor who wants a reward to never expire clears the expiry field when setting up the card. Existing programs are unchanged.
+- The dashboard home is now a vendor briefing (regulars and cadence, base
+  stats that explain themselves on tap, a 7/14-day visits trend, "worth a
+  look" actions, what the rewards cost this month, recent activity)
+  instead of a program launcher. The shop QR and scan-to-route blocks
+  move off the home screen; "Serve a customer" is an in-page button that
+  remembers the last program served on this device.
+- Onboarding tour's first step is retitled from "Your shop QR" to "Your
+  dashboard" and describes the new briefing view, since the join QR now
+  lives on the Counter, not the dashboard home.
+- The Counter is scan-first: a large scan target is the primary action,
+  manual phone entry collapses into a fallback, the active card starts
+  empty, and a vendor can add a new customer or print a shop join poster
+  inline. A missing `?p=` now routes to the busiest active program instead
+  of bouncing to the dashboard, the last-worked program is remembered per
+  device, and the most recent stamp has a one-level Undo.
+- Onboarding tour's Customers step now says explicitly that scanning the
+  shop QR only joins a customer to a program, it doesn't add a stamp by
+  itself — a vendor could otherwise assume the scan itself was the
+  scan-to-earn step, since the tour never connected the QR step to the
+  separate vendor-side "search and add a stamp" step.
 - Dropped the required typed legal-name field from the acceptance
   checkbox — a plain ToS/Privacy clickwrap doesn't need a signatory name
   for evidentiary strength beyond the existing (vendor_email, auth_uid,
