@@ -9,32 +9,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Added
 
 - Editing a stamp goal or reward wording on a loyalty card that customers already hold now asks the vendor to confirm, spelling out that existing stamps are kept and the goal or wording only changes going forward.
-
-### Changed
-
-- The dashboard home is now a vendor briefing (regulars and cadence, base
-  stats that explain themselves on tap, a 7/14-day visits trend, "worth a
-  look" actions, what the rewards cost this month, recent activity)
-  instead of a program launcher. The shop QR and scan-to-route blocks
-  move off the home screen; "Serve a customer" is an in-page button that
-  remembers the last program served on this device.
-- Onboarding tour's first step is retitled from "Your shop QR" to "Your
-  dashboard" and describes the new briefing view, since the join QR now
-  lives on the Counter, not the dashboard home.
-- The Counter is scan-first: a large scan target is the primary action,
-  manual phone entry collapses into a fallback, the active card starts
-  empty, and a vendor can add a new customer or print a shop join poster
-  inline. A missing `?p=` now routes to the busiest active program instead
-  of bouncing to the dashboard, the last-worked program is remembered per
-  device, and the most recent stamp has a one-level Undo.
-- Onboarding tour's Customers step now says explicitly that scanning the
-  shop QR only joins a customer to a program, it doesn't add a stamp by
-  itself — a vendor could otherwise assume the scan itself was the
-  scan-to-earn step, since the tour never connected the QR step to the
-  separate vendor-side "search and add a stamp" step.
-
-### Added
-
 - Stamp programs can carry an optional reward cost estimate (SGD), edited
   from the program form and stored as integer cents in
   `programs.reward_cost_cents` (migration 0045). Feeds the reward-cost view
@@ -65,6 +39,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `/login` redirect. Accepting records the timestamp and IP/user-agent
   with merqo (not stored locally) via merqo's `POST
 /api/merqo/legal-accept`.
+
+### Changed
+
+- The dashboard home is now a vendor briefing (regulars and cadence, base
+  stats that explain themselves on tap, a 7/14-day visits trend, "worth a
+  look" actions, what the rewards cost this month, recent activity)
+  instead of a program launcher. The shop QR and scan-to-route blocks
+  move off the home screen; "Serve a customer" is an in-page button that
+  remembers the last program served on this device.
+- Onboarding tour's first step is retitled from "Your shop QR" to "Your
+  dashboard" and describes the new briefing view, since the join QR now
+  lives on the Counter, not the dashboard home.
+- The Counter is scan-first: a large scan target is the primary action,
+  manual phone entry collapses into a fallback, the active card starts
+  empty, and a vendor can add a new customer or print a shop join poster
+  inline. A missing `?p=` now routes to the busiest active program instead
+  of bouncing to the dashboard, the last-worked program is remembered per
+  device, and the most recent stamp has a one-level Undo.
+- Onboarding tour's Customers step now says explicitly that scanning the
+  shop QR only joins a customer to a program, it doesn't add a stamp by
+  itself — a vendor could otherwise assume the scan itself was the
+  scan-to-earn step, since the tour never connected the QR step to the
+  separate vendor-side "search and add a stamp" step.
 
 ### Changed
 
