@@ -54,40 +54,44 @@ The dialog appears only when **all** of these hold:
 
 - The form is in edit mode (`isEdit === true`, `program` is non-null).
 - The pending change is **progress-affecting** (see below).
-- The program has at least one active card.
+- The program has at least one card (`cardCount > 0`).
 
-Any other case (new program, prep, change-type, non-progress edit, or zero
-active cards) submits straight through with no dialog, exactly as today.
+Any other case (new program, prep, change-type, non-progress edit, or a
+program with zero cards) submits straight through with no dialog, exactly as
+today.
 
 ### "Progress-affecting"
 
 A pure comparison of the submitted form values against the loaded `program`:
 
-- `stamps_required` changed, OR
-- `reward_text` changed (trimmed compare), OR
-- a mechanic knob that moves the goal changed: for `lucky` the win
-  probability, for `plant`/`wheel`/`scratch` the visits-to-bloom / segment
-  weights. Compare the built `config` object's relevant fields, not the whole
-  object (avoids false positives from key ordering or unrelated fields).
+- `stamps_required` (the built value from `buildProgramFields`) changed, OR
+- `reward_text` changed (trimmed compare)
+
+`stamps_required` is already the goal count for every mechanic: `lucky` sets
+it to `pity_ceiling`, `plant` to `visits_to_bloom`, `wheel`/`scratch` to
+`pity_ceiling ?? 10` (see `buildProgramFields` in `src/lib/program.ts`). So
+any change that moves a card's finish line shows up here. Lucky win-odds and
+chance-segment weights are deliberately not compared: they only exist on Pro
+multi-mechanic programs (zero real vendors), and adding a `config`-blob diff
+for them is YAGNI for this pass.
 
 `name`, `reward_cost_dollars`, `expiry_days`, `reward_expiry_days`,
-`head_start*`, `birthday_bonus_enabled` are **not** progress-affecting.
+`head_start*`, `birthday_bonus_enabled`, and any `config` field other than
+what feeds `stamps_required` are **not** progress-affecting.
 
 ### Dialog contents
 
 shadcn `AlertDialog`. Title: "Save this change?". Body is one short intro line
 plus one line per relevant impact:
 
-- Intro: "N customers have a card on this program." (N = active card count)
-- If `stamps_required` changed: "They keep the stamps they have. The goal
-  moves from {old} to {new}." When {new} < {old}: "They keep the stamps they
-  have. The goal drops from {old} to {new}, so some may already have earned a
-  reward." (the RPCs handle overflow on next visit; this is just honest
-  framing)
+- Intro: "N customers have a card on this program." (N = `cardCount`)
+- If `stamps_required` increased: "They keep the stamps they have. The goal
+  moves from {old} to {new}."
+- If `stamps_required` decreased: "They keep the stamps they have. The goal
+  drops from {old} to {new}, so some may already have earned a reward." (the
+  RPCs handle overflow on the next visit; this line is just honest framing)
 - If `reward_text` changed: "Rewards already earned keep the current wording.
   New rewards will read \"{new}\"."
-- If a mechanic knob changed: "The odds change for every card from the next
-  visit on."
 
 Actions: "Save changes" (proceeds) and "Cancel" (closes, no submit).
 
@@ -95,35 +99,37 @@ Actions: "Save changes" (proceeds) and "Cancel" (closes, no submit).
 
 - `src/lib/program-edit-impact.ts` (new, pure, no I/O):
   - `type EditImpactLine = string`
+  - `type ProgramSnapshot = { stamps_required: number; reward_text: string }`
   - `isProgressAffecting(before: ProgramSnapshot, after: ProgramSnapshot): boolean`
-  - `describeEditImpact(before: ProgramSnapshot, after: ProgramSnapshot, activeCardCount: number): EditImpactLine[]`
-  - `ProgramSnapshot = { stamps_required: number; reward_text: string; type: string; config: unknown }`
+  - `describeEditImpact(before: ProgramSnapshot, after: ProgramSnapshot, cardCount: number): EditImpactLine[]`
 - `src/app/setup/edit-impact-dialog.tsx` (new, `"use client"`): wraps the
   submit button. Props: `disabled`, `pending`, `impactLines: string[] | null`,
   `children` (the button label node). When `impactLines` is null or empty,
   renders the plain submit button. Otherwise renders a button that opens the
   `AlertDialog`; the dialog's confirm calls the form's `requestSubmit()`.
 - `src/app/setup/setup-form.tsx`:
-  - Track the current form values needed for the comparison in component
-    state (already partly tracked: `type`, segments, etc). Derive
-    `afterSnapshot` from them plus the controlled inputs; `beforeSnapshot`
-    from `program`.
+  - Track the two comparison inputs in component state: the resolved
+    `stamps_required` (already derivable from the type-specific state the
+    form keeps) and the `reward_text` input value. `beforeSnapshot` comes
+    from `program`, `afterSnapshot` from that state.
   - Compute `impactLines` client-side each render when `isEdit` and
-    `activeCardCount > 0` and `isProgressAffecting`, else null.
+    `cardCount > 0` and `isProgressAffecting`, else null.
   - Replace the bare submit `<Button type="submit">` (line ~1400) with
     `<EditImpactDialog impactLines={impactLines} .../>` for the edit case.
     Non-edit cases keep the current button unchanged.
-  - New prop `activeCardCount?: number` (default 0).
+  - New prop `cardCount?: number` (default 0).
 - `src/lib/cards.ts`: add
-  `programActiveCardCount(programId: string): Promise<number>` returning the
-  count of `cards` rows for that program with `status = 'active'`. Reuses the
-  `createServerClient` pattern already in the file. (Distinct from
-  `activeCardCountsByProgram`, which is a 30-day-touched count for the Counter
-  default; the dialog wants "has a card at all".)
+  `programCardCount(programId: string): Promise<number>` returning
+  `count(*)` of `cards` rows for that program (Supabase
+  `.select("id", { count: "exact", head: true }).eq("program_id", id)`).
+  `cards` has no `status` / soft-delete column: one row per (program, phone)
+  is one customer on that program. Reuses the `createServerClient` pattern
+  already in the file. Distinct from `activeCardCountsByProgram`, which is a
+  30-day-touched count for the Counter default.
 - `src/app/setup/page.tsx`: when `editing` is non-null, call
-  `programActiveCardCount(editing.id)` and pass it to `<SetupForm>`. Both
-  `<SetupForm>` call sites (lines 266, 283): the edit render passes the real
-  count, the other passes nothing (defaults 0).
+  `programCardCount(editing.id)` and pass it as `cardCount` to `<SetupForm>`.
+  Both `<SetupForm>` call sites (lines 266, 283): the edit render passes the
+  real count, the other passes nothing (defaults 0).
 
 ### Server side
 
@@ -135,14 +141,14 @@ this is a confirmation nicety, not a security control).
 ### Testing
 
 - `test/lib/program-edit-impact.test.ts`:
-  - `isProgressAffecting`: true on `stamps_required` change, `reward_text`
-    change (and trimmed-equal returns false), lucky `win_probability` change;
-    false on `name`-only, `reward_cost` -only, expiry-only, identical
-    snapshots.
-  - `describeEditImpact`: the intro line uses the passed count; the
-    `stamps_required` up vs down wording; the `reward_text` line quotes the
-    new text; multiple simultaneous changes produce multiple lines in a
-    stable order (intro, stamps, reward, mechanic).
+  - `isProgressAffecting`: true on `stamps_required` change; true on
+    `reward_text` change; false when `reward_text` differs only by
+    surrounding whitespace; false on identical snapshots.
+  - `describeEditImpact`: the intro line uses the passed `cardCount`; the
+    `stamps_required` increase vs decrease wording; the `reward_text` line
+    quotes the new text; both changes at once produce lines in a stable
+    order (intro, stamps, reward); `cardCount` of 0 still returns lines
+    (the caller, not this helper, gates on count).
 - `src/app/setup/edit-impact-dialog.dom.test.tsx`:
   - null `impactLines` -> renders a plain submit button, no dialog role in
     the tree.
@@ -150,12 +156,12 @@ this is a confirmation nicety, not a security control).
     line; "Cancel" closes without submitting; "Save changes" triggers form
     submission (assert via a spied `requestSubmit` or a form `onSubmit`).
 - `src/app/setup/setup-form.dom.test.tsx`: add a block. Render in edit mode
-  with `activeCardCount={3}` and a `program` at `stamps_required: 8`. Change
-  the stamps input to `10`, click save, assert the dialog appears with "3
-  customers". Change only the program `name`, click save, assert no dialog
-  (submits straight through). Note the existing flakiness caveat in that file
-  (userEvent under coverage instrumentation): keep new interactions minimal
-  and prefer `fireEvent` where the existing block does.
+  with `cardCount={3}` and a `program` at `stamps_required: 8`. Change the
+  stamps input to `10`, click save, assert the dialog appears with "3
+  customers". Separately, with `cardCount={0}`, the same change submits with
+  no dialog. Note the existing flakiness caveat in that file (userEvent under
+  coverage instrumentation): keep new interactions minimal and prefer
+  `fireEvent` where the existing block does.
 
 ## Part 2: Reward expiry default of 90 days
 
@@ -230,8 +236,8 @@ Create:
 
 Modify:
 - `src/app/setup/setup-form.tsx` (dialog wiring, expiry field default + copy)
-- `src/app/setup/page.tsx` (pass `activeCardCount` to the edit `<SetupForm>`)
-- `src/lib/cards.ts` (`programActiveCardCount`)
+- `src/app/setup/page.tsx` (pass `cardCount` to the edit `<SetupForm>`)
+- `src/lib/cards.ts` (`programCardCount`)
 - `src/app/setup/setup-form.dom.test.tsx` (two new blocks)
 - READMEs: `src/lib/`, `src/app/setup/`, `test/lib/`, `test/db/`,
   `supabase/migrations/`, root; `CHANGELOG.md`
