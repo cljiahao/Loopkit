@@ -9,10 +9,14 @@ import {
   programInputSchema,
   saveProgramSchema,
   canPrepProgram,
+  canUseFamily,
+  canUseStampStyle,
+  canUseColor,
   getEntitlement,
   buildProgramFields,
   getVoucherByToken,
 } from "@/lib/program";
+import { DEFAULT_STAMP_COLOR } from "@/lib/engine/stamp";
 
 describe("programInputSchema", () => {
   it("accepts a valid program", () => {
@@ -70,6 +74,57 @@ describe("canPrepProgram", () => {
   });
   it("never blocks a Pro vendor regardless of count", () => {
     expect(canPrepProgram(getEntitlement(true), 50)).toBe(true);
+  });
+});
+
+describe("canUseFamily", () => {
+  it("allows a free vendor to use the stamp family", () => {
+    expect(canUseFamily(getEntitlement(false), "stamp")).toBe(true);
+  });
+  it("blocks a free vendor from growth, points, and chance", () => {
+    expect(canUseFamily(getEntitlement(false), "growth")).toBe(false);
+    expect(canUseFamily(getEntitlement(false), "points")).toBe(false);
+    expect(canUseFamily(getEntitlement(false), "chance")).toBe(false);
+  });
+  it("allows a Pro vendor to use every family", () => {
+    expect(canUseFamily(getEntitlement(true), "stamp")).toBe(true);
+    expect(canUseFamily(getEntitlement(true), "growth")).toBe(true);
+    expect(canUseFamily(getEntitlement(true), "points")).toBe(true);
+    expect(canUseFamily(getEntitlement(true), "chance")).toBe(true);
+  });
+});
+
+describe("canUseStampStyle", () => {
+  it("allows a free vendor to use the classic dots style", () => {
+    expect(canUseStampStyle(getEntitlement(false), "dots")).toBe(true);
+  });
+  it("blocks a free vendor from the premium styles", () => {
+    expect(canUseStampStyle(getEntitlement(false), "seal")).toBe(false);
+    expect(canUseStampStyle(getEntitlement(false), "ink")).toBe(false);
+    expect(canUseStampStyle(getEntitlement(false), "punch")).toBe(false);
+    expect(canUseStampStyle(getEntitlement(false), "charm")).toBe(false);
+  });
+  it("allows a Pro vendor to use every stamp style", () => {
+    for (const style of ["dots", "seal", "ink", "punch", "charm"] as const) {
+      expect(canUseStampStyle(getEntitlement(true), style)).toBe(true);
+    }
+  });
+});
+
+describe("canUseColor", () => {
+  it("allows a free vendor to leave the color unset", () => {
+    expect(canUseColor(getEntitlement(false), undefined)).toBe(true);
+  });
+  it("allows a free vendor to explicitly pick the default color", () => {
+    expect(canUseColor(getEntitlement(false), DEFAULT_STAMP_COLOR)).toBe(true);
+  });
+  it("blocks a free vendor from a custom color", () => {
+    expect(canUseColor(getEntitlement(false), "#112233")).toBe(false);
+  });
+  it("allows a Pro vendor any color, including unset and default", () => {
+    expect(canUseColor(getEntitlement(true), undefined)).toBe(true);
+    expect(canUseColor(getEntitlement(true), DEFAULT_STAMP_COLOR)).toBe(true);
+    expect(canUseColor(getEntitlement(true), "#112233")).toBe(true);
   });
 });
 

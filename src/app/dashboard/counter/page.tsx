@@ -1,7 +1,12 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { requireVendor } from "@/features/auth";
-import { listPrograms, currentProgram } from "@/lib/program";
+import {
+  listPrograms,
+  currentProgram,
+  isPro,
+  getEntitlement,
+} from "@/lib/program";
 import { activeCardCountsByProgram } from "@/lib/cards";
 import { getVendorProfile } from "@/lib/vendor";
 import { qrSvg } from "@/lib/qr";
@@ -53,6 +58,7 @@ export default async function CounterPage({ searchParams }: CounterPageProps) {
   const shopJoinLink = `${origin}/c?v=${user.id}`;
   const shopJoinQrSvg = await qrSvg(shopJoinLink);
   const shopName = (await getVendorProfile()).name ?? "Your stall";
+  const entitlement = getEntitlement(await isPro());
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -91,6 +97,7 @@ export default async function CounterPage({ searchParams }: CounterPageProps) {
         shopName={shopName}
         shopJoinQrSvg={shopJoinQrSvg}
         shopJoinLink={shopJoinLink}
+        showBranding={entitlement.showBranding}
       />
     </div>
   );

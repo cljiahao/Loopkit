@@ -8,10 +8,12 @@ export function ShopJoinPoster({
   shopName,
   qrSvgMarkup,
   link,
+  showBranding = true,
 }: {
   shopName: string;
   qrSvgMarkup: string;
   link: string;
+  showBranding?: boolean;
 }) {
   return (
     <div className="space-y-3">
@@ -31,7 +33,9 @@ export function ShopJoinPoster({
         <p className="mt-5 text-sm font-semibold">
           Scan to join. Just your phone number.
         </p>
-        <p className="mt-4 text-xs text-neutral-500">via LoopKit</p>
+        {showBranding && (
+          <p className="mt-4 text-xs text-neutral-500">via LoopKit</p>
+        )}
         <code className="mt-2 block truncate text-[10px] text-neutral-400">
           {link}
         </code>

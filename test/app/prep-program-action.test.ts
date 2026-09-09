@@ -72,6 +72,8 @@ describe("prepProgramAction", () => {
   });
 
   it("sends p_reward_expiry_days=null for a type that doesn't support it", async () => {
+    isProMock.mockResolvedValue(true);
+
     await expect(
       prepProgramAction(
         {},
@@ -89,6 +91,22 @@ describe("prepProgramAction", () => {
       "create_program",
       expect.objectContaining({ p_reward_expiry_days: null }),
     );
+  });
+
+  it("blocks a free vendor prepping a non-stamp mechanic", async () => {
+    const res = await prepProgramAction(
+      {},
+      form({
+        type: "lucky",
+        name: "Lucky spin",
+        reward_text: "Free kopi",
+        win_percent: "10",
+        pity_ceiling: "5",
+      }),
+    );
+
+    expect(res.error).toMatch(/needs pro/i);
+    expect(rpcMock).not.toHaveBeenCalled();
   });
 
   it("blocks a free vendor already at the live-in-play prep cap", async () => {

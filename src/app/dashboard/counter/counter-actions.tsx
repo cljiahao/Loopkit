@@ -13,12 +13,14 @@ export function CounterActions({
   shopName,
   shopJoinQrSvg,
   shopJoinLink,
+  showBranding = true,
   onCreated,
 }: {
   programId: string;
   shopName: string;
   shopJoinQrSvg: string;
   shopJoinLink: string;
+  showBranding?: boolean;
   onCreated: (phone: string, card: StampCard) => void;
 }) {
   const [open, setOpen] = useState<"new" | "qr" | null>(null);
@@ -71,6 +73,7 @@ export function CounterActions({
             shopName={shopName}
             qrSvgMarkup={shopJoinQrSvg}
             link={shopJoinLink}
+            showBranding={showBranding}
           />
         </div>
       )}

@@ -68,12 +68,13 @@ export default async function SetupPage({
     : null;
   const managing = manage === "1";
   const pro = await isPro();
+  const entitlement = getEntitlement(pro);
   const canCreate = canCreateProgram(
-    getEntitlement(pro),
+    entitlement,
     programs.filter((p) => p.active).length,
   );
   const canPrep = canPrepProgram(
-    getEntitlement(pro),
+    entitlement,
     programs.filter((p) => p.replaced_by === null).length,
   );
   const activePrograms = programs.filter((p) => p.active);
@@ -274,6 +275,9 @@ export default async function SetupPage({
               replacingType={migrating ? migrating.type : null}
               vendorAvatarUrl={vendorAvatarUrl}
               cardCount={editingCardCount}
+              allowedFamilies={entitlement.allowedFamilies}
+              allowedStampStyles={entitlement.allowedStampStyles}
+              allowedCustomColor={entitlement.customColor}
             />
           </div>
         ) : view === "prep" ? (
@@ -292,6 +296,9 @@ export default async function SetupPage({
               replacingType={null}
               prepping
               vendorAvatarUrl={vendorAvatarUrl}
+              allowedFamilies={entitlement.allowedFamilies}
+              allowedStampStyles={entitlement.allowedStampStyles}
+              allowedCustomColor={entitlement.customColor}
             />
           </div>
         ) : view === "schedule" ? (

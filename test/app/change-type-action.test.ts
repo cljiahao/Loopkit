@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { getProgramByIdMock, rpcMock } = vi.hoisted(() => ({
+const { getProgramByIdMock, isProMock, rpcMock } = vi.hoisted(() => ({
   getProgramByIdMock: vi.fn(),
+  isProMock: vi.fn(),
   rpcMock: vi.fn(),
 }));
 
@@ -14,6 +15,7 @@ vi.mock("@/lib/program", async (importActual) => {
   return {
     ...actual,
     getProgramById: getProgramByIdMock,
+    isPro: isProMock,
   };
 });
 
@@ -59,6 +61,7 @@ describe("changeTypeAction", () => {
     vi.clearAllMocks();
     updateCalls.length = 0;
     getProgramByIdMock.mockResolvedValue({ id: "old-id", type: "wheel" });
+    isProMock.mockResolvedValue(false);
     rpcMock.mockResolvedValue({ data: "new-id", error: null });
   });
 
@@ -178,6 +181,8 @@ describe("changeTypeAction", () => {
   });
 
   it("sends p_reward_expiry_days=null when the new type doesn't support it", async () => {
+    isProMock.mockResolvedValue(true);
+
     await expect(
       changeTypeAction(
         {},
@@ -195,6 +200,57 @@ describe("changeTypeAction", () => {
     expect(rpcMock).toHaveBeenCalledWith(
       "create_program",
       expect.objectContaining({ p_reward_expiry_days: null }),
+    );
+  });
+
+  it("blocks a free vendor changing to a non-stamp mechanic, without deactivating the old card", async () => {
+    const res = await changeTypeAction(
+      {},
+      form({
+        replacing: "old-id",
+        type: "lucky",
+        name: "Lucky spin",
+        reward_text: "Free kopi",
+        win_percent: "10",
+        pity_ceiling: "5",
+      }),
+    );
+
+    expect(res.error).toMatch(/needs pro/i);
+    expect(fromMock).not.toHaveBeenCalled();
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks a free vendor changing into a premium stamp style", async () => {
+    const res = await changeTypeAction(
+      {},
+      form({ ...stampFields, stamp_style: "seal" }),
+    );
+
+    expect(res.error).toMatch(/needs pro/i);
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("allows a Pro vendor to change into any mechanic", async () => {
+    isProMock.mockResolvedValue(true);
+
+    await expect(
+      changeTypeAction(
+        {},
+        form({
+          replacing: "old-id",
+          type: "lucky",
+          name: "Lucky spin",
+          reward_text: "Free kopi",
+          win_percent: "10",
+          pity_ceiling: "5",
+        }),
+      ),
+    ).rejects.toThrow("REDIRECT:/dashboard?p=new-id");
+
+    expect(rpcMock).toHaveBeenCalledWith(
+      "create_program",
+      expect.objectContaining({ p_type: "lucky" }),
     );
   });
 });
