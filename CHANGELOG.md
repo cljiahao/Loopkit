@@ -25,6 +25,10 @@ actions.ts`) pointed at a stale, dead `.vercel.app` host — confirmed by
   a dead host in production. Fixed the literal here; the primary,
   immediate fix is still setting `MERQO_BASE_URL` explicitly in Vercel —
   this is defense-in-depth for whichever environment forgets it.
+- `VendorCustomerList`'s totals test used a loose `/8/` regex that also
+  matched the row's last-seen date once it landed on the 8th of the
+  month, failing CI non-deterministically. Asserts the exact rendered
+  totals text instead.
 
 ### Security
 
