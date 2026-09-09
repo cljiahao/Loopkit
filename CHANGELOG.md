@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   to Vercel, which does its own function bundling and does not use the
   standalone output. Under `next` 16.3.x that config also made Vercel's
   build finalizer look for a server trace file it no longer writes there.
+- Bumped `vitest` and `@vitest/coverage-v8` to `4.1.11` (from `3.2.6`).
+  Clears GHSA-82fw-gwwq-j7x9 (`@vitest/mocker` path traversal / arbitrary
+  file read, patched only in `4.1.11`). Also `fast-uri` to `4.1.4` and the
+  `qs` override to `>=6.16.0`, clearing four high and two moderate advisories
+  that reach in through `@stryker-mutator`. The dependency audit is now
+  clean at every level. No test or config changes were needed for vitest 4.
 
 ### Added
 

@@ -197,9 +197,9 @@ Stamp programs can also opt into a birthday bonus (migration `0041`,
 
 ## Stack
 
-Next.js 16 · App Router · Turbopack · TypeScript strict · Tailwind v4 ·
+Next.js 16.3.4 · App Router · Turbopack · TypeScript strict · Tailwind v4 ·
 shadcn/ui (new-york) · React Hook Form · Zod · Supabase (`@supabase/ssr`) ·
-Vitest · pnpm 11 · Node ≥24 · deploy target: Vercel
+Vitest 4 · pnpm 11 · Node ≥24 · deploy target: Vercel
 
 ## Commands
 
