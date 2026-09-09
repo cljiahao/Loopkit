@@ -192,8 +192,8 @@ this is a confirmation nicety, not a security control).
 - `create or replace function loopkit.create_program(...)` with the identical
   signature and body from 0027 except `p_reward_expiry_days int default 90`.
 - Re-issue the existing `grant execute on function loopkit.create_program(
-  text, text, int, text, jsonb, int, boolean, boolean, boolean, int, int)
-  to authenticated;` (signature unchanged, but `create or replace` keeps the
+text, text, int, text, jsonb, int, boolean, boolean, boolean, int, int)
+to authenticated;` (signature unchanged, but `create or replace` keeps the
   grant anyway; include it for clarity, matching prior migrations' style).
 - A comment line at the top: what changed and why (one line).
 
@@ -227,6 +227,7 @@ this is a confirmation nicety, not a security control).
 ## File-change summary
 
 Create:
+
 - `docs/superpowers/specs/2026-09-09-program-edit-safety-design.md` (this file)
 - `docs/superpowers/plans/2026-09-09-*.md` (from writing-plans)
 - `src/lib/program-edit-impact.ts` + `test/lib/program-edit-impact.test.ts`
@@ -235,6 +236,7 @@ Create:
 - `test/db/reward-expiry-default.test.ts`
 
 Modify:
+
 - `src/app/setup/setup-form.tsx` (dialog wiring, expiry field default + copy)
 - `src/app/setup/page.tsx` (pass `cardCount` to the edit `<SetupForm>`)
 - `src/lib/cards.ts` (`programCardCount`)

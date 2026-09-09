@@ -26,31 +26,33 @@
 
 ## File Structure
 
-| File | Responsibility |
-|---|---|
-| `src/lib/program-edit-impact.ts` (new) | Pure. `ProgramSnapshot` type, `isProgressAffecting(before, after)`, `describeEditImpact(before, after, cardCount)`. No I/O, no React. |
-| `test/lib/program-edit-impact.test.ts` (new) | Unit tests for the above. |
-| `src/lib/cards.ts` (modify) | Add `programCardCount(programId)`: `count(*)` of `cards` for that program. |
-| `test/lib/cards.test.ts` (modify) | Add a `programCardCount` block (mock the Supabase client like the existing `listCards` block). |
-| `src/app/setup/edit-impact-dialog.tsx` (new, `"use client"`) | Wraps the submit button. Plain button when `impactLines` is null/empty, else a button that opens an `AlertDialog` whose confirm submits the form. |
-| `src/app/setup/edit-impact-dialog.dom.test.tsx` (new) | DOM tests for the wrapper. |
-| `src/app/setup/setup-form.tsx` (modify) | New `cardCount` prop; compute `impactLines` from existing form state; swap the edit-mode submit button for `<EditImpactDialog>`; change the `reward_expiry_days` field default + helper copy. |
-| `src/app/setup/setup-form.dom.test.tsx` (modify) | Two new blocks: dialog trigger behaviour, expiry-field default. |
-| `src/app/setup/page.tsx` (modify) | Call `programCardCount(editing.id)` and pass `cardCount` to the edit `<SetupForm>`. |
-| `supabase/migrations/0046_loopkit_reward_expiry_default.sql` (new) | `create or replace function loopkit.create_program(...)` identical to `0027` except `p_reward_expiry_days int default 90`. |
-| `test/db/reward-expiry-default.test.ts` (new) | Static SQL string-match on `0046`. |
-| READMEs + `CHANGELOG.md` | Folder READMEs per touched folder; CHANGELOG under `[Unreleased]`; root README running-narrative sentence. |
+| File                                                               | Responsibility                                                                                                                                                                                |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/program-edit-impact.ts` (new)                             | Pure. `ProgramSnapshot` type, `isProgressAffecting(before, after)`, `describeEditImpact(before, after, cardCount)`. No I/O, no React.                                                         |
+| `test/lib/program-edit-impact.test.ts` (new)                       | Unit tests for the above.                                                                                                                                                                     |
+| `src/lib/cards.ts` (modify)                                        | Add `programCardCount(programId)`: `count(*)` of `cards` for that program.                                                                                                                    |
+| `test/lib/cards.test.ts` (modify)                                  | Add a `programCardCount` block (mock the Supabase client like the existing `listCards` block).                                                                                                |
+| `src/app/setup/edit-impact-dialog.tsx` (new, `"use client"`)       | Wraps the submit button. Plain button when `impactLines` is null/empty, else a button that opens an `AlertDialog` whose confirm submits the form.                                             |
+| `src/app/setup/edit-impact-dialog.dom.test.tsx` (new)              | DOM tests for the wrapper.                                                                                                                                                                    |
+| `src/app/setup/setup-form.tsx` (modify)                            | New `cardCount` prop; compute `impactLines` from existing form state; swap the edit-mode submit button for `<EditImpactDialog>`; change the `reward_expiry_days` field default + helper copy. |
+| `src/app/setup/setup-form.dom.test.tsx` (modify)                   | Two new blocks: dialog trigger behaviour, expiry-field default.                                                                                                                               |
+| `src/app/setup/page.tsx` (modify)                                  | Call `programCardCount(editing.id)` and pass `cardCount` to the edit `<SetupForm>`.                                                                                                           |
+| `supabase/migrations/0046_loopkit_reward_expiry_default.sql` (new) | `create or replace function loopkit.create_program(...)` identical to `0027` except `p_reward_expiry_days int default 90`.                                                                    |
+| `test/db/reward-expiry-default.test.ts` (new)                      | Static SQL string-match on `0046`.                                                                                                                                                            |
+| READMEs + `CHANGELOG.md`                                           | Folder READMEs per touched folder; CHANGELOG under `[Unreleased]`; root README running-narrative sentence.                                                                                    |
 
 ---
 
 ### Task 1: Pure edit-impact helper
 
 **Files:**
+
 - Create: `src/lib/program-edit-impact.ts`
 - Test: `test/lib/program-edit-impact.test.ts`
 - Modify: `src/lib/README.md`, `test/lib/README.md`, `CHANGELOG.md`, `README.md`
 
 **Interfaces:**
+
 - Consumes: nothing.
 - Produces:
   - `type ProgramSnapshot = { stamps_required: number; reward_text: string }`
@@ -166,7 +168,10 @@ export type ProgramSnapshot = {
   reward_text: string;
 };
 
-function rewardChanged(before: ProgramSnapshot, after: ProgramSnapshot): boolean {
+function rewardChanged(
+  before: ProgramSnapshot,
+  after: ProgramSnapshot,
+): boolean {
   return before.reward_text.trim() !== after.reward_text.trim();
 }
 
@@ -237,9 +242,11 @@ git commit -m "feat(setup): pure helper for program edit-impact lines"
 ### Task 2: `programCardCount` data helper
 
 **Files:**
+
 - Modify: `src/lib/cards.ts`, `test/lib/cards.test.ts`, `src/lib/README.md`, `test/lib/README.md`
 
 **Interfaces:**
+
 - Consumes: nothing from earlier tasks.
 - Produces: `function programCardCount(programId: string): Promise<number>`
 
@@ -336,10 +343,12 @@ git commit -m "feat(setup): programCardCount for the edit-impact dialog"
 ### Task 3: `EditImpactDialog` client component
 
 **Files:**
+
 - Create: `src/app/setup/edit-impact-dialog.tsx`, `src/app/setup/edit-impact-dialog.dom.test.tsx`
 - Modify: `src/app/setup/README.md`
 
 **Interfaces:**
+
 - Consumes: nothing from earlier tasks (it takes plain `string[]`).
 - Produces:
 
@@ -348,7 +357,7 @@ function EditImpactDialog(props: {
   impactLines: string[] | null;
   pending: boolean;
   label: React.ReactNode;
-}): React.JSX.Element
+}): React.JSX.Element;
 ```
 
 Renders a `type="submit"` button with `label` when `impactLines` is `null` or empty. Otherwise renders a `type="button"` button (same styling) that opens an `AlertDialog`; the dialog body lists every line; the confirm action calls `event.currentTarget.form?.requestSubmit()` via the button's closest form, and the cancel action just closes.
@@ -367,7 +376,10 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { EditImpactDialog } from "@/app/setup/edit-impact-dialog";
 
-function renderInForm(ui: React.ReactNode, onSubmit = vi.fn((e) => e.preventDefault())) {
+function renderInForm(
+  ui: React.ReactNode,
+  onSubmit = vi.fn((e) => e.preventDefault()),
+) {
   return {
     onSubmit,
     ...render(<form onSubmit={onSubmit}>{ui}</form>),
@@ -377,7 +389,11 @@ function renderInForm(ui: React.ReactNode, onSubmit = vi.fn((e) => e.preventDefa
 describe("EditImpactDialog", () => {
   it("renders a plain submit button when impactLines is null", () => {
     renderInForm(
-      <EditImpactDialog impactLines={null} pending={false} label="Save changes" />,
+      <EditImpactDialog
+        impactLines={null}
+        pending={false}
+        label="Save changes"
+      />,
     );
     const btn = screen.getByRole("button", { name: "Save changes" });
     expect(btn).toHaveAttribute("type", "submit");
@@ -386,19 +402,25 @@ describe("EditImpactDialog", () => {
 
   it("renders a plain submit button when impactLines is empty", () => {
     renderInForm(
-      <EditImpactDialog impactLines={[]} pending={false} label="Save changes" />,
+      <EditImpactDialog
+        impactLines={[]}
+        pending={false}
+        label="Save changes"
+      />,
     );
-    expect(screen.getByRole("button", { name: "Save changes" })).toHaveAttribute(
-      "type",
-      "submit",
-    );
+    expect(
+      screen.getByRole("button", { name: "Save changes" }),
+    ).toHaveAttribute("type", "submit");
   });
 
   it("opens a dialog listing every line and does not submit until confirmed", async () => {
     const user = userEvent.setup();
     const { onSubmit } = renderInForm(
       <EditImpactDialog
-        impactLines={["3 customers have a card on this program.", "The goal moves from 8 to 10."]}
+        impactLines={[
+          "3 customers have a card on this program.",
+          "The goal moves from 8 to 10.",
+        ]}
         pending={false}
         label="Save changes"
       />,
@@ -406,7 +428,9 @@ describe("EditImpactDialog", () => {
 
     await user.click(screen.getByRole("button", { name: "Save changes" }));
     const dialog = await screen.findByRole("alertdialog");
-    expect(dialog).toHaveTextContent("3 customers have a card on this program.");
+    expect(dialog).toHaveTextContent(
+      "3 customers have a card on this program.",
+    );
     expect(dialog).toHaveTextContent("The goal moves from 8 to 10.");
     expect(onSubmit).not.toHaveBeenCalled();
 
@@ -464,7 +488,12 @@ export function EditImpactDialog({
 
   if (!impactLines || impactLines.length === 0) {
     return (
-      <Button type="submit" size="lg" disabled={pending} className={SUBMIT_CLASS}>
+      <Button
+        type="submit"
+        size="lg"
+        disabled={pending}
+        className={SUBMIT_CLASS}
+      >
         {label}
       </Button>
     );
@@ -531,9 +560,11 @@ git commit -m "feat(setup): EditImpactDialog submit wrapper"
 ### Task 4: Wire the dialog into the setup form
 
 **Files:**
+
 - Modify: `src/app/setup/setup-form.tsx`, `src/app/setup/page.tsx`, `src/app/setup/setup-form.dom.test.tsx`, `src/app/setup/README.md`, `CHANGELOG.md`
 
 **Interfaces:**
+
 - Consumes:
   - `isProgressAffecting`, `describeEditImpact`, `type ProgramSnapshot` from `@/lib/program-edit-impact` (Task 1)
   - `programCardCount(programId: string): Promise<number>` from `@/lib/cards` (Task 2)
@@ -541,6 +572,7 @@ git commit -m "feat(setup): EditImpactDialog submit wrapper"
 - Produces: `SetupForm` gains an optional `cardCount?: number` prop (default `0`).
 
 **Context:**
+
 - `setup-form.tsx` already holds this state: `type` (`ProgramType`), `stampsRequired` (number), `visitsToBloom` (number), `pityCeiling` (number | undefined), `rewardText` (string), plus `isEdit`, `program`, `pending` (from `useActionState`).
 - Resolved goal per type, matching `buildProgramFields` in `src/lib/program.ts`: `stamp` -> `stampsRequired`; `plant` -> `visitsToBloom`; `lucky`/`wheel`/`scratch` -> `pityCeiling ?? 10`. The `points` variant is a stamp-family type; treat it as `stampsRequired`.
 - The submit `<Button type="submit" ...>` is near line 1400, inside `{isEdit ? "Save changes" : replacingId ? "Change type" : prepping ...}`.
@@ -554,7 +586,11 @@ In `src/app/setup/setup-form.dom.test.tsx`, add a block. Follow the file's exist
 describe("SetupForm edit-impact dialog", () => {
   const stampProgram = {
     // spread whatever the file's existing program fixture factory returns
-    ...makeProgram({ type: "stamp", stamps_required: 8, reward_text: "Free coffee" }),
+    ...makeProgram({
+      type: "stamp",
+      stamps_required: 8,
+      reward_text: "Free coffee",
+    }),
   };
 
   it("confirms before saving a stamp-goal change when customers hold cards", async () => {
@@ -572,7 +608,9 @@ describe("SetupForm edit-impact dialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     const dialog = await screen.findByRole("alertdialog");
-    expect(dialog).toHaveTextContent("3 customers have a card on this program.");
+    expect(dialog).toHaveTextContent(
+      "3 customers have a card on this program.",
+    );
   });
 
   it("saves with no dialog when the program has no cards", async () => {
@@ -702,14 +740,17 @@ git commit -m "feat(setup): confirm goalpost-moving program edits"
 ### Task 5: 90-day reward-expiry default
 
 **Files:**
+
 - Create: `supabase/migrations/0046_loopkit_reward_expiry_default.sql`, `test/db/reward-expiry-default.test.ts`
 - Modify: `src/app/setup/setup-form.tsx`, `src/app/setup/setup-form.dom.test.tsx`, `supabase/migrations/README.md`, `test/db/README.md`, `src/app/setup/README.md`, `CHANGELOG.md`
 
 **Interfaces:**
+
 - Consumes: nothing from earlier tasks.
 - Produces: no new code symbols. Behaviour: `create_program` RPC default `p_reward_expiry_days` becomes `90`; the setup form pre-fills the `reward_expiry_days` input with `90` for a new program.
 
 **Context:**
+
 - `supabase/migrations/0027_loopkit_reward_vouchers.sql` defines the current `loopkit.create_program`. Open it and copy the `create or replace function loopkit.create_program(...) ... $$;` block plus its trailing `grant execute on function loopkit.create_program(...)` **verbatim**. The `db` CI job actually runs every migration against a fresh Postgres, so the body must be valid and complete, not paraphrased.
 - The only change from `0027`'s definition: the parameter line `p_reward_expiry_days int default null` becomes `p_reward_expiry_days int default 90`.
 - Do not touch `grant_reward_voucher`, `record_stamp`, `redeem_voucher_by_token`, or any voucher-insert path. They already map `null` -> no expiry and `N` -> `now() + N days`, which stays correct.
@@ -730,9 +771,7 @@ const sql = readFileSync(
 
 describe("0046 reward expiry default", () => {
   it("re-creates loopkit.create_program", () => {
-    expect(sql).toMatch(
-      /create or replace function loopkit\.create_program/i,
-    );
+    expect(sql).toMatch(/create or replace function loopkit\.create_program/i);
   });
 
   it("defaults p_reward_expiry_days to 90", () => {
@@ -815,7 +854,12 @@ In `setup-form.dom.test.tsx`, add:
 describe("SetupForm reward expiry default", () => {
   it("pre-fills 90 days for a new stamp program", () => {
     render(
-      <SetupForm program={null} isEdit={false} replacingId={null} replacingType={null} />,
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
     );
     // navigate the form to the stamp type / basics step if the field is gated
     expect(screen.getByLabelText(/reward.*expire|expiry/i)).toHaveValue(90);
@@ -885,8 +929,7 @@ For every changed non-README path, confirm that folder's `README.md` is also in 
 - [ ] **Step 3: Confirm the plan file is indexed**
 
 If `docs/superpowers/plans/README.md` has a per-file list, add:
-`- \`2026-09-09-program-edit-safety.md\` — edit-impact confirmation dialog (Part 1) + 90-day \`create_program\` reward-expiry default (Part 2), from the same-dated spec`
-Commit: `git add docs/superpowers/plans/ && git commit -m "docs: index the program-edit-safety plan"`
+`- \`2026-09-09-program-edit-safety.md\` — edit-impact confirmation dialog (Part 1) + 90-day \`create_program\` reward-expiry default (Part 2), from the same-dated spec`Commit:`git add docs/superpowers/plans/ && git commit -m "docs: index the program-edit-safety plan"`
 
 - [ ] **Step 4: Push and open the PR**
 
@@ -943,6 +986,7 @@ Expected: `check + unit`, `build`, `e2e (public smoke)`, `db (migrations + pgTAP
 ## Self-Review
 
 **1. Spec coverage:**
+
 - Part 1 trigger (edit mode + progress-affecting + cardCount > 0): Task 4 `editImpactLines` guard. ✓
 - Part 1 "progress-affecting" = stamps_required or reward_text: Task 1 `isProgressAffecting`. ✓
 - Part 1 dialog contents (intro line, goal up/down, reward wording): Task 1 `describeEditImpact` + Task 3 renders them. ✓
