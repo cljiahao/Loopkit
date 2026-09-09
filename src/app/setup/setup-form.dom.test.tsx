@@ -874,6 +874,39 @@ describe("SetupForm reward expiry field", () => {
   });
 });
 
+describe("SetupForm reward expiry default", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("pre-fills 90 days for a new stamp program", async () => {
+    const user = userEvent.setup();
+    render(
+      <SetupForm
+        program={null}
+        isEdit={false}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    await goToBasics(user);
+    await user.type(screen.getByLabelText("Card name"), "Coffee card");
+    await goToRules(user);
+
+    expect(screen.getByLabelText(/reward expires after/i)).toHaveValue(90);
+  });
+
+  it("shows the existing blank value when editing a program with none set", () => {
+    render(
+      <SetupForm
+        program={stampProgram}
+        isEdit={true}
+        replacingId={null}
+        replacingType={null}
+      />,
+    );
+    expect(screen.getByLabelText(/reward expires after/i)).toHaveValue(null);
+  });
+});
+
 describe("SetupForm reward cost field", () => {
   beforeEach(() => vi.clearAllMocks());
 

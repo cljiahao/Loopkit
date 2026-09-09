@@ -1384,11 +1384,14 @@ export function SetupForm({
                   min={1}
                   max={3650}
                   placeholder="Never expires"
-                  defaultValue={program?.reward_expiry_days ?? ""}
+                  defaultValue={
+                    isEdit ? (program?.reward_expiry_days ?? "") : 90
+                  }
                   className="h-11 rounded-xl"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Leave blank so an earned reward never expires.
+                  Pre-filled to 90 days. Clear the box if you want earned
+                  rewards to never expire.
                 </p>
               </div>
             )}

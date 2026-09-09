@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Rewards a customer earns now expire 90 days after being granted by default. A vendor who wants a reward to never expire clears the expiry field when setting up the card. Existing programs are unchanged.
 - The dashboard home is now a vendor briefing (regulars and cadence, base
   stats that explain themselves on tap, a 7/14-day visits trend, "worth a
   look" actions, what the rewards cost this month, recent activity)
