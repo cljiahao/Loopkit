@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `sharp` to `0.35.4`. Clears two critical Next.js RCE advisories
   (GHSA-p293-qw3h-jr36 on Windows-hosted servers, GHSA-2xp9-vwfh-vxw4 in the
   image-optimization AVIF path) and a high `sharp`/libheif advisory.
+- Dropped `output: "standalone"` from `next.config.ts`. loopkit deploys only
+  to Vercel, which does its own function bundling and does not use the
+  standalone output. Under `next` 16.3.x that config also made Vercel's
+  build finalizer look for a server trace file it no longer writes there.
 
 ### Added
 
