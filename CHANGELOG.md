@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+
+- Bumped `next` to `16.3.4` (`eslint-config-next` to match), which pulls
+  `sharp` to `0.35.4`. Clears two critical Next.js RCE advisories
+  (GHSA-p293-qw3h-jr36 on Windows-hosted servers, GHSA-2xp9-vwfh-vxw4 in the
+  image-optimization AVIF path) and a high `sharp`/libheif advisory.
+
 ### Added
 
 - Editing a stamp goal or reward wording on a loyalty card that customers already hold now asks the vendor to confirm, spelling out that existing stamps are kept and the goal or wording only changes going forward.
