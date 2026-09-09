@@ -62,9 +62,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   itself — a vendor could otherwise assume the scan itself was the
   scan-to-earn step, since the tour never connected the QR step to the
   separate vendor-side "search and add a stamp" step.
-
-### Changed
-
 - Dropped the required typed legal-name field from the acceptance
   checkbox — a plain ToS/Privacy clickwrap doesn't need a signatory name
   for evidentiary strength beyond the existing (vendor_email, auth_uid,
