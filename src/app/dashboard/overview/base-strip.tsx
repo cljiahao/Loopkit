@@ -1,8 +1,7 @@
 "use client";
 
-import { StatTile, InfoTooltip } from "@merqo/ui";
+import { StatTile, InfoTooltip, ElevatedCard } from "@merqo/ui";
 import type { BaseStat } from "@/app/dashboard/dashboard-view";
-import { ElevatedCard } from "@/components/elevated-card";
 
 const TONE_CLASS: Record<BaseStat["tone"], string> = {
   plain: "",

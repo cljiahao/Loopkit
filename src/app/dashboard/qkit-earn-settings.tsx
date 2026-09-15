@@ -12,7 +12,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ElevatedCard } from "@/components/elevated-card";
+import { ElevatedCard } from "@merqo/ui";
 import { ProLock } from "@/components/pro-lock";
 
 type Program = { id: string; name: string };

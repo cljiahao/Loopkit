@@ -27,7 +27,7 @@ import { WorthALook } from "@/app/dashboard/overview/worth-a-look";
 import { RecentActivity } from "@/app/dashboard/overview/recent-activity";
 import { RewardCostPanel } from "@/app/dashboard/overview/reward-cost-panel";
 import { YourPrograms } from "@/app/dashboard/overview/your-programs";
-import { ElevatedCard } from "@/components/elevated-card";
+import { ElevatedCard } from "@merqo/ui";
 
 export default async function DashboardPage() {
   await requireVendor();

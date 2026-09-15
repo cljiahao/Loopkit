@@ -1,5 +1,5 @@
 import { Sparkles } from "lucide-react";
-import { PlanComparisonTable } from "@merqo/ui";
+import { PlanComparisonTable, ElevatedCard } from "@merqo/ui";
 import { requireVendor } from "@/features/auth";
 import { isPro, listPrograms, currentProgram } from "@/lib/program";
 import { getProgramStats } from "@/lib/stats";
@@ -7,7 +7,6 @@ import { getPricing } from "@/lib/pricing";
 import { formatPrice } from "@/lib/utils";
 import { UpgradeCta } from "@/app/dashboard/plan/upgrade-cta";
 import { Badge } from "@/components/ui/badge";
-import { ElevatedCard } from "@/components/elevated-card";
 
 const FEATURES = [
   { label: "Loyalty programs", free: "1", pro: "∞" },

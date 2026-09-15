@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { ElevatedCard } from "@/components/elevated-card";
+import { ElevatedCard } from "@merqo/ui";
 
 /** A back-office figure tile: a small uppercase label over a big value. */
 export function Stat({

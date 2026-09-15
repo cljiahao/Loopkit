@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireVendor } from "@/features/auth";
 import { getVoucherByToken, type VoucherLookup } from "@/lib/program";
-import { BackButton } from "@/components/back-button";
+import { BackButton } from "@merqo/ui";
 import { RedeemVoucherConfirm } from "@/app/dashboard/redeem-voucher/redeem-voucher-confirm";
 
 function VoucherBody({
@@ -47,7 +48,11 @@ export default async function RedeemVoucherPage({
 
   return (
     <div className="mx-auto max-w-md space-y-6">
-      <BackButton href="/dashboard" label="Back to dashboard" />
+      <BackButton
+        href="/dashboard"
+        label="Back to dashboard"
+        LinkComponent={Link}
+      />
       <VoucherBody token={token} voucher={voucher} />
     </div>
   );

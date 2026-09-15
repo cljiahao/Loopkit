@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/admin";
 import { listVendors, listPendingUpgradeRequests } from "@/lib/admin-data";
 import { formatSgtDateTime } from "@/lib/format";
-import { ElevatedCard } from "@/components/elevated-card";
+import { ElevatedCard } from "@merqo/ui";
 import { ResolveUpgradeRequestButton } from "@/app/admin/vendors/resolve-upgrade-request-button";
 import { VendorsTable } from "@/app/admin/vendors/vendors-table";
 

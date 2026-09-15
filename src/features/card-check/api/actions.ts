@@ -3,7 +3,7 @@
 import { createServerClient } from "@/lib/supabase/server";
 import { normalizePhone } from "@/lib/phone";
 import { applyVisit, getProgress } from "@/lib/engine";
-import { qrSvg } from "@/lib/qr";
+import { qrSvg } from "@merqo/ui";
 import { isCardExpired } from "@/lib/expiry";
 import type { ActionResult } from "@/lib/action-result";
 import type { Json } from "@/lib/types";

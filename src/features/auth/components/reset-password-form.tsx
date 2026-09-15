@@ -7,7 +7,7 @@ import { Wordmark } from "@/components/landing/wordmark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ElevatedCard } from "@/components/elevated-card";
+import { ElevatedCard } from "@merqo/ui";
 
 // Reached from the password-reset email → /auth/callback establishes a recovery
 // session and forwards here. We update the password on that session, then land

@@ -22,7 +22,7 @@ vi.mock("@/features/auth", () => ({ requireVendor: requireVendorMock }));
 vi.mock("@/lib/program", () => ({ getProgramById: getProgramByIdMock }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
 vi.mock("next/headers", () => ({ headers: headersMock }));
-vi.mock("@/lib/qr", () => ({ qrSvg: vi.fn(async () => "<svg></svg>") }));
+vi.mock("@merqo/ui", () => ({ qrSvg: vi.fn(async () => "<svg></svg>") }));
 vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({
     from: () => ({ insert: insertMock }),

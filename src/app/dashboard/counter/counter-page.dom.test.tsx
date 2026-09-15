@@ -42,9 +42,10 @@ vi.mock("next/headers", () => ({
 vi.mock("@/lib/vendor", () => ({
   getVendorProfile: vi.fn(async () => ({ name: "Kopi Corner" })),
 }));
-vi.mock("@/lib/qr", () => ({
-  qrSvg: vi.fn(async () => "<svg id='qr'></svg>"),
-}));
+vi.mock("@merqo/ui", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@merqo/ui")>();
+  return { ...actual, qrSvg: vi.fn(async () => "<svg id='qr'></svg>") };
+});
 vi.mock("next/navigation", () => ({
   redirect: vi.fn((url: string) => {
     throw new Error(`REDIRECT:${url}`);
