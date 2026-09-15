@@ -201,6 +201,11 @@ Next.js 16.3.4 · App Router · Turbopack · TypeScript strict · Tailwind v4 ·
 shadcn/ui (new-york) · React Hook Form · Zod · Supabase (`@supabase/ssr`) ·
 Vitest 4 · pnpm 11 · Node ≥24 · deploy target: Vercel
 
+`@merqo/ui` bumped to v0.27.0 (2026-09-15), which adds `DashboardTours` — a
+route-matched multi-tour router for kits with more than one dashboard-page
+tour (qkit's first consumer); purely additive, this kit's own `DashboardTour`
+usage is unchanged.
+
 ## Commands
 
 ```bash
