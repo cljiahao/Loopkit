@@ -23,7 +23,7 @@ The scan-first "serve a customer at the counter" view at `/dashboard/counter?p=<
 - `use-served-strip.ts` — `useServedStrip()` hook owning the served list: `push(phone, note, undoable)` prepends (cap 5) and clears every prior entry's Undo; `markDone(id)` clears one. Keeps this state plumbing out of `serve-customer.tsx`.
 - `serve-result.ts` — the `ServeResult` union (stamp / lucky / plant / chance) plus its `PlantView` / `ChanceView` shapes, lifted verbatim from `serve-customer.tsx` so `serve-customer` and `active-card` share one definition.
 - `active-card.tsx` — client `ActiveCard`: the Counter's right column. An explicit empty state (`data-state="empty"`) until a customer loads, then the per-mechanic result block (`StampBlock` / lucky / `PlantBlock` / `ChanceBlock`) and the regenerate-card dialog. Every block is the original `serve-customer.tsx` markup, moved not rewritten; `RedemptionControl` and `luckyResultMessage` moved here with it.
-- `counter-page.dom.test.tsx` — jsdom tests: with `?p=` set, `ServeCustomer` gets the program + shop-join props (including `showBranding: true` for a free vendor, `false` for a Pro one) and `RememberProgram` gets the program id; a missing `?p=` redirects to the busiest program; an unknown `?p=` redirects to `/dashboard`.
+- `counter-page.dom.test.tsx` — jsdom tests: with `?p=` set, `ServeCustomer` gets the program + shop-join props (including `showBranding: true` for a free vendor, `false` for a Pro one) and `RememberProgram` gets the program id; a missing `?p=` redirects to the busiest program; an unknown `?p=` redirects to `/dashboard`. Mocks `@merqo/ui`'s `qrSvg` via `importOriginal` (preserving every other export) rather than mocking the whole package.
 
 ## Parent
 

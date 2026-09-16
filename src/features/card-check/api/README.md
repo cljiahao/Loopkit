@@ -10,7 +10,7 @@ Server-side card-check logic: the public `"use server"` actions behind
 - `actions.ts` — `checkStatusAction`: no-auth action that enrolls a phone
   into every active program at a vendor via the `vendor_join` RPC (which
   also returns every card the phone already holds there), then computes
-  per-card progress with `getProgress` and a QR (`qrSvg`) for each row.
+  per-card progress with `getProgress` and a QR (`@merqo/ui`'s `qrSvg`) for each row.
   When the form carries a `ref` field (a host/couple referral link, `/c?ref=`
   — `src/app/dashboard/referrals/`), it calls `vendor_join_referred`
   instead, same return shape plus a `referral_credit` column; when that

@@ -3,7 +3,7 @@
 ## Purpose
 
 Tests for `src/features/card-check/`'s non-DOM server actions — Supabase
-client and `qrSvg` mocked via `vi.mock`/`vi.hoisted`.
+client and `@merqo/ui`'s `qrSvg` mocked via `vi.mock`/`vi.hoisted`.
 
 ## Contents
 
