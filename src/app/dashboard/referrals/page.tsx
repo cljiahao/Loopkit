@@ -1,10 +1,9 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { requireVendor } from "@/features/auth";
 import { listPrograms } from "@/lib/program";
 import { listReferralHosts, referralLink } from "@/lib/referrals";
-import { qrSvg } from "@/lib/qr";
-import { BackButton } from "@/components/back-button";
-import { ElevatedCard } from "@/components/elevated-card";
+import { BackButton, ElevatedCard, qrSvg } from "@merqo/ui";
 import { ReferralsPanel } from "./referrals-panel";
 
 export default async function ReferralsPage() {
@@ -43,7 +42,11 @@ export default async function ReferralsPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-8">
-      <BackButton href="/dashboard" label="Back to dashboard" />
+      <BackButton
+        href="/dashboard"
+        label="Back to dashboard"
+        LinkComponent={Link}
+      />
       <div>
         <h1 className="font-display text-2xl font-bold">Referrals</h1>
         <p className="mt-1 text-sm text-muted-foreground">

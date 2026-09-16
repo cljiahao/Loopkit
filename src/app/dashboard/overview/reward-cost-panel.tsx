@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { CostView } from "@/app/dashboard/dashboard-view";
 import { formatSgd } from "@/lib/money";
-import { ElevatedCard } from "@/components/elevated-card";
+import { ElevatedCard } from "@merqo/ui";
 
 export function RewardCostPanel({
   cost,

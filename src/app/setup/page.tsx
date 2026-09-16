@@ -15,7 +15,7 @@ import { activateProgramAction } from "@/app/setup/actions";
 import { resolveSetupView } from "@/app/setup/setup-view";
 import { Wordmark } from "@/components/landing/wordmark";
 import { ProLock } from "@/components/pro-lock";
-import { BackButton } from "@/components/back-button";
+import { BackButton } from "@merqo/ui";
 import { cn } from "@/lib/utils";
 import { getVendorProfile } from "@/lib/vendor";
 import { programCardCount } from "@/lib/cards";
@@ -105,7 +105,11 @@ export default async function SetupPage({
     <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center p-5 md:max-w-4xl">
       <div className="w-full">
         <div className="mb-4">
-          <BackButton href="/dashboard" label="Back to dashboard" />
+          <BackButton
+            href="/dashboard"
+            label="Back to dashboard"
+            LinkComponent={Link}
+          />
         </div>
         <div className="mb-8 text-center">
           <Wordmark className="text-3xl" />

@@ -7,7 +7,7 @@ import { requireVendor } from "@/features/auth";
 import { getProgramById } from "@/lib/program";
 import { normalizePhone } from "@/lib/phone";
 import { referralLink } from "@/lib/referrals";
-import { qrSvg } from "@/lib/qr";
+import { qrSvg } from "@merqo/ui";
 import { createServerClient } from "@/lib/supabase/server";
 import type { CreateReferralHostState } from "./types";
 

@@ -8,7 +8,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({ rpc: rpcMock })),
 }));
 
-vi.mock("@/lib/qr", () => ({
+vi.mock("@merqo/ui", () => ({
   qrSvg: vi.fn(async (text: string) => `<svg data-token="${text}"></svg>`),
 }));
 

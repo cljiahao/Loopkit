@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { StatTile } from "@merqo/ui";
+import { StatTile, ElevatedCard } from "@merqo/ui";
 import { requireVendor } from "@/features/auth";
 import { listPrograms, currentProgram } from "@/lib/program";
 import {
@@ -10,7 +10,6 @@ import {
 } from "@/lib/stats";
 import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
 import { VisitsChart } from "@/app/dashboard/stats/visits-chart";
-import { ElevatedCard } from "@/components/elevated-card";
 
 /** Wraps @merqo/ui's shared StatTile (value-above-label) in loopkit's own card shell. */
 function Tile({

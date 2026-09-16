@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Wordmark } from "@/components/landing/wordmark";
-import { ElevatedCard } from "@/components/elevated-card";
+import { ElevatedCard } from "@merqo/ui";
 import { GoogleMark } from "./google-mark";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

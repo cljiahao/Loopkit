@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { DataTable, type DataTableColumn } from "@merqo/ui";
+import { DataTable, ElevatedCard, type DataTableColumn } from "@merqo/ui";
 import { requireAdmin } from "@/lib/admin";
 import { listProgramsOverview } from "@/lib/admin-data";
 import { programHealth, type ProgramHealth } from "@/lib/program-health";
 import { formatSgtDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { HEALTH_BADGE, type BadgeVariant } from "@/app/admin/health-badge";
-import { ElevatedCard } from "@/components/elevated-card";
 
 export const revalidate = 0;
 

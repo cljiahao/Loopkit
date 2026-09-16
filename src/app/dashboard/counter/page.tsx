@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { requireVendor } from "@/features/auth";
@@ -9,7 +10,6 @@ import {
 } from "@/lib/program";
 import { activeCardCountsByProgram } from "@/lib/cards";
 import { getVendorProfile } from "@/lib/vendor";
-import { qrSvg } from "@/lib/qr";
 import {
   PROGRAM_TYPE_BADGE,
   describeProgram,
@@ -18,7 +18,7 @@ import { pickDefaultCounterProgram } from "@/app/dashboard/counter/counter-view"
 import { RememberProgram } from "@/app/dashboard/counter/remember-program";
 import { ServeCustomer } from "@/app/dashboard/serve-customer";
 import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
-import { BackButton } from "@/components/back-button";
+import { BackButton, qrSvg } from "@merqo/ui";
 import { Badge } from "@/components/ui/badge";
 
 type CounterPageProps = {
@@ -62,7 +62,11 @@ export default async function CounterPage({ searchParams }: CounterPageProps) {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <BackButton href="/dashboard" label="Back to dashboard" />
+      <BackButton
+        href="/dashboard"
+        label="Back to dashboard"
+        LinkComponent={Link}
+      />
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import { redeemVoucherAction } from "@/app/dashboard/actions";
 import { Button } from "@/components/ui/button";
-import { BackButton } from "@/components/back-button";
+import { BackButton } from "@merqo/ui";
 
 export function RedeemVoucherConfirm({
   token,
@@ -38,7 +39,11 @@ export function RedeemVoucherConfirm({
       <div className="space-y-3 rounded-xl border border-gold bg-gold/10 p-5 text-center">
         <p className="text-sm font-semibold text-gold-accent">Redeemed! 🎉</p>
         <p className="text-sm text-muted-foreground">{redeemedText}</p>
-        <BackButton href="/dashboard" label="Back to dashboard" />
+        <BackButton
+          href="/dashboard"
+          label="Back to dashboard"
+          LinkComponent={Link}
+        />
       </div>
     );
   }

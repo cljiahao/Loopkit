@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- `BackButton`, `ElevatedCard`, `SOCIAL_LINK_FIELDS`/`SocialLinksFields`,
+  `qrSvg`, and the landing `Footer` now come from `@merqo/ui` (bumped to
+  v0.29.1) instead of a loopkit-local copy — each was confirmed duplicated
+  across 2 or more sibling kits before promoting, no behavior change
+  intended.
+
 ### Fixed
 
 - Bumped `@merqo/ui` to `v0.26.0` and switched `legal-gate.ts`/`legal/accept/

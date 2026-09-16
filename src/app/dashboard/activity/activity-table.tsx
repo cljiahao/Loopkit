@@ -1,7 +1,6 @@
 import { Gift, Stamp, Pencil } from "lucide-react";
-import { DataTable, type DataTableColumn } from "@merqo/ui";
+import { DataTable, ElevatedCard, type DataTableColumn } from "@merqo/ui";
 import { Badge } from "@/components/ui/badge";
-import { ElevatedCard } from "@/components/elevated-card";
 import { formatSgtDateTime } from "@/lib/format";
 import type { VendorActivityRow } from "@/lib/activity";
 

@@ -4,7 +4,7 @@ const { rpcMock } = vi.hoisted(() => ({ rpcMock: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({ rpc: rpcMock })),
 }));
-vi.mock("@/lib/qr", () => ({ qrSvg: vi.fn(async () => "<svg></svg>") }));
+vi.mock("@merqo/ui", () => ({ qrSvg: vi.fn(async () => "<svg></svg>") }));
 
 import {
   checkStatusAction,

@@ -5,7 +5,7 @@ import { getCustomerDetail } from "@/lib/customers";
 import { listActivity } from "@/lib/activity";
 import { normalizePhone } from "@/lib/phone";
 import { formatSgtDate } from "@/lib/format";
-import { ElevatedCard } from "@/components/elevated-card";
+import { ElevatedCard } from "@merqo/ui";
 import { Badge } from "@/components/ui/badge";
 import { ActivityTable } from "@/app/dashboard/activity/activity-table";
 import { AdjustStampForm } from "./adjust-stamp-form";

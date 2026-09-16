@@ -52,10 +52,14 @@ dashboard nav/account dropdown, `useAsyncAction`, `InfoTooltip`,
 `ImageUploader`, `DashboardTour`, `PricingForm` (the `/admin` pricing
 section, `src/app/admin/pricing-form-client.tsx`), the landing page's
 sticky header (`LandingNav`, via `src/components/landing/nav.tsx`), and
-the profile page's two-column layout all now delegate to `@merqo/ui`'s
-versions — see `AGENTS.md`'s File Layout and this README's Data model
-section below for what's still loopkit-local (`ElevatedCard`, the upload
-adapter, step/action wiring). `DashboardNav`'s wrapper
+the profile page's two-column layout, `BackButton`, `ElevatedCard`,
+`SOCIAL_LINK_FIELDS`/`SocialLinksFields`, `qrSvg`, and the landing `Footer`
+(as of v0.29.1, 2026-09-16 — each confirmed duplicated across 2+ sibling
+kits before promoting) all now delegate to `@merqo/ui`'s versions — see
+`AGENTS.md`'s File Layout and this README's Data model section below for
+what's still loopkit-local (the upload adapter, step/action wiring, and
+`ProLock`/the activity-page `PaginationNav`, both deliberately left local —
+see `CHANGELOG.md`). `DashboardNav`'s wrapper
 (`src/app/dashboard/dashboard-nav.tsx`) passes `LinkComponent={Link}`
 (v0.10.0+) so the package renders `next/link`'s `Link` instead of a
 plain `<a>` for its nav links and the `AccountMenu` it composes

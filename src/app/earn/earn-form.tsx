@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { claimEarnAction, type EarnState } from "./actions";
-import { ElevatedCard } from "@/components/elevated-card";
+import { ElevatedCard } from "@merqo/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

@@ -1,5 +1,4 @@
-import { Section as SharedSection } from "@merqo/ui";
-import { ElevatedCard } from "@/components/elevated-card";
+import { Section as SharedSection, ElevatedCard } from "@merqo/ui";
 
 // Delegates header rendering (icon badge, eyebrow, title, description) to
 // @merqo/ui's Section, keeping ElevatedCard — loopkit's own polished-card

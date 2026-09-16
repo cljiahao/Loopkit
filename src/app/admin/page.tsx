@@ -4,7 +4,7 @@ import { platformTotals, recentActivity } from "@/lib/admin-data";
 import { getPricing } from "@/lib/pricing";
 import { formatSgtDateTime } from "@/lib/format";
 import { Stat } from "@/app/admin/stat";
-import { ElevatedCard } from "@/components/elevated-card";
+import { ElevatedCard } from "@merqo/ui";
 import { PricingFormClient } from "./pricing-form-client";
 
 export const revalidate = 0;

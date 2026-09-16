@@ -19,15 +19,16 @@ not a sixth engine `type`. See
   validation used everywhere else), inserts the `referral_hosts` row (RLS
   scopes it to the signed-in vendor; `referral_code` is DB-generated), then
   builds the shareable link (`referralLink`, `src/lib/referrals.ts`) and its
-  QR (`qrSvg`) to return immediately, so the new host appears in the list
-  without a page reload
+  QR (`@merqo/ui`'s `qrSvg`) to return immediately, so the new host appears
+  in the list without a page reload
 - `page.tsx` — `ReferralsPage` server component: requires a vendor, loads
   their programs (offering only the active ones to the create form) and
   existing `referral_hosts` rows (`listReferralHosts`), pre-computes each
   existing host's link/QR from the request origin (same
   `NEXT_PUBLIC_BASE_URL`-or-request-host fallback `dashboard/page.tsx`'s
   shop QR uses), and renders a setup prompt instead of the form when the
-  vendor has no active program yet
+  vendor has no active program yet. Its "Back to dashboard" nav is
+  `@merqo/ui`'s `BackButton`.
 - `referrals-panel.tsx` — client `ReferralsPanel`: the create form
   (`useActionState` + `createReferralHostAction`, a program `Select`, phone
   and optional label `Input`s) above the host list; a freshly created host
@@ -36,7 +37,8 @@ not a sixth engine `type`. See
   `card-check`'s `CheckForm` uses to react to a fresh action result) rather
   than waiting on a full page revalidation. Each list row shows the host's
   label (falling back to the program name), guest count, QR, and link with
-  `card-link.tsx`'s existing `CardLinkActions` (copy link / print QR)
+  `card-link.tsx`'s existing `CardLinkActions` (copy link / print QR),
+  each row wrapped in `@merqo/ui`'s `ElevatedCard`
 - `actions.test.ts` — vitest tests for `createReferralHostAction`: rejects
   a missing/inactive program and an invalid phone without inserting, builds
   the correct `vendor_id`/`program_id`/`host_phone`/`label` insert payload

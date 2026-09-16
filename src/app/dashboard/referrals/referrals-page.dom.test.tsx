@@ -21,7 +21,10 @@ vi.mock("@/lib/referrals", () => ({
     `${origin}/c?v=${vendorId}&ref=${code}`,
 }));
 
-vi.mock("@/lib/qr", () => ({ qrSvg: vi.fn(async () => "<svg></svg>") }));
+vi.mock("@merqo/ui", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@merqo/ui")>();
+  return { ...actual, qrSvg: vi.fn(async () => "<svg></svg>") };
+});
 
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => ({

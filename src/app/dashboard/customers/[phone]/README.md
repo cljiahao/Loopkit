@@ -18,7 +18,8 @@ reason, and their full activity history in one place.
   (name, type badge, stamp/reward counts) with `AdjustStampForm` shown only
   for `type === "stamp"` programs — Growth/Points/Chance cards use the
   separate jsonb `state` engine and have no adjustment tool yet. `notFound()`
-  when the customer has neither a name on file nor any card.
+  when the customer has neither a name on file nor any card. Each card uses
+  `@merqo/ui`'s `ElevatedCard`.
 - `customer-detail-page.dom.test.tsx` — jsdom test asserting the name/phone
   fallback, that `AdjustStampForm` only renders for stamp-type cards, and
   the two `notFound()` paths (invalid phone param, unknown customer).
