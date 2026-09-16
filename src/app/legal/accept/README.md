@@ -28,7 +28,8 @@ terms/privacy versions are behind `@merqo/ui`'s `LEGAL_VERSIONS`.
   `user_agent` off the request's own `headers()`. It then `POST`s
   `/api/merqo/legal-accept` on merqo once per doc type (`terms`, `privacy`) —
   bearer-authed with `MERQO_CUSTOMER_SECRET`, `kit_slug: "loopkit"`, each body
-  carrying the SHA-256 of that doc's `getLegalDocSource(...)` plus
+  carrying the SHA-256 of that doc's `getLegalDocSource(docType, "loopkit")`
+  (loopkit's own scoped schedule, not the full multi-kit annex) plus
   `ip`/`user_agent`. Each call is independent, and merqo maps a
   duplicate `(email, doc_type, doc_version)` to a success, so a conflict on
   one doc never blocks the other. On success it primes the local
