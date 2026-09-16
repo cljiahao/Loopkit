@@ -59,7 +59,12 @@ kits before promoting) all now delegate to `@merqo/ui`'s versions — see
 `AGENTS.md`'s File Layout and this README's Data model section below for
 what's still loopkit-local (the upload adapter, step/action wiring, and
 `ProLock`/the activity-page `PaginationNav`, both deliberately left local —
-see `CHANGELOG.md`). `DashboardNav`'s wrapper
+see `CHANGELOG.md`). Bumped `@merqo/ui` to v0.30.0 (2026-09-16):
+`/legal/terms` now renders only loopkit's own Annex schedule
+(`<LegalDocument doc="terms" kit="loopkit" />`), not every sibling kit's —
+previously every kit's `/legal/terms` page showed the full multi-kit annex
+since none passed kit context; `legal/accept/actions.ts`'s recorded
+`doc_sha256` hashes that same scoped content. `DashboardNav`'s wrapper
 (`src/app/dashboard/dashboard-nav.tsx`) passes `LinkComponent={Link}`
 (v0.10.0+) so the package renders `next/link`'s `Link` instead of a
 plain `<a>` for its nav links and the `AccountMenu` it composes

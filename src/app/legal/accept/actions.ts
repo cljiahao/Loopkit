@@ -80,7 +80,7 @@ export async function acceptLegalTerms(formData: FormData): Promise<void> {
         auth_uid: user.id,
         doc_type: docType,
         doc_version: LEGAL_VERSIONS[docType],
-        doc_sha256: sha256(getLegalDocSource(docType)),
+        doc_sha256: sha256(getLegalDocSource(docType, "loopkit")),
         kit_slug: "loopkit",
         ip,
         user_agent: userAgent,

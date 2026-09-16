@@ -13,8 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   v0.29.1) instead of a loopkit-local copy — each was confirmed duplicated
   across 2 or more sibling kits before promoting, no behavior change
   intended.
+- Bumped `@merqo/ui` to `v0.30.0`.
 
 ### Fixed
+
+- `/legal/terms` now shows only loopkit's own Annex schedule, not every
+  sibling kit's, via `@merqo/ui`'s new per-kit `getLegalDocSource`/
+  `LegalDocument` scoping. `legal/accept/actions.ts`'s recorded
+  `doc_sha256` now hashes that same scoped content.
 
 - Bumped `@merqo/ui` to `v0.26.0` and switched `legal-gate.ts`/`legal/accept/
 actions.ts` to import `LEGAL_VERSIONS`/`getLegalDocSource`/`isLegalCurrent`
