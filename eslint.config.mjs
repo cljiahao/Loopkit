@@ -15,6 +15,7 @@ const eslintConfig = [
       "playwright-report/**",
       "scripts/demo/out/**",
       ".claude/worktrees/**",
+      ".codex/**",
     ],
   },
   // sonarjs's own recommended config carries its plugin registration; every
