@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { requireVendor } from "@/features/auth";
 import { getVendorProfile } from "@/lib/vendor";
 import { createServerClient } from "@/lib/supabase/server";
@@ -34,11 +33,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="mx-auto max-w-lg space-y-8 md:max-w-4xl">
-      <BackButton
-        href="/dashboard"
-        label="Back to dashboard"
-        LinkComponent={Link}
-      />
+      <BackButton href="/dashboard" label="Back to dashboard" />
       <div>
         <h1 className="font-display text-2xl font-bold">Profile</h1>
         <p className="mt-1 text-sm text-muted-foreground">
