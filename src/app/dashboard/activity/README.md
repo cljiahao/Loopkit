@@ -12,6 +12,14 @@ Vendor-facing activity feed at `/dashboard/activity` — a paginated, filterable
 - `activity-table.tsx` — `ActivityTable`, renders a table of `VendorActivityRow`s (type icon, phone, optional program badge, formatted date), via `@merqo/ui`'s shared `DataTable` (wrapped in `@merqo/ui`'s `ElevatedCard`), or an empty-state message. A row's icon/color is picked by the local `activityIcon()` helper — a manual `'adjust'`-kind row (see `../customers/[phone]/adjust-stamp-form.tsx`) gets its own amber `Pencil` icon and shows its reason beneath the label, never visually confusable with a real stamp or reward.
 - `page.tsx` — `ActivityPage` server component; requires a vendor, redirects to the single program when there's exactly one, paginates `listActivity()` results (25/page) with type/date-range filters, and renders `ActivityFilters` (which now includes the program switcher as its first field) below the page header, then `ActivityTable`. Its root element is a plain `<div className="space-y-8">` — the page no longer sets its own `max-w-*`/padding; the enclosing `../layout.tsx` `<main>` now owns the shared `max-w-7xl` width and padding for the whole `/dashboard` tree.
 
+## Server-component note
+
+`DataTable`'s `columns[].cell` and `getRowKey` are functions, so they
+cannot be passed from a Server Component into `@merqo/ui` (which is
+client-bannered package-wide). They live behind a `"use client"` wrapper
+that takes plain rows as props — same pattern as
+`src/app/admin/vendors/vendors-table.tsx`.
+
 ## Parent
 
 [dashboard](../README.md)

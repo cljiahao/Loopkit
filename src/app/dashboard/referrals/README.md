@@ -74,6 +74,14 @@ query param, and the actual per-guest crediting logic lives in
 `src/features/card-check/api/actions.ts`'s `checkStatusAction` — none of
 that logic lives in this folder.
 
+## Server-component note
+
+The back nav here renders `@merqo/ui`'s `BackButton` with no
+`LinkComponent` override. This page is a Server Component, and passing
+`next/link` in as a prop sends a function across the Server → Client
+boundary (`@merqo/ui` is client-bannered package-wide), which Next rejects
+at render. `BackButton` falls back to a plain `<a>`.
+
 ## Parent
 
 [dashboard](../README.md)
