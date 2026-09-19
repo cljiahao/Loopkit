@@ -12,6 +12,14 @@ Vendor profile page at `/dashboard/profile` — lets a vendor edit their stall n
 - `profile-form.dom.test.tsx` — jsdom tests for `ProfileForm`: renders all 5 sections, prefills the social-links fields from `socialLinks` and saves them via `updateSocialLinksAction`, saves the stall name via `updateStallNameAction`.
 - `profile-form.tsx` — `ProfileForm` client component; `@merqo/ui`'s `TwoColumnSections` (column 1: stall name, profile icon, change password; column 2: display name, social links — the locked cross-kit order) of five independently-saving `Section` cards (stall name via server action, social/website links via `@merqo/ui`'s `SocialLinksFields` + server action, avatar via `@merqo/ui`'s `ImageUploader` + browser auth client, display name via browser auth client, password change with client-side confirm match).
 
+## Server-component note
+
+The back nav here renders `@merqo/ui`'s `BackButton` with no
+`LinkComponent` override. This page is a Server Component, and passing
+`next/link` in as a prop sends a function across the Server → Client
+boundary (`@merqo/ui` is client-bannered package-wide), which Next rejects
+at render. `BackButton` falls back to a plain `<a>`.
+
 ## Parent
 
 [dashboard](../README.md)

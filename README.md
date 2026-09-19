@@ -70,6 +70,20 @@ since none passed kit context; `legal/accept/actions.ts`'s recorded
 plain `<a>` for its nav links and the `AccountMenu` it composes
 internally (loopkit has no standalone `AccountMenu` usage) — dashboard
 nav clicks are client-side transitions again, not full-page reloads.
+That `LinkComponent={Link}` is safe only because the wrapper is itself a
+`"use client"` file: every `@merqo/ui` component ships as a Client
+Component, so a **Server** Component may pass it only serializable props
+— never a function, and never a component reference. Both forms crash at
+render with `Functions cannot be passed directly to Client Components`,
+and because the crash happens at request time on a dynamic route,
+`next build` does not catch it. The seven Server-Component `BackButton`
+call sites therefore drop the optional prop and let its own plain-`<a>`
+fallback render, and `DataTable`'s `cell`/`getRowKey` function props live
+in `"use client"` wrappers (`dashboard/activity/activity-table.tsx`,
+`admin/programs/programs-table.tsx`). The full incident writeup lives in
+qkit at `docs/meta/2026-09-18-social-links-backbutton-rsc-crash-aar.md`,
+and `../merqo-ui/docs/usage-matrix.md` records which kit uses which
+export.
 The account dropdown also renders a "Switch products" submenu
 (`@merqo/ui` v0.13.0's `switchKits` prop, resolved via v0.14.0's
 `getSwitchKits("loopkit")` helper against its centralized `KIT_FAMILY`

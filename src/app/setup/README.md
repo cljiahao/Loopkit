@@ -24,6 +24,14 @@ Vendor onboarding and program-management flow at `/setup` — create, edit, migr
 - `setup-view.test.ts` — unit tests for `resolveSetupView`: one case per `SetupView` outcome plus a regression guard for the Pro-vendor bug where an unconditionally-true `canCreate` made the `schedule` query param unreachable.
 - `setup-view.ts` — `resolveSetupView()`: pure precedence logic deciding which single view `page.tsx` renders (migrate/edit/prep/schedule/manage always win over the ambient `canCreate` default, which only then picks between create/upsell) — extracted for fast, unmocked coverage, mirroring `src/app/dashboard/dashboard-view.ts`'s `shouldShowQr`.
 
+## Server-component note
+
+The back nav here renders `@merqo/ui`'s `BackButton` with no
+`LinkComponent` override. This page is a Server Component, and passing
+`next/link` in as a prop sends a function across the Server → Client
+boundary (`@merqo/ui` is client-bannered package-wide), which Next rejects
+at render. `BackButton` falls back to a plain `<a>`.
+
 ## Parent
 
 [app](../README.md)

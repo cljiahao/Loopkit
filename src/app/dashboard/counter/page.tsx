@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { requireVendor } from "@/features/auth";
@@ -62,11 +61,7 @@ export default async function CounterPage({ searchParams }: CounterPageProps) {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <BackButton
-        href="/dashboard"
-        label="Back to dashboard"
-        LinkComponent={Link}
-      />
+      <BackButton href="/dashboard" label="Back to dashboard" />
 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

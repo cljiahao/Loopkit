@@ -1,3 +1,5 @@
+"use client";
+
 import { Gift, Stamp, Pencil } from "lucide-react";
 import { DataTable, ElevatedCard, type DataTableColumn } from "@merqo/ui";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +18,9 @@ function activityIcon(event: VendorActivityRow) {
 
 // Extracted so it's testable with plain props, mirroring this repo's
 // existing precedent for list/table extraction (e.g. VendorCustomerList).
+// Also the client boundary for DataTable's columns/getRowKey functions,
+// which its two Server Component callers (both page.tsx files) can't pass
+// directly — same pattern as src/app/admin/vendors/vendors-table.tsx.
 export function ActivityTable({
   activity,
   showProgram,

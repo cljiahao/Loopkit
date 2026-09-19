@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Eight dashboard/admin pages no longer 500: `/dashboard/counter`,
+  `/dashboard/profile`, `/dashboard/redeem-voucher`, `/dashboard/referrals`,
+  `/dashboard/settings`, `/setup`, `/admin/programs`, and
+  `/dashboard/activity`. Each is a Server Component that passed a function
+  prop into a `@merqo/ui` component — `LinkComponent={Link}` on
+  `BackButton` for the first six, `DataTable`'s `columns[].cell`/
+  `getRowKey` for the last two. `@merqo/ui` is client-bannered
+  package-wide, so those props crossed the Server → Client boundary, which
+  Next rejects at render. `BackButton`'s `LinkComponent` is optional (plain
+  `<a>` fallback) so it's dropped; the two tables now render behind
+  `"use client"` wrappers taking plain rows, mirroring
+  `admin/vendors/vendors-table.tsx`. Same root cause as qkit's own
+  production outage.
+
 ### Changed
 
 - `BackButton`, `ElevatedCard`, `SOCIAL_LINK_FIELDS`/`SocialLinksFields`,
