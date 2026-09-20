@@ -218,6 +218,20 @@ Stamp programs can also opt into a birthday bonus (migration `0041`,
 `loopkit.set_customer_birthday` + a lazy check-on-next-visit trigger on
 `stamp_events`) — see `src/features/card-check/README.md`.
 
+`@merqo/ui` bumped to v0.31.2 (2026-09-19). v0.31.0 replaced the
+package-wide `"use client"` banner with per-module directives, so a
+plain-data export is a real value inside a Server Component rather than an
+opaque client-reference stub — the root cause of the 2026-09-18 RSC
+crashes. It also promoted four modules loopkit had its own copy of:
+`safeRedirectPath`, `resizeToWebp`, `BackToTop` and `GoogleMark`.
+`src/lib/image-upload-adapter.ts` stays local — the Storage bucket and
+object path are loopkit's own. `src/app/admin/health-badge.ts` also stays:
+a cross-kit sweep flagged it as a `StatusBadge` duplicate, but its `gold`
+variant is loopkit's reward motif and `StatusBadge` is deliberately not a
+`Badge` wrapper. v0.31.1 fixes a latent `resizeToWebp` bug where a dotless
+filename yielded the whole name as its extension. Which kit uses which
+shared export is tracked in `../merqo-ui/docs/usage-matrix.md`.
+
 ## Stack
 
 Next.js 16.3.4 · App Router · Turbopack · TypeScript strict · Tailwind v4 ·

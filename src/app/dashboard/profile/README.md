@@ -20,6 +20,10 @@ The back nav here renders `@merqo/ui`'s `BackButton` with no
 boundary (`@merqo/ui` is client-bannered package-wide), which Next rejects
 at render. `BackButton` falls back to a plain `<a>`.
 
+## Shared package note
+
+The avatar upload's resize step now calls `@merqo/ui`'s `resizeToWebp` (v0.31.0). v0.31.1 also fixes a latent bug there: a filename with no dot used to yield the whole name as its extension.
+
 ## Parent
 
 [dashboard](../README.md)

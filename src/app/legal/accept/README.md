@@ -42,6 +42,10 @@ terms/privacy versions are behind `@merqo/ui`'s `LEGAL_VERSIONS`.
   chain (`x-real-ip` when `x-forwarded-for` is absent, `"unknown"` when
   neither header is present).
 
+## Shared package note
+
+`safeRedirectPath` now comes from `@merqo/ui` (v0.31.0) rather than `@/lib/safe-redirect`.
+
 ## Parent
 
 [legal](../README.md)

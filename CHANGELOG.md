@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped `@merqo/ui` to `v0.31.2`. v0.31.0 replaced the package-wide
+  `"use client"` banner with per-module directives, so a plain-data export
+  is a real value inside a Server Component rather than an opaque
+  client-reference stub — the root cause of the 2026-09-18 RSC crashes.
+- Adopted four primitives promoted into `@merqo/ui` v0.31.0, deleting the
+  loopkit copies: `safeRedirectPath` and `resizeToWebp` (were
+  `src/lib/safe-redirect.ts` / `image-resize.ts`), `BackToTop` (was
+  `src/components/landing/back-to-top.tsx`) and `GoogleMark` (was
+  `src/features/auth/components/google-mark.tsx`).
+
+### Fixed
+
+- `resizeToWebp` on a filename with no dot returned the whole name as the
+  extension (a file called `photo` gave `ext: "photo"`). Fixed upstream in
+  v0.31.1 and picked up here.
+
+### Note
+
+- `src/app/admin/health-badge.ts` deliberately keeps its shadcn `Badge`
+  variants rather than adopting `@merqo/ui`'s `StatusBadge`. A cross-kit
+  sweep had flagged it as a duplicate; it is not. `StatusBadge` is a
+  dot-and-pill chip that deliberately is not a `Badge` wrapper, and the
+  `gold` variant here is loopkit's reward motif. Converting would change
+  the look and drop a brand token, not remove duplication.
+
 ### Fixed
 
 - Eight dashboard/admin pages no longer 500: `/dashboard/counter`,
