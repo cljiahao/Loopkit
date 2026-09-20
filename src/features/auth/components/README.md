@@ -25,6 +25,10 @@ Client-side auth UI.
   password + confirm-password form on an active recovery session, calls
   `supabase.auth.updateUser` then redirects to `/dashboard`
 
+## Shared package note
+
+`google-mark.tsx` moved to `@merqo/ui` (v0.31.0) as `GoogleMark` — it was byte-identical in all five repos.
+
 ## Parent
 
 [auth](../README.md)

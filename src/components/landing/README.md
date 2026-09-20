@@ -19,6 +19,10 @@ landing page.
 - `stamp-card.tsx` — `StampCard`: illustrative 8-slot stamp card (6 stamped, 1 reward slot) used in the hero, pure markup with no image; the 6th (last-stamped) dot plays `motion-safe:animate-stamp-pop` once on load, delayed 0.5s to land just after the hero's `fade-rise` reveal finishes — same class/keyframe `StampDots` uses for a real stamp landing
 - `wordmark.tsx` — `Wordmark`: "LoopKit" text logo with the "oo" rendered in gold as the brand's stamp-dot motif
 
+## Shared package note
+
+`back-to-top.tsx` moved to `@merqo/ui` (v0.31.0) as `BackToTop` — it was byte-identical across four kits.
+
 ## Parent
 
 [components](../README.md)

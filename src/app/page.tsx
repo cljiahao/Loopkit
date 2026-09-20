@@ -4,7 +4,7 @@ import { HowItWorks } from "@/components/landing/how-it-works";
 import { Benefits } from "@/components/landing/benefits";
 import { Footer } from "@/components/landing/footer";
 import { Faq } from "@/components/landing/faq";
-import { BackToTop } from "@/components/landing/back-to-top";
+import { BackToTop } from "@merqo/ui";
 import { createServerClient } from "@/lib/supabase/server";
 
 export default async function Home() {

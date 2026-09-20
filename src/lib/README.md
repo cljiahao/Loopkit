@@ -111,6 +111,10 @@ point, and its `checkLegalAcceptance` is reused directly by
 `safe-redirect.ts`'s `safeRedirectPath` is used by that same `accept/`
 page + action to validate the `next` redirect target.
 
+## Shared package note
+
+`safe-redirect.ts` and `image-resize.ts` moved to `@merqo/ui` (v0.31.0) — both were duplicated across all five repos. Import `safeRedirectPath` and `resizeToWebp` from `@merqo/ui` instead. `image-upload-adapter.ts` stays local: the Storage bucket and object path are loopkit's own.
+
 ## Parent
 
 [src](../README.md)

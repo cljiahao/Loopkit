@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Section } from "@/components/section";
 import { ImageUploader, SocialLinksFields, TwoColumnSections } from "@merqo/ui";
 import { uploadLoopkitImage } from "@/lib/image-upload-adapter";
-import { resizeToWebp } from "@/lib/image-resize";
+import { resizeToWebp } from "@merqo/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useAsyncAction } from "@/hooks/use-async-action";
 import type { SocialLinks } from "@/lib/types";

@@ -47,6 +47,10 @@ app over HTTP. The root-level files (`layout.tsx`, `globals.css`,
 `error.tsx`, `global-error.tsx`, `not-found.tsx`) provide the shared shell,
 theme, and error/404 boundaries every route in this tree inherits.
 
+## Shared package note
+
+`page.tsx` now imports `BackToTop` from `@merqo/ui` (v0.31.0) rather than a loopkit-local copy.
+
 ## Parent
 
 [src](../README.md)
