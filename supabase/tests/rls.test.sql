@@ -13,7 +13,7 @@
 -- Runs in ONE rolled-back transaction with inline fixtures (fixed UUIDs).
 
 begin;
-select plan(94);
+select plan(96);
 
 -- ── Fixtures (created under the default/superuser test role → RLS + grants
 -- are bypassed here, same as inserting via the table owner) ─────────────────
@@ -677,6 +677,20 @@ select throws_ok(
   'authenticated cannot SELECT legal_check_state directly');
 
 reset role;
+
+-- storage: vendor-images is public-read, so it must enforce its own size and
+-- MIME limits (migration 0047). Otherwise a vendor JWT could upload an
+-- arbitrary file, including HTML, that the public bucket would then serve.
+select is(
+  (select file_size_limit from storage.buckets where id = 'vendor-images'),
+  5242880::bigint,
+  'vendor-images caps objects at 5 MB'
+);
+select is(
+  (select allowed_mime_types from storage.buckets where id = 'vendor-images'),
+  array['image/jpeg', 'image/png', 'image/webp']::text[],
+  'vendor-images accepts only JPEG, PNG and WebP'
+);
 
 select * from finish();
 rollback;
