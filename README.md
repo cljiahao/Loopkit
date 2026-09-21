@@ -218,7 +218,11 @@ Stamp programs can also opt into a birthday bonus (migration `0041`,
 `loopkit.set_customer_birthday` + a lazy check-on-next-visit trigger on
 `stamp_events`) — see `src/features/card-check/README.md`.
 
-`@merqo/ui` bumped to v0.31.2 (2026-09-19). v0.31.0 replaced the
+`@merqo/ui` bumped to v0.31.3 (2026-09-22), which also stops `resizeToWebp`
+mislabelling a PNG as WebP on browsers that cannot encode WebP. The public
+`vendor-images` bucket now enforces 5 MB and JPEG/PNG/WebP itself (migration
+`0047`) rather than relying on the browser resize. Before that, v0.31.2
+(2026-09-19): v0.31.0 replaced the
 package-wide `"use client"` banner with per-module directives, so a
 plain-data export is a real value inside a Server Component rather than an
 opaque client-reference stub — the root cause of the 2026-09-18 RSC

@@ -56,3 +56,5 @@ design.md` §3): `loopkit.vendors` (shared profile, for-all self policy),
 ## Parent
 
 [supabase](../README.md)
+
+It also pins the `vendor-images` bucket's own limits from migration `0047` (5 MB `file_size_limit`, JPEG/PNG/WebP `allowed_mime_types`), so a later migration cannot quietly loosen them on a public bucket.

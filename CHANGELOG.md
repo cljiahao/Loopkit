@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+
+- The public `vendor-images` bucket had no size or MIME limit, so the
+  browser-side resize in `ImageUploader` was its only guard. A direct storage
+  call with a vendor JWT could upload an arbitrarily large file, or a
+  non-image such as HTML that the public bucket would then serve. Migration
+  `0047` sets 5 MB and JPEG/PNG/WebP only, matching the sibling kits' image
+  buckets, pinned by two new pgTAP assertions.
+
+### Fixed
+
+- Bumped `@merqo/ui` to `v0.31.3`: where a browser cannot encode WebP,
+  `canvas.toBlob` silently returns a PNG, which `resizeToWebp` had
+  mislabelled `image/webp`. It now falls back to JPEG, so profile images on
+  such browsers are no longer stored as oversized, mislabelled PNGs.
+
 ### Changed
 
 - Bumped `@merqo/ui` to `v0.31.2`. v0.31.0 replaced the package-wide
