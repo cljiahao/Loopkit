@@ -9,7 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Section } from "@/components/section";
 import { ImageUploader, SocialLinksFields, TwoColumnSections } from "@merqo/ui";
-import { uploadLoopkitImage } from "@/lib/image-upload-adapter";
+import {
+  uploadLoopkitImage,
+  removeReplacedAvatar,
+} from "@/lib/image-upload-adapter";
 import { resizeToWebp } from "@merqo/ui";
 import { createClient } from "@/lib/supabase/client";
 import { useAsyncAction } from "@/hooks/use-async-action";
@@ -97,14 +100,21 @@ export function ProfileForm({
   }
 
   async function handleAvatarChange(url: string | null) {
+    const previousAvatar = avatar;
     setAvatar(url);
     const { error } = await supabase.auth.updateUser({
       data: { avatar_url: url },
     });
     if (error) {
+      setAvatar(previousAvatar);
+      // The upload landed but the save did not, so the new object is
+      // referenced nowhere.
+      if (url && url !== previousAvatar) void removeReplacedAvatar(url);
       toast.error("Couldn't save your photo. Try again.");
       return;
     }
+    if (previousAvatar && previousAvatar !== url)
+      void removeReplacedAvatar(previousAvatar);
     toast.success(url ? "Photo saved" : "Photo removed");
     router.refresh();
   }
