@@ -218,6 +218,11 @@ Stamp programs can also opt into a birthday bonus (migration `0041`,
 `loopkit.set_customer_birthday` + a lazy check-on-next-visit trigger on
 `stamp_events`) — see `src/features/card-check/README.md`.
 
+`@merqo/ui` bumped to v0.32.0 (2026-09-22), for currency. It adds
+`ImageUploader`'s `deferUpload` mode (upload on save instead of on pick);
+this app doesn't need it, because its only uploader is the profile icon,
+which saves the moment an image is picked.
+
 `@merqo/ui` bumped to v0.31.4 (2026-09-22), for its new
 `storagePathFromPublicUrl`. Replacing or removing a profile icon now deletes the
 old image from storage (`removeReplacedAvatar` in

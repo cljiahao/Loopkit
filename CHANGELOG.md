@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped `@merqo/ui` to `v0.32.0`, which adds `ImageUploader`'s
+  `deferUpload` mode and `commitPendingImages` (upload an image only when
+  its form is saved). Nothing here adopts it: this app's only uploader is
+  the profile icon, which saves the moment an image is picked, so upload on
+  pick is already upload on save.
+
 ### Security
 
 - The public `vendor-images` bucket had no size or MIME limit, so the
