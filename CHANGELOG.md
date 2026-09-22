@@ -14,43 +14,60 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   non-image such as HTML that the public bucket would then serve. Migration
   `0047` sets 5 MB and JPEG/PNG/WebP only, matching the sibling kits' image
   buckets, pinned by two new pgTAP assertions.
+- Bumped `next` to `16.3.4` (`eslint-config-next` to match), which pulls
+  `sharp` to `0.35.4`. Clears two critical Next.js RCE advisories
+  (GHSA-p293-qw3h-jr36 on Windows-hosted servers, GHSA-2xp9-vwfh-vxw4 in the
+  image-optimization AVIF path) and a high `sharp`/libheif advisory.
+- Dropped `output: "standalone"` from `next.config.ts`. loopkit deploys only
+  to Vercel, which does its own function bundling and does not use the
+  standalone output. Under `next` 16.3.x that config also made Vercel's
+  build finalizer look for a server trace file it no longer writes there.
+- Bumped `vitest` and `@vitest/coverage-v8` to `4.1.11` (from `3.2.6`).
+  Clears GHSA-82fw-gwwq-j7x9 (`@vitest/mocker` path traversal / arbitrary
+  file read, patched only in `4.1.11`). Also `fast-uri` to `4.1.4` and the
+  `qs` override to `>=6.16.0`, clearing four high and two moderate advisories
+  that reach in through `@stryker-mutator`. The dependency audit is now
+  clean at every level. No test or config changes were needed for vitest 4.
+- Upgraded `next` `16.2.10` → `16.2.11`, resolving all 7 Next.js advisories
+  (cache-confusion of response bodies x2, unbounded Server Action payload
+  in Edge runtime, image-optimization SVG DoS, unauthenticated Server
+  Function endpoint disclosure, and 2 more) that CI's `dependency audit
+(pnpm)` job had been flagging on every PR this cycle — this was the one
+  actually in the production dependency graph (`--prod` scope), everything
+  else audit had flagged was dev-tooling-only.
+- Force-patched (via `pnpm-workspace.yaml`'s existing `overrides:`
+  convention) `postcss` (path traversal via `sourceMappingURL`,
+  GHSA-r28c-9q8g-f849 — supersedes an earlier, narrower postcss entry),
+  `fast-uri` (host confusion via a literal backslash authority delimiter,
+  GHSA-v2hh-gcrm-f6hx, dev-only via stryker), and `brace-expansion`
+  (exponential-time expansion DoS, GHSA-3jxr-9vmj-r5cp, dev-only via
+  eslint/vitest-coverage/stryker's respective internal `minimatch`
+  chains) — see the workspace file's own comment for the one residual,
+  intentionally-unfixed `brace-expansion` advisory (a second, unrelated
+  bug with no patched release on the old `minimatch@3.1.5` chain's 1.x
+  line; forcing it past 1.x breaks eslint outright). All residual findings
+  are devDependency-only, which CI's audit step already treats as
+  informational, not a hard gate.
 
 ### Fixed
 
+- Replacing or removing a profile icon no longer leaves the old image in storage.
+  `ImageUploader` names every upload randomly and nothing ever deleted the object
+  it replaced, so each change orphaned one file. The save handler now deletes the
+  previous avatar after a successful save, and deletes the fresh upload after a
+  failed one, via a new best-effort `removeReplacedAvatar` in
+  `src/lib/image-upload-adapter.ts`. It checks all three public avatar buckets,
+  since all five apps share one signed-in user and one `avatar_url`, and ignores
+  OAuth provider pictures. A failed save also now restores the previous avatar
+  instead of showing one that was never saved.
+- Bumped `@merqo/ui` to `v0.31.4`, which adds `storagePathFromPublicUrl`.
 - Bumped `@merqo/ui` to `v0.31.3`: where a browser cannot encode WebP,
   `canvas.toBlob` silently returns a PNG, which `resizeToWebp` had
   mislabelled `image/webp`. It now falls back to JPEG, so profile images on
   such browsers are no longer stored as oversized, mislabelled PNGs.
-
-### Changed
-
-- Bumped `@merqo/ui` to `v0.31.2`. v0.31.0 replaced the package-wide
-  `"use client"` banner with per-module directives, so a plain-data export
-  is a real value inside a Server Component rather than an opaque
-  client-reference stub — the root cause of the 2026-09-18 RSC crashes.
-- Adopted four primitives promoted into `@merqo/ui` v0.31.0, deleting the
-  loopkit copies: `safeRedirectPath` and `resizeToWebp` (were
-  `src/lib/safe-redirect.ts` / `image-resize.ts`), `BackToTop` (was
-  `src/components/landing/back-to-top.tsx`) and `GoogleMark` (was
-  `src/features/auth/components/google-mark.tsx`).
-
-### Fixed
-
 - `resizeToWebp` on a filename with no dot returned the whole name as the
   extension (a file called `photo` gave `ext: "photo"`). Fixed upstream in
   v0.31.1 and picked up here.
-
-### Note
-
-- `src/app/admin/health-badge.ts` deliberately keeps its shadcn `Badge`
-  variants rather than adopting `@merqo/ui`'s `StatusBadge`. A cross-kit
-  sweep had flagged it as a duplicate; it is not. `StatusBadge` is a
-  dot-and-pill chip that deliberately is not a `Badge` wrapper, and the
-  `gold` variant here is loopkit's reward motif. Converting would change
-  the look and drop a brand token, not remove duplication.
-
-### Fixed
-
 - Eight dashboard/admin pages no longer 500: `/dashboard/counter`,
   `/dashboard/profile`, `/dashboard/redeem-voucher`, `/dashboard/referrals`,
   `/dashboard/settings`, `/setup`, `/admin/programs`, and
@@ -64,18 +81,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `"use client"` wrappers taking plain rows, mirroring
   `admin/vendors/vendors-table.tsx`. Same root cause as qkit's own
   production outage.
-
-### Changed
-
-- `BackButton`, `ElevatedCard`, `SOCIAL_LINK_FIELDS`/`SocialLinksFields`,
-  `qrSvg`, and the landing `Footer` now come from `@merqo/ui` (bumped to
-  v0.29.1) instead of a loopkit-local copy — each was confirmed duplicated
-  across 2 or more sibling kits before promoting, no behavior change
-  intended.
-- Bumped `@merqo/ui` to `v0.30.0`.
-
-### Fixed
-
 - `/legal/terms` now shows only loopkit's own Annex schedule, not every
   sibling kit's, via `@merqo/ui`'s new per-kit `getLegalDocSource`/
   `LegalDocument` scoping. `legal/accept/actions.ts`'s recorded
@@ -102,211 +107,6 @@ actions.ts`) pointed at a stale, dead `.vercel.app` host — confirmed by
   matched the row's last-seen date once it landed on the 8th of the
   month, failing CI non-deterministically. Asserts the exact rendered
   totals text instead.
-
-### Security
-
-- Bumped `next` to `16.3.4` (`eslint-config-next` to match), which pulls
-  `sharp` to `0.35.4`. Clears two critical Next.js RCE advisories
-  (GHSA-p293-qw3h-jr36 on Windows-hosted servers, GHSA-2xp9-vwfh-vxw4 in the
-  image-optimization AVIF path) and a high `sharp`/libheif advisory.
-- Dropped `output: "standalone"` from `next.config.ts`. loopkit deploys only
-  to Vercel, which does its own function bundling and does not use the
-  standalone output. Under `next` 16.3.x that config also made Vercel's
-  build finalizer look for a server trace file it no longer writes there.
-- Bumped `vitest` and `@vitest/coverage-v8` to `4.1.11` (from `3.2.6`).
-  Clears GHSA-82fw-gwwq-j7x9 (`@vitest/mocker` path traversal / arbitrary
-  file read, patched only in `4.1.11`). Also `fast-uri` to `4.1.4` and the
-  `qs` override to `>=6.16.0`, clearing four high and two moderate advisories
-  that reach in through `@stryker-mutator`. The dependency audit is now
-  clean at every level. No test or config changes were needed for vitest 4.
-
-### Added
-
-- Program mechanics, stamp visual styles, custom stamp color, and the "via
-  LoopKit" shop-poster branding are now Pro-gated (previously only program
-  count was): a free vendor may save a stamp card in its classic look only,
-  every other family (Growth/Points/Chance), premium stamp style
-  (seal/ink/punch/charm), and custom color needs Pro. The type picker and
-  stamp-style/color pickers stay fully clickable and previewable for a free
-  vendor, marked with a small "Pro" lock badge; the block happens server-side
-  on Save (`src/lib/program.ts`'s `canUseFamily`/`canUseStampStyle`/
-  `canUseColor`, enforced by every program-writing action's shared
-  `mechanicGateError`). Also fixes a real bug this surfaced: `stamp_style`/
-  `stamp_color` were never read from the submitted form, so nothing a vendor
-  picked in the Stamp style section ever saved.
-- Editing a stamp goal or reward wording on a loyalty card that customers already hold now asks the vendor to confirm, spelling out that existing stamps are kept and the goal or wording only changes going forward.
-- Stamp programs can carry an optional reward cost estimate (SGD), edited
-  from the program form and stored as integer cents in
-  `programs.reward_cost_cents` (migration 0045). Feeds the reward-cost view
-  on the upcoming dashboard Overview. `src/lib/money.ts` holds the
-  dollars/cents conversion (`dollarsToCents`, `centsToDollars`,
-  `formatSgd`).
-- The vendor Customers list has segment chips (all / reward ready / new
-  this week / not seen 30d+), a sort control (last visit / longest away /
-  closest to reward), and a Serve action on every row that opens that
-  customer at the counter.
-- `src/lib/stats.ts` gains three pure helpers for the vendor dashboard
-  Overview: `returnRate90d` (share of 90-day-active customers who are
-  repeat visitors), `regularsGoneQuiet` (regulars whose last visit is 21
-  to 40 days ago, worth a win-back nudge), and `cardsNearReward` (cards
-  one or two stamps short of the reward). It also gains `countRegulars`,
-  `countNewThisMonth`, `sgtMonthStart` (pure) and `getVendorOverviewInputs`
-  (impure shell) feeding the new Overview.
-- `src/lib/phone.ts` gains `maskPhone`, a vendor-facing partial phone mask
-  for the Overview's recent-activity list.
-- `/about` — a public "Why Merqo" page: `@merqo/ui`'s shared `AboutMerqo`
-  component (the qkit origin story, one source reused by every kit's own
-  `/about`), linked from the landing `Nav` and `Footer`.
-- Legal Terms of Service and Privacy Policy pages (`/legal/terms`,
-  `/legal/privacy`), linked from the footer, plus a session-level
-  acceptance gate: a vendor whose acceptance is missing or older than
-  merqo's current `LEGAL_VERSIONS` is redirected to `/legal/accept` before
-  reaching the dashboard, matching the pattern already used for the
-  `/login` redirect. Accepting records the timestamp and IP/user-agent
-  with merqo (not stored locally) via merqo's `POST
-/api/merqo/legal-accept`.
-
-### Changed
-
-- Rewards a customer earns now expire 90 days after being granted by default. A vendor who wants a reward to never expire clears the expiry field when setting up the card. Existing programs are unchanged.
-- The dashboard home is now a vendor briefing (regulars and cadence, base
-  stats that explain themselves on tap, a 7/14-day visits trend, "worth a
-  look" actions, what the rewards cost this month, recent activity)
-  instead of a program launcher. The shop QR and scan-to-route blocks
-  move off the home screen; "Serve a customer" is an in-page button that
-  remembers the last program served on this device.
-- Onboarding tour's first step is retitled from "Your shop QR" to "Your
-  dashboard" and describes the new briefing view, since the join QR now
-  lives on the Counter, not the dashboard home.
-- The Counter is scan-first: a large scan target is the primary action,
-  manual phone entry collapses into a fallback, the active card starts
-  empty, and a vendor can add a new customer or print a shop join poster
-  inline. A missing `?p=` now routes to the busiest active program instead
-  of bouncing to the dashboard, the last-worked program is remembered per
-  device, and the most recent stamp has a one-level Undo.
-- Onboarding tour's Customers step now says explicitly that scanning the
-  shop QR only joins a customer to a program, it doesn't add a stamp by
-  itself — a vendor could otherwise assume the scan itself was the
-  scan-to-earn step, since the tour never connected the QR step to the
-  separate vendor-side "search and add a stamp" step.
-- Dropped the required typed legal-name field from the acceptance
-  checkbox — a plain ToS/Privacy clickwrap doesn't need a signatory name
-  for evidentiary strength beyond the existing (vendor_email, auth_uid,
-  doc_type, doc_version, ip, user_agent, timestamp) record merqo already
-  keeps. `@merqo/ui` bumped to `v0.25.0` (`TermsAcceptanceCheckbox` no
-  longer takes `legalName`/`onLegalNameChange`; a pre-lawyer-review
-  legal-wording pass and a "← Back" button landed on `/legal/*` pages;
-  the new `AboutMerqo` component above also shipped in this bump).
-- Points Club programs become a real accumulate-then-spend reward shop, in
-  two vendor-chosen redemption modes:
-  - **Catalog mode**: a vendor defines fixed-point reward items; a customer
-    with enough points redeems one for a voucher (a `voucher_token` mirroring
-    `cards.card_token`), scanned and confirmed at the counter on a new
-    `/dashboard/redeem-voucher` screen.
-  - **Offset mode**: points are spent as a dollar discount at checkout via
-    a new `applyPointsOffsetAction` on the vendor counter.
-  - Migration `0043_loopkit_points_reward_shop.sql` adds voucher tokens and
-    4 RPCs (`voucher_by_token`, `redeem_voucher_by_token`,
-    `select_points_reward`, `apply_points_offset`). `checkStatusAction` now
-    surfaces a customer's active vouchers; `resolveTokenAction` returns a
-    discriminated union so a scanned voucher routes to the new redeem
-    screen instead of the card flow.
-- Stamp Card programs get a vendor choice of 5 stamp skins and an accent
-  color, free for every vendor with no Pro gate:
-  - `StampDots` gains a `style?: "dots" | "seal" | "ink" | "punch" | "charm"`
-    prop (default `"dots"`, unchanged from before this feature) and an
-    optional `color?: string` hex accent — classic dots, a pressed wax-seal
-    dome, a rotated ink-stamp ring, a die-cut punch hole, or a small brass
-    coin, each still layering the vendor's existing preset-icon/photo mark
-    choice on top. The reward stamp always stays gold, untouched by the
-    color picker. Vendors pick both in `/setup` (a new "Stamp style"
-    section, shown only for plain-dot stamp cards) via
-    `stamp_style`/`stamp_color`, stored in the program's existing `config`
-    JSONB (no migration needed) and threaded through `StampConfig`/
-    `ProgressView` to both the setup preview and the real customer card.
-  - Deliberately not Pro-gated: 3 direct competitors (Loopy Loyalty,
-    Stamp Me, Stampet) were researched before building — none gate a
-    mechanic's card type by tier, and none monetize customization this
-    granular either.
-- Scratch Card programs now get a real drag-to-scratch reveal and a vendor
-  choice of 3 cover materials:
-  - `ScratchCard` gains a `coverStyle?: "foil" | "wax" | "ticket"` prop
-    (default `"foil"`) — brushed gold foil, a sealing-wax panel with an
-    embossed medallion, or a charcoal ticket stub with a dashed center line
-    and corner folds. Vendors pick one in `/setup` (a new "Scratch cover"
-    section, scratch-only) via `scratch_cover_style`, stored in the
-    program's existing `config` JSONB (no migration needed) and threaded
-    through `ChanceConfig`/`ProgressView` to both the setup preview and the
-    real customer card.
-  - For the real customer card specifically, `ScratchCard` now also mounts
-    a `<canvas>` layer over the existing SVG-stroke reveal: real
-    `pointerdown`/`pointermove`-driven erasing (`globalCompositeOperation:
-"destination-out"`, a soft radial brush), auto-settling once ~55% is
-    cleared. This is a strict progressive enhancement, not a replacement —
-    `getContext("2d")` is feature-detected, and whenever it's unavailable
-    (jsdom, which is why the SVG strokes stay the fully-tested fallback
-    path) or the reveal is caller-managed (the setup preview never mounts
-    it at all), the existing SVG strokes do the entire job unchanged.
-
-### Removed
-
-- The `/login` page's "Continue with name & phone" vendor onboarding option
-  — an anonymous-Supabase-session sign-in path unique to loopkit (every
-  sibling kit ships only Google OAuth + email/password) with no account
-  recovery story for what is a business owner's primary sign-in, not a
-  disposable customer flow. `/login` now matches qkit's reference login
-  pattern exactly.
-
-### Changed
-
-- Setup preview now defaults Flame Club, Sprout, and Cup to 5/5 (was a
-  mixed 5/6/10) so every growth-card preview opens fully bloomed; Flame
-  Club also dropped `FlameLayers`' own internal stage/count label, which
-  duplicated the one line the caller (`PreviewCard` / `ProgramCardStatus`)
-  already renders below the card.
-- Redesigned `Wheel` and `ScratchCard` to match the Cup/Sprout/Flame Club
-  pass below — the real physics-based spin and real SVG scratch-texture
-  masking were already right, the gap was visual craft:
-  - `Wheel` gains a static gold housing ring and hub (radial gradients,
-    never rotate with the disc, like a real wheel's frame), gold wedge
-    dividers instead of background-colored gaps, a small wax-seal dot
-    marking each reward wedge near the rim (so win/lose reads as more
-    than the emerald/rose color pairing), a static radial glare plus a
-    restrained drop-shadow, and a gold-gradient SVG pointer replacing the
-    flat CSS border-triangle.
-  - `ScratchCard`'s cover gains a real foil texture (a metallic-fleck
-    pattern plus one static diagonal sheen, masked under the same reveal
-    strokes as the base gradient) instead of a flat two-stop gradient, an
-    embossed card frame (inset highlight + drop shadow) instead of a
-    plain border, and the same wax-seal dot marking a reward reveal.
-- Redesigned the three "reward-mechanic" progress visuals — Cup, Plant/
-  Sprout, and Flame Club — with hand-drawn SVG art replacing the previous
-  flat-shape/lucide-icon placeholders, plus real stage-to-stage growth
-  transitions (as opposed to plain crossfades):
-  - `Cup` is now a 3/4-perspective "looking down into the mug" illustration
-    (gradient-filled shell, elliptical rim, translucent rim-shadow, a
-    hand-traced pitcher pouring milk at the penultimate stage, a latte-art
-    flourish at Full) with one persistent coffee ellipse whose geometry and
-    gradient stops are set per stage and left to the browser to interpolate,
-    so the surface genuinely rises/widens in place and the espresso→latte
-    tone blends continuously.
-  - `Plant` now keeps growing across all 5 stages (previously froze after
-    Leafing), with 5 persistent leaf slots (never swapped, so leaves don't
-    flash/replace across stages) and, at the final stage, one of 4 flower
-    types — tulip, daisy, sakura, or pansy — deterministically selected by a
-    new optional `seed` prop (hashed, not random) so a given customer's
-    flower stays the same across visits instead of changing on every reload.
-  - `FlameLayers` replaces its stacked `lucide-react` `Flame` icons with a
-    hand-built campfire (coal bed → coal mound+ghost-flames → candle lick →
-    3-tongue fan → large lick with rising sparks/smoke), each stage its own
-    gradient-stopped shape; Ember↔Spark and the Full-Campfire→Ember
-    redemption jump crossfade in sync, while Small→Medium→Large instead
-    holds the old flame at full size while the new one grows, only shrinking
-    the old one away after a delay once the new one has visibly grown past
-    it.
-
-### Fixed
-
 - `ScratchCard`'s cover had a real opacity leak — the base gradient faded to
   65% black at one corner via `stopOpacity`, translucent enough that the
   win/lose label underneath was visible as a silhouette before scratching.
@@ -322,9 +122,6 @@ actions.ts`) pointed at a stale, dead `.vercel.app` host — confirmed by
   preview (`usePreviewAnimation`) is unaffected — it already passes an
   explicit `scratching` boolean every render, which keeps that call site
   fully caller-managed exactly as before.
-
-### Fixed
-
 - Dashboard onboarding tour re-triggered on every single dashboard load,
   even after a vendor's account was months old — `stampTourSeen` (`src/lib/
 tour-prefs.ts`) used `.update()` against `loopkit.vendors`, but that table
@@ -369,89 +166,6 @@ tour-prefs.ts`) used `.update()` against `loopkit.vendors`, but that table
   (`src/app/admin/activity/activity-log.tsx`,
   `src/app/admin/vendors/vendors-table.tsx`); the pages pass only
   serializable data.
-
-### Changed
-
-- `@merqo/ui` bumped to v0.22.1 (TS2742 declaration-emit fix): the activity
-  table, admin programs list, and admin vendors list now render through the
-  shared `DataTable` component instead of hand-rolled/shadcn-`Table` markup.
-
-### Added
-
-- `GET /api/merqo/vendor-activity?email=` — merqo's cross-kit vendor
-  detail view now gets real per-vendor loyalty activity (programs, cards,
-  stamps/rewards in the last 30 days) instead of nothing.
-
-- Admin `/admin/activity` tab rendering `admin_audit` via `@merqo/ui`'s
-  shared `AuditLogTable` — the first kit-family reader of an audit trail
-  that every kit already writes to but none previously displayed.
-- Onboarding step wizard for first-run program creation: `/setup`'s create
-  flow (not edit, not a scheduled type-change, not an in-place type swap)
-  now walks a vendor through Type → Basics → Rules with a numbered
-  progress indicator instead of one long page, `Next: Rules` disabled
-  until a card name is entered, and the optional "Stamp mark" section
-  collapsed behind a "Show advanced options" toggle. Every field stays
-  mounted across steps (hidden via the native HTML `hidden` attribute,
-  not unmounted), so nothing loses its value going Back. Editing an
-  existing program keeps the original single-page layout unchanged.
-
-- Manual stamp adjustment and a per-customer detail view — the real day-2
-  ops gap: a vendor's only correction tool used to be "Regenerate card," a
-  full reset that also invalidates the customer's QR. `/dashboard/customers/
-[phone]` shows every card a customer holds across the vendor's own
-  programs, their full activity history, and (for classic Stamp-type
-  programs) an "Adjust stamps" action — a `±` delta with a required reason,
-  clamped at 0, logged as its own `stamp_events` kind (`adjust`, distinct
-  from a real stamp) via `loopkit.adjust_stamp` (migration `0042`). Free-tier,
-  not Pro-gated. Growth/Points/Chance cards are out of scope for this pass.
-
-- Birthday bonus for Stamp programs: customers can optionally self-enter
-  their birthday on the card-check page (`loopkit.set_customer_birthday`,
-  anon-scoped to the exact vendor+phone pair). A vendor opts a Stamp
-  program in via a new edit-mode toggle; the next visit on or after the
-  birthday grants one bonus stamp, once per year, via a lazy
-  check-on-next-visit trigger on `stamp_events` — no cron. Reuses
-  `add_stamp`'s real threshold-crossing/reward-voucher accounting (now
-  factored into `loopkit._add_stamp_unchecked`) instead of a second,
-  parallel stamp-granting path. Migration `0041`.
-- Per-mechanic stats breakdown on the vendor-wide `/dashboard/stats` page:
-  a new "By mechanic" card groups enrolled/visits/redemption-rate by which
-  named mechanic (Stamp/Growth/Chance Card) a program's engine `type`
-  belongs to, shown only when a vendor runs 2+ distinct mechanics.
-- Host/couple-facing referral mechanic for event-cart vendors
-  (`/dashboard/referrals`): a vendor names one of their own active
-  programs plus a host's phone (the bride/groom/organizer who chose them),
-  and gets a shareable `/c?v=<vendorId>&ref=<code>` link. Every distinct
-  guest who joins through that link earns their own card as usual and
-  bumps the host one stamp/visit on the named program — credit-routing on
-  an existing program, not a new engine type. New `vendor_join_referred`/
-  `apply_referral_credit` RPCs and `loopkit.referral_hosts`/
-  `referral_credits` tables (migration `0040`); `vendor_join` itself is
-  unchanged for every existing caller.
-
-### Changed
-
-- Dark mode moved from pure OS-media-query CSS to a `.dark`-class-based
-  approach (`@custom-variant dark`), now driven by `next-themes`'
-  `ThemeProvider` (`src/app/layout.tsx`) — gives a manual Light/Dark/System
-  control in the account menu (via `@merqo/ui` bumped to v0.18.0) on top of
-  the existing OS-auto behavior. `src/app/globals.css`'s color tokens are
-  unchanged, only the two `@media (prefers-color-scheme: dark)` blocks were
-  converted to `.dark`/`.dark body` selectors.
-- Bumped `@merqo/ui` to v0.20.0: the vendor stats page's tile now wraps the
-  new shared `StatTile`/`DeltaPill` content instead of a fully local
-  implementation — no visible change, loopkit's own `ElevatedCard` shell and
-  value-above-label ordering are unchanged.
-- Bumped `@merqo/ui` to v0.19.0: the theme control now sits behind a
-  collapsed "Theme · {current}" submenu instead of three always-expanded
-  radio options.
-- The onboarding tour's "example card" progress text now renders the real
-  `stampStrategy.progress()` output instead of a hand-copied "5 of 8
-  stamps"/"3 more for a reward" — the hand copy had already drifted from
-  the engine's real `N/M stamps` label format.
-
-### Fixed
-
 - Cards were visually indistinguishable from the page background in both
   light and dark mode — the Sealing Wax rebrand set `--card`/`--popover`
   to the exact same OKLCH value as `--background`. Restored a distinct
@@ -466,172 +180,12 @@ tour-prefs.ts`) used `.update()` against `loopkit.vendors`, but that table
   `src/lib/tour-prefs.ts`'s `stampTourSeen` now also runs synchronously in
   `dashboard/layout.tsx`'s own server render, durable regardless of what
   happens client-side.
-
-### Changed
-
-- Onboarding tour copy: no more em dashes, and two new steps (Activity,
-  Stats) covering ground the tour skipped before. The first step now shows
-  an example stamp-card preview.
-
-### Added
-
-- Cross-kit audit-trail sweep: extracted `admin_audit`'s insert helper out
-  of `src/app/admin/actions.ts` into a shared `recordAudit`
-  (`src/lib/admin-audit.ts`, no behavior change for the existing 5 admin
-  actions) so it can be reused outside `/admin`. `POST
-/api/merqo/vendor-provision` — the one place merqo mutates a vendor's
-  access on loopkit directly, over a bearer secret with no signed-in admin
-  behind it — now calls it too, attributing the action to the provisioned
-  vendor's own id with a `detail.actor: "merqo_system"` sentinel. Migration
-  `0039` also revokes `update`/`delete` on `loopkit.admin_audit` from
-  `service_role` (RLS already blocked `authenticated`/`anon`; the app only
-  ever inserts), and `AGENTS.md` now states a 5-year retention policy for
-  `admin_audit`, matching IRAS record-keeping norms.
-
-### Changed
-
-- Brand theme: `globals.css`'s color tokens replaced with "Sealing Wax"
-  (oxblood-crimson primary, antique-brass counter-tone), light and
-  dark, replacing "Raspberry-Rose Punch & Gold" — same berry family,
-  pushed darker/denser. Purely cosmetic — no component/behavior change.
-- Bumped `@merqo/ui` to v0.16.0 and migrated `/dashboard/plan`'s feature
-  comparison grid onto the shared `PlanComparisonTable` component (matching
-  qkit's own migration onto the same component). Replaces the page's local
-  `FEATURES`-rendering JSX + local `Cell` helper — same 2-tier (Free/Pro)
-  visible output, including the "Loyalty programs" row's string cell values
-  (`"1"`/`"∞"`). Also adds `--color-status-ready` (mapped to `--primary`) in
-  `src/app/globals.css`, since the shared component's check icon hardcodes
-  that token and loopkit had no order-status palette to supply it.
-
-### Fixed
-
 - Bumped `@merqo/ui` to v0.14.1 — the kit-switcher (account menu's
   "Switch products") was sending vendors to a kit's `-sg.vercel.app`
   deployment host instead of its real `<kit>.merqo.io` domain, a
   different host from `NEXT_PUBLIC_AUTH_COOKIE_DOMAIN=.merqo.io`'s
   shared-session cookie scope — bouncing a switching vendor into a login
   loop instead of a live session.
-
-### Added
-
-- Vendor Telegram Connect (Phase A2) — retires loopkit's own Telegram bot
-  in favor of merqo's shared one. `redeemAction`'s vendor alert
-  (`notifyRedemptionOnTelegram`) now calls a new `notifyVendor`
-  (`src/lib/merqo-customer-notify.ts`), posting to merqo's
-  `POST /api/merqo/notify-vendor` instead of a local `vendor_telegram`
-  lookup + `sendTelegramMessage` call. Deleted entirely: the Phase A
-  webhook route (`src/app/api/telegram/webhook/`), `src/lib/telegram.ts`,
-  `src/lib/telegram-link.ts`, the dashboard settings "Connect Telegram"
-  section, and `disconnectTelegramAction`. Migration `0037` drops
-  `loopkit.vendor_telegram`/`loopkit.telegram_link_tokens` (added by
-  `0036`) — no data carries over, so **any vendor who'd linked loopkit's
-  own bot must reconnect once via merqo's own profile page**; this is an
-  expected consequence of the retirement, not a regression.
-  `TELEGRAM_BOT_TOKEN`/`TELEGRAM_BOT_USERNAME`/`TELEGRAM_WEBHOOK_SECRET`
-  are gone — `MERQO_BASE_URL`/`MERQO_CUSTOMER_SECRET` (already used by the
-  customer-notify call below) now also power the vendor alert. Depends on
-  merqo's own Phase A2 rollout (PR #51) already live.
-- Customer-notify vendor toggle — a vendor-level on/off switch (default
-  on, opt-out) for `redeemAction`'s customer redemption-confirmation
-  message, a fast-follow on the customer Telegram connect work above. New
-  `loopkit.vendor_notify_settings` table (migration `0038`,
-  `customer_telegram_notify_enabled` boolean, default `true`) with a
-  `for all` own-row RLS policy and `select, insert, update` granted
-  directly to `authenticated` — a vendor upserts their own row under RLS
-  from a server action, not service-role-only like `vendor_telegram`/
-  `telegram_link_tokens` used to be. `redeemAction` reads the row via a
-  new `customerNotifyEnabled` helper and skips `notifyCustomerByPhone`
-  only when a row exists AND the flag is explicitly `false` — a vendor
-  who's never visited `/dashboard/settings` (no row at all) still gets
-  the confirmation, resolved in application code rather than relying on
-  the column default alone. New `saveCustomerNotifySettingsAction`
-  (same upsert-on-`vendor_id` shape as `saveQkitEarnConfigAction`) backs
-  a new switch in `/dashboard/settings`
-  (`src/app/dashboard/customer-notify-settings.tsx`), not Pro-gated.
-  See `docs/superpowers/specs/2026-08-16-customer-notify-vendor-toggle-design.md`.
-- Customer Telegram connect (reuse-only) — loopkit's half of the cross-kit
-  Phase B+D rollout. `redeemAction` now also calls a new
-  `notifyCustomerByPhone` (`src/lib/merqo-customer-notify.ts`) as a
-  sibling to the existing vendor Telegram alert, posting to merqo's
-  `notify-customer` endpoint in its `phone` lookup mode so a customer who
-  already connected Telegram via qkit (with a matching phone number)
-  gets a redemption confirmation too. No new UI, no new table, no connect
-  flow — loopkit never mints its own connect token, only reuses a
-  standing connection merqo already has. `MERQO_BASE_URL`/
-  `MERQO_CUSTOMER_SECRET` are optional; a failure or a missing connection
-  never affects `redeemAction`'s own returned result. Depends on merqo's
-  own Phase B+D endpoints (PR #50) already live.
-- Telegram reward-redemption alerts — loopkit's half of the cross-kit
-  Telegram Phase A rollout. A vendor connects Telegram once from
-  `/dashboard/settings` via a deep-link QR code (reusing the existing
-  `src/lib/qr.ts` QR renderer, no new QR library); every reward
-  redemption then fires a message to their linked chat via
-  `redeemAction`. New `loopkit.vendor_telegram`/`loopkit.telegram_link_
-tokens` tables (migration `0036`, no client write grant — every write
-  goes through the service-role webhook route or the settings page's
-  token-issuing/disconnect actions), a signature-verified webhook route
-  (`src/app/api/telegram/webhook/`), and `src/lib/telegram.ts`/
-  `src/lib/telegram-link.ts`. A missing link, a lookup failure, or a
-  send failure is caught and logged — never affects `redeemAction`'s own
-  returned result. `TELEGRAM_BOT_TOKEN`/`TELEGRAM_BOT_USERNAME`/
-  `TELEGRAM_WEBHOOK_SECRET` are optional; see `docs/DEPLOY.md`'s
-  "Telegram bot setup" for the manual one-time `setWebhook` step.
-- Cross-kit customer identity substrate: `sync_customer_on_card`/
-  `sync_customer_on_activity` (migration `0035`) now also write to the
-  shared `merqo.customers` table (merqo migration `0018`) alongside the
-  existing local `loopkit.customers` write. Additive only — loopkit's own
-  dashboard keeps reading `loopkit.customers` exactly as before; no new UI
-  yet. Guarded against loopkit-only local/CI `supabase start` (no merqo
-  schema present) the same way `0030_vendor_feedback_backfill.sql` is.
-- "Switch products" submenu in the dashboard account menu (via `@merqo/ui`
-  v0.13.0's `switchKits` prop), letting a signed-in vendor jump straight to
-  the other live Merqo kits — qkit, paykit, stockkit — since SSO via the
-  shared `.merqo.io` cookie already signs them in everywhere. Static list,
-  no new API call.
-- Admin-tunable Pro pricing — loopkit's first-ever live price. A new
-  single-row `loopkit.pricing` table (migration `0034`, seeded at
-  $4.99/mo) backs a `setPricing` admin action and `@merqo/ui`'s new
-  `PricingForm` component, wired into `/admin` so an admin can retune the
-  price with no redeploy. `/dashboard/plan` now shows the live price
-  (`$4.99 / month`) in place of the old "no card needed yet" copy with no
-dollar figure at all. The manual "ask us to upgrade" grant flow
-(`requestUpgrade`/`UpgradeCta`/`setVendorPro`/`resolveUpgradeRequest`) is
-  unchanged — this is a display/expectation-setting change, not a
-  checkout change.
-
-### Changed
-
-- Bumped `@merqo/ui` to v0.14.0 and switched the dashboard nav's "Switch
-  products" submenu from a locally hardcoded kit list to the package's new
-  `getSwitchKits("loopkit")` helper (backed by its centralized `KIT_FAMILY`
-  registry). Same three kits, same URLs — a future new kit now only needs
-  `KIT_FAMILY` updated once in `@merqo/ui`, not in every kit's own
-  `dashboard-nav.tsx`.
-- Expanded ESLint's sonarjs wiring from 2 hand-picked rules to the plugin's
-  full `configs.recommended` set. Fixed every real finding in app code:
-  nested-ternary/cognitive-complexity hotspots refactored into helper
-  functions across ~14 files (including a real DRY fix unifying
-  `dashboard/activity/page.tsx`'s duplicated render branches), super-linear
-  regex patterns in schema tests tightened, unused imports/vars removed,
-  and a component literally named `Error` (shadowing the global) renamed to
-  `RouteError`. Scoped, documented rule-offs remain for cosmetic
-  `Math.random()` use, test-file mock-chain nesting, and the two largest
-  pre-existing complexity hotspots (`setup/page.tsx`, `setup/setup-form.tsx`)
-  — tracked as follow-up debt, not silently suppressed.
-
-- Display font switched from Bricolage Grotesque to Fraunces (the shared
-  family display face — see
-  `docs/business/2026-08-13-typography-family-standard.md`). qkit already
-  used Fraunces; this brings loopkit in line with the rest of the family
-  now that cross-kit SSO means vendors move between kits under one
-  identity, so a per-kit display face reads as a seam rather than a
-  feature. Body (Plus Jakarta Sans) and mono (IBM Plex Mono) fonts are
-  unchanged. The brand-icon mark's font fallback also switched from the
-  system sans-serif stack to the Georgia serif stand-in, matching
-  Fraunces being a serif.
-
-### Fixed
-
 - Second frontend-design/impeccable critique pass (the first covered
   counter/benefits/FAQ/hero/stats/nav badge; this one hunted for what it
   missed): the login page's wordmark subtitle read "Sign in to your loopkit
@@ -682,100 +236,9 @@ dollar figure at all. The manual "ask us to upgrade" grant flow
   `keepalive` guarantees the browser finishes the write even after the
   document that started it unloads, which a Server Action's own internal
   fetch cannot opt into.
-
-### Changed
-
-- Design pass from a completed frontend-design/impeccable critique:
-  the counter page now leads with phone entry (the product's actual
-  mechanic) instead of a full-width scan button pushing it below the
-  fold on mobile; Benefits and FAQ gained the eyebrow/heading/divider
-  pattern already used by How-it-works; the hero's stamp-card now
-  pops its last dot on load; the stats bar chart was extracted into
-  a shared `VisitsChart` component (was ~110 duplicated lines) and
-  gained a baseline plus date labels; and the free-tier nav badge
-  got a visible gold-tinted outline instead of being nearly invisible.
-- Bumped `@merqo/ui` to v0.9.0. The landing page's sticky header
-  (`src/components/landing/nav.tsx`) now delegates its outer shell to the
-  new shared `LandingNav` component (`wordmark`/`end` slots), matching
-  qkit's landing-header sizing exactly the same way `DashboardNav` already
-  does for the dashboard header — no visible change to the wordmark, FAQ
-  button, or sign-in/get-started controls. Also unified every `/dashboard`
-  page onto one canonical `max-w-7xl` content container set at the layout
-  level (`src/app/dashboard/layout.tsx`, matching qkit's `dashboard/layout.tsx`
-  pattern) instead of each page picking its own (previously inconsistent)
-  width — `profile`/`counter`/`plan`/`settings` still nest their own
-  narrower wrapper inside that shared container, since those single-column
-  forms genuinely read better constrained.
-- Bumped `@merqo/ui` to v0.10.0 and wired its new `LinkComponent` prop
-  (`LinkComponent={Link}`, `src/app/dashboard/dashboard-nav.tsx`) through to
-  `DashboardNav` (which forwards it internally to the `AccountMenu` it
-  composes — loopkit has no standalone `AccountMenu` usage). Dashboard nav
-  and account-menu links now render as `next/link`'s `Link` instead of the
-  package's default plain `<a>`, so clicking them is a client-side
-  transition again instead of a full-page hard navigation — the root cause
-  the `/api/tour-seen` `keepalive` workaround above was patching around
-  the symptom of.
-- Migrated onto the shared `@merqo/ui` component package (v0.8.1): the
-  dashboard nav/account dropdown now composes `@merqo/ui`'s `DashboardNav`
-  and `AccountMenu` (with loopkit's own Feedback/Get-help server actions
-  wired through throw-adapters); `useAsyncAction`, `InfoTooltip`,
-  `ImageUploader` (via a new `uploadLoopkitImage` adapter,
-  `src/lib/image-upload-adapter.ts`), `DashboardTour`, and the profile
-  page's two-column layout (`TwoColumnSections`) all now delegate to the
-  shared package instead of hand-rolled local copies. `Section` keeps
-  loopkit's own `ElevatedCard` shell via the shared component's `wrapper`
-  render-prop, so the polished-card visual is unchanged. No user-visible
-  behavior change; removes `FeedbackForm`/`SupportForm`/local
-  `ImageUploader`/`InfoTooltip`/`tour.css` and the direct `driver.js`
-  dependency (now only reached transitively through `@merqo/ui`).
-- Deduplicated the per-route `bearerOk` bearer-secret check (previously copy-pasted into
-  3 `src/app/api/merqo/*` routes) into a shared helper in `src/lib/merqo-auth.ts`, and the
-  repeated Merqo-schema RPC-call boilerplate across `merqo-support.ts`/
-  `merqo-vendor-feedback.ts`/`merqo-vendor-profile.ts` into a shared `callMerqoRpc` helper
-  in `src/lib/merqo-rpc.ts`. No behavior change.
-- Adopted templateCentral 5.13.0's mechanical comment-hygiene enforcement layer
-  (live edit-time feedback, pre-commit warn, CI gate on added lines).
-- Landing footer rebuilt to match qkit's exact single-row layout
-  (wordmark, tagline, copyright, sign-in link as flex siblings), and the
-  bottom call-to-action band above it removed — qkit's landing page never
-  had one.
-
-### Fixed
-
 - Dashboard onboarding tour now stamps `tour_seen_at` as soon as it
   auto-runs, not when it finishes — a refresh mid-tour no longer makes
   it re-run on every dashboard load.
-
-### Removed
-
-- Per-IP rate limiting (`src/lib/rate-limit.ts`, `@upstash/ratelimit`,
-  `@upstash/redis`) on the public `/c` card-check and `/earn` claim actions —
-  never provisioned in production (fail-open, so it was a no-op), decided
-  not worth the added dependency + config surface.
-
-### Added
-
-- Dashboard onboarding tour (ported from qkit/stockkit): a `driver.js`
-  overlay auto-runs once on first login, spotlighting the shop QR block,
-  Customers, and the account menu, replayable via a floating "?" button.
-  Tracked server-side via a new `vendors.tour_seen_at` column, not
-  localStorage, so it's consistent across devices.
-- `supabase/config.toml` — loopkit was the only one of the 5 Merqo repos
-  without a local-dev Supabase CLI config. Added to match the format
-  merqo/qkit/paykit/stockkit already share (same local ports, Google OAuth
-  external provider, `auto_expose_new_tables = false` with explicit
-  Data-API grants), plus the matching `SUPABASE_AUTH_EXTERNAL_GOOGLE_*`
-  entries in `.env.example`.
-- `BackToTop` scroll-to-top button on the landing page (ported from qkit).
-- Shared-session SSO across `*.merqo.io` kits: `NEXT_PUBLIC_AUTH_COOKIE_DOMAIN`
-  scopes the Supabase auth cookie to `.merqo.io` in production, so signing
-  in on one kit signs you in on the rest. A one-time cleanup in
-  `src/lib/supabase/middleware.ts` clears each already-signed-in vendor's
-  pre-existing host-only cookie (forcing a single re-login) without
-  clobbering a same-request token refresh.
-
-### Fixed
-
 - Google OAuth sign-in now forces the consent screen to English
   (`hl=en`), matching the fix already shipped in paykit/merqo.
 - Landing nav's "Log in" link renamed to "Sign in" for cross-kit label
@@ -817,94 +280,6 @@ dollar figure at all. The manual "ask us to upgrade" grant flow
   never resolves) and `await` it at the end of the login form's
   email/password and phone-onboarding success branches — the component
   unmounts once the new route lands, so `pending` correctly never resets.
-
-### Changed
-
-- Migrated git hooks from lefthook to husky — lefthook's unsigned
-  `lefthook.exe` is unconditionally blocked by Windows Smart App Control on
-  this machine; husky has no native binary. Same checks, same rigor.
-
-- Login form migrated off raw `useState` + manual submit handlers with
-  inline error text onto React Hook Form + Zod (a new `loginSchema` in
-  `src/lib/schemas.ts`) with a `zodResolver`, matching qkit's login page
-  pattern and the stack AGENTS.md already documents. Auth/server errors now
-  surface via sonner toasts instead of an inline alert paragraph. The
-  name+phone onboarding sub-flow keeps its own hand-rolled busy/error state
-  rather than moving onto the same resolver, since it isn't a validated
-  email/password form; all buttons still share one disabled state across
-  both flows.
-
-- **qkit-earn upsell copy overstated the stamp award as automatic.** The
-  Pro upgrade prompt for earning stamps from qkit orders said a stamp is
-  awarded "automatically" — the real flow is a claim link (the customer
-  gets a link on their qkit order page and enters their phone number on
-  loopkit's `/earn` page to collect it). Copy now describes the actual
-  behavior.
-
-### Added
-
-- New `POST /api/merqo/vendor-provision` endpoint and
-  `loopkit.provision_default_program` Postgres function, letting the Merqo
-  hub one-click-activate a vendor onto loopkit: creates the vendor's
-  `vendors` row and a default free-tier "Starter" stamp program, bearer-
-  gated by a dedicated `MERQO_PROVISION_SECRET` (`provisionBearerOk`,
-  separate from the existing `MERQO_METRICS_SECRET` used by the read-only
-  merqo routes). `provision_default_program` is idempotent on whether the
-  vendor already has any program row, not on the `vendors` table, so
-  re-provisioning a vendor who already has a program (default or
-  custom) never adds a second one.
-
-### Security
-
-- Upgraded `next` `16.2.10` → `16.2.11`, resolving all 7 Next.js advisories
-  (cache-confusion of response bodies x2, unbounded Server Action payload
-  in Edge runtime, image-optimization SVG DoS, unauthenticated Server
-  Function endpoint disclosure, and 2 more) that CI's `dependency audit
-(pnpm)` job had been flagging on every PR this cycle — this was the one
-  actually in the production dependency graph (`--prod` scope), everything
-  else audit had flagged was dev-tooling-only.
-- Force-patched (via `pnpm-workspace.yaml`'s existing `overrides:`
-  convention) `postcss` (path traversal via `sourceMappingURL`,
-  GHSA-r28c-9q8g-f849 — supersedes an earlier, narrower postcss entry),
-  `fast-uri` (host confusion via a literal backslash authority delimiter,
-  GHSA-v2hh-gcrm-f6hx, dev-only via stryker), and `brace-expansion`
-  (exponential-time expansion DoS, GHSA-3jxr-9vmj-r5cp, dev-only via
-  eslint/vitest-coverage/stryker's respective internal `minimatch`
-  chains) — see the workspace file's own comment for the one residual,
-  intentionally-unfixed `brace-expansion` advisory (a second, unrelated
-  bug with no patched release on the old `minimatch@3.1.5` chain's 1.x
-  line; forcing it past 1.x breaks eslint outright). All residual findings
-  are devDependency-only, which CI's audit step already treats as
-  informational, not a hard gate.
-
-### Changed
-
-- Flame Club now has 5 growth stages (Ember, Spark, Small Fire, Medium
-  Fire, Full Campfire) instead of 3 — `flameStageFor` buckets progress
-  evenly at 0/20/40/60/80% of the stamps required, mirroring how Plant/Cup
-  already derive their 5 stages, and `FlameLayers` is redrawn with a
-  woodpile base, a dim ember coal at the start, and a layered/colored
-  flame cluster that grows through the later stages.
-- Fill the Cup is redrawn: a single continuous rim outline instead of a
-  floating ellipse, a saucer + pedestal foot for depth, a fixed (not
-  brand-themed) coffee-color liquid palette that warms from dark espresso
-  to caramel-tan latte as it fills, and a tulip-pour "done" flourish
-  replacing the old two-circles-and-triangle shape.
-- Sprout now restages so each of its 5 stages introduces exactly one new
-  visual element instead of several overlapping across stages: the stem
-  alone shoots up at Sprout (with a closed tip nub, no leaves yet), both
-  leaf pairs arrive together at Leafing (stem height holds from here on),
-  a small bud appears at Budding, and the bud opens into the full bloom at
-  the final stage — fixing "Budding" being visually indistinguishable from
-  "Leafing" before this change.
-- Vendors can now choose a preset icon (gift, coffee, star, or heart) or
-  their own profile photo to appear on each stamp instead of a plain dot,
-  for plain-dot stamp cards. Picked from a new "Stamp mark" section on
-  `/setup`, reflected immediately in its live preview, and shown the same
-  way on the customer-facing `/c` card.
-
-### Fixed
-
 - Fourth round of user-reported follow-up: the win/lose result shown for
   Wheel could still be wrong/absent (no confetti even on a win), and the
   popup sat in a corner disconnected from the wheel itself. Root cause: the
@@ -1018,9 +393,617 @@ dollar figure at all. The manual "ask us to upgrade" grant flow
 - `SupportForm`'s category `ToggleGroup` was missing `spacing={1.5}`,
   rendering the category buttons edge-to-edge instead of qkit's
   separated-pill layout.
+- The dashboard account-menu trigger showed only the bare avatar — the
+  stall name was visible only once the dropdown was opened, unlike qkit's
+  trigger which shows the name (or an "Account" fallback) plus a chevron
+  beside the avatar at `md:` and up. Now matches.
+- The dashboard account-dropdown label leaked the vendor's email — as the
+  primary line when no stall name was set, or as the subtitle when one
+  was. Now matches qkit's dropdown exactly: stall name (or a "Your stall"
+  placeholder) as the primary line, a static "Vendor account" subtitle
+  always, no email in either.
+- `/dashboard/profile`'s two-column layout used CSS `columns-2` (visual
+  order could drift from DOM/tab order) with the wrong section order;
+  rebuilt onto two independent flex-column stacks with the locked
+  cross-kit order (column 1: stall name, profile icon, change password;
+  column 2: display name, social links).
+- The dashboard's shared shop QR block overflowed its card on mobile: the
+  link-text container's parent used `items-start` in the mobile
+  (`flex-col`) layout, which sizes flex children to their own content
+  width rather than the container's width, so `min-w-0`/`truncate` on the
+  long URL never actually took effect. Fixed with a `self-stretch`
+  (mobile) / `self-auto` (`sm:` and up) override.
+- `/dashboard/customers`'s program-switcher + search row could overflow on
+  narrow phones (the search `<input>` had no `min-w-0`, so it refused to
+  shrink below its intrinsic width, pushing the Search button off-screen);
+  now stacks the switcher above a full-width search form below the `sm`
+  breakpoint, matching the activity filters' existing mobile pattern.
+- `/dashboard/activity`'s program switcher sat as a bare, unlabeled,
+  differently-styled control (no border/shadow, no shared card) next to
+  the bordered/shadowed `ActivityFilters` card, and didn't stack full-width
+  on mobile like the filter fields did. `ProgramSwitcher` now composes as
+  that card's first field (a "Program" label + trigger matching Type's
+  styling and mobile stacking) instead of a separate sibling — `ProgramSwitcher`
+  gained optional `triggerId`/`triggerClassName` props for this, defaulting
+  to its existing bare look on Customers/Stats.
+- `GET /api/merqo/vendor-status` and the `/admin` console's vendor-email
+  lookup (`admin-data.ts`) both only ever read the first 1000 auth users
+  (`listUsers`' default page size) — past that, a vendor would silently
+  resolve as "inactive" to merqo, or go missing from the admin console.
+  Extracted a shared `listAllUsers()` (`src/lib/list-all-users.ts`) that
+  paginates to completion; both call sites now use it.
+- `.claude/worktrees/` is now excluded from `.gitignore`, `eslint.config.mjs`,
+  and `tsconfig.json` — previously only `.prettierignore` knew about it, so
+  a sibling worktree's un-migrated source could trip false-positive lint
+  errors on a fresh checkout.
+- `/setup`'s "Schedule retirement" action was silently unreachable for Pro
+  vendors — `canCreate` is unconditionally true for Pro (unlimited
+  programs), so the old view-routing check let it always win over the
+  `schedule` query param, showing the create form instead. Fixed via a new
+  `resolveSetupView` precedence that gives explicit query-param intents
+  priority over the ambient `canCreate` default.
+- Opening any Radix dropdown/dialog (e.g. the dashboard's account menu)
+  could visibly shift the centered page content, since the scrollbar's
+  gutter wasn't reserved ahead of time — `scrollbar-gutter: stable` now
+  keeps that space allocated whether or not a scrollbar is actually shown.
+- Dashboard's Shop QR + Scan quick-actions row could stretch wider than its
+  card (pushing the QR link/labels past their intended width) — the two
+  flex children were missing `min-w-0`, so neither could shrink below its
+  content's natural width.
+
+### Added
+
+- Program mechanics, stamp visual styles, custom stamp color, and the "via
+  LoopKit" shop-poster branding are now Pro-gated (previously only program
+  count was): a free vendor may save a stamp card in its classic look only,
+  every other family (Growth/Points/Chance), premium stamp style
+  (seal/ink/punch/charm), and custom color needs Pro. The type picker and
+  stamp-style/color pickers stay fully clickable and previewable for a free
+  vendor, marked with a small "Pro" lock badge; the block happens server-side
+  on Save (`src/lib/program.ts`'s `canUseFamily`/`canUseStampStyle`/
+  `canUseColor`, enforced by every program-writing action's shared
+  `mechanicGateError`). Also fixes a real bug this surfaced: `stamp_style`/
+  `stamp_color` were never read from the submitted form, so nothing a vendor
+  picked in the Stamp style section ever saved.
+- Editing a stamp goal or reward wording on a loyalty card that customers already hold now asks the vendor to confirm, spelling out that existing stamps are kept and the goal or wording only changes going forward.
+- Stamp programs can carry an optional reward cost estimate (SGD), edited
+  from the program form and stored as integer cents in
+  `programs.reward_cost_cents` (migration 0045). Feeds the reward-cost view
+  on the upcoming dashboard Overview. `src/lib/money.ts` holds the
+  dollars/cents conversion (`dollarsToCents`, `centsToDollars`,
+  `formatSgd`).
+- The vendor Customers list has segment chips (all / reward ready / new
+  this week / not seen 30d+), a sort control (last visit / longest away /
+  closest to reward), and a Serve action on every row that opens that
+  customer at the counter.
+- `src/lib/stats.ts` gains three pure helpers for the vendor dashboard
+  Overview: `returnRate90d` (share of 90-day-active customers who are
+  repeat visitors), `regularsGoneQuiet` (regulars whose last visit is 21
+  to 40 days ago, worth a win-back nudge), and `cardsNearReward` (cards
+  one or two stamps short of the reward). It also gains `countRegulars`,
+  `countNewThisMonth`, `sgtMonthStart` (pure) and `getVendorOverviewInputs`
+  (impure shell) feeding the new Overview.
+- `src/lib/phone.ts` gains `maskPhone`, a vendor-facing partial phone mask
+  for the Overview's recent-activity list.
+- `/about` — a public "Why Merqo" page: `@merqo/ui`'s shared `AboutMerqo`
+  component (the qkit origin story, one source reused by every kit's own
+  `/about`), linked from the landing `Nav` and `Footer`.
+- Legal Terms of Service and Privacy Policy pages (`/legal/terms`,
+  `/legal/privacy`), linked from the footer, plus a session-level
+  acceptance gate: a vendor whose acceptance is missing or older than
+  merqo's current `LEGAL_VERSIONS` is redirected to `/legal/accept` before
+  reaching the dashboard, matching the pattern already used for the
+  `/login` redirect. Accepting records the timestamp and IP/user-agent
+  with merqo (not stored locally) via merqo's `POST
+/api/merqo/legal-accept`.
+- `GET /api/merqo/vendor-activity?email=` — merqo's cross-kit vendor
+  detail view now gets real per-vendor loyalty activity (programs, cards,
+  stamps/rewards in the last 30 days) instead of nothing.
+
+- Admin `/admin/activity` tab rendering `admin_audit` via `@merqo/ui`'s
+  shared `AuditLogTable` — the first kit-family reader of an audit trail
+  that every kit already writes to but none previously displayed.
+- Onboarding step wizard for first-run program creation: `/setup`'s create
+  flow (not edit, not a scheduled type-change, not an in-place type swap)
+  now walks a vendor through Type → Basics → Rules with a numbered
+  progress indicator instead of one long page, `Next: Rules` disabled
+  until a card name is entered, and the optional "Stamp mark" section
+  collapsed behind a "Show advanced options" toggle. Every field stays
+  mounted across steps (hidden via the native HTML `hidden` attribute,
+  not unmounted), so nothing loses its value going Back. Editing an
+  existing program keeps the original single-page layout unchanged.
+
+- Manual stamp adjustment and a per-customer detail view — the real day-2
+  ops gap: a vendor's only correction tool used to be "Regenerate card," a
+  full reset that also invalidates the customer's QR. `/dashboard/customers/
+[phone]` shows every card a customer holds across the vendor's own
+  programs, their full activity history, and (for classic Stamp-type
+  programs) an "Adjust stamps" action — a `±` delta with a required reason,
+  clamped at 0, logged as its own `stamp_events` kind (`adjust`, distinct
+  from a real stamp) via `loopkit.adjust_stamp` (migration `0042`). Free-tier,
+  not Pro-gated. Growth/Points/Chance cards are out of scope for this pass.
+
+- Birthday bonus for Stamp programs: customers can optionally self-enter
+  their birthday on the card-check page (`loopkit.set_customer_birthday`,
+  anon-scoped to the exact vendor+phone pair). A vendor opts a Stamp
+  program in via a new edit-mode toggle; the next visit on or after the
+  birthday grants one bonus stamp, once per year, via a lazy
+  check-on-next-visit trigger on `stamp_events` — no cron. Reuses
+  `add_stamp`'s real threshold-crossing/reward-voucher accounting (now
+  factored into `loopkit._add_stamp_unchecked`) instead of a second,
+  parallel stamp-granting path. Migration `0041`.
+- Per-mechanic stats breakdown on the vendor-wide `/dashboard/stats` page:
+  a new "By mechanic" card groups enrolled/visits/redemption-rate by which
+  named mechanic (Stamp/Growth/Chance Card) a program's engine `type`
+  belongs to, shown only when a vendor runs 2+ distinct mechanics.
+- Host/couple-facing referral mechanic for event-cart vendors
+  (`/dashboard/referrals`): a vendor names one of their own active
+  programs plus a host's phone (the bride/groom/organizer who chose them),
+  and gets a shareable `/c?v=<vendorId>&ref=<code>` link. Every distinct
+  guest who joins through that link earns their own card as usual and
+  bumps the host one stamp/visit on the named program — credit-routing on
+  an existing program, not a new engine type. New `vendor_join_referred`/
+  `apply_referral_credit` RPCs and `loopkit.referral_hosts`/
+  `referral_credits` tables (migration `0040`); `vendor_join` itself is
+  unchanged for every existing caller.
+- Cross-kit audit-trail sweep: extracted `admin_audit`'s insert helper out
+  of `src/app/admin/actions.ts` into a shared `recordAudit`
+  (`src/lib/admin-audit.ts`, no behavior change for the existing 5 admin
+  actions) so it can be reused outside `/admin`. `POST
+/api/merqo/vendor-provision` — the one place merqo mutates a vendor's
+  access on loopkit directly, over a bearer secret with no signed-in admin
+  behind it — now calls it too, attributing the action to the provisioned
+  vendor's own id with a `detail.actor: "merqo_system"` sentinel. Migration
+  `0039` also revokes `update`/`delete` on `loopkit.admin_audit` from
+  `service_role` (RLS already blocked `authenticated`/`anon`; the app only
+  ever inserts), and `AGENTS.md` now states a 5-year retention policy for
+  `admin_audit`, matching IRAS record-keeping norms.
+- Vendor Telegram Connect (Phase A2) — retires loopkit's own Telegram bot
+  in favor of merqo's shared one. `redeemAction`'s vendor alert
+  (`notifyRedemptionOnTelegram`) now calls a new `notifyVendor`
+  (`src/lib/merqo-customer-notify.ts`), posting to merqo's
+  `POST /api/merqo/notify-vendor` instead of a local `vendor_telegram`
+  lookup + `sendTelegramMessage` call. Deleted entirely: the Phase A
+  webhook route (`src/app/api/telegram/webhook/`), `src/lib/telegram.ts`,
+  `src/lib/telegram-link.ts`, the dashboard settings "Connect Telegram"
+  section, and `disconnectTelegramAction`. Migration `0037` drops
+  `loopkit.vendor_telegram`/`loopkit.telegram_link_tokens` (added by
+  `0036`) — no data carries over, so **any vendor who'd linked loopkit's
+  own bot must reconnect once via merqo's own profile page**; this is an
+  expected consequence of the retirement, not a regression.
+  `TELEGRAM_BOT_TOKEN`/`TELEGRAM_BOT_USERNAME`/`TELEGRAM_WEBHOOK_SECRET`
+  are gone — `MERQO_BASE_URL`/`MERQO_CUSTOMER_SECRET` (already used by the
+  customer-notify call below) now also power the vendor alert. Depends on
+  merqo's own Phase A2 rollout (PR #51) already live.
+- Customer-notify vendor toggle — a vendor-level on/off switch (default
+  on, opt-out) for `redeemAction`'s customer redemption-confirmation
+  message, a fast-follow on the customer Telegram connect work above. New
+  `loopkit.vendor_notify_settings` table (migration `0038`,
+  `customer_telegram_notify_enabled` boolean, default `true`) with a
+  `for all` own-row RLS policy and `select, insert, update` granted
+  directly to `authenticated` — a vendor upserts their own row under RLS
+  from a server action, not service-role-only like `vendor_telegram`/
+  `telegram_link_tokens` used to be. `redeemAction` reads the row via a
+  new `customerNotifyEnabled` helper and skips `notifyCustomerByPhone`
+  only when a row exists AND the flag is explicitly `false` — a vendor
+  who's never visited `/dashboard/settings` (no row at all) still gets
+  the confirmation, resolved in application code rather than relying on
+  the column default alone. New `saveCustomerNotifySettingsAction`
+  (same upsert-on-`vendor_id` shape as `saveQkitEarnConfigAction`) backs
+  a new switch in `/dashboard/settings`
+  (`src/app/dashboard/customer-notify-settings.tsx`), not Pro-gated.
+  See `docs/superpowers/specs/2026-08-16-customer-notify-vendor-toggle-design.md`.
+- Customer Telegram connect (reuse-only) — loopkit's half of the cross-kit
+  Phase B+D rollout. `redeemAction` now also calls a new
+  `notifyCustomerByPhone` (`src/lib/merqo-customer-notify.ts`) as a
+  sibling to the existing vendor Telegram alert, posting to merqo's
+  `notify-customer` endpoint in its `phone` lookup mode so a customer who
+  already connected Telegram via qkit (with a matching phone number)
+  gets a redemption confirmation too. No new UI, no new table, no connect
+  flow — loopkit never mints its own connect token, only reuses a
+  standing connection merqo already has. `MERQO_BASE_URL`/
+  `MERQO_CUSTOMER_SECRET` are optional; a failure or a missing connection
+  never affects `redeemAction`'s own returned result. Depends on merqo's
+  own Phase B+D endpoints (PR #50) already live.
+- Telegram reward-redemption alerts — loopkit's half of the cross-kit
+  Telegram Phase A rollout. A vendor connects Telegram once from
+  `/dashboard/settings` via a deep-link QR code (reusing the existing
+  `src/lib/qr.ts` QR renderer, no new QR library); every reward
+  redemption then fires a message to their linked chat via
+  `redeemAction`. New `loopkit.vendor_telegram`/`loopkit.telegram_link_
+tokens` tables (migration `0036`, no client write grant — every write
+  goes through the service-role webhook route or the settings page's
+  token-issuing/disconnect actions), a signature-verified webhook route
+  (`src/app/api/telegram/webhook/`), and `src/lib/telegram.ts`/
+  `src/lib/telegram-link.ts`. A missing link, a lookup failure, or a
+  send failure is caught and logged — never affects `redeemAction`'s own
+  returned result. `TELEGRAM_BOT_TOKEN`/`TELEGRAM_BOT_USERNAME`/
+  `TELEGRAM_WEBHOOK_SECRET` are optional; see `docs/DEPLOY.md`'s
+  "Telegram bot setup" for the manual one-time `setWebhook` step.
+- Cross-kit customer identity substrate: `sync_customer_on_card`/
+  `sync_customer_on_activity` (migration `0035`) now also write to the
+  shared `merqo.customers` table (merqo migration `0018`) alongside the
+  existing local `loopkit.customers` write. Additive only — loopkit's own
+  dashboard keeps reading `loopkit.customers` exactly as before; no new UI
+  yet. Guarded against loopkit-only local/CI `supabase start` (no merqo
+  schema present) the same way `0030_vendor_feedback_backfill.sql` is.
+- "Switch products" submenu in the dashboard account menu (via `@merqo/ui`
+  v0.13.0's `switchKits` prop), letting a signed-in vendor jump straight to
+  the other live Merqo kits — qkit, paykit, stockkit — since SSO via the
+  shared `.merqo.io` cookie already signs them in everywhere. Static list,
+  no new API call.
+- Admin-tunable Pro pricing — loopkit's first-ever live price. A new
+  single-row `loopkit.pricing` table (migration `0034`, seeded at
+  $4.99/mo) backs a `setPricing` admin action and `@merqo/ui`'s new
+  `PricingForm` component, wired into `/admin` so an admin can retune the
+  price with no redeploy. `/dashboard/plan` now shows the live price
+  (`$4.99 / month`) in place of the old "no card needed yet" copy with no
+dollar figure at all. The manual "ask us to upgrade" grant flow
+(`requestUpgrade`/`UpgradeCta`/`setVendorPro`/`resolveUpgradeRequest`) is
+  unchanged — this is a display/expectation-setting change, not a
+  checkout change.
+- Dashboard onboarding tour (ported from qkit/stockkit): a `driver.js`
+  overlay auto-runs once on first login, spotlighting the shop QR block,
+  Customers, and the account menu, replayable via a floating "?" button.
+  Tracked server-side via a new `vendors.tour_seen_at` column, not
+  localStorage, so it's consistent across devices.
+- `supabase/config.toml` — loopkit was the only one of the 5 Merqo repos
+  without a local-dev Supabase CLI config. Added to match the format
+  merqo/qkit/paykit/stockkit already share (same local ports, Google OAuth
+  external provider, `auto_expose_new_tables = false` with explicit
+  Data-API grants), plus the matching `SUPABASE_AUTH_EXTERNAL_GOOGLE_*`
+  entries in `.env.example`.
+- `BackToTop` scroll-to-top button on the landing page (ported from qkit).
+- Shared-session SSO across `*.merqo.io` kits: `NEXT_PUBLIC_AUTH_COOKIE_DOMAIN`
+  scopes the Supabase auth cookie to `.merqo.io` in production, so signing
+  in on one kit signs you in on the rest. A one-time cleanup in
+  `src/lib/supabase/middleware.ts` clears each already-signed-in vendor's
+  pre-existing host-only cookie (forcing a single re-login) without
+  clobbering a same-request token refresh.
+- New `POST /api/merqo/vendor-provision` endpoint and
+  `loopkit.provision_default_program` Postgres function, letting the Merqo
+  hub one-click-activate a vendor onto loopkit: creates the vendor's
+  `vendors` row and a default free-tier "Starter" stamp program, bearer-
+  gated by a dedicated `MERQO_PROVISION_SECRET` (`provisionBearerOk`,
+  separate from the existing `MERQO_METRICS_SECRET` used by the read-only
+  merqo routes). `provision_default_program` is idempotent on whether the
+  vendor already has any program row, not on the `vendors` table, so
+  re-provisioning a vendor who already has a program (default or
+  custom) never adds a second one.
+- `Stats` gains an "Expired unclaimed (30d)" tile, sourced from the
+  `reward_vouchers` ledger (`countExpiredVouchers`) — added alongside,
+  not replacing, the existing `stamp_events`-sourced `rewards30d`/
+  `redemptionRate` tiles, per
+  `docs/superpowers/specs/2026-07-16-reward-voucher-ledger-design.md`'s
+  explicit decision not to risk a regression migrating those.
+- Test coverage for the `/admin` console's data layer (`admin.ts`,
+  `admin-data.ts`) and `rate-limit.ts`, previously untested — the one
+  surface handling cross-vendor sensitive data had zero automated
+  coverage.
+- `e2e/route-protection.spec.ts`: signed-out redirects for
+  `/dashboard`/`/setup`, a signed-out 404 for `/admin`, and the
+  no-DB-call fallback copy for `/c`/`/earn` without their required query
+  param — the e2e suite's first coverage of anything beyond the public
+  landing/login smoke pages.
+- Reward-voucher ledger (`loopkit.reward_vouchers`, migration
+  `0027_loopkit_reward_vouchers.sql`): every earned reward across all
+  program types (Stamp, Plant, Wheel, Scratch, Lucky) now creates a voucher
+  row with `active`/`redeemed`/`expired` status. Redeem actions now require
+  an active, non-expired voucher rather than only checking raw
+  `stamp_count`/`growth` against the threshold.
+- New `programs.reward_expiry_days` config (1–3650 days, optional) lets
+  vendors set an expiry window for unclaimed Stamp/Plant rewards. Expiry is
+  checked lazily — on `add_stamp`, Plant's `apply`, and the counter's
+  lookup action — and forfeits the expired voucher's threshold worth of
+  `stamp_count`/`growth` (floored at 0). No cron job required.
+- Setup form: new reward-expiry field for program types that support it.
+- Profile settings: a new "Social & website" section (website/Instagram/
+  Facebook/TikTok), backed by the shared `merqo.vendor_profile` table
+  loopkit already partially used (`/setup`'s vendor-name seeding). Ported
+  from qkit's identical feature.
 
 ### Changed
 
+- Bumped `@merqo/ui` to `v0.31.2`. v0.31.0 replaced the package-wide
+  `"use client"` banner with per-module directives, so a plain-data export
+  is a real value inside a Server Component rather than an opaque
+  client-reference stub — the root cause of the 2026-09-18 RSC crashes.
+- Adopted four primitives promoted into `@merqo/ui` v0.31.0, deleting the
+  loopkit copies: `safeRedirectPath` and `resizeToWebp` (were
+  `src/lib/safe-redirect.ts` / `image-resize.ts`), `BackToTop` (was
+  `src/components/landing/back-to-top.tsx`) and `GoogleMark` (was
+  `src/features/auth/components/google-mark.tsx`).
+- `BackButton`, `ElevatedCard`, `SOCIAL_LINK_FIELDS`/`SocialLinksFields`,
+  `qrSvg`, and the landing `Footer` now come from `@merqo/ui` (bumped to
+  v0.29.1) instead of a loopkit-local copy — each was confirmed duplicated
+  across 2 or more sibling kits before promoting, no behavior change
+  intended.
+- Bumped `@merqo/ui` to `v0.30.0`.
+- Rewards a customer earns now expire 90 days after being granted by default. A vendor who wants a reward to never expire clears the expiry field when setting up the card. Existing programs are unchanged.
+- The dashboard home is now a vendor briefing (regulars and cadence, base
+  stats that explain themselves on tap, a 7/14-day visits trend, "worth a
+  look" actions, what the rewards cost this month, recent activity)
+  instead of a program launcher. The shop QR and scan-to-route blocks
+  move off the home screen; "Serve a customer" is an in-page button that
+  remembers the last program served on this device.
+- Onboarding tour's first step is retitled from "Your shop QR" to "Your
+  dashboard" and describes the new briefing view, since the join QR now
+  lives on the Counter, not the dashboard home.
+- The Counter is scan-first: a large scan target is the primary action,
+  manual phone entry collapses into a fallback, the active card starts
+  empty, and a vendor can add a new customer or print a shop join poster
+  inline. A missing `?p=` now routes to the busiest active program instead
+  of bouncing to the dashboard, the last-worked program is remembered per
+  device, and the most recent stamp has a one-level Undo.
+- Onboarding tour's Customers step now says explicitly that scanning the
+  shop QR only joins a customer to a program, it doesn't add a stamp by
+  itself — a vendor could otherwise assume the scan itself was the
+  scan-to-earn step, since the tour never connected the QR step to the
+  separate vendor-side "search and add a stamp" step.
+- Dropped the required typed legal-name field from the acceptance
+  checkbox — a plain ToS/Privacy clickwrap doesn't need a signatory name
+  for evidentiary strength beyond the existing (vendor_email, auth_uid,
+  doc_type, doc_version, ip, user_agent, timestamp) record merqo already
+  keeps. `@merqo/ui` bumped to `v0.25.0` (`TermsAcceptanceCheckbox` no
+  longer takes `legalName`/`onLegalNameChange`; a pre-lawyer-review
+  legal-wording pass and a "← Back" button landed on `/legal/*` pages;
+  the new `AboutMerqo` component above also shipped in this bump).
+- Points Club programs become a real accumulate-then-spend reward shop, in
+  two vendor-chosen redemption modes:
+  - **Catalog mode**: a vendor defines fixed-point reward items; a customer
+    with enough points redeems one for a voucher (a `voucher_token` mirroring
+    `cards.card_token`), scanned and confirmed at the counter on a new
+    `/dashboard/redeem-voucher` screen.
+  - **Offset mode**: points are spent as a dollar discount at checkout via
+    a new `applyPointsOffsetAction` on the vendor counter.
+  - Migration `0043_loopkit_points_reward_shop.sql` adds voucher tokens and
+    4 RPCs (`voucher_by_token`, `redeem_voucher_by_token`,
+    `select_points_reward`, `apply_points_offset`). `checkStatusAction` now
+    surfaces a customer's active vouchers; `resolveTokenAction` returns a
+    discriminated union so a scanned voucher routes to the new redeem
+    screen instead of the card flow.
+- Stamp Card programs get a vendor choice of 5 stamp skins and an accent
+  color, free for every vendor with no Pro gate:
+  - `StampDots` gains a `style?: "dots" | "seal" | "ink" | "punch" | "charm"`
+    prop (default `"dots"`, unchanged from before this feature) and an
+    optional `color?: string` hex accent — classic dots, a pressed wax-seal
+    dome, a rotated ink-stamp ring, a die-cut punch hole, or a small brass
+    coin, each still layering the vendor's existing preset-icon/photo mark
+    choice on top. The reward stamp always stays gold, untouched by the
+    color picker. Vendors pick both in `/setup` (a new "Stamp style"
+    section, shown only for plain-dot stamp cards) via
+    `stamp_style`/`stamp_color`, stored in the program's existing `config`
+    JSONB (no migration needed) and threaded through `StampConfig`/
+    `ProgressView` to both the setup preview and the real customer card.
+  - Deliberately not Pro-gated: 3 direct competitors (Loopy Loyalty,
+    Stamp Me, Stampet) were researched before building — none gate a
+    mechanic's card type by tier, and none monetize customization this
+    granular either.
+- Scratch Card programs now get a real drag-to-scratch reveal and a vendor
+  choice of 3 cover materials:
+  - `ScratchCard` gains a `coverStyle?: "foil" | "wax" | "ticket"` prop
+    (default `"foil"`) — brushed gold foil, a sealing-wax panel with an
+    embossed medallion, or a charcoal ticket stub with a dashed center line
+    and corner folds. Vendors pick one in `/setup` (a new "Scratch cover"
+    section, scratch-only) via `scratch_cover_style`, stored in the
+    program's existing `config` JSONB (no migration needed) and threaded
+    through `ChanceConfig`/`ProgressView` to both the setup preview and the
+    real customer card.
+  - For the real customer card specifically, `ScratchCard` now also mounts
+    a `<canvas>` layer over the existing SVG-stroke reveal: real
+    `pointerdown`/`pointermove`-driven erasing (`globalCompositeOperation:
+"destination-out"`, a soft radial brush), auto-settling once ~55% is
+    cleared. This is a strict progressive enhancement, not a replacement —
+    `getContext("2d")` is feature-detected, and whenever it's unavailable
+    (jsdom, which is why the SVG strokes stay the fully-tested fallback
+    path) or the reveal is caller-managed (the setup preview never mounts
+    it at all), the existing SVG strokes do the entire job unchanged.
+- Setup preview now defaults Flame Club, Sprout, and Cup to 5/5 (was a
+  mixed 5/6/10) so every growth-card preview opens fully bloomed; Flame
+  Club also dropped `FlameLayers`' own internal stage/count label, which
+  duplicated the one line the caller (`PreviewCard` / `ProgramCardStatus`)
+  already renders below the card.
+- Redesigned `Wheel` and `ScratchCard` to match the Cup/Sprout/Flame Club
+  pass below — the real physics-based spin and real SVG scratch-texture
+  masking were already right, the gap was visual craft:
+  - `Wheel` gains a static gold housing ring and hub (radial gradients,
+    never rotate with the disc, like a real wheel's frame), gold wedge
+    dividers instead of background-colored gaps, a small wax-seal dot
+    marking each reward wedge near the rim (so win/lose reads as more
+    than the emerald/rose color pairing), a static radial glare plus a
+    restrained drop-shadow, and a gold-gradient SVG pointer replacing the
+    flat CSS border-triangle.
+  - `ScratchCard`'s cover gains a real foil texture (a metallic-fleck
+    pattern plus one static diagonal sheen, masked under the same reveal
+    strokes as the base gradient) instead of a flat two-stop gradient, an
+    embossed card frame (inset highlight + drop shadow) instead of a
+    plain border, and the same wax-seal dot marking a reward reveal.
+- Redesigned the three "reward-mechanic" progress visuals — Cup, Plant/
+  Sprout, and Flame Club — with hand-drawn SVG art replacing the previous
+  flat-shape/lucide-icon placeholders, plus real stage-to-stage growth
+  transitions (as opposed to plain crossfades):
+  - `Cup` is now a 3/4-perspective "looking down into the mug" illustration
+    (gradient-filled shell, elliptical rim, translucent rim-shadow, a
+    hand-traced pitcher pouring milk at the penultimate stage, a latte-art
+    flourish at Full) with one persistent coffee ellipse whose geometry and
+    gradient stops are set per stage and left to the browser to interpolate,
+    so the surface genuinely rises/widens in place and the espresso→latte
+    tone blends continuously.
+  - `Plant` now keeps growing across all 5 stages (previously froze after
+    Leafing), with 5 persistent leaf slots (never swapped, so leaves don't
+    flash/replace across stages) and, at the final stage, one of 4 flower
+    types — tulip, daisy, sakura, or pansy — deterministically selected by a
+    new optional `seed` prop (hashed, not random) so a given customer's
+    flower stays the same across visits instead of changing on every reload.
+  - `FlameLayers` replaces its stacked `lucide-react` `Flame` icons with a
+    hand-built campfire (coal bed → coal mound+ghost-flames → candle lick →
+    3-tongue fan → large lick with rising sparks/smoke), each stage its own
+    gradient-stopped shape; Ember↔Spark and the Full-Campfire→Ember
+    redemption jump crossfade in sync, while Small→Medium→Large instead
+    holds the old flame at full size while the new one grows, only shrinking
+    the old one away after a delay once the new one has visibly grown past
+    it.
+- `@merqo/ui` bumped to v0.22.1 (TS2742 declaration-emit fix): the activity
+  table, admin programs list, and admin vendors list now render through the
+  shared `DataTable` component instead of hand-rolled/shadcn-`Table` markup.
+- Dark mode moved from pure OS-media-query CSS to a `.dark`-class-based
+  approach (`@custom-variant dark`), now driven by `next-themes`'
+  `ThemeProvider` (`src/app/layout.tsx`) — gives a manual Light/Dark/System
+  control in the account menu (via `@merqo/ui` bumped to v0.18.0) on top of
+  the existing OS-auto behavior. `src/app/globals.css`'s color tokens are
+  unchanged, only the two `@media (prefers-color-scheme: dark)` blocks were
+  converted to `.dark`/`.dark body` selectors.
+- Bumped `@merqo/ui` to v0.20.0: the vendor stats page's tile now wraps the
+  new shared `StatTile`/`DeltaPill` content instead of a fully local
+  implementation — no visible change, loopkit's own `ElevatedCard` shell and
+  value-above-label ordering are unchanged.
+- Bumped `@merqo/ui` to v0.19.0: the theme control now sits behind a
+  collapsed "Theme · {current}" submenu instead of three always-expanded
+  radio options.
+- The onboarding tour's "example card" progress text now renders the real
+  `stampStrategy.progress()` output instead of a hand-copied "5 of 8
+  stamps"/"3 more for a reward" — the hand copy had already drifted from
+  the engine's real `N/M stamps` label format.
+- Onboarding tour copy: no more em dashes, and two new steps (Activity,
+  Stats) covering ground the tour skipped before. The first step now shows
+  an example stamp-card preview.
+- Brand theme: `globals.css`'s color tokens replaced with "Sealing Wax"
+  (oxblood-crimson primary, antique-brass counter-tone), light and
+  dark, replacing "Raspberry-Rose Punch & Gold" — same berry family,
+  pushed darker/denser. Purely cosmetic — no component/behavior change.
+- Bumped `@merqo/ui` to v0.16.0 and migrated `/dashboard/plan`'s feature
+  comparison grid onto the shared `PlanComparisonTable` component (matching
+  qkit's own migration onto the same component). Replaces the page's local
+  `FEATURES`-rendering JSX + local `Cell` helper — same 2-tier (Free/Pro)
+  visible output, including the "Loyalty programs" row's string cell values
+  (`"1"`/`"∞"`). Also adds `--color-status-ready` (mapped to `--primary`) in
+  `src/app/globals.css`, since the shared component's check icon hardcodes
+  that token and loopkit had no order-status palette to supply it.
+- Bumped `@merqo/ui` to v0.14.0 and switched the dashboard nav's "Switch
+  products" submenu from a locally hardcoded kit list to the package's new
+  `getSwitchKits("loopkit")` helper (backed by its centralized `KIT_FAMILY`
+  registry). Same three kits, same URLs — a future new kit now only needs
+  `KIT_FAMILY` updated once in `@merqo/ui`, not in every kit's own
+  `dashboard-nav.tsx`.
+- Expanded ESLint's sonarjs wiring from 2 hand-picked rules to the plugin's
+  full `configs.recommended` set. Fixed every real finding in app code:
+  nested-ternary/cognitive-complexity hotspots refactored into helper
+  functions across ~14 files (including a real DRY fix unifying
+  `dashboard/activity/page.tsx`'s duplicated render branches), super-linear
+  regex patterns in schema tests tightened, unused imports/vars removed,
+  and a component literally named `Error` (shadowing the global) renamed to
+  `RouteError`. Scoped, documented rule-offs remain for cosmetic
+  `Math.random()` use, test-file mock-chain nesting, and the two largest
+  pre-existing complexity hotspots (`setup/page.tsx`, `setup/setup-form.tsx`)
+  — tracked as follow-up debt, not silently suppressed.
+
+- Display font switched from Bricolage Grotesque to Fraunces (the shared
+  family display face — see
+  `docs/business/2026-08-13-typography-family-standard.md`). qkit already
+  used Fraunces; this brings loopkit in line with the rest of the family
+  now that cross-kit SSO means vendors move between kits under one
+  identity, so a per-kit display face reads as a seam rather than a
+  feature. Body (Plus Jakarta Sans) and mono (IBM Plex Mono) fonts are
+  unchanged. The brand-icon mark's font fallback also switched from the
+  system sans-serif stack to the Georgia serif stand-in, matching
+  Fraunces being a serif.
+- Design pass from a completed frontend-design/impeccable critique:
+  the counter page now leads with phone entry (the product's actual
+  mechanic) instead of a full-width scan button pushing it below the
+  fold on mobile; Benefits and FAQ gained the eyebrow/heading/divider
+  pattern already used by How-it-works; the hero's stamp-card now
+  pops its last dot on load; the stats bar chart was extracted into
+  a shared `VisitsChart` component (was ~110 duplicated lines) and
+  gained a baseline plus date labels; and the free-tier nav badge
+  got a visible gold-tinted outline instead of being nearly invisible.
+- Bumped `@merqo/ui` to v0.9.0. The landing page's sticky header
+  (`src/components/landing/nav.tsx`) now delegates its outer shell to the
+  new shared `LandingNav` component (`wordmark`/`end` slots), matching
+  qkit's landing-header sizing exactly the same way `DashboardNav` already
+  does for the dashboard header — no visible change to the wordmark, FAQ
+  button, or sign-in/get-started controls. Also unified every `/dashboard`
+  page onto one canonical `max-w-7xl` content container set at the layout
+  level (`src/app/dashboard/layout.tsx`, matching qkit's `dashboard/layout.tsx`
+  pattern) instead of each page picking its own (previously inconsistent)
+  width — `profile`/`counter`/`plan`/`settings` still nest their own
+  narrower wrapper inside that shared container, since those single-column
+  forms genuinely read better constrained.
+- Bumped `@merqo/ui` to v0.10.0 and wired its new `LinkComponent` prop
+  (`LinkComponent={Link}`, `src/app/dashboard/dashboard-nav.tsx`) through to
+  `DashboardNav` (which forwards it internally to the `AccountMenu` it
+  composes — loopkit has no standalone `AccountMenu` usage). Dashboard nav
+  and account-menu links now render as `next/link`'s `Link` instead of the
+  package's default plain `<a>`, so clicking them is a client-side
+  transition again instead of a full-page hard navigation — the root cause
+  the `/api/tour-seen` `keepalive` workaround above was patching around
+  the symptom of.
+- Migrated onto the shared `@merqo/ui` component package (v0.8.1): the
+  dashboard nav/account dropdown now composes `@merqo/ui`'s `DashboardNav`
+  and `AccountMenu` (with loopkit's own Feedback/Get-help server actions
+  wired through throw-adapters); `useAsyncAction`, `InfoTooltip`,
+  `ImageUploader` (via a new `uploadLoopkitImage` adapter,
+  `src/lib/image-upload-adapter.ts`), `DashboardTour`, and the profile
+  page's two-column layout (`TwoColumnSections`) all now delegate to the
+  shared package instead of hand-rolled local copies. `Section` keeps
+  loopkit's own `ElevatedCard` shell via the shared component's `wrapper`
+  render-prop, so the polished-card visual is unchanged. No user-visible
+  behavior change; removes `FeedbackForm`/`SupportForm`/local
+  `ImageUploader`/`InfoTooltip`/`tour.css` and the direct `driver.js`
+  dependency (now only reached transitively through `@merqo/ui`).
+- Deduplicated the per-route `bearerOk` bearer-secret check (previously copy-pasted into
+  3 `src/app/api/merqo/*` routes) into a shared helper in `src/lib/merqo-auth.ts`, and the
+  repeated Merqo-schema RPC-call boilerplate across `merqo-support.ts`/
+  `merqo-vendor-feedback.ts`/`merqo-vendor-profile.ts` into a shared `callMerqoRpc` helper
+  in `src/lib/merqo-rpc.ts`. No behavior change.
+- Adopted templateCentral 5.13.0's mechanical comment-hygiene enforcement layer
+  (live edit-time feedback, pre-commit warn, CI gate on added lines).
+- Landing footer rebuilt to match qkit's exact single-row layout
+  (wordmark, tagline, copyright, sign-in link as flex siblings), and the
+  bottom call-to-action band above it removed — qkit's landing page never
+  had one.
+- Migrated git hooks from lefthook to husky — lefthook's unsigned
+  `lefthook.exe` is unconditionally blocked by Windows Smart App Control on
+  this machine; husky has no native binary. Same checks, same rigor.
+
+- Login form migrated off raw `useState` + manual submit handlers with
+  inline error text onto React Hook Form + Zod (a new `loginSchema` in
+  `src/lib/schemas.ts`) with a `zodResolver`, matching qkit's login page
+  pattern and the stack AGENTS.md already documents. Auth/server errors now
+  surface via sonner toasts instead of an inline alert paragraph. The
+  name+phone onboarding sub-flow keeps its own hand-rolled busy/error state
+  rather than moving onto the same resolver, since it isn't a validated
+  email/password form; all buttons still share one disabled state across
+  both flows.
+
+- **qkit-earn upsell copy overstated the stamp award as automatic.** The
+  Pro upgrade prompt for earning stamps from qkit orders said a stamp is
+  awarded "automatically" — the real flow is a claim link (the customer
+  gets a link on their qkit order page and enters their phone number on
+  loopkit's `/earn` page to collect it). Copy now describes the actual
+  behavior.
+- Flame Club now has 5 growth stages (Ember, Spark, Small Fire, Medium
+  Fire, Full Campfire) instead of 3 — `flameStageFor` buckets progress
+  evenly at 0/20/40/60/80% of the stamps required, mirroring how Plant/Cup
+  already derive their 5 stages, and `FlameLayers` is redrawn with a
+  woodpile base, a dim ember coal at the start, and a layered/colored
+  flame cluster that grows through the later stages.
+- Fill the Cup is redrawn: a single continuous rim outline instead of a
+  floating ellipse, a saucer + pedestal foot for depth, a fixed (not
+  brand-themed) coffee-color liquid palette that warms from dark espresso
+  to caramel-tan latte as it fills, and a tulip-pour "done" flourish
+  replacing the old two-circles-and-triangle shape.
+- Sprout now restages so each of its 5 stages introduces exactly one new
+  visual element instead of several overlapping across stages: the stem
+  alone shoots up at Sprout (with a closed tip nub, no leaves yet), both
+  leaf pairs arrive together at Leafing (stem height holds from here on),
+  a small bud appears at Budding, and the bud opens into the full bloom at
+  the final stage — fixing "Budding" being visually indistinguishable from
+  "Leafing" before this change.
+- Vendors can now choose a preset icon (gift, coffee, star, or heart) or
+  their own profile photo to appear on each stamp instead of a plain dot,
+  for plain-dot stamp cards. Picked from a new "Stamp mark" section on
+  `/setup`, reflected immediately in its live preview, and shown the same
+  way on the customer-facing `/c` card.
 - Loyalty card visuals get their first animation-polish pass (see
   `docs/superpowers/specs/2026-07-25-loyalty-card-animation-polish-design.md`
   for the full design + research rationale — pure CSS, deliberately no new
@@ -1095,69 +1078,6 @@ dollar figure at all. The manual "ask us to upgrade" grant flow
   reward-expiry) moved into a new tap-to-open `(i)` info tooltip
   (`InfoTooltip`, `ui/popover.tsx`) instead of a second paragraph or a
   hover-only native `title` attribute, which never worked on mobile.
-
-### Fixed
-
-- The dashboard account-menu trigger showed only the bare avatar — the
-  stall name was visible only once the dropdown was opened, unlike qkit's
-  trigger which shows the name (or an "Account" fallback) plus a chevron
-  beside the avatar at `md:` and up. Now matches.
-- The dashboard account-dropdown label leaked the vendor's email — as the
-  primary line when no stall name was set, or as the subtitle when one
-  was. Now matches qkit's dropdown exactly: stall name (or a "Your stall"
-  placeholder) as the primary line, a static "Vendor account" subtitle
-  always, no email in either.
-- `/dashboard/profile`'s two-column layout used CSS `columns-2` (visual
-  order could drift from DOM/tab order) with the wrong section order;
-  rebuilt onto two independent flex-column stacks with the locked
-  cross-kit order (column 1: stall name, profile icon, change password;
-  column 2: display name, social links).
-- The dashboard's shared shop QR block overflowed its card on mobile: the
-  link-text container's parent used `items-start` in the mobile
-  (`flex-col`) layout, which sizes flex children to their own content
-  width rather than the container's width, so `min-w-0`/`truncate` on the
-  long URL never actually took effect. Fixed with a `self-stretch`
-  (mobile) / `self-auto` (`sm:` and up) override.
-- `/dashboard/customers`'s program-switcher + search row could overflow on
-  narrow phones (the search `<input>` had no `min-w-0`, so it refused to
-  shrink below its intrinsic width, pushing the Search button off-screen);
-  now stacks the switcher above a full-width search form below the `sm`
-  breakpoint, matching the activity filters' existing mobile pattern.
-- `/dashboard/activity`'s program switcher sat as a bare, unlabeled,
-  differently-styled control (no border/shadow, no shared card) next to
-  the bordered/shadowed `ActivityFilters` card, and didn't stack full-width
-  on mobile like the filter fields did. `ProgramSwitcher` now composes as
-  that card's first field (a "Program" label + trigger matching Type's
-  styling and mobile stacking) instead of a separate sibling — `ProgramSwitcher`
-  gained optional `triggerId`/`triggerClassName` props for this, defaulting
-  to its existing bare look on Customers/Stats.
-- `GET /api/merqo/vendor-status` and the `/admin` console's vendor-email
-  lookup (`admin-data.ts`) both only ever read the first 1000 auth users
-  (`listUsers`' default page size) — past that, a vendor would silently
-  resolve as "inactive" to merqo, or go missing from the admin console.
-  Extracted a shared `listAllUsers()` (`src/lib/list-all-users.ts`) that
-  paginates to completion; both call sites now use it.
-
-### Added
-
-- `Stats` gains an "Expired unclaimed (30d)" tile, sourced from the
-  `reward_vouchers` ledger (`countExpiredVouchers`) — added alongside,
-  not replacing, the existing `stamp_events`-sourced `rewards30d`/
-  `redemptionRate` tiles, per
-  `docs/superpowers/specs/2026-07-16-reward-voucher-ledger-design.md`'s
-  explicit decision not to risk a regression migrating those.
-- Test coverage for the `/admin` console's data layer (`admin.ts`,
-  `admin-data.ts`) and `rate-limit.ts`, previously untested — the one
-  surface handling cross-vendor sensitive data had zero automated
-  coverage.
-- `e2e/route-protection.spec.ts`: signed-out redirects for
-  `/dashboard`/`/setup`, a signed-out 404 for `/admin`, and the
-  no-DB-call fallback copy for `/c`/`/earn` without their required query
-  param — the e2e suite's first coverage of anything beyond the public
-  landing/login smoke pages.
-
-### Changed
-
 - Theme rewritten from "Mulberry & Gold" to "Raspberry-Rose Punch & Gold" —
   a deep-research pass (BMC Psychology 2025; Royal Society Open Science
   2023, both adversarially verified) found brightness and saturation, not
@@ -1186,28 +1106,6 @@ dollar figure at all. The manual "ask us to upgrade" grant flow
   (fields now stack full-width below the `sm` breakpoint). Rebuilt
   `/earn`'s customer-facing form onto shadcn components (previously the
   one hand-rolled, unstyled form in the app), with new test coverage.
-
-### Added
-
-- Reward-voucher ledger (`loopkit.reward_vouchers`, migration
-  `0027_loopkit_reward_vouchers.sql`): every earned reward across all
-  program types (Stamp, Plant, Wheel, Scratch, Lucky) now creates a voucher
-  row with `active`/`redeemed`/`expired` status. Redeem actions now require
-  an active, non-expired voucher rather than only checking raw
-  `stamp_count`/`growth` against the threshold.
-- New `programs.reward_expiry_days` config (1–3650 days, optional) lets
-  vendors set an expiry window for unclaimed Stamp/Plant rewards. Expiry is
-  checked lazily — on `add_stamp`, Plant's `apply`, and the counter's
-  lookup action — and forfeits the expired voucher's threshold worth of
-  `stamp_count`/`growth` (floored at 0). No cron job required.
-- Setup form: new reward-expiry field for program types that support it.
-- Profile settings: a new "Social & website" section (website/Instagram/
-  Facebook/TikTok), backed by the shared `merqo.vendor_profile` table
-  loopkit already partially used (`/setup`'s vendor-name seeding). Ported
-  from qkit's identical feature.
-
-### Changed
-
 - Auth code (`src/lib/auth.ts`, `src/app/login/actions.ts`, and the
   login/reset-password UI) moved into `src/features/auth/` — a pure
   code-location migration, no behavioral change. External consumers now
@@ -1270,23 +1168,24 @@ dollar figure at all. The manual "ask us to upgrade" grant flow
   tap-away scrim. The program-switcher dropdown on Stats/Customers/Activity
   now renders below the page header instead of above it.
 
-### Fixed
+### Removed
 
-- `.claude/worktrees/` is now excluded from `.gitignore`, `eslint.config.mjs`,
-  and `tsconfig.json` — previously only `.prettierignore` knew about it, so
-  a sibling worktree's un-migrated source could trip false-positive lint
-  errors on a fresh checkout.
-- `/setup`'s "Schedule retirement" action was silently unreachable for Pro
-  vendors — `canCreate` is unconditionally true for Pro (unlimited
-  programs), so the old view-routing check let it always win over the
-  `schedule` query param, showing the create form instead. Fixed via a new
-  `resolveSetupView` precedence that gives explicit query-param intents
-  priority over the ambient `canCreate` default.
-- Opening any Radix dropdown/dialog (e.g. the dashboard's account menu)
-  could visibly shift the centered page content, since the scrollbar's
-  gutter wasn't reserved ahead of time — `scrollbar-gutter: stable` now
-  keeps that space allocated whether or not a scrollbar is actually shown.
-- Dashboard's Shop QR + Scan quick-actions row could stretch wider than its
-  card (pushing the QR link/labels past their intended width) — the two
-  flex children were missing `min-w-0`, so neither could shrink below its
-  content's natural width.
+- The `/login` page's "Continue with name & phone" vendor onboarding option
+  — an anonymous-Supabase-session sign-in path unique to loopkit (every
+  sibling kit ships only Google OAuth + email/password) with no account
+  recovery story for what is a business owner's primary sign-in, not a
+  disposable customer flow. `/login` now matches qkit's reference login
+  pattern exactly.
+- Per-IP rate limiting (`src/lib/rate-limit.ts`, `@upstash/ratelimit`,
+  `@upstash/redis`) on the public `/c` card-check and `/earn` claim actions —
+  never provisioned in production (fail-open, so it was a no-op), decided
+  not worth the added dependency + config surface.
+
+### Note
+
+- `src/app/admin/health-badge.ts` deliberately keeps its shadcn `Badge`
+  variants rather than adopting `@merqo/ui`'s `StatusBadge`. A cross-kit
+  sweep had flagged it as a duplicate; it is not. `StatusBadge` is a
+  dot-and-pill chip that deliberately is not a `Badge` wrapper, and the
+  `gold` variant here is loopkit's reward motif. Converting would change
+  the look and drop a brand token, not remove duplication.

@@ -218,6 +218,12 @@ Stamp programs can also opt into a birthday bonus (migration `0041`,
 `loopkit.set_customer_birthday` + a lazy check-on-next-visit trigger on
 `stamp_events`) — see `src/features/card-check/README.md`.
 
+`@merqo/ui` bumped to v0.31.4 (2026-09-22), for its new
+`storagePathFromPublicUrl`. Replacing or removing a profile icon now deletes the
+old image from storage (`removeReplacedAvatar` in
+`src/lib/image-upload-adapter.ts`); before this, every avatar change orphaned one
+file, because `ImageUploader` names each upload randomly.
+
 `@merqo/ui` bumped to v0.31.3 (2026-09-22), which also stops `resizeToWebp`
 mislabelling a PNG as WebP on browsers that cannot encode WebP. The public
 `vendor-images` bucket now enforces 5 MB and JPEG/PNG/WebP itself (migration
