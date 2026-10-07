@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- The repository moved from the `cljiahao` GitHub account to the `merqo-io` organization. `@merqo/ui` now installs from `github:merqo-io/merqo-ui` at the same tag, with the lockfile and tarball URLs updated to match.
 - Bumped `@merqo/ui` to `v0.32.0`, which adds `ImageUploader`'s
   `deferUpload` mode and `commitPendingImages` (upload an image only when
   its form is saved). Nothing here adopts it: this app's only uploader is
