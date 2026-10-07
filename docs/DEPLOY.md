@@ -247,7 +247,7 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
 
 ## B. loopkit on Vercel
 
-1. Vercel → New Project → import `cljiahao/loopkit`.
+1. Vercel → New Project → import `merqo-io/loopkit`.
 2. Environment Variables (Production + Preview) — **same shared Supabase project**:
    - `NEXT_PUBLIC_SUPABASE_URL` = shared project URL
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` = anon key
