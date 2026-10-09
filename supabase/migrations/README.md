@@ -67,4 +67,6 @@ exception.
 - `0058_audit_truncate_privilege.sql` — revokes service-role TRUNCATE on the admin audit trail, preserving SELECT/INSERT and owner maintenance.
 - `0059_retire_local_feedback_writes.sql` — retires authenticated INSERT on legacy local feedback; retains historical rows and service maintenance access. Current submissions use the shared Merqo RPC.
 
-Prepared audit migrations require local database validation before deployment.
+- `0060_qualified_rpc_columns.sql` — qualifies column references that overlap RPC output parameters in referral joins and points offsets, preserving signatures, execution grants and row locks. Existing pgTAP tests verify both runtime paths.
+
+Prepared audit migrations require database validation and rollout review before deployment.

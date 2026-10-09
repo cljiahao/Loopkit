@@ -225,7 +225,7 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      carries over. Safe to re-run.
 
    - **Current migration inventory:** the historical descriptions above stop at `0037`. Review every migration in
-     `supabase/migrations/` in numeric order and its cross-schema prerequisites. The October audit additions `0048`–`0059` are prepared but database validation and deployment remain pending; do not treat this runbook or passing application tests as proof of rollout.
+     `supabase/migrations/` in numeric order and its cross-schema prerequisites. The October audit additions `0048`–`0060` are prepared but database validation and deployment remain pending; do not treat this runbook or passing application tests as proof of rollout.
 
    - **Customer authorization:** the current actions require migrations `0055` and `0056`. Existing customers use saved card-token proof, with shop-assisted recovery. The former Upstash limiter and dependencies were removed; setting Upstash variables does not enable throttling in this application.
 

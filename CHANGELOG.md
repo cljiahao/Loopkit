@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Pin shared UI to audited commit `989d934c1cc8d957ff383934debf8ef083b6b6a4` with matching build permissions.
+- Qualify referral and points-offset RPC columns in forward migration `0060`, fixing output-parameter naming conflicts exposed by database CI without changing grants or locking.
+
 - Remove an exact duplicate plant-redemption SQL fixture; the canonical twelve-case parity fixture remains.
 
 - The repository moved from the `cljiahao` GitHub account to the `merqo-io` organization. `@merqo/ui` now installs from `github:merqo-io/merqo-ui` at the same tag, with the lockfile and tarball URLs updated to match.
@@ -724,6 +727,9 @@ dollar figure at all. The manual "ask us to upgrade" grant flow
   from qkit's identical feature.
 
 ### Changed
+
+- Pin shared UI to audited commit `989d934c1cc8d957ff383934debf8ef083b6b6a4` with matching build permissions.
+- Qualify referral and points-offset RPC columns in forward migration `0060`, fixing output-parameter naming conflicts exposed by database CI without changing grants or locking.
 
 - Remove an exact duplicate plant-redemption SQL fixture; the canonical twelve-case parity fixture remains.
 

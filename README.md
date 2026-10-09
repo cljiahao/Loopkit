@@ -1,5 +1,7 @@
 # loopkit
 
+Shared UI is pinned to audited commit `989d934c1cc8d957ff383934debf8ef083b6b6a4`. The lockfile and exact build allowlist select this same source, including image lifecycle cleanup, malformed storage-URL handling and bounded money inputs.
+
 Digital stamp-card loyalty for SG small vendors. A Merqo kit — owns the
 `loopkit` schema in the shared Merqo Supabase project, reports metrics to
 merqo over HTTP. Browser-tab title follows the cross-kit "Name | Tagline"
@@ -481,4 +483,4 @@ Prepared migration `0048` restricts internal reward writes, validates Qkit earn 
 
 Prepared migration `0049` adds atomic referral state comparison and recoverable pending-credit retries. See the audit evidence above; database execution remains outstanding.
 
-Prepared migrations `0050`–`0059` also address atomic program replacement, plant and stamp redemption, visit concurrency, retired RPC privileges, points/voucher locking, saved-card authorization for customer actions and Qkit claims, audit-table privileges, and historical feedback writes. Database validation and rollout remain outstanding; passing application tests do not establish that these migrations have been applied.
+Prepared migrations `0050`–`0060` also address atomic program replacement, plant and stamp redemption, visit concurrency, retired RPC privileges, points/voucher locking, saved-card authorization for customer actions and Qkit claims, audit-table privileges, and historical feedback writes. Database validation and rollout remain outstanding; passing application tests do not establish that these migrations have been applied.
