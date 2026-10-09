@@ -14,3 +14,5 @@ Component/Action, middleware), all pinned to the `loopkit` schema.
 ## Parent
 
 [lib](../README.md)
+
+Factory tests reset environment and cookie mocks between cases, covering schema scope, production cookie domain and service-client separation without real credentials.

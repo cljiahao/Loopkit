@@ -16,3 +16,5 @@ merqo calls into loopkit over.
 ## Parent
 
 [api](../README.md)
+
+Boundary regressions assert unauthorized and invalid requests cannot create a service client or query privileged tables. Later-page failures are surfaced, not silently converted to partial reports.

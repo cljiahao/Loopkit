@@ -79,9 +79,11 @@ that logic lives in this folder.
 The back nav here renders `@merqo/ui`'s `BackButton` with no
 `LinkComponent` override. This page is a Server Component, and passing
 `next/link` in as a prop sends a function across the Server → Client
-boundary (`@merqo/ui` is client-bannered package-wide), which Next rejects
+boundary (this shared interactive component has a client boundary), which Next rejects
 at render. `BackButton` falls back to a plain `<a>`.
 
 ## Parent
 
 [dashboard](../README.md)
+
+Labels are validated as returned form errors before insertion. Reward crediting uses trusted snapshots and compare-and-swap commits; database concurrency tests remain separate from the form regressions.

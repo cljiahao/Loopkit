@@ -12,3 +12,5 @@ up whether an email belongs to an active/Pro loopkit vendor.
 ## Parent
 
 [merqo](../README.md)
+
+The route validates the email before privileged client creation and returns a service-unavailable result when a paginated lookup or status read fails.
