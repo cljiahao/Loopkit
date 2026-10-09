@@ -15,8 +15,7 @@ Vendor-facing activity feed at `/dashboard/activity` — a paginated, filterable
 ## Server-component note
 
 `DataTable`'s `columns[].cell` and `getRowKey` are functions, so they
-cannot be passed from a Server Component into `@merqo/ui` (which is
-client-bannered package-wide). They live behind a `"use client"` wrapper
+cannot be passed from a Server Component into `@merqo/ui` (whose interactive components are client components). They live behind a `"use client"` wrapper
 that takes plain rows as props — same pattern as
 `src/app/admin/vendors/vendors-table.tsx`.
 

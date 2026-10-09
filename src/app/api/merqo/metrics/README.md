@@ -11,3 +11,5 @@ GET endpoint reporting platform-wide loopkit metrics to Merqo.
 ## Parent
 
 [merqo](../README.md)
+
+Service client creation and privileged reads occur only after bearer authentication and input checks. Reporting reads paginate instead of treating the server row cap as a complete result.

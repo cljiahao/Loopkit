@@ -17,14 +17,36 @@ import {
 } from "@/lib/cards";
 
 function makeBuilder(data: unknown, error: unknown = null) {
+  let filtered = Array.isArray(data) ? data : [];
+  let take = 1000;
   const ilike = vi.fn(() => b);
   const b: Record<string, unknown> = {
-    select: vi.fn(() => b),
+    select: vi.fn(() => {
+      filtered = Array.isArray(data) ? data : [];
+      return b;
+    }),
     eq: vi.fn(() => b),
     ilike,
     order: vi.fn(() => b),
-    then: (resolve: (v: { data: unknown; error: unknown }) => unknown) =>
-      resolve({ data, error }),
+    limit: vi.fn((size: number) => {
+      take = size;
+      return b;
+    }),
+    or: vi.fn((predicate: string) => {
+      const timestamp = predicate.match(/updated_at\.lt\.([^,]+)/)?.[1] ?? "";
+      const id = predicate.match(/id\.lt\.([^)]*)/)?.[1] ?? "";
+      filtered = filtered.filter(
+        (row: { updated_at: string; id: string }) =>
+          row.updated_at < timestamp ||
+          (row.updated_at === timestamp && row.id < id),
+      );
+      return b;
+    }),
+    then: (resolve: (value: { data: unknown; error: unknown }) => unknown) =>
+      resolve({
+        data: Array.isArray(data) ? filtered.slice(0, take) : data,
+        error,
+      }),
   };
   return { builder: b, ilike };
 }
@@ -80,12 +102,22 @@ describe("listCards", () => {
 });
 
 function makeCountBuilder(data: unknown, error: unknown = null) {
+  let filtered = Array.isArray(data) ? data : [];
   const b: Record<string, unknown> = {
-    select: vi.fn(() => b),
+    select: vi.fn(() => {
+      filtered = Array.isArray(data) ? data : [];
+      return b;
+    }),
     in: vi.fn(() => b),
     gte: vi.fn(() => b),
-    then: (resolve: (v: { data: unknown; error: unknown }) => unknown) =>
-      resolve({ data, error }),
+    order: vi.fn(() => b),
+    limit: vi.fn(() => b),
+    gt: vi.fn((_column: string, id: string) => {
+      filtered = filtered.filter((row: { id: string }) => row.id > id);
+      return b;
+    }),
+    then: (resolve: (value: { data: unknown; error: unknown }) => unknown) =>
+      resolve({ data: Array.isArray(data) ? filtered : data, error }),
   };
   return b;
 }
@@ -115,9 +147,9 @@ describe("activeCardCountsByProgram", () => {
   it("counts recent cards per program", async () => {
     fromMock.mockReturnValue(
       makeCountBuilder([
-        { program_id: "p1" },
-        { program_id: "p1" },
-        { program_id: "p2" },
+        { id: "c1", program_id: "p1" },
+        { id: "c2", program_id: "p1" },
+        { id: "c3", program_id: "p2" },
       ]),
     );
 

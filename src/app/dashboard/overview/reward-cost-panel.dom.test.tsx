@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { RewardCostPanel } from "./reward-cost-panel";
 import type { CostView } from "@/app/dashboard/dashboard-view";
@@ -12,6 +12,7 @@ const cost = (over: Partial<CostView> = {}): CostView => ({
   pendingReturnSoon: 23,
   perProgram: [
     {
+      id: "stamp",
       name: "Stamp Card",
       rewardText: "kopi-o",
       unitCents: 80,
@@ -19,6 +20,7 @@ const cost = (over: Partial<CostView> = {}): CostView => ({
       lineCents: 960,
     },
     {
+      id: "plant",
       name: "Sprout Club",
       rewardText: "$15 voucher",
       unitCents: null,
@@ -52,4 +54,21 @@ describe("RewardCostPanel", () => {
     expect(screen.getByText(/1 x \$15 voucher/)).toBeInTheDocument();
     expect(screen.getByText("cost not set")).toBeInTheDocument();
   });
+});
+
+it("keeps duplicate program names as distinct cost rows", () => {
+  const error = vi.spyOn(console, "error").mockImplementation(() => {});
+  try {
+    const value = cost();
+    value.perProgram = value.perProgram.map((program) => ({
+      ...program,
+      name: "Same name",
+    }));
+    render(<RewardCostPanel cost={value} />);
+    expect(screen.getByText(/12 x kopi-o/)).toBeInTheDocument();
+    expect(screen.getByText(/1 x \$15 voucher/)).toBeInTheDocument();
+    expect(error.mock.calls.flat().join(" ")).not.toMatch(/same key/);
+  } finally {
+    error.mockRestore();
+  }
 });

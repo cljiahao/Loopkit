@@ -30,7 +30,8 @@ vi.mock("@/lib/engine", () => ({
   getProgress: vi.fn(() => ({ label: "3/8 stamps" })),
 }));
 
-import CustomersPage, { VendorCustomerList } from "./page";
+import CustomersPage from "./page";
+import { VendorCustomerList } from "./vendor-customer-list";
 
 const DAY = 24 * 60 * 60 * 1000;
 const iso = (daysAgo: number) =>

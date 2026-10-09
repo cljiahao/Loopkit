@@ -34,7 +34,7 @@ describe("ResetPasswordForm", () => {
   it("shows an error and does not call updateUser when passwords don't match", async () => {
     const user = userEvent.setup();
     render(<ResetPasswordForm />);
-    await user.type(screen.getByLabelText("New password"), "hunter2");
+    await user.type(screen.getByLabelText("New password"), "hunter22");
     await user.type(screen.getByLabelText("Confirm password"), "different");
     await user.click(screen.getByRole("button", { name: "Update password" }));
 
@@ -47,12 +47,12 @@ describe("ResetPasswordForm", () => {
   it("updates the password and redirects to dashboard on success", async () => {
     const user = userEvent.setup();
     render(<ResetPasswordForm />);
-    await user.type(screen.getByLabelText("New password"), "hunter2");
-    await user.type(screen.getByLabelText("Confirm password"), "hunter2");
+    await user.type(screen.getByLabelText("New password"), "hunter22");
+    await user.type(screen.getByLabelText("Confirm password"), "hunter22");
     await user.click(screen.getByRole("button", { name: "Update password" }));
 
     await waitFor(() =>
-      expect(updateUserMock).toHaveBeenCalledWith({ password: "hunter2" }),
+      expect(updateUserMock).toHaveBeenCalledWith({ password: "hunter22" }),
     );
     expect(routerPush).toHaveBeenCalledWith("/dashboard");
     expect(routerRefresh).toHaveBeenCalled();
@@ -64,13 +64,42 @@ describe("ResetPasswordForm", () => {
     });
     const user = userEvent.setup();
     render(<ResetPasswordForm />);
-    await user.type(screen.getByLabelText("New password"), "hunter2");
-    await user.type(screen.getByLabelText("Confirm password"), "hunter2");
+    await user.type(screen.getByLabelText("New password"), "hunter22");
+    await user.type(screen.getByLabelText("Confirm password"), "hunter22");
     await user.click(screen.getByRole("button", { name: "Update password" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Password too weak",
     );
     expect(routerPush).not.toHaveBeenCalled();
+  });
+});
+
+describe("password reset failure recovery", () => {
+  it("restores submission after network rejection", async () => {
+    vi.clearAllMocks();
+    updateUserMock.mockRejectedValueOnce(Error("offline"));
+    const user = userEvent.setup();
+    render(<ResetPasswordForm />);
+    await user.type(screen.getByLabelText("New password"), "validpass123");
+    await user.type(screen.getByLabelText("Confirm password"), "validpass123");
+    await user.click(screen.getByRole("button", { name: "Update password" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not update your password",
+    );
+    expect(
+      screen.getByRole("button", { name: "Update password" }),
+    ).toBeEnabled();
+    expect(routerPush).not.toHaveBeenCalled();
+  });
+  it("rejects short matching passwords before auth I/O", async () => {
+    vi.clearAllMocks();
+    const user = userEvent.setup();
+    render(<ResetPasswordForm />);
+    await user.type(screen.getByLabelText("New password"), "short");
+    await user.type(screen.getByLabelText("Confirm password"), "short");
+    await user.click(screen.getByRole("button", { name: "Update password" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("8 and 72");
+    expect(updateUserMock).not.toHaveBeenCalled();
   });
 });

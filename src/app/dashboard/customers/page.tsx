@@ -4,7 +4,7 @@ import { requireVendor } from "@/features/auth";
 import { listPrograms, currentProgram } from "@/lib/program";
 import { getProgress } from "@/lib/engine";
 import { listCards } from "@/lib/cards";
-import { listVendorCustomers, type VendorCustomerRow } from "@/lib/customers";
+import { listVendorCustomers } from "@/lib/customers";
 import {
   parseSegment,
   parseSort,
@@ -19,10 +19,13 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import { ElevatedCard } from "@merqo/ui";
 import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
+import { VendorCustomerList } from "./vendor-customer-list";
 import { CustomerControls } from "./customer-controls";
+import { OverviewCohortList } from "./overview-cohort";
+import { parseOverviewCohort } from "@/lib/overview-cohorts";
 
 type CustomersPageProps = {
   searchParams: Promise<{
@@ -30,6 +33,7 @@ type CustomersPageProps = {
     p?: string;
     seg?: string;
     sort?: string;
+    cohort?: string;
   }>;
 };
 
@@ -40,98 +44,23 @@ const SEGMENT_LABELS: Record<CustomerSegment, string> = {
   lapsed: "Not seen 30d+",
 };
 
-// Extracted so it's testable with plain props — no Supabase/auth mocking
-// needed. Renders the vendor-level (no ?p=) list: every customer across
-// every program, merged.
-export function VendorCustomerList({
-  customers,
-}: {
-  customers: VendorCustomerRow[];
-}) {
-  if (customers.length === 0) {
-    return (
-      <ElevatedCard className="p-6">
-        <p className="text-sm text-muted-foreground">No customers yet.</p>
-      </ElevatedCard>
-    );
-  }
-
-  return (
-    <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      {customers.map((customer) => (
-        <ElevatedCard
-          as="li"
-          key={customer.phone}
-          className="flex flex-col gap-2 p-3 text-sm"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold uppercase">
-                {(customer.name ?? "#").charAt(0)}
-              </span>
-              <Link
-                href={`/dashboard/customers/${encodeURIComponent(customer.phone)}`}
-                className="truncate font-medium hover:underline"
-              >
-                {customer.name ?? customer.phone}
-              </Link>
-            </div>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {formatSgtDate(customer.lastSeenAt)}
-            </span>
-          </div>
-          {customer.name && (
-            <p className="text-xs text-muted-foreground">{customer.phone}</p>
-          )}
-          <div className="flex flex-wrap items-center gap-1">
-            {customer.programNames.map((name) => (
-              <Badge key={name} variant="secondary">
-                {name}
-              </Badge>
-            ))}
-            {customer.rewardReady ? (
-              <Badge>Ready</Badge>
-            ) : (
-              customer.bestGap !== null && (
-                <span className="text-xs text-muted-foreground">
-                  {customer.bestGap} to go
-                </span>
-              )
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {customer.totalStamps} total stamps/visits · {customer.totalRewards}{" "}
-            reward{customer.totalRewards === 1 ? "" : "s"}
-          </p>
-          {customer.recentProgramId && (
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="mt-1 w-full rounded-lg"
-            >
-              <Link
-                href={`/dashboard/counter?p=${customer.recentProgramId}&phone=${encodeURIComponent(customer.phone)}`}
-              >
-                Serve
-              </Link>
-            </Button>
-          )}
-        </ElevatedCard>
-      ))}
-    </ul>
-  );
-}
-
 export default async function CustomersPage({
   searchParams,
 }: CustomersPageProps) {
   await requireVendor();
 
   const programs = await listPrograms();
-  const { q, p, seg: segRaw, sort: sortRaw } = await searchParams;
+  const {
+    q,
+    p,
+    seg: segRaw,
+    sort: sortRaw,
+    cohort: cohortRaw,
+  } = await searchParams;
+  const cohort = parseOverviewCohort(cohortRaw);
+  if (cohort) return OverviewCohortList({ programs, cohort, p, q });
 
-  if (!p && programs.length === 1) {
+  if (!p && !segRaw && !sortRaw && programs.length === 1) {
     const qSuffix = q ? `&q=${encodeURIComponent(q)}` : "";
     redirect(`/dashboard/customers?p=${programs[0].id}${qSuffix}`);
   }

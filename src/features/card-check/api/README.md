@@ -1,63 +1,9 @@
-# api
+# Card-check actions
 
-## Purpose
+Customers join through the service-only customer_join RPC. Existing customers must present a current card capability from the HttpOnly vendor-scoped cookie or the saved card code. Phone numbers identify records and never authorize access. New enrollment returns only newly created credentials; an existing-card conflict returns generic recovery guidance.
 
-Server-side card-check logic: the public `"use server"` actions behind
-`/c?v=<vendorId>`.
+Birthday changes, catalog picks and expired-cycle resets use separate proof-checked RPCs. Catalog debits serialize the balance check and voucher issue. Customer reset is limited to an expired active program. Lost-card recovery is an owning-vendor operation that rotates all customer card and active voucher capabilities at that vendor while preserving progress.
 
-## Contents
+Responses are schema validated. Transport and malformed-response failures produce retry messages. Referral completion is best effort after successful enrollment. Tests cover scoped proof, enrollment conflicts, recovery, mutation failures and referral delivery; direct SQL authorization tests live in supabase/tests/customer-capability.test.sql.
 
-- `actions.ts` — `checkStatusAction`: no-auth action that enrolls a phone
-  into every active program at a vendor via the `vendor_join` RPC (which
-  also returns every card the phone already holds there), then computes
-  per-card progress with `getProgress` and a QR (`@merqo/ui`'s `qrSvg`) for each row.
-  When the form carries a `ref` field (a host/couple referral link, `/c?ref=`
-  — `src/app/dashboard/referrals/`), it calls `vendor_join_referred`
-  instead, same return shape plus a `referral_credit` column; when that
-  column signals a pending non-stamp-type credit (stamp-type programs are
-  already credited inline by the RPC), `creditReferralHost` computes the
-  next state via the TS engine's `applyVisit` and finishes it through
-  `apply_referral_credit` — wrapped so a failure there never affects
-  `checkStatusAction`'s own result, the guest's own join having already
-  succeeded by that point. It also builds each card's `activeVouchers` from
-  `vendor_join`'s `active_vouchers` jsonb column (Points Club catalog mode
-  only, empty array otherwise), pre-rendering each voucher's own QR
-  (`qrSvg(voucher_token)`) the same way the card's own `qr` field already
-  works. `regenerateCardAction`: reissues one program's card via the
-  `regenerate_card` RPC for a lost or expired card, same phone-as-identity
-  trust model, acting on one program at a time (invoked per-card from the
-  check-form's card list). `setCustomerBirthdayAction`: optional,
-  self-entered birthday for the birthday-bonus feature (migration `0041`)
-  — same anonymous, phone-scoped trust model as the two actions above;
-  calls `loopkit.set_customer_birthday`, which only ever UPDATEs an
-  existing `loopkit.customers` row for the exact `(vendor, phone)` pair,
-  never creates one. `selectPointsRewardAction`: customer self-service
-  catalog pick, same trust model — calls the `select_points_reward` RPC
-  (migration `0043`, re-derives cost/label server-side) and returns the
-  newly-minted voucher's id/reward text/QR, or a friendly
-  "not enough points" message when the RPC reports `insufficient_points`
-- `actions.test.ts` — vitest tests for `checkStatusAction`'s referral path:
-  dispatches to `vendor_join` vs. `vendor_join_referred` based on whether
-  `ref` is present, calls `apply_referral_credit` only for a pending
-  non-stamp credit (never for an already-credited stamp-type row), and logs
-  (without throwing or changing the result) when the finish call fails.
-  `checkStatusAction` active-vouchers tests: each `active_vouchers` row
-  becomes an `activeVouchers` entry with its own rendered QR, and a
-  non-points card gets an empty array. `setCustomerBirthdayAction` tests:
-  submits the normalized phone and numeric month/day, rejects an invalid
-  phone/missing vendor/out-of-range month or day without calling the RPC,
-  and surfaces a friendly error on RPC failure. `selectPointsRewardAction`
-  tests: returns the new voucher's id/reward text/QR on success, and
-  surfaces "Not enough points for that reward yet." when the RPC errors
-  with `insufficient_points`
-
-## Connectivity
-
-N/A — no subfolders. Note that `types.ts` (the shared `CardStatus`/
-`StatusState` types `actions.ts` returns) lives one level up at the
-feature root, not inside this folder, since both `api/actions.ts` and
-`components/check-form.tsx` import it.
-
-## Parent
-
-[card-check](../README.md)
+[Parent](../README.md)

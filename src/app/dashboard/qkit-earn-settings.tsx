@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useAsyncAction } from "@/hooks/use-async-action";
+import { toast } from "sonner";
 import { saveQkitEarnConfigAction } from "./actions";
 import {
   Select,
@@ -26,7 +27,7 @@ export function QkitEarnSettings({
   current: { programId: string; enabled: boolean } | null;
   isPro: boolean;
 }) {
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useAsyncAction();
 
   if (!isPro) {
     return (
@@ -47,8 +48,17 @@ export function QkitEarnSettings({
     <form
       className="space-y-3 rounded-[20px] border bg-card p-4 shadow-[0_1px_0_0_var(--color-border),0_12px_28px_-20px_rgba(0,0,0,0.35)]"
       action={(fd) => {
-        startTransition(() => {
-          void saveQkitEarnConfigAction(fd);
+        void run(async () => {
+          try {
+            const result = await saveQkitEarnConfigAction(fd);
+            if (!result.success) {
+              toast.error(result.error);
+              return;
+            }
+            toast.success("Settings saved");
+          } catch {
+            toast.error("Could not save settings. Try again.");
+          }
         });
       }}
     >

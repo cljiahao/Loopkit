@@ -29,19 +29,8 @@ function prefersReducedMotion(): boolean {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-// Three separate, overlapping, irregular strokes — not one continuous
-// zigzag — each covering its own rough vertical band with per-point
-// jitter, staggered draw-in delays, and slightly different widths. A
-// single clean line reads as "a wiggly line drew itself in"; three
-// overlapping irregular passes, worked over slightly out of sync, is much
-// closer to how an actual coin/fingernail scratch looks — uneven coverage
-// building up over a few strokes, not one uniform sweep. Randomized once
-// per mount (same convention as CardBurst's makePieces), in a fixed 100x60
-// coordinate space with `pathLength={100}` on each consuming <path> so the
-// stroke-dasharray/dashoffset reveal is plain percentages — no runtime
-// path-length measurement needed. This is the jsdom-safe fallback path
-// (SVG, no canvas 2D context needed) — see the canvas effect below for the
-// real drag-to-scratch layer that sits on top of it in real browsers.
+// SVG strokes provide a reveal fallback when a canvas context is unavailable.
+// Their staggered irregular paths mimic overlapping scratch marks.
 function makeStrokes(): Stroke[] {
   return STROKE_BANDS.map(([yMin, yMax], i) => {
     const dir = i % 2 === 0 ? 1 : -1;
@@ -243,6 +232,7 @@ export function ScratchCard({
     const timer = setTimeout(commit, AUTO_SCRATCH_MS);
     return () => {
       clearTimeout(timer);
+      playedRef.current = false;
       commitRef.current = null;
     };
   }, [autoManaged, revealed, reducedMotion]);

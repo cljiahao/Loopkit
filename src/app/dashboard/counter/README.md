@@ -30,7 +30,7 @@ The scan-first "serve a customer at the counter" view at `/dashboard/counter?p=<
 The back nav here renders `@merqo/ui`'s `BackButton` with no
 `LinkComponent` override. This page is a Server Component, and passing
 `next/link` in as a prop sends a function across the Server → Client
-boundary (`@merqo/ui` is client-bannered package-wide), which Next rejects
+boundary (the interactive `BackButton` is a Client Component), which Next rejects
 at render. `BackButton` falls back to a plain `<a>`.
 
 ## Parent

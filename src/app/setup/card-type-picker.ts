@@ -1,11 +1,4 @@
-// Pure family/style data and mapping for /setup's type picker. Groups the
-// backend's existing 5 program types (2 of which already fan out into
-// variants) into 4 vendor-facing families with a style sub-step, so the
-// picker stops reading as "8 unrelated card types." No new type/variant
-// value is introduced — "chance" is a UI-only grouping label over the
-// existing wheel/scratch DB type values. Extracted from setup-form.tsx so
-// this mapping gets fast, unmocked test coverage, same pattern as
-// setup-view.ts / dashboard-view.ts.
+// Families group existing database types without introducing a new type.
 
 export type FamilyKey = "stamp" | "growth" | "points" | "chance";
 

@@ -151,3 +151,19 @@ describe("createReferralHostAction", () => {
     });
   });
 });
+
+it("returns a validation error for an overlong referral label without writing", async () => {
+  vi.clearAllMocks();
+  requireVendorMock.mockResolvedValue({ user: { id: "vendor-1" } });
+  getProgramByIdMock.mockResolvedValue({ id: "p1", active: true });
+  const result = await createReferralHostAction(
+    CREATE_REFERRAL_HOST_IDLE,
+    formData({
+      program_id: "p1",
+      host_phone: "91234567",
+      label: "x".repeat(61),
+    }),
+  );
+  expect(result.status).toBe("error");
+  expect(insertMock).not.toHaveBeenCalled();
+});

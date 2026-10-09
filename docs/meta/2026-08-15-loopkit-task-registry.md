@@ -14,6 +14,19 @@ registry. What follows are real, evidenced gaps found by reading the actual
 code, today's own PR history (`git log --oneline -30`), and the
 `docs/superpowers/specs/` "Out of scope" sections — not invented backlog.
 
+## Review update (2026-10-09)
+
+The sections below retain the August baseline as historical evidence. T1 is
+closed by direct wheel/scratch `applyVisit` and `getProgress` regressions in
+`src/lib/engine/index.test.ts`, covering fresh state, retained wins, cooldown and
+variant-specific progress. Eight new dispatcher tests pass in the focused review
+run. T4 was superseded by the September Points Club catalog and payment-offset
+implementation; its dated reward-shop plan records that work. T2 and T3 remain
+maintenance decisions, not authorization to replace the typed strategy dispatch
+with unsafe generic casts. Later security findings and staged SQL fixes are
+recorded in `docs/loopkit-audit-2026-10-08.md`; its outstanding database validation
+must not be confused with the August statement that no P1 items were found.
+
 ## P2 — real verification, not urgent yet
 
 ### T1. `applyVisit`/`getProgress` dispatcher: the wheel/scratch branch is never exercised through the dispatcher itself

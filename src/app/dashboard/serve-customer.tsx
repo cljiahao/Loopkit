@@ -130,6 +130,11 @@ export function ServeCustomer({
   const [result, setResult] = useState<ServeResult | null>(null);
   const [redeemOpen, setRedeemOpen] = useState(false);
   const [regenOpen, setRegenOpen] = useState(false);
+  const [recoveredCard, setRecoveredCard] = useState<{
+    phone: string;
+    cardToken: string;
+    qr: string;
+  } | null>(null);
   const [lookingUp, setLookingUp] = useState(false);
   const [celebration, setCelebration] = useState<{
     phone: string;
@@ -412,7 +417,12 @@ export function ServeCustomer({
         toast.error(res.error);
         return;
       }
-      toast.success(`Issued a fresh card for ${res.phone}.`);
+      toast.success(`Recovered card access for ${res.phone}.`);
+      setRecoveredCard({
+        phone: res.phone,
+        cardToken: res.cardToken,
+        qr: res.qr,
+      });
       setResult(null);
       setRegenOpen(false);
       router.refresh();
@@ -488,6 +498,42 @@ export function ServeCustomer({
         </div>
 
         <div>
+          {recoveredCard && (
+            <section
+              aria-label="Recovered card"
+              className="mb-4 space-y-3 rounded-xl border bg-card p-4"
+            >
+              <h2 className="font-semibold">Card access recovered</h2>
+              <p className="text-sm">
+                Give this code only to the customer you verified for{" "}
+                {recoveredCard.phone}. Their progress is preserved. The previous
+                card code no longer works.
+              </p>
+              <div
+                role="img"
+                aria-label="Recovered card QR code"
+                dangerouslySetInnerHTML={{ __html: recoveredCard.qr }}
+              />
+              <Label htmlFor="recovered-card-code">Saved card code</Label>
+              <Input
+                id="recovered-card-code"
+                readOnly
+                value={recoveredCard.cardToken}
+                onFocus={(event) => event.currentTarget.select()}
+              />
+              <p className="text-xs text-muted-foreground">
+                Ask the customer to save this code privately for future
+                recovery.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRecoveredCard(null)}
+              >
+                Done
+              </Button>
+            </section>
+          )}
           <ActiveCard
             result={result}
             stampsRequired={stampsRequired}

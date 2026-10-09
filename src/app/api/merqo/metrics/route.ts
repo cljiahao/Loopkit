@@ -1,3 +1,4 @@
+import { readAllRows } from "@/lib/read-all-rows";
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server";
 import { computeLoopkitMetrics } from "@/lib/metrics";
@@ -15,9 +16,27 @@ export async function GET(request: Request) {
   // Three independent reads — issue them concurrently so endpoint latency is
   // one round-trip, not the sum of three.
   const [programsRes, cardsRes, stampEventsRes] = await Promise.all([
-    supabase.from("programs").select("id, active, created_at"),
-    supabase.from("cards").select("id, program_id"),
-    supabase.from("stamp_events").select("card_id, kind, created_at, payload"),
+    readAllRows((start, end) =>
+      supabase
+        .from("programs")
+        .select("id, active, created_at")
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
+    readAllRows((start, end) =>
+      supabase
+        .from("cards")
+        .select("id, program_id")
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
+    readAllRows((start, end) =>
+      supabase
+        .from("stamp_events")
+        .select("card_id, kind, created_at, payload")
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
   ]);
 
   for (const r of [programsRes, cardsRes, stampEventsRes]) {

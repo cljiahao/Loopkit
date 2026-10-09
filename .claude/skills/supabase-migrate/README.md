@@ -8,7 +8,7 @@ Project skill: apply Supabase schema migrations and regenerate
 
 ## Contents
 
-- `SKILL.md` — skill definition (`disable-model-invocation: true`, explicit-only): local workflow (`supabase migration up` / `supabase db reset` + `supabase gen types typescript --local`), linked-project workflow (`supabase db push` + `--linked` type regen), a no-CLI fallback (paste SQL into the Supabase SQL editor, hand-edit types), and a safety checklist for hosted changes (confirm the linked project ref, keep RLS enabled on core tables, keep `orders` in the `supabase_realtime` publication)
+- `SKILL.md` — skill definition (`disable-model-invocation: true`, explicit-only): local workflow (`supabase migration up` / `supabase db reset` + `supabase gen types typescript --local`), linked-project workflow (`supabase db push` + `--linked` type regen), a no-CLI fallback (paste SQL into the Supabase SQL editor, hand-edit types), and a safety checklist for hosted changes (confirm the linked project ref, keep RLS enabled on core tables, verify function execution grants and customer capability boundaries)
 
 ## Connectivity
 

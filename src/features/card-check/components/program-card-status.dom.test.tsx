@@ -175,15 +175,24 @@ describe("ProgramCardStatus regenerate dialog", () => {
   it("issues a new card and closes the dialog on confirm", async () => {
     regenerateCardActionMock.mockResolvedValue({ success: true });
     const user = userEvent.setup();
-    render(<ProgramCardStatus card={baseCard({})} phone="+6591234567" />);
+    render(
+      <ProgramCardStatus
+        vendorId="91111111-1111-4111-8111-111111111111"
+        card={baseCard({ expired: true })}
+        phone="+6591234567"
+      />,
+    );
 
-    await user.click(screen.getByRole("button", { name: /lost your code/i }));
+    await user.click(screen.getByRole("button", { name: "Get a new card" }));
     expect(
       screen.getByRole("heading", { name: "Get a new card?" }),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Get a new card" }));
-    expect(regenerateCardActionMock).toHaveBeenCalled();
+    expect(regenerateCardActionMock).toHaveBeenCalledWith(expect.any(FormData));
+    expect(regenerateCardActionMock.mock.calls.at(-1)?.[0].get("vendor")).toBe(
+      "91111111-1111-4111-8111-111111111111",
+    );
   });
 });
 
@@ -312,5 +321,19 @@ describe("ProgramCardStatus points catalog mode", () => {
     );
     expect(screen.getByText("Your rewards")).toBeInTheDocument();
     expect(screen.getByText("Free drink")).toBeInTheDocument();
+  });
+});
+
+describe("customer cycle recovery boundary", () => {
+  it("offers no destructive reset for a current card", () => {
+    render(
+      <ProgramCardStatus
+        card={baseCard({ expired: false })}
+        phone="+6591234567"
+      />,
+    );
+    expect(
+      screen.queryByRole("button", { name: /get a new card|lost your code/i }),
+    ).not.toBeInTheDocument();
   });
 });

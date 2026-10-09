@@ -1,3 +1,4 @@
+import { readAllRows, readRowsForIds } from "@/lib/read-all-rows";
 import { cache } from "react";
 import { createServerClient } from "@/lib/supabase/server";
 import { sgtDateKey } from "@/lib/format";
@@ -249,10 +250,16 @@ export async function getVendorOverviewInputs(programIds: string[]): Promise<{
   }
   const supabase = await createServerClient();
 
-  const { data: cards, error: cardsError } = await supabase
-    .from("cards")
-    .select("id,program_id,stamp_count,created_at")
-    .in("program_id", programIds);
+  const { data: cards, error: cardsError } = await readRowsForIds(
+    programIds,
+    (batch, start, end) =>
+      supabase
+        .from("cards")
+        .select("id,program_id,stamp_count,created_at")
+        .in("program_id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+  );
   if (cardsError) {
     throw new Error(`getVendorOverviewInputs: ${cardsError.message}`);
   }
@@ -260,10 +267,14 @@ export async function getVendorOverviewInputs(programIds: string[]): Promise<{
   const cardIds = (cards ?? []).map((c) => c.id);
   let events: StatsEvent[] = [];
   if (cardIds.length > 0) {
-    const { data, error } = await supabase
-      .from("stamp_events")
-      .select("card_id,kind,payload,created_at")
-      .in("card_id", cardIds);
+    const { data, error } = await readRowsForIds(cardIds, (batch, start, end) =>
+      supabase
+        .from("stamp_events")
+        .select("card_id,kind,payload,created_at")
+        .in("card_id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+    );
     if (error) throw new Error(`getVendorOverviewInputs: ${error.message}`);
     events = data ?? [];
   }
@@ -424,18 +435,30 @@ export async function getVendorMechanicBreakdown(
   if (programIds.length === 0) return [];
   const supabase = await createServerClient();
 
-  const { data: programs, error: programsError } = await supabase
-    .from("programs")
-    .select("id,type")
-    .in("id", programIds);
+  const { data: programs, error: programsError } = await readRowsForIds(
+    programIds,
+    (batch, start, end) =>
+      supabase
+        .from("programs")
+        .select("id,type")
+        .in("id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+  );
   if (programsError) {
     throw new Error(`getVendorMechanicBreakdown: ${programsError.message}`);
   }
 
-  const { data: cards, error: cardsError } = await supabase
-    .from("cards")
-    .select("id,program_id")
-    .in("program_id", programIds);
+  const { data: cards, error: cardsError } = await readRowsForIds(
+    programIds,
+    (batch, start, end) =>
+      supabase
+        .from("cards")
+        .select("id,program_id")
+        .in("program_id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+  );
   if (cardsError) {
     throw new Error(`getVendorMechanicBreakdown: ${cardsError.message}`);
   }
@@ -443,10 +466,14 @@ export async function getVendorMechanicBreakdown(
   const cardIds = (cards ?? []).map((c) => c.id);
   let events: StatsEvent[] = [];
   if (cardIds.length > 0) {
-    const { data, error } = await supabase
-      .from("stamp_events")
-      .select("card_id,kind,payload,created_at")
-      .in("card_id", cardIds);
+    const { data, error } = await readRowsForIds(cardIds, (batch, start, end) =>
+      supabase
+        .from("stamp_events")
+        .select("card_id,kind,payload,created_at")
+        .in("card_id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+    );
     if (error) {
       throw new Error(`getVendorMechanicBreakdown: ${error.message}`);
     }
@@ -471,20 +498,28 @@ export const getProgramStats = cache(async function getProgramStats(
   const supabase = await createServerClient();
   const nowMs = Date.now();
 
-  const { data: cards, error: cardsError } = await supabase
-    .from("cards")
-    .select("id,created_at")
-    .eq("program_id", programId);
+  const { data: cards, error: cardsError } = await readAllRows((start, end) =>
+    supabase
+      .from("cards")
+      .select("id,created_at")
+      .eq("program_id", programId)
+      .order("id", { ascending: true })
+      .range(start, end),
+  );
   if (cardsError) throw new Error(`getProgramStats: ${cardsError.message}`);
 
   const cardIds = (cards ?? []).map((c) => c.id);
 
   let events: StatsEvent[] = [];
   if (cardIds.length > 0) {
-    const { data, error } = await supabase
-      .from("stamp_events")
-      .select("card_id,kind,payload,created_at")
-      .in("card_id", cardIds);
+    const { data, error } = await readRowsForIds(cardIds, (batch, start, end) =>
+      supabase
+        .from("stamp_events")
+        .select("card_id,kind,payload,created_at")
+        .in("card_id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+    );
     if (error) throw new Error(`getProgramStats: ${error.message}`);
     events = data ?? [];
   }
@@ -548,20 +583,30 @@ export async function getVendorStats(
     };
   }
 
-  const { data: cards, error: cardsError } = await supabase
-    .from("cards")
-    .select("id,created_at")
-    .in("program_id", programIds);
+  const { data: cards, error: cardsError } = await readRowsForIds(
+    programIds,
+    (batch, start, end) =>
+      supabase
+        .from("cards")
+        .select("id,created_at")
+        .in("program_id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+  );
   if (cardsError) throw new Error(`getVendorStats: ${cardsError.message}`);
 
   const cardIds = (cards ?? []).map((c) => c.id);
 
   let events: StatsEvent[] = [];
   if (cardIds.length > 0) {
-    const { data, error } = await supabase
-      .from("stamp_events")
-      .select("card_id,kind,payload,created_at")
-      .in("card_id", cardIds);
+    const { data, error } = await readRowsForIds(cardIds, (batch, start, end) =>
+      supabase
+        .from("stamp_events")
+        .select("card_id,kind,payload,created_at")
+        .in("card_id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+    );
     if (error) throw new Error(`getVendorStats: ${error.message}`);
     events = data ?? [];
   }

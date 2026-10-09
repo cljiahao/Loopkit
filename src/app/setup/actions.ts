@@ -48,6 +48,35 @@ function mechanicGateError(
   return null;
 }
 
+function programFormFields(formData: FormData) {
+  return {
+    name: formData.get("name") ?? undefined,
+    stamps_required: formData.get("stamps_required") ?? undefined,
+    reward_text: formData.get("reward_text") ?? undefined,
+    win_percent: formData.get("win_percent") ?? undefined,
+    pity_ceiling: formData.get("pity_ceiling") ?? undefined,
+    visits_to_bloom: formData.get("visits_to_bloom") ?? undefined,
+    segments: formData.get("segments") ?? undefined,
+    expiry_days: formData.get("expiry_days") ?? undefined,
+    reward_expiry_days: formData.get("reward_expiry_days") ?? undefined,
+    reward_cost_dollars: formData.get("reward_cost_dollars") ?? undefined,
+    head_start: formData.get("head_start") ?? undefined,
+    head_start_percent: formData.get("head_start_percent") ?? undefined,
+    variant: formData.get("variant") ?? undefined,
+    birthday_bonus_enabled: formData.get("birthday_bonus_enabled") ?? undefined,
+    stamp_style: formData.get("stamp_style") ?? undefined,
+    stamp_color: formData.get("stamp_color") ?? undefined,
+    points_per_visit: formData.get("points_per_visit") ?? undefined,
+    stamp_mark_mode: formData.get("stamp_mark_mode") ?? undefined,
+    stamp_mark_preset: formData.get("stamp_mark_preset") ?? undefined,
+    scratch_cover_style: formData.get("scratch_cover_style") ?? undefined,
+    redemption_mode: formData.get("redemption_mode") ?? undefined,
+    catalog: formData.get("catalog") ?? undefined,
+    offset_rate_points: formData.get("offset_rate_points") ?? undefined,
+    offset_rate_dollars: formData.get("offset_rate_dollars") ?? undefined,
+  };
+}
+
 export type SaveProgramState = { error?: string };
 
 export async function saveProgramAction(
@@ -70,23 +99,8 @@ export async function saveProgramAction(
   }
 
   const parsed = saveProgramSchema.safeParse({
+    ...programFormFields(formData),
     type: isEdit ? lockedType : formData.get("type"),
-    name: formData.get("name"),
-    stamps_required: formData.get("stamps_required"),
-    reward_text: formData.get("reward_text"),
-    win_percent: formData.get("win_percent"),
-    pity_ceiling: formData.get("pity_ceiling"),
-    visits_to_bloom: formData.get("visits_to_bloom"),
-    segments: formData.get("segments"),
-    expiry_days: formData.get("expiry_days"),
-    reward_expiry_days: formData.get("reward_expiry_days"),
-    reward_cost_dollars: formData.get("reward_cost_dollars"),
-    head_start: formData.get("head_start"),
-    head_start_percent: formData.get("head_start_percent"),
-    variant: formData.get("variant"),
-    birthday_bonus_enabled: formData.get("birthday_bonus_enabled"),
-    stamp_style: formData.get("stamp_style"),
-    stamp_color: formData.get("stamp_color"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
@@ -178,10 +192,7 @@ export async function saveProgramAction(
 // saveProgramAction above), so migrating means retiring the old program and
 // creating a fresh one — never mutating `type` on an existing row.
 //
-// Order matters: the old program is deactivated BEFORE the new one is
-// created. create_program's plan-cap gate counts only active programs
-// (migration 0016), so deactivating first is what lets a free-tier vendor's
-// single active program be replaced without ever needing a Pro upsell.
+// Retire, create and link atomically so a failed replacement keeps the old card.
 export async function changeTypeAction(
   _prev: SaveProgramState,
   formData: FormData,
@@ -193,21 +204,8 @@ export async function changeTypeAction(
   if (!existing) return { error: "Couldn't find that card." };
 
   const parsed = saveProgramSchema.safeParse({
+    ...programFormFields(formData),
     type: formData.get("type"),
-    name: formData.get("name"),
-    stamps_required: formData.get("stamps_required"),
-    reward_text: formData.get("reward_text"),
-    win_percent: formData.get("win_percent"),
-    pity_ceiling: formData.get("pity_ceiling"),
-    visits_to_bloom: formData.get("visits_to_bloom"),
-    segments: formData.get("segments"),
-    expiry_days: formData.get("expiry_days"),
-    reward_expiry_days: formData.get("reward_expiry_days"),
-    head_start: formData.get("head_start"),
-    head_start_percent: formData.get("head_start_percent"),
-    variant: formData.get("variant"),
-    stamp_style: formData.get("stamp_style"),
-    stamp_color: formData.get("stamp_color"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };
@@ -232,50 +230,25 @@ export async function changeTypeAction(
 
   const supabase = await createServerClient();
 
-  // 1. Deactivate the old program first (see order note above).
-  const { error: deactivateError } = await supabase
-    .from("programs")
-    .update({ active: false })
-    .eq("id", replacingId);
-  if (deactivateError) {
+  const { data: created, error } = await supabase.rpc("replace_program", {
+    p_replacing: replacingId,
+    p_type: type,
+    p_name: parsed.data.name,
+    p_stamps_required: stampsRequired,
+    p_reward_text: parsed.data.reward_text,
+    p_config: config,
+    p_expiry_days: parsed.data.expiry_days ?? null,
+    p_reward_expiry_days:
+      "reward_expiry_days" in parsed.data
+        ? (parsed.data.reward_expiry_days ?? null)
+        : null,
+    p_head_start: headStart,
+    p_carry_over_stamps: carryOverStamps,
+    p_head_start_percent: headStartPercent,
+  });
+  if (error || !created) {
     return { error: "Couldn't change your card. Try again." };
   }
-
-  // 2. Create the new program.
-  const { data: created, error: createError } = await supabase.rpc(
-    "create_program",
-    {
-      p_type: type,
-      p_name: parsed.data.name,
-      p_stamps_required: stampsRequired,
-      p_reward_text: parsed.data.reward_text,
-      p_config: config,
-      p_expiry_days: parsed.data.expiry_days ?? null,
-      p_reward_expiry_days:
-        "reward_expiry_days" in parsed.data
-          ? (parsed.data.reward_expiry_days ?? null)
-          : null,
-      p_head_start: headStart,
-      p_carry_over_stamps: carryOverStamps,
-      p_head_start_percent: headStartPercent,
-    },
-  );
-  if (createError || !created) {
-    // Old program is already deactivated with no replacement yet — not data
-    // loss. The vendor can retry from /setup; the free-tier gate is open
-    // again (active count is back to 0). No saga/rollback machinery, matching
-    // this codebase's existing non-transactional RPC-sequencing pattern.
-    return { error: "Couldn't create the new card. Try again from Setup." };
-  }
-
-  // 3. Link old -> new so vendor_join can tell affected customers. Best
-  // effort: a failure here just means the retired card shows the generic
-  // message (program-card-status.tsx) instead of naming the replacement —
-  // cosmetic, not blocking.
-  await supabase
-    .from("programs")
-    .update({ replaced_by: created })
-    .eq("id", replacingId);
 
   revalidatePath("/setup");
   redirect(`/dashboard?p=${created}`);
@@ -298,21 +271,8 @@ export async function prepProgramAction(
   await requireVendor();
 
   const parsed = saveProgramSchema.safeParse({
+    ...programFormFields(formData),
     type: formData.get("type"),
-    name: formData.get("name"),
-    stamps_required: formData.get("stamps_required"),
-    reward_text: formData.get("reward_text"),
-    win_percent: formData.get("win_percent"),
-    pity_ceiling: formData.get("pity_ceiling"),
-    visits_to_bloom: formData.get("visits_to_bloom"),
-    segments: formData.get("segments"),
-    expiry_days: formData.get("expiry_days"),
-    reward_expiry_days: formData.get("reward_expiry_days"),
-    head_start: formData.get("head_start"),
-    head_start_percent: formData.get("head_start_percent"),
-    variant: formData.get("variant"),
-    stamp_style: formData.get("stamp_style"),
-    stamp_color: formData.get("stamp_color"),
   });
   if (!parsed.success) {
     return { error: "Check the card details and try again." };

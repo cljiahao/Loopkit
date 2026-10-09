@@ -142,12 +142,7 @@ const resolveUpgradeRequestSchema = z.object({
   vendorId: z.string().uuid(),
 });
 
-/**
- * Grant a vendor Pro and clear their pending upgrade request in one action —
- * the admin's "Grant Pro" button on the /admin/vendors pending-requests
- * section. Admin-only, service-role (RLS scopes vendor_pro/upgrade_requests
- * reads to the owner or an admin).
- */
+/** Require a pending request for this vendor before granting Pro. */
 export async function resolveUpgradeRequest(
   formData: FormData,
 ): Promise<ActionResult> {
@@ -161,10 +156,28 @@ export async function resolveUpgradeRequest(
 
   const supabase = await createServiceClient();
 
-  // Inlined rather than calling setVendorPro() directly: this grant is
-  // audited as "resolve_upgrade_request", not "set_vendor_pro", so a report
-  // filtering admin_audit by action: "set_vendor_pro" will miss grants made
-  // through this path.
+  const { data: request, error: requestError } = await supabase
+    .from("upgrade_requests")
+    .select("vendor_id, status")
+    .eq("id", parsed.data.requestId)
+    .eq("vendor_id", parsed.data.vendorId)
+    .eq("status", "pending")
+    .maybeSingle();
+  if (requestError) {
+    console.error(
+      "resolveUpgradeRequest (lookup) failed",
+      requestError.message,
+    );
+    return { success: false, error: "Could not load upgrade request" };
+  }
+  if (
+    !request ||
+    request.vendor_id !== parsed.data.vendorId ||
+    request.status !== "pending"
+  )
+    return { success: false, error: "Pending upgrade request not found" };
+
+  // Upgrade-request grants use their own audit action.
   const { error: proError } = await supabase
     .from("vendor_pro")
     .upsert({ vendor_id: parsed.data.vendorId }, { onConflict: "vendor_id" });
@@ -173,24 +186,29 @@ export async function resolveUpgradeRequest(
     return { success: false, error: "Could not grant Pro" };
   }
 
-  const { error: resolveError } = await supabase
+  await recordAudit(user.id, "resolve_upgrade_request", parsed.data.vendorId, {
+    requestId: parsed.data.requestId,
+    stage: "pro_granted",
+  });
+
+  const { data: resolved, error: resolveError } = await supabase
     .from("upgrade_requests")
     .update({ status: "resolved" })
-    .eq("id", parsed.data.requestId);
-  if (resolveError) {
+    .eq("id", parsed.data.requestId)
+    .eq("vendor_id", parsed.data.vendorId)
+    .eq("status", "pending")
+    .select("id")
+    .maybeSingle();
+  if (resolveError || !resolved) {
     console.error(
       "resolveUpgradeRequest (resolve) failed",
-      resolveError.message,
+      resolveError?.message ?? "no pending row updated",
     );
     return {
       success: false,
       error: "Granted Pro, but could not clear the request",
     };
   }
-
-  await recordAudit(user.id, "resolve_upgrade_request", parsed.data.vendorId, {
-    requestId: parsed.data.requestId,
-  });
 
   revalidatePath("/admin/vendors");
   return { success: true };

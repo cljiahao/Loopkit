@@ -73,6 +73,20 @@ export function EarnForm({
             className="h-11 rounded-xl"
           />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="earn-token">Saved card token (if needed)</Label>
+          <Input
+            id="earn-token"
+            name="token"
+            type="password"
+            autoComplete="off"
+            maxLength={36}
+          />
+          <p className="text-xs text-muted-foreground">
+            Existing cards need the saved card on this browser or its token. Ask
+            the shop for help if you have lost it.
+          </p>
+        </div>
         {state.status === "error" && (
           <p role="alert" className="text-sm text-destructive">
             {state.message}

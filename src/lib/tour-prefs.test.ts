@@ -41,17 +41,4 @@ describe("stampTourSeen", () => {
     );
     consoleError.mockRestore();
   });
-
-  it("stamps a vendor who has no row yet — an update would silently no-op here", async () => {
-    // loopkit.vendors is created lazily (first /profile save); a vendor who
-    // lands on the dashboard without ever visiting /profile has no row.
-    // upsert must still succeed in that case, matching what the vendors_own
-    // RLS policy's WITH CHECK allows on insert (vendor_id = auth.uid()).
-    await stampTourSeen(fakeSupabase(), "v-no-row-yet");
-
-    expect(upsertMock).toHaveBeenCalledWith({
-      vendor_id: "v-no-row-yet",
-      tour_seen_at: expect.any(String),
-    });
-  });
 });

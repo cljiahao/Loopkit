@@ -42,8 +42,8 @@ function okFetch() {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  process.env.MERQO_BASE_URL = "https://merqo.example.com";
-  process.env.MERQO_CUSTOMER_SECRET = "test-secret";
+  vi.stubEnv("MERQO_BASE_URL", "https://merqo.example.com");
+  vi.stubEnv("MERQO_CUSTOMER_SECRET", "test-secret");
   upsertMock.mockResolvedValue({ error: null });
   headersMock.mockResolvedValue(
     new Headers({ "x-forwarded-for": REAL_IP, "user-agent": REAL_UA }),
@@ -51,6 +51,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   global.fetch = originalFetch;
 });
 
@@ -160,7 +161,7 @@ describe("acceptLegalTerms", () => {
   });
 
   it("throws when MERQO_CUSTOMER_SECRET is unset", async () => {
-    delete process.env.MERQO_CUSTOMER_SECRET;
+    vi.stubEnv("MERQO_CUSTOMER_SECRET", undefined);
     getUserMock.mockResolvedValue({
       data: { user: { id: "u1", email: "vendor@business.sg" } },
     });

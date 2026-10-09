@@ -3,16 +3,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const {
   requireVendorMock,
   getOrCreateVendorProfileMock,
-  upsertVendorProfileMock,
+  patchVendorProfileMock,
 } = vi.hoisted(() => ({
   requireVendorMock: vi.fn(async () => ({ user: { id: "vendor-1" } })),
   getOrCreateVendorProfileMock: vi.fn(),
-  upsertVendorProfileMock: vi.fn(),
+  patchVendorProfileMock: vi.fn(),
 }));
 vi.mock("@/features/auth", () => ({ requireVendor: requireVendorMock }));
 vi.mock("@/lib/merqo-vendor-profile", () => ({
   getOrCreateVendorProfile: getOrCreateVendorProfileMock,
-  upsertVendorProfile: upsertVendorProfileMock,
+  patchVendorProfile: patchVendorProfileMock,
 }));
 
 const selectChain = {
@@ -63,7 +63,7 @@ describe("stallNameSchema", () => {
 describe("saveStallName", () => {
   beforeEach(() => {
     getOrCreateVendorProfileMock.mockReset();
-    upsertVendorProfileMock.mockReset();
+    patchVendorProfileMock.mockReset();
     getOrCreateVendorProfileMock.mockResolvedValue({
       vendor_id: "vendor-1",
       stall_name: "Old Name",
@@ -71,7 +71,7 @@ describe("saveStallName", () => {
       created_at: "",
       updated_at: "",
     });
-    upsertVendorProfileMock.mockResolvedValue({
+    patchVendorProfileMock.mockResolvedValue({
       vendor_id: "vendor-1",
       stall_name: "Kopi Corner",
       social_links: { website: "https://old.example" },
@@ -83,16 +83,16 @@ describe("saveStallName", () => {
   it("saves the name to merqo.vendor_profile, preserving existing social links", async () => {
     const res = await saveStallName("Kopi Corner");
     expect(res.error).toBeUndefined();
-    expect(upsertVendorProfileMock).toHaveBeenCalledWith(
+    expect(getOrCreateVendorProfileMock).not.toHaveBeenCalled();
+    expect(patchVendorProfileMock).toHaveBeenCalledWith(
       expect.anything(),
       "vendor-1",
-      "Kopi Corner",
-      { website: "https://old.example" },
+      { stallName: "Kopi Corner" },
     );
   });
 
   it("returns an error without throwing when the merqo write fails", async () => {
-    upsertVendorProfileMock.mockRejectedValueOnce(new Error("db down"));
+    patchVendorProfileMock.mockRejectedValueOnce(new Error("db down"));
     const res = await saveStallName("Kopi Corner");
     expect(res.error).toMatch(/couldn't save/i);
   });
@@ -101,7 +101,7 @@ describe("saveStallName", () => {
     const res = await saveStallName("");
     expect(res.error).toBeDefined();
     expect(getOrCreateVendorProfileMock).not.toHaveBeenCalled();
-    expect(upsertVendorProfileMock).not.toHaveBeenCalled();
+    expect(patchVendorProfileMock).not.toHaveBeenCalled();
   });
 });
 

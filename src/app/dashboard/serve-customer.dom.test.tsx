@@ -161,3 +161,73 @@ describe("ServeCustomer (scan-first)", () => {
     expect(fd.get("phone")).toBe("+6591234567");
   });
 });
+
+describe("vendor-assisted card recovery", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("delivers the rotated code privately and preserves the recovery instruction", async () => {
+    const user = userEvent.setup();
+    lookupAction.mockResolvedValue({
+      success: true,
+      card: { id: "c1", phone: "+6591234567", stamp_count: 7 },
+      progress: {
+        label: "7 stamps",
+        rewardReady: false,
+        view: { kind: "stamp" },
+      },
+    });
+    regenerateCardAction.mockResolvedValue({
+      success: true,
+      phone: "+6591234567",
+      cardToken: "replacement-private-code",
+      qr: "<svg></svg>",
+    });
+    render(<ServeCustomer {...baseProps} />);
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Look up" }));
+    await user.click(
+      screen.getByRole("button", { name: "Recover card access" }),
+    );
+    expect(screen.getByText(/verify the customer for/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Recover access" }));
+    expect(
+      await screen.findByRole("region", { name: "Recovered card" }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Saved card code")).toHaveValue(
+      "replacement-private-code",
+    );
+    expect(
+      screen.getByText(/their progress is preserved/i),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Done" }));
+    expect(screen.queryByLabelText("Saved card code")).not.toBeInTheDocument();
+  });
+
+  it("does not expose a credential after failed recovery", async () => {
+    const user = userEvent.setup();
+    lookupAction.mockResolvedValue({
+      success: true,
+      card: { id: "c1", phone: "+6591234567", stamp_count: 7 },
+      progress: {
+        label: "7 stamps",
+        rewardReady: false,
+        view: { kind: "stamp" },
+      },
+    });
+    regenerateCardAction.mockResolvedValue({
+      success: false,
+      error: "Try again.",
+    });
+    render(<ServeCustomer {...baseProps} />);
+    await user.type(screen.getByLabelText("Customer phone"), "91234567");
+    await user.click(screen.getByRole("button", { name: "Look up" }));
+    await user.click(
+      screen.getByRole("button", { name: "Recover card access" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Recover access" }));
+    expect(screen.queryByLabelText("Saved card code")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Recover access" }),
+    ).toBeEnabled();
+  });
+});

@@ -4,12 +4,17 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-const { checkStatusActionMock } = vi.hoisted(() => ({
+const { checkStatusActionMock, forgetProofMock } = vi.hoisted(() => ({
+  forgetProofMock: vi.fn(),
   checkStatusActionMock: vi.fn(),
 }));
 
 vi.mock("../api/actions", () => ({
   checkStatusAction: checkStatusActionMock,
+}));
+
+vi.mock("@/lib/customer-proof-actions", () => ({
+  forgetCustomerProof: forgetProofMock,
 }));
 
 import { CheckForm } from "./check-form";
@@ -18,6 +23,46 @@ import { STATUS_IDLE } from "../types";
 describe("CheckForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    forgetProofMock.mockResolvedValue({ success: true });
+  });
+  it("explicitly forgets this shop proof before submitting a different customer", async () => {
+    checkStatusActionMock.mockResolvedValue({
+      status: "none",
+      message: "No rewards",
+    });
+    const user = userEvent.setup();
+    render(<CheckForm vendorId="v1" />);
+    await user.click(
+      screen.getByRole("button", { name: "Forget saved card on this browser" }),
+    );
+    expect(forgetProofMock).toHaveBeenCalledWith("v1");
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Saved card forgotten",
+    );
+    expect(checkStatusActionMock).not.toHaveBeenCalled();
+    await user.type(screen.getByLabelText("Your phone number"), "98888888");
+    await user.click(screen.getByRole("button", { name: "Check my card" }));
+    expect(checkStatusActionMock).toHaveBeenCalled();
+    expect(forgetProofMock.mock.invocationCallOrder[0]).toBeLessThan(
+      checkStatusActionMock.mock.invocationCallOrder[0],
+    );
+  });
+  it("allows retry after forgetting saved proof rejects", async () => {
+    forgetProofMock.mockRejectedValueOnce(new Error("unavailable"));
+    const user = userEvent.setup();
+    render(<CheckForm vendorId="v1" />);
+    const button = screen.getByRole("button", {
+      name: "Forget saved card on this browser",
+    });
+    await user.click(button);
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Could not forget",
+    );
+    expect(button).not.toBeDisabled();
+    await user.click(button);
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Saved card forgotten",
+    );
   });
 
   it("renders the phone input and submit button with the vendor id in a hidden field", () => {

@@ -36,7 +36,7 @@ customer, and admin surfaces.
 `c/` and `earn/` are unauthenticated, customer-facing flows reached via QR
 code or link. `login/`, `auth/`, `reset-password/`, and `setup/` form the
 authentication chain: `login/` starts a session (email/password, Google
-OAuth, or phone onboarding), `auth/callback` completes an OAuth or recovery
+OAuth), `auth/callback` completes an OAuth or recovery
 handoff and forwards to `reset-password/` or `dashboard/`, and `setup/`
 handles authenticated vendor onboarding. `legal/` is reached both directly
 (the landing footer's `@merqo/ui` `LegalFooterLinks`, `page.tsx`) and via

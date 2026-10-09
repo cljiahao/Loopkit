@@ -237,3 +237,74 @@ describe("saveProgramAction (gated create + edit)", () => {
     );
   });
 });
+
+describe("points setup boundary", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireVendorMock.mockResolvedValue({ user: { id: "v1" } });
+    isProMock.mockResolvedValue(true);
+    listProgramsMock.mockResolvedValue([]);
+    rpcMock.mockResolvedValue({ data: "new-id", error: null });
+  });
+  it("preserves configured catalog and points per visit", async () => {
+    await expect(
+      saveProgramAction(
+        {},
+        form({
+          ...stampFields,
+          variant: "points",
+          points_per_visit: "25",
+          redemption_mode: "catalog",
+          catalog: JSON.stringify([
+            { label: "Drink", cost: 100 },
+            { label: "Meal", cost: 300 },
+          ]),
+        }),
+      ),
+    ).rejects.toThrow("REDIRECT:");
+    expect(rpcMock).toHaveBeenCalledWith(
+      "create_program",
+      expect.objectContaining({
+        p_config: expect.objectContaining({
+          points_per_visit: 25,
+          redemption_mode: "catalog",
+          catalog: expect.arrayContaining([
+            expect.objectContaining({ label: "Drink", cost: 100 }),
+          ]),
+        }),
+      }),
+    );
+  });
+  it("preserves configured cash conversion", async () => {
+    await expect(
+      saveProgramAction(
+        {},
+        form({
+          ...stampFields,
+          variant: "points",
+          points_per_visit: "15",
+          redemption_mode: "offset",
+          offset_rate_points: "120",
+          offset_rate_dollars: "2.50",
+        }),
+      ),
+    ).rejects.toThrow("REDIRECT:");
+    expect(rpcMock).toHaveBeenCalledWith(
+      "create_program",
+      expect.objectContaining({
+        p_config: expect.objectContaining({
+          redemption_mode: "offset",
+          offset_rate: { points: 120, dollars: 2.5 },
+        }),
+      }),
+    );
+  });
+  it("rejects incomplete points config without creating a program", async () => {
+    const result = await saveProgramAction(
+      {},
+      form({ ...stampFields, variant: "points", redemption_mode: "catalog" }),
+    );
+    expect(result.error).toBeDefined();
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+});

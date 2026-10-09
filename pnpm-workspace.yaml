@@ -3,64 +3,24 @@ allowBuilds:
   esbuild: true
   sharp: true
   unrs-resolver: true
-  "@merqo/ui": true
+  "@merqo/ui@https://codeload.github.com/merqo-io/merqo-ui/tar.gz/989d934c1cc8d957ff383934debf8ef083b6b6a4": true
+  "@merqo/ui@https://codeload.github.com/merqo-io/merqo-ui/tar.gz/d4f4f3c49e5426aa6c7cf276afdc19d0be36c17e": set this to true or false
 
-# Security: force-patch transitive advisories. Each entry is scoped to the
-# vulnerable range, so it self-clears once a dep ships the patched version.
-#   postcss  GHSA-fxqj-rqcc-2cmp  (incomplete fix for sourceMappingURL path
-#                                  traversal; via @tailwindcss/postcss,
-#                                  next>postcss, and dev:
-#                                  vite<-vitest/stryker-vitest-runner —
-#                                  supersedes the narrower <8.5.18 entry this
-#                                  replaced, both are the same postcss line)
-#   undici   GHSA-*-7.29          (dev: via jsdom<-vitest)
-#   vite     GHSA-fx2h/v6wh       (dev: via vitest; 6.4.3 is the first patch)
-#   sharp    GHSA-f88m-g3jw-g9cj  (via next>sharp; libvips CVE-2026-33327/33328/35590/35591)
-#   fast-uri GHSA-v2hh-gcrm-f6hx / GHSA-7p8r-x3mc-p8w7 (dev: via
-#            stryker<-ajv; host confusion via backslash authority
-#            introducer. The old <3.1.4 floor only raised versions below
-#            3.1.4 — it didn't cap a newer 4.0.0-4.1.1 resolution that
-#            reintroduced the same class of bug; >=4.1.2 closes both.)
-#   nanoid   GHSA-2v37-7h3g-55p8 (via next>postcss>nanoid; custom generators
-#                                 can loop indefinitely when size is zero)
-#   browserslist  GHSA-c83g-rgw3-j3cx / GHSA-73wf-gq98-2v4g (unbounded
-#                 memory growth / prototype write via untrusted stats; via
-#                 next>styled-jsx>@babel/core>@babel/helper-compilation-
-#                 targets>browserslist)
-#   js-yaml  GHSA (quadratic CPU consumption parsing `!!omap`; dev: via
-#            eslint) — net-new pin, >=4.3.1.
-#   brace-expansion — 3 separate advisories affected 3 separate transitive
-#   consumers, each naturally on its own major line (minimatch@3.1.5's
-#   eslint-internal chain wants 1.x, vitest coverage's glob wants 2.x,
-#   stryker's minimatch@10.2.5 wants 5.x). Bounded, same-major-line
-#   overrides fixed 2 of 3 cleanly:
-#     GHSA-3jxr-9vmj-r5cp (exponential-time expansion) — patched on every
-#       major line (>=1.1.17, >=2.1.2, >=5.0.8) — all 3 chains clean.
-#     GHSA-mh99-v99m-4gvg (unbounded expansion length OOM, 2.x line) —
-#       patched >=2.1.3.
-#     GHSA-rgw5-rvv9-x895 (unbounded intermediate arrays, bypasses the
-#       above mitigation) — patched >=2.1.4 (2.x line) / >=5.0.9 (5.x
-#       line); these are the floors actually pinned below. The 1.x
-#       (eslint-internal minimatch@3.1.5) chain genuinely
-#       cannot be fixed without breaking eslint: forcing it past 1.x
-#       broke `pnpm check` outright (`TypeError: expand is not a
-#       function` inside minimatch.js — brace-expansion 2.x/5.x isn't a
-#       drop-in API match for what that old minimatch build calls), and
-#       there's no patched 1.x release to bound-override to instead.
-#       Dev-only, no production exposure (ReDoS on attacker-controlled
-#       glob patterns fed to eslint, not user input this app ever
-#       processes) — accepted until eslint's own dependency chain moves
-#       off that old internal minimatch.
+# Scoped overrides retain patched floors and compatible major versions.
 overrides:
   postcss@<8.5.23: ">=8.5.23"
-  undici@<7.29.0: ">=7.29.0 <8"
   vite@<=6.4.2: ">=6.4.3 <7"
   qs@<6.16.0: ">=6.16.0"
   sharp@<0.35.0: ">=0.35.0"
-  fast-uri@<4.1.3: ">=4.1.3"
   nanoid@<3.3.17: ">=3.3.17"
   browserslist@<4.28.7: ">=4.28.7"
-  js-yaml@<4.3.1: ">=4.3.1"
-  brace-expansion@<1.1.17: ">=1.1.17 <2"
+
+  undici@<7.29.1: ">=7.29.1 <8"
+  fast-uri@<4.1.5: ">=4.1.5 <5"
+  js-yaml@<4.3.1: ">=4.3.1 <5"
+  js-yaml@>=5.0.0 <5.4.1: ">=5.4.1 <6"
+  brace-expansion@<1.1.21: ">=1.1.21 <2"
   brace-expansion@>=2.0.0 <2.1.4: ">=2.1.4 <3"
-  brace-expansion@>=3.0.0 <5.0.9: ">=5.0.9"
+  brace-expansion@>=3.0.0 <5.0.12: ">=5.0.12 <6"
+  source-map-js@<1.2.2: ">=1.2.2 <2"
+  postcss-selector-parser@<7.1.6: ">=7.1.6 <8"

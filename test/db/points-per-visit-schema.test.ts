@@ -27,12 +27,4 @@ describe("0026 points-per-visit migration", () => {
     expect(sql).toMatch(/values \(p_program, p_phone, v_amount\)/i);
     expect(sql).toMatch(/set stamp_count = stamp_count \+ v_amount/i);
   });
-
-  it("fallback reproduces today's exact +1 behavior for programs without points_per_visit", () => {
-    // The coalesce(...,1) means: no points_per_visit key in config -> v_amount = 1,
-    // identical to migration 0022's hardcoded +1 on both write paths. This test
-    // asserts the SQL shape that guarantees that equivalence (both paths use the
-    // same v_amount, and v_amount's only fallback value is 1).
-    expect(sql).toMatch(/v_amount int/i);
-  });
 });

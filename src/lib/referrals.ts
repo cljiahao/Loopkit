@@ -1,3 +1,4 @@
+import { readAllRows } from "@/lib/read-all-rows";
 import { createServerClient } from "@/lib/supabase/server";
 
 export type ReferralHost = {
@@ -24,12 +25,16 @@ export function referralLink(
 // is needed here.
 export async function listReferralHosts(): Promise<ReferralHost[]> {
   const supabase = await createServerClient();
-  const { data, error } = await supabase
-    .from("referral_hosts")
-    .select(
-      "id,program_id,host_phone,label,referral_code,guest_count,created_at",
-    )
-    .order("created_at", { ascending: false });
+  const { data, error } = await readAllRows((start, end) =>
+    supabase
+      .from("referral_hosts")
+      .select(
+        "id,program_id,host_phone,label,referral_code,guest_count,created_at",
+      )
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(start, end),
+  );
   if (error) throw new Error(`listReferralHosts: ${error.message}`);
   return (data ?? []).map((row) => ({
     id: row.id,

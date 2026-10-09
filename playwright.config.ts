@@ -1,13 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// E2E smoke layer. Deliberately small — a few critical-path flows against a
-// REAL local Supabase, covering what the mocked unit/component tests cannot:
-// RLS, the proxy.ts auth guard, and the full customer order lifecycle.
-//
-// Prerequisites to run (see AGENTS.md):
-//   1. Docker running, `supabase start`
-//   2. apply migrations + the coffee-cart seed
-//   3. `pnpm test:e2e` (auto-starts `pnpm dev` via webServer below)
+// Anonymous browser smoke covers route protection and public fallbacks.
+// Requires a booting app and installed Chromium; no seeded database is used.
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,

@@ -1,60 +1,35 @@
-# tests
+# Database tests
 
 ## Purpose
 
-pgTAP RLS cross-vendor isolation tests, run against a real local Supabase
-instance via `supabase test db` (`../README.md`'s `config.toml` backs the
-local project this runs against).
+Run rollback-only pgTAP fixtures against a migrated local Supabase database with
+`supabase test db`. These tests require Docker's Linux engine; prepared audit
+fixtures have not yet been executed in this checkout.
 
 ## Contents
 
-- `rls.test.sql` — scoped to the highest-risk vendor-facing write paths
-  (loopkit has 40+ migrations; exhaustive per-table coverage is out of
-  scope — see `docs/superpowers/specs/2026-07-22-cicd-hook-harness-parity-
-design.md` §3): `loopkit.vendors` (shared profile, for-all self policy),
-  `loopkit.upgrade_requests` (vendor-insert/select-own + admin-select-all),
-  `loopkit.feedback` (self-insert-only), `loopkit.vendor_notify_settings`
-  (for-all own-row, same shape as `vendors` — a vendor inserts/reads/
-  updates only its own row, cross-vendor insert/update/select all blocked),
-  and `loopkit.referral_hosts` (own-row create/read, no update/delete grant
-  this round — migration `0040`). 67 assertions, one rolled-back
-  transaction, fixed-UUID inline fixtures — asserts RLS is actually enabled
-  on every covered table, cross-vendor read/write isolation, that a grant
-  gap (no `UPDATE` grant on `upgrade_requests`/`referral_hosts`) fails on
-  the table-level privilege check before RLS ever runs, and (for
-  `provision_default_program`) that the service-role-only function grant
-  and its advisory-lock idempotency guard are both actually present.
-  (`loopkit.vendor_telegram`/`loopkit.telegram_link_tokens` — loopkit's
-  own retired Telegram bot tables — were covered here through migration
-  `0036`; dropped by `0037`, so their assertions were removed alongside.)
-  A dedicated "Vendor C"/"Vendor F" fixture pair (not A/B) backs a
-  functional suite for `vendor_join_referred`/`apply_referral_credit`
-  (self-referral no-op, first-vs-repeat-guest crediting exactly once for
-  both a stamp-type program credited inline and a non-stamp program's
-  deferred `apply_referral_credit` finish step, and cross-vendor referral-
-  code isolation) — kept separate from A/B so its own program fixtures
-  never disturb the `provision_default_program` section's "vendor A/B
-  start with N programs" pre-conditions. 80 assertions total: a birthday-
-  bonus functional block (migration `0041`) adds 13, reusing Vendor A with
-  two new stamp programs (one opted into the bonus, one not) — covers
-  `set_customer_birthday`'s anon-scoped write (records the birthday, and
-  is a safe no-op on an unknown phone, creating no row), the lazy
-  check-on-next-visit trigger granting exactly one bonus stamp on a real
-  birthday match, no second bonus on a same-day repeat visit, and no bonus
-  at all on a program that never opted in. 90 assertions total: a manual
-  stamp-adjustment block (migration `0042`) adds 10, reusing Vendor A's
-  birthday-bonus card — a reasoned `+2` adjustment lands the count and logs
-  its own `'adjust'` event with the reason, a large negative delta clamps
-  at 0 rather than going negative, a zero delta/blank reason/nonexistent
-  card each throw their own distinct error without mutating anything, and
-  Vendor B cannot adjust Vendor A's program. 94 assertions total: a
-  `legal_check_state` block (migration `0044`) adds 4 — RLS is enabled with
-  zero policies, and both `anon` and `authenticated` are rejected on a
-  direct `SELECT` (service-role-only, same shape as the retired
-  `telegram_link_tokens` table).
+- `rls.test.sql` contains 96 assertions for vendor isolation, upgrade requests,
+  retired local feedback writes, notification settings, referral operations,
+  provisioning, birthday bonuses, manual adjustments, legal-cache isolation and
+  storage limits. Owner-level legacy reward fixtures do not prove anonymous
+  authorization of the current customer endpoints.
+- `customer-capability.test.sql` and `earn-customer-capability.test.sql` exercise
+  customer and earn proofs; `retired-rpc-permissions.test.sql` checks retired RPC
+  grants.
+- `reward-rpc.test.sql`, `plant-redemption.test.sql` and
+  `plant-redemption-parity.test.sql` exercise reward state and redemption contracts.
+- `visit-compare-and-swap.test.sql` and `referral-cas.test.sql` cover state snapshot
+  conflicts; `atomic-program-replacement.test.sql` covers replacement contracts.
+- `points-and-voucher-locks.test.sql` and `stamp-redemption.test.sql` cover lock
+  ordering and voucher status; `isolation/stamp-redemption.spec` is a separate
+  PostgreSQL multi-session isolation fixture, not automatically run by pgTAP.
+- `audit-truncate-privilege.test.sql` checks effective maintenance privileges and
+  denied audit truncation; `legacy-feedback-privileges.test.sql` checks retired
+  client writes and retained service maintenance access.
+
+Mocked application tests and SQL source-string assertions cannot establish live
+RLS or concurrent transaction behavior. Report database execution separately.
 
 ## Parent
 
 [supabase](../README.md)
-
-It also pins the `vendor-images` bucket's own limits from migration `0047` (5 MB `file_size_limit`, JPEG/PNG/WebP `allowed_mime_types`), so a later migration cannot quietly loosen them on a public bucket.

@@ -6,9 +6,6 @@ Client-side auth UI.
 
 ## Contents
 
-- `google-mark.tsx` — `GoogleMark`: the Google "G" icon SVG, extracted out
-  of `login-form.tsx` so it matches the shared component used across every
-  kit's login page.
 - `login-form.tsx` — `LoginForm`: `@merqo/ui`'s `ElevatedCard`-wrapped Google OAuth
   sign-in (forces `hl=en` on the consent screen, cross-kit parity) and
   email/password sign-in/sign-up on react-hook-form + `loginSchema`

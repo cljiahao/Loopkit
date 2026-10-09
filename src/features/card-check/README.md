@@ -2,14 +2,9 @@
 
 ## Purpose
 
-The public, unauthenticated card-check flow reached via `/c?v=<vendorId>`
-(optionally `&ref=<code>`, a host/couple referral link —
-`src/app/dashboard/referrals/`) — a customer checks or enrolls their
-loyalty card by phone number, and can self-service regenerate a
-lost/expired card. A `ref` link additionally credits the referring host
-one stamp/visit the first time each distinct guest phone joins through it.
-A found card also offers an optional, self-entered birthday — vendors can
-opt a Stamp program into granting a bonus stamp on it (migration `0041`).
+The customer flow at /c?v=<vendorId> creates new cards or reads existing cards with a saved possession capability. The browser stores the capability in an HttpOnly vendor-scoped cookie; customers can also save the displayed card code for another device. Phone numbers alone cannot recover existing cards.
+
+Lost capability recovery requires the owning shop, which rotates credentials while preserving progress. Customers with valid proof can start a fresh expired cycle, choose points rewards and enter an optional birthday. Referral links preserve the same proof requirement for existing customers. New phone enrollment remains unverified; referral identity abuse is a separate product policy concern.
 
 ## Contents
 

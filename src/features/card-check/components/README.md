@@ -1,89 +1,10 @@
-# components
+# Card-check components
 
-## Purpose
+- check-form.tsx submits vendor, phone, optional saved card code and referral code. It renders generic recovery guidance without revealing whether a phone has a card. A successful check stores the opaque capability in an HttpOnly cookie and renders authorized cards.
+- program-card-status.tsx renders progress, card and voucher QR codes, and a saveable card code. Fresh-cycle reset is available only for an expired card; lost credentials require the shop. Retired-card notices are optional local preferences.
+- points-catalog-picker.tsx submits vendor and program scope; the server reads the capability cookie and the database checks ownership and balance. Pending state always clears after failures.
+- birthday-field.tsx submits an optional birthday through the proof-checked action.
 
-Client-side card-check UI.
+Component tests verify rendering, form payloads, retry states and the expired-cycle reset boundary. Capability cookie and direct SQL authorization regressions live in src/lib/customer-proof.test.ts and supabase/tests/customer-capability.test.sql.
 
-## Contents
-
-- `check-form.tsx` — `CheckForm`: phone-entry form using `useActionState` +
-  `checkStatusAction`, renders a `ProgramCardStatus` per returned card, and
-  shows a `role="alert"` message on an `"error"`/`"none"` result. Accepts
-  an optional `referralCode` prop (`src/app/c/page.tsx`'s `?ref=` query
-  param) rendered as a hidden `ref` form field only when present — an
-  unchanged, ref-less submit behaves exactly as before. On a
-  `"found"` result the form collapses to a compact "Showing +65… / Not
-  you?" summary so the card status (and the QR the customer needs to show
-  the shop) isn't pushed below a form they've already filled in; "Not
-  you?" reopens it, and it re-collapses once a fresh result comes back
-  (not immediately on submit, so it stays open through the pending
-  "Checking…" state) — done by comparing the current action state against
-  the last-seen one during render, React's documented alternative to a
-  `setState`-in-`useEffect` for resetting state on a change. Renders
-  `BirthdayField` once, below the card list, on a `"found"` result.
-- `check-form.dom.test.tsx` — jsdom tests for `CheckForm`: renders the phone
-  input and hidden vendor field, submits the form and renders one
-  `ProgramCardStatus` per returned card, shows the `role="alert"` message
-  for both the error and not-found results, and renders a hidden `ref`
-  field only when a `referralCode` prop is given
-- `program-card-status.tsx` — `ProgramCardStatus`: renders one program's
-  progress visual by `view.kind`/`view.variant` (`Plant`/`Cup`,
-  `FlameLayers`, `Wheel`/`ScratchCard`, `StampDots`/`PointsBar`), and owns
-  its own dialog state for card regeneration (`regenerateCardAction`) and a
-  one-time retired-card notice (auto-opens once per replaced card, tracked
-  in `localStorage`); renders `LuckyBox` for a `kind: "lucky"` view instead
-  of falling through to the generic stamp-dots view; its outer container is
-  now `@/components/card-shell.tsx`'s `CardShell` (idle holographic sheen +
-  pointer-tilt), replacing a plain `<div>`. Passes `Plant` a `seed={`${phone}
-  :${card.programId}`}` so a given customer's bloom type (see `Plant`'s own
-  README entry) stays stable across visits instead of defaulting to tulip.
-  Its flame branch now passes `FlameLayers` only `stage` — the component
-  dropped `filled`/`total`/`stageName`, which duplicated the `{card.label}`
-  line this component already renders below the card. Its scratch branch
-  now also passes `ScratchCard` a `coverStyle={view.coverStyle}` — the
-  vendor's chosen scratch cover material (`"foil" | "wax" | "ticket"`, from
-  `src/lib/engine/chance.ts`'s `ScratchCoverStyle`; ignored by the wheel
-  branch, defaults to `"foil"` on `ScratchCard`'s own side for programs
-  saved before this field existed). Its stamp/dots branch now also passes
-  `StampDots` a `style={view.style}`/`color={view.color}` — the vendor's
-  chosen stamp skin (`"dots" | "seal" | "ink" | "punch" | "charm"`, from
-  `src/lib/engine/stamp.ts`'s `StampVisualStyle`, plain-dots-only, free for
-  every vendor) and accent hex; both default to `StampDots`'s own fallback
-  (`"dots"` / the built-in gold) for programs saved before these fields
-  existed. Its points branch now renders `PointsCatalogPicker` (catalog
-  mode, filtered to affordable items) below the unchanged `PointsBar`, plus
-  a new "Your rewards" section listing every pending voucher's own QR — the
-  card's own `activeVouchers` (from `checkStatusAction`) plus any picked
-  this session (local `freshVouchers` state, since a freshly-created
-  voucher isn't in `card.activeVouchers` until the next full page fetch).
-- `points-catalog-picker.tsx` — `PointsCatalogPicker`: renders nothing when
-  passed an empty (already-filtered-to-affordable) item list; each button
-  opens an `AlertDialog` confirm before calling `selectPointsRewardAction`,
-  reports the new voucher's `{id, rewardText, qr}` back to its caller.
-- `points-catalog-picker.dom.test.tsx` — jsdom tests for
-  `PointsCatalogPicker`: renders nothing for an empty item list, and
-  confirms a redeem dialog then reports the new voucher on success.
-- `program-card-status.dom.test.tsx` — jsdom tests for `ProgramCardStatus`:
-  verifies `PointsBar` vs `StampDots` renders per `view.variant` on a
-  `"dots"` view, and `Cup` vs `Plant` renders per `view.variant` on a
-  `"plant"` view (via `Cup`'s `data-cup-coffee` hook, not an implementation
-  detail of its old stroked-outline shape); its plant/cup view fixtures
-  include the `filled`/`total` counter fields `ProgressView`'s plant kind
-  now carries; also covers a catalog-mode points card (renders only the
-  affordable catalog buttons) and a card with pending `activeVouchers`
-  (renders a "Your rewards" section with each voucher's own QR)
-- `birthday-field.tsx` — `BirthdayField({vendorId, phone})`: optional,
-  self-entered birthday (plain native `<select>`s for month/day, not the
-  shadcn `Select` — Radix's pointer-event/`scrollIntoView` needs have no
-  existing jsdom-test precedent in this repo, and a native select is fine
-  UX here) calling `setCustomerBirthdayAction` via `useTransition`; shows a
-  "Birthday saved." confirmation and hides the form once saved, never says
-  whether the vendor's own bonus toggle is actually on
-- `birthday-field.dom.test.tsx` — jsdom tests for `BirthdayField`: Save
-  stays disabled until both month and day are picked, submits vendor/phone/
-  month/day as `FormData`, shows the saved confirmation and removes the
-  form on success, and stays on the form with an error toast on failure
-
-## Parent
-
-[card-check](../README.md)
+[Parent](../README.md)

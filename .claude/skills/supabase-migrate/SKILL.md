@@ -5,7 +5,7 @@ allowed-tools: "Bash(supabase *), Bash(pnpm *)"
 disable-model-invocation: true
 ---
 
-QKit uses Supabase (Postgres + RLS + realtime), not Drizzle. Migrations live in
+Loopkit uses Supabase (Postgres + RLS + realtime), not Drizzle. Migrations live in
 `supabase/migrations/`.
 
 ## Apply schema
@@ -33,7 +33,7 @@ QKit uses Supabase (Postgres + RLS + realtime), not Drizzle. Migrations live in
 ## Safety gate (before running against a non-local project)
 
 - Confirm the linked project ref is correct: `supabase projects list`.
-- RLS must stay enabled on `vendors`, `booths`, `orders` — never disable it to
+- RLS must stay enabled on `vendors`, `programs`, `cards` and vendor-scoped support tables — never disable it to
   make a query work; fix the policy or the query instead.
-- Confirm `orders` remains in the `supabase_realtime` publication (the dashboard
-  and status page depend on it).
+- Verify current function execution grants and customer capability boundaries; do not
+  copy ordering or realtime-publication assumptions from sibling kits.

@@ -224,11 +224,10 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
      own bot must reconnect once via merqo's profile page; no data
      carries over. Safe to re-run.
 
-   - **Optional — rate limiting on the public `/c` surface.** The card-check
-     action is throttled per-IP only if an Upstash Redis is configured. Create a
-     free Upstash Redis and set `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
-     in Vercel to enable it; leave them blank and the limiter fails open (no
-     throttling). The `0009` phone guard works regardless.
+   - **Current migration inventory:** the historical descriptions above stop at `0037`. Review every migration in
+     `supabase/migrations/` in numeric order and its cross-schema prerequisites. The October audit additions `0048`–`0060` passed disposable CI migration application and 284 PostgreSQL assertions in 14 suites. Production deployment and separate multi-session isolation tests remain pending; do not treat CI as proof of production rollout.
+
+   - **Customer authorization:** the current actions require migrations `0055` and `0056`. Existing customers use saved card-token proof, with shop-assisted recovery. The former Upstash limiter and dependencies were removed; setting Upstash variables does not enable throttling in this application.
 
    - **Bootstrap the first admin.** The `/admin` console 404s until your auth
      user is in `loopkit.admins` — there is no self-serve UI. Sign in once so the
@@ -241,6 +240,7 @@ Do the steps in order: **A (Supabase) → B (Vercel) → C (attach to merqo)**.
 
      An admin account has no vendor program: `/dashboard` redirects it to
      `/admin`.
+
 3. **Auth** is shared — email + Google are already configured (qkit/merqo use
    them). Add loopkit's callback to Authentication → **URL Configuration →
    Redirect URLs**: `https://<loopkit-domain>/auth/callback`.

@@ -15,10 +15,10 @@ describe("WorthALook", () => {
     );
     expect(
       screen.getByRole("link", { name: /6 regulars have gone quiet/i }),
-    ).toHaveAttribute("href", "/dashboard/customers?seg=lapsed");
+    ).toHaveAttribute("href", "/dashboard/customers?cohort=gone-quiet");
     expect(
       screen.getByRole("link", { name: /4 are one stamp from a reward/i }),
-    ).toHaveAttribute("href", "/dashboard/customers?seg=ready");
+    ).toHaveAttribute("href", "/dashboard/customers?cohort=one-away");
   });
 
   it("renders nothing when there are no items", () => {
@@ -44,6 +44,6 @@ describe("WorthALook", () => {
     expect(screen.getByText(/1 is two stamps away/i)).toBeInTheDocument();
     expect(
       screen.getAllByRole("link", { name: /two stamps away/i })[0],
-    ).toHaveAttribute("href", "/dashboard/customers?seg=ready");
+    ).toHaveAttribute("href", "/dashboard/customers?cohort=two-away");
   });
 });

@@ -7,6 +7,7 @@ import type { VendorActivityRow } from "@/lib/activity";
 const row = (over: Partial<VendorActivityRow> = {}): VendorActivityRow => ({
   id: Math.random().toString(),
   phone: "+6591234567",
+  programId: "p1",
   programName: "Stamp Card",
   kind: "stamp",
   isReward: false,
@@ -28,12 +29,7 @@ describe("RecentActivity", () => {
   });
 
   it("shows a Serve link for a visit row when the program id resolves", () => {
-    render(
-      <RecentActivity
-        rows={[row({ id: "e1" })]}
-        programIdByName={{ "Stamp Card": "p1" }}
-      />,
-    );
+    render(<RecentActivity rows={[row({ id: "e1" })]} />);
     expect(screen.getByRole("link", { name: "Serve" })).toHaveAttribute(
       "href",
       "/dashboard/counter?p=p1&phone=%2B6591234567",
@@ -44,7 +40,6 @@ describe("RecentActivity", () => {
     render(
       <RecentActivity
         rows={[row({ id: "e2", isReward: true, label: "redeem" })]}
-        programIdByName={{ "Stamp Card": "p1" }}
       />,
     );
     expect(screen.queryByRole("link", { name: "Serve" })).toBeNull();
@@ -54,4 +49,23 @@ describe("RecentActivity", () => {
     render(<RecentActivity rows={[row()]} />);
     expect(screen.getByText("9123 ****")).toBeInTheDocument();
   });
+});
+
+it("routes duplicate display names by each event's program ID", () => {
+  render(
+    <RecentActivity
+      rows={[
+        row({ id: "a", programId: "first" }),
+        row({ id: "b", programId: "second" }),
+      ]}
+    />,
+  );
+  expect(
+    screen
+      .getAllByRole("link", { name: "Serve" })
+      .map((link) => link.getAttribute("href")),
+  ).toEqual([
+    "/dashboard/counter?p=first&phone=%2B6591234567",
+    "/dashboard/counter?p=second&phone=%2B6591234567",
+  ]);
 });

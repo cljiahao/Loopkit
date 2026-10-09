@@ -18,11 +18,9 @@ marking the dashboard onboarding tour as seen.
   for the update itself. Deliberately a plain Route Handler rather than a
   Server Action: `src/components/dashboard-tour.tsx` calls it with
   `fetch("/api/tour-seen", { method: "POST", keepalive: true })`, not
-  `await`ed, so the write survives a full-page unload — `@merqo/ui`'s
-  shared `DashboardNav` renders its links as plain `<a>` tags, so a
-  dashboard nav click is a hard navigation, and only `keepalive` (which a
-  Server Action's own internal fetch can't opt into) guarantees the browser
-  finishes sending the request after the document that started it is gone.
+  awaited. `keepalive` allows a small request to outlive its originating page;
+  it is best effort, not guaranteed delivery. Dashboard navigation uses Next
+  links, while reloads or external navigation can still unload the document.
 
 ## Connectivity
 

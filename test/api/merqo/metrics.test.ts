@@ -14,6 +14,11 @@ function result(rows: unknown[]) {
   Object.assign(r, {
     select: chain,
     eq: chain,
+    order: chain,
+    range: async (start: number, end: number) => ({
+      data: rows.slice(start, end + 1),
+      error: null,
+    }),
     then: (res: (v: { data: unknown[]; error: null }) => void) =>
       res({ data: rows, error: null }),
   });
@@ -49,22 +54,16 @@ describe("GET /api/merqo/metrics", () => {
   });
 
   it("200 returns the contract shape on a valid bearer", async () => {
-    fromMock
-      .mockReturnValueOnce(
-        result([
-          { id: "p1", active: true, created_at: new Date().toISOString() },
-        ]),
-      )
-      .mockReturnValueOnce(result([{ id: "c1", program_id: "p1" }]))
-      .mockReturnValueOnce(
-        result([
-          {
-            card_id: "c1",
-            kind: "stamp",
-            created_at: new Date().toISOString(),
-          },
-        ]),
-      );
+    const tables: Record<string, unknown[]> = {
+      programs: [
+        { id: "p1", active: true, created_at: new Date().toISOString() },
+      ],
+      cards: [{ id: "c1", program_id: "p1" }],
+      stamp_events: [
+        { card_id: "c1", kind: "stamp", created_at: new Date().toISOString() },
+      ],
+    };
+    fromMock.mockImplementation((table: string) => result(tables[table] ?? []));
 
     const res = await GET(req("Bearer test-secret"));
     expect(res.status).toBe(200);
@@ -106,6 +105,8 @@ describe("GET /api/merqo/metrics", () => {
       Object.assign(r, {
         select: chain,
         eq: chain,
+        order: chain,
+        range: async () => ({ data: null, error: { message: "boom" } }),
         then: (res: (v: { data: null; error: { message: string } }) => void) =>
           res({ data: null, error: { message: "boom" } }),
       });

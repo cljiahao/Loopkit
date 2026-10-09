@@ -1,6 +1,7 @@
 "use client";
 
-import { useTransition } from "react";
+import { useAsyncAction } from "@/hooks/use-async-action";
+import { toast } from "sonner";
 import { saveCustomerNotifySettingsAction } from "./actions";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -14,7 +15,7 @@ export function CustomerNotifySettings({
 }: {
   current: { enabled: boolean } | null;
 }) {
-  const [pending, startTransition] = useTransition();
+  const { pending, run } = useAsyncAction();
 
   return (
     // Matches ElevatedCard's classes directly — a <form> needs the action
@@ -23,8 +24,17 @@ export function CustomerNotifySettings({
     <form
       className="space-y-3 rounded-[20px] border bg-card p-4 shadow-[0_1px_0_0_var(--color-border),0_12px_28px_-20px_rgba(0,0,0,0.35)]"
       action={(fd) => {
-        startTransition(() => {
-          void saveCustomerNotifySettingsAction(fd);
+        void run(async () => {
+          try {
+            const result = await saveCustomerNotifySettingsAction(fd);
+            if (!result.success) {
+              toast.error(result.error);
+              return;
+            }
+            toast.success("Settings saved");
+          } catch {
+            toast.error("Could not save settings. Try again.");
+          }
         });
       }}
     >

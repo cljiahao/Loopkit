@@ -23,48 +23,59 @@ function merqoBaseUrl(): string {
  */
 export async function checkLegalAcceptance(email: string): Promise<boolean> {
   const normalized = email.toLowerCase();
-  const supabase = await createServiceClient();
-
-  const { data: cached } = await supabase
-    .from("legal_check_state")
-    .select("checked_at, is_current")
-    .eq("email", normalized)
-    .maybeSingle();
-
-  if (cached && Date.now() - new Date(cached.checked_at).getTime() < TTL_MS) {
-    return cached.is_current;
-  }
-
-  const secret = process.env.MERQO_CUSTOMER_SECRET;
-  if (!secret) return false;
-
-  let isCurrent = false;
   try {
-    const url = new URL("/api/merqo/legal-status", merqoBaseUrl());
-    url.searchParams.set("email", normalized);
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${secret}` },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (res.ok) {
-      const status = (await res.json()) as {
-        terms: string | null;
-        privacy: string | null;
-      };
-      isCurrent = isLegalCurrent(status, LEGAL_VERSIONS);
+    const supabase = await createServiceClient();
+
+    const { data: cached } = await supabase
+      .from("legal_check_state")
+      .select("checked_at, is_current")
+      .eq("email", normalized)
+      .maybeSingle();
+
+    if (cached && Date.now() - new Date(cached.checked_at).getTime() < TTL_MS) {
+      return cached.is_current;
     }
-  } catch (err) {
-    console.error("checkLegalAcceptance: merqo legal-status call failed", err);
+
+    const secret = process.env.MERQO_CUSTOMER_SECRET;
+    if (!secret) return false;
+
+    let isCurrent = false;
+    try {
+      const url = new URL("/api/merqo/legal-status", merqoBaseUrl());
+      url.searchParams.set("email", normalized);
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${secret}` },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const status = (await res.json()) as {
+          terms: string | null;
+          privacy: string | null;
+        };
+        isCurrent = isLegalCurrent(status, LEGAL_VERSIONS);
+      }
+    } catch (err) {
+      console.error(
+        "checkLegalAcceptance: merqo legal-status call failed",
+        err,
+      );
+      return false;
+    }
+
+    try {
+      await supabase.from("legal_check_state").upsert({
+        email: normalized,
+        checked_at: new Date().toISOString(),
+        is_current: isCurrent,
+      });
+    } catch {
+      // A cache failure does not invalidate the remote acceptance record.
+    }
+
+    return isCurrent;
+  } catch {
     return false;
   }
-
-  await supabase.from("legal_check_state").upsert({
-    email: normalized,
-    checked_at: new Date().toISOString(),
-    is_current: isCurrent,
-  });
-
-  return isCurrent;
 }
 
 /**

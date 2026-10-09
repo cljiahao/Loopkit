@@ -32,3 +32,5 @@ actions write via `recordAudit`.
 ## Parent
 
 [app](../README.md)
+
+Admin writes patch only the intended owned profile fields and preserve unrelated shared Merqo profile data. Authorization checks precede service-role mutations.

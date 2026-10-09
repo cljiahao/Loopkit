@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Pin shared UI to audited commit `989d934c1cc8d957ff383934debf8ef083b6b6a4` with matching build permissions.
+- Qualify referral and points-offset RPC columns in forward migration `0060`, fixing output-parameter naming conflicts exposed by database CI without changing grants or locking.
+
+- Remove an exact duplicate plant-redemption SQL fixture; the canonical twelve-case parity fixture remains.
+
 - The repository moved from the `cljiahao` GitHub account to the `merqo-io` organization. `@merqo/ui` now installs from `github:merqo-io/merqo-ui` at the same tag, with the lockfile and tarball URLs updated to match.
 - The `secret scan (gitleaks)` CI job runs the pinned gitleaks release binary, verified against the release checksum, instead of `gitleaks-action`. The action is free only for personal-account repos and needs a paid license on organization-owned ones, so every run failed after the move to `merqo-io`. It scans the PR commits, or the pushed range on `main`.
 - Bumped `@merqo/ui` to `v0.32.0`, which adds `ImageUploader`'s
@@ -18,6 +23,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Security
 
+- Make the local loyalty demo seed refuse vendors with existing programs instead of deleting their progress, and generate card IDs per run. Database validation remains pending.
+
+- Prepare migration0059 to retire authenticated inserts into the unused local feedback table while retaining its history and service maintenance access; current feedback continues through the shared Merqo RPC. Database validation remains pending.
+
+- Bind administrative Pro grants to the matching pending upgrade request, reject mismatched or resolved requests before writes, and audit successful grants even if clearing the request later fails.
+- Prepare atomic non-stamp referral credits with snapshot comparison, bounded server retries and recovery of pending credits, preventing concurrent guest visits from overwriting each other. Migration0049 awaits database validation.
+- Prepare migration0048 to constrain reward RPC authorization, reject forged earn state and cross-vendor program references, and preserve threshold vouchers and birthday bonuses through private internal helpers; database validation and deployment remain outstanding.
 - The public `vendor-images` bucket had no size or MIME limit, so the
   browser-side resize in `ImageUploader` was its only guard. A direct storage
   call with a vendor JWT could upload an arbitrarily large file, or a
@@ -60,6 +72,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   informational, not a hard gate.
 
 ### Fixed
+
+- Improve small brand-text and input-boundary contrast in both themes while preserving primary button fills and decorative separators.
 
 - Replacing or removing a profile icon no longer leaves the old image in storage.
   `ImageUploader` names every upload randomly and nothing ever deleted the object
@@ -713,6 +727,11 @@ dollar figure at all. The manual "ask us to upgrade" grant flow
   from qkit's identical feature.
 
 ### Changed
+
+- Pin shared UI to audited commit `989d934c1cc8d957ff383934debf8ef083b6b6a4` with matching build permissions.
+- Qualify referral and points-offset RPC columns in forward migration `0060`, fixing output-parameter naming conflicts exposed by database CI without changing grants or locking.
+
+- Remove an exact duplicate plant-redemption SQL fixture; the canonical twelve-case parity fixture remains.
 
 - Bumped `@merqo/ui` to `v0.31.2`. v0.31.0 replaced the package-wide
   `"use client"` banner with per-module directives, so a plain-data export

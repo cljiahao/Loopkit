@@ -13,7 +13,7 @@ function toRow(item: WorthALookItem): Row {
   if (item.kind === "gone-quiet") {
     const noun = item.count === 1 ? "regular has" : "regulars have";
     return {
-      href: "/dashboard/customers?seg=lapsed",
+      href: "/dashboard/customers?cohort=gone-quiet",
       tone: "warn",
       strong: `${item.count} ${noun} gone quiet`,
       sub: "Weekly customers, not in for about three weeks. A message brings most back.",
@@ -21,14 +21,14 @@ function toRow(item: WorthALookItem): Row {
   }
   if (item.kind === "one-away") {
     return {
-      href: "/dashboard/customers?seg=ready",
+      href: "/dashboard/customers?cohort=one-away",
       tone: "gold",
       strong: `${item.count} ${item.count === 1 ? "is" : "are"} one stamp from a reward`,
       sub: "They will be in soon to claim it. A planned cost, and a near-certain visit.",
     };
   }
   return {
-    href: "/dashboard/customers?seg=ready",
+    href: "/dashboard/customers?cohort=two-away",
     tone: "gold",
     strong: `${item.count} ${item.count === 1 ? "is" : "are"} two stamps away`,
     sub: "Close enough to nudge.",

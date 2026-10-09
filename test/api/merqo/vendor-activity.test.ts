@@ -26,6 +26,11 @@ function rows(data: unknown[], error: { message: string } | null = null) {
     select: chain,
     eq: chain,
     in: chain,
+    order: chain,
+    range: async (start: number, end: number) => ({
+      data: error ? null : data.slice(start, end + 1),
+      error,
+    }),
     then: (res: (v: { data: unknown[] | null; error: typeof error }) => void) =>
       res({ data: error ? null : data, error }),
   });

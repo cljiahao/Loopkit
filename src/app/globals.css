@@ -15,6 +15,7 @@
   --popover: oklch(0.992 0.004 56.3);
   --popover-foreground: oklch(0.22 0.035 28.9);
   --primary: oklch(0.463 0.186 19);
+  --primary-text: oklch(0.463 0.186 19);
   --primary-foreground: oklch(1 0 0);
   --secondary: oklch(0.94 0.025 15);
   --secondary-foreground: oklch(0.34 0.09 15);
@@ -31,7 +32,7 @@
      ever get confused in practice. */
   --destructive: oklch(0.55 0.2 32);
   --border: oklch(0.9 0.02 13);
-  --input: oklch(0.9 0.02 13);
+  --input: oklch(0.59 0.02 13);
   --ring: oklch(0.463 0.186 19);
   --radius: 0.75rem;
 
@@ -60,6 +61,7 @@
   --popover: oklch(0.279 0.034 29.7);
   --popover-foreground: oklch(0.95 0.013 48.6);
   --primary: oklch(0.64 0.17 18.1);
+  --primary-text: oklch(0.78 0.12 18.1);
   /* Iron Gall ink (the same dark literal used as --foreground in light
      mode), not this theme's own (light) --foreground — this lighter
      dark-mode red needs a dark foreground for contrast, not a white/light
@@ -73,7 +75,7 @@
   --accent-foreground: oklch(0.96 0.012 15);
   --destructive: oklch(0.62 0.2 32);
   --border: oklch(0.36 0.03 13);
-  --input: oklch(0.38 0.03 13);
+  --input: oklch(0.61 0.02 13);
   --ring: oklch(0.64 0.17 18.1);
 
   --gold: oklch(0.749 0.095 75);
@@ -91,6 +93,8 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  /* Brand text needs its own contrast; fills, borders and focus keep primary. */
+  --text-color-primary: var(--primary-text);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -299,9 +303,11 @@
   }
 }
 
-* {
-  border-color: var(--color-border);
-  outline-color: var(--color-ring);
+@layer base {
+  * {
+    border-color: var(--color-border);
+    outline-color: var(--color-ring);
+  }
 }
 
 body {

@@ -1,20 +1,19 @@
 # meta
 
-Cross-cutting project-management docs for loopkit — distinct from the
-per-feature specs/plans in `docs/superpowers/`, which record how a shipped
-feature was designed. This tracks what's actually left to do and why.
+Cross-cutting review and backlog evidence for Loopkit. Feature design and dated
+implementation history live in `docs/superpowers/`.
 
 ## Contents
 
-- `2026-08-15-loopkit-task-registry.md` — loopkit's first standing backlog.
-  No P1 gaps (the core loop is implemented and live); real items found by
-  reading the code and today's own PR history: an engine-dispatcher test
-  gap on the wheel/scratch routing branch (P2), the two files where
-  today's sonarjs rollout explicitly deferred a cognitive-complexity fix
-  (P3), and two long-deferred structural/feature items with no demand
-  signal (P4) — the `STRATEGIES` registry that was planned but never built,
-  and the Points Club multi-tier redemption redesign that's been flagged
-  "separate follow-up spec" since 2026-07-22 with no follow-up written yet.
+- `2026-08-15-loopkit-task-registry.md` preserves the original backlog and its
+  October review update. Direct wheel/scratch dispatch tests now close T1;
+  September catalog/payment-offset work supersedes T4. Setup complexity and the
+  typed strategy-dispatch tradeoff remain documented maintenance debt.
+- `archive/2026-10-08-unused-vouchers/` preserves removed, uncalled voucher
+  wrappers and their tests outside runtime and test discovery.
+
+The current security audit is `../loopkit-audit-2026-10-08.md`. Prepared database
+fixes still require local validation and an approved deployment rollout.
 
 ## Parent
 

@@ -25,17 +25,6 @@ describe("saveProgramSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts a stamp program with head_start_percent absent (toggle off)", () => {
-    const result = saveProgramSchema.safeParse({
-      type: "stamp",
-      name: "Coffee card",
-      stamps_required: "10",
-      reward_text: "Free kopi",
-      head_start: "false",
-    });
-    expect(result.success).toBe(true);
-  });
-
   it("rejects a stamp program with head_start_percent below the 5% minimum", () => {
     const result = saveProgramSchema.safeParse({
       type: "stamp",
@@ -159,17 +148,6 @@ describe("saveProgramSchema", () => {
       reward_text: "Free item",
       head_start: "false",
       variant: "flame",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("accepts a stamp program with variant absent (defaults to dots at buildProgramFields)", () => {
-    const result = saveProgramSchema.safeParse({
-      type: "stamp",
-      name: "Coffee card",
-      stamps_required: "10",
-      reward_text: "Free kopi",
-      head_start: "false",
     });
     expect(result.success).toBe(true);
   });

@@ -24,11 +24,13 @@ type NewVoucher = { id: string; rewardText: string; qr: string };
 // permanently-disabled list when none are affordable yet.
 export function PointsCatalogPicker({
   programId,
+  vendorId = "",
   phone,
   items,
   onSelected,
 }: {
   programId: string;
+  vendorId?: string;
   phone: string;
   items: CatalogItem[];
   onSelected: (voucher: NewVoucher) => void;
@@ -40,20 +42,26 @@ export function PointsCatalogPicker({
 
   function confirm(item: CatalogItem) {
     setSubmitting(true);
-    (async () => {
-      const fd = new FormData();
-      fd.set("phone", phone);
-      fd.set("program", programId);
-      fd.set("item_id", item.id);
-      const res = await selectPointsRewardAction(fd);
-      setSubmitting(false);
-      setPendingId(null);
-      if (!res.success) {
-        toast.error(res.error);
-        return;
+    void (async () => {
+      try {
+        const fd = new FormData();
+        fd.set("phone", phone);
+        fd.set("program", programId);
+        fd.set("vendor", vendorId);
+        fd.set("item_id", item.id);
+        const res = await selectPointsRewardAction(fd);
+        setPendingId(null);
+        if (!res.success) {
+          toast.error(res.error);
+          return;
+        }
+        toast.success(`${res.rewardText} redeemed — show the QR to the shop.`);
+        onSelected({ id: res.id, rewardText: res.rewardText, qr: res.qr });
+      } catch {
+        toast.error("Could not redeem your reward. Try again.");
+      } finally {
+        setSubmitting(false);
       }
-      toast.success(`${res.rewardText} redeemed — show the QR to the shop.`);
-      onSelected({ id: res.id, rewardText: res.rewardText, qr: res.qr });
     })();
   }
 

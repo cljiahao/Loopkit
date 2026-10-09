@@ -4,10 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { saveStallName } from "@/lib/vendor";
 import { createServerClient } from "@/lib/supabase/server";
-import {
-  getOrCreateVendorProfile,
-  upsertVendorProfile,
-} from "@/lib/merqo-vendor-profile";
+import { patchVendorProfile } from "@/lib/merqo-vendor-profile";
 import type { SocialLinks } from "@/lib/types";
 
 // Thin wrapper — saveStallName (src/lib/vendor.ts) does the actual write to
@@ -51,6 +48,10 @@ const socialUrl = z.preprocess(
     .trim()
     .max(200, "That link is too long")
     .url("Enter a valid URL, e.g. https://instagram.com/yourstall")
+    .refine(
+      (value) => ["http:", "https:"].includes(URL.parse(value)?.protocol ?? ""),
+      "Use an http or https link",
+    )
     .optional(),
 );
 
@@ -82,13 +83,7 @@ export async function updateSocialLinksAction(
   if (!user) return { error: "Not signed in" };
 
   try {
-    const current = await getOrCreateVendorProfile(supabase, user.id, null);
-    await upsertVendorProfile(
-      supabase,
-      user.id,
-      current.stall_name,
-      parsed.data,
-    );
+    await patchVendorProfile(supabase, user.id, { socialLinks: parsed.data });
   } catch (err) {
     console.error(
       "updateSocialLinksAction failed",

@@ -5,7 +5,7 @@
 -- migrations; exhaustive coverage of every table is out of scope for this
 -- pass — see docs/superpowers/specs/2026-07-22-cicd-hook-harness-parity-design.md
 -- §3): loopkit.vendors (shared profile, for-all self policy), loopkit.upgrade_requests
--- (vendor-insert/select-own + admin-select-all), loopkit.feedback (self-insert-only),
+-- (vendor-insert/select-own + admin-select-all), loopkit.feedback (retired client writes),
 -- loopkit.vendor_notify_settings (for-all own-row, same shape as vendors),
 -- loopkit.referral_hosts (own-row create/read, no update/delete grant), a
 -- functional suite for vendor_join_referred/apply_referral_credit, and
@@ -163,10 +163,12 @@ select is_empty(
   $$ select 1 from loopkit.upgrade_requests where id = '00000000-0000-0000-0000-0000000e0002' $$,
   'A cannot read B''s upgrade request');
 
--- feedback: self-insert-only (no select policy exists at all — 0029_feedback.sql)
-select lives_ok(
+-- Legacy feedback writes are retired; current feedback uses the shared Merqo RPC.
+select throws_ok(
   $$ insert into loopkit.feedback (vendor_id, nps, message) values ('00000000-0000-0000-0000-00000000000a', 9, 'great') $$,
-  'A can insert its own feedback');
+  '42501',
+  null,
+  'A cannot append legacy feedback');
 select throws_ok(
   $$ insert into loopkit.feedback (vendor_id, nps) values ('00000000-0000-0000-0000-00000000000b', 5) $$,
   '42501',
@@ -329,14 +331,8 @@ select ok(
   'authenticated has no DELETE grant on referral_hosts (create-only this round)');
 
 -- ── vendor_join_referred / apply_referral_credit ─────────────────────────
--- Both are granted to anon (same public-surface shape as vendor_join
--- itself) — a real guest tapping a /c?ref= link never has a session. Every
--- direct table read below (guest_count/stamp_count/state/credited_at) runs
--- with role reset first: anon has no SELECT grant on referral_hosts/cards/
--- referral_credits by design (a guest reads through the RPCs only, never
--- the tables directly) — asserting on those columns needs the privileged
--- test-harness role, not the identity under test. Only the RPC calls
--- themselves run as anon.
+-- Retired customer implementations are exercised as the fixture owner.
+-- Client access and saved-proof checks live in customer-capability.test.sql.
 
 reset role;
 select is(
@@ -346,7 +342,8 @@ select is(
 -- Self-referral (guest phone == host phone) is a deliberate no-op: the
 -- guest still gets enrolled normally, but the host must never be credited
 -- or bumped — guards against someone farming their own link.
-set local role anon;
+reset role;
+-- Historical implementation fixture; capability permissions are checked separately.
 select lives_ok(
   $$ select * from loopkit.vendor_join_referred(
        '00000000-0000-0000-0000-00000000000c', '+6591110001', 'c-stamp-code') $$,
@@ -359,7 +356,8 @@ select is(
 
 -- First distinct guest: credits the host exactly once (stamp-type credits
 -- inline, mirroring add_stamp's own body).
-set local role anon;
+reset role;
+-- Historical implementation fixture; capability permissions are checked separately.
 select lives_ok(
   $$ select * from loopkit.vendor_join_referred(
        '00000000-0000-0000-0000-00000000000c', '+6591119001', 'c-stamp-code') $$,
@@ -374,7 +372,8 @@ select is(
   1, 'the host''s stamp card has exactly 1 stamp after one distinct guest');
 
 -- Same guest again via the same link: no double credit.
-set local role anon;
+reset role;
+-- Historical implementation fixture; capability permissions are checked separately.
 select lives_ok(
   $$ select * from loopkit.vendor_join_referred(
        '00000000-0000-0000-0000-00000000000c', '+6591119001', 'c-stamp-code') $$,
@@ -390,7 +389,8 @@ select is(
 
 -- A second, genuinely different guest: credits again (proves the guard is
 -- per-guest, not a blanket "already credited once" flag on the host).
-set local role anon;
+reset role;
+-- Historical implementation fixture; capability permissions are checked separately.
 select lives_ok(
   $$ select * from loopkit.vendor_join_referred(
        '00000000-0000-0000-0000-00000000000c', '+6591119002', 'c-stamp-code') $$,
@@ -410,7 +410,8 @@ select is(
 -- thing standing between "a code from C" and "credits something at F". The
 -- guest still gets enrolled normally at F, since enrollment doesn't depend
 -- on the referral code resolving at all.
-set local role anon;
+reset role;
+-- Historical implementation fixture; capability permissions are checked separately.
 select lives_ok(
   $$ select * from loopkit.vendor_join_referred(
        '00000000-0000-0000-0000-00000000000f', '+6591129001', 'c-stamp-code') $$,
@@ -436,7 +437,8 @@ select is(
   (select guest_count from loopkit.referral_hosts where id = '00000000-0000-0000-0000-0000000f1002'),
   0, 'C''s plant referral host starts at 0 guests (pre-condition)');
 
-set local role anon;
+reset role;
+-- Historical implementation fixture; capability permissions are checked separately.
 select results_eq(
   $$ select (referral_credit->>'pending')::boolean
      from loopkit.vendor_join_referred('00000000-0000-0000-0000-00000000000c', '+6591139001', 'c-plant-code') vjr
@@ -453,7 +455,8 @@ select is(
      where referral_host_id = '00000000-0000-0000-0000-0000000f1002' and guest_phone = '+6591139001'),
   null, 'the reserved plant credit is not yet finished (credited_at still null)');
 
-set local role anon;
+reset role;
+-- Historical implementation fixture; capability permissions are checked separately.
 select lives_ok(
   $$ select * from loopkit.apply_referral_credit(
        '00000000-0000-0000-0000-0000000f1002', '+6591139001',
@@ -469,7 +472,8 @@ select is(
 
 -- A second finish attempt on the same reservation must be a no-op — proves
 -- the deferred non-stamp path can't double-credit either.
-set local role anon;
+reset role;
+-- Historical implementation fixture; capability permissions are checked separately.
 select lives_ok(
   $$ select * from loopkit.apply_referral_credit(
        '00000000-0000-0000-0000-0000000f1002', '+6591139001',
@@ -507,16 +511,15 @@ select is(
   (select stamp_count from loopkit.cards where program_id = '00000000-0000-0000-0000-100000000001' and phone = '+6590000001'),
   1, 'no bonus fires before the customer has a birthday on file');
 
--- Anon self-entry (the card-view page's own new field): sets today's real
--- month/day, scoped to this exact (vendor, phone) pair — no separate
--- customer auth exists in this app, same trust model as vendor_join itself.
-set local role anon;
+-- Set the fixture birthday through the now-private historical implementation.
+reset role;
+-- Historical implementation fixture; capability permissions are checked separately.
 select lives_ok(
   $$ select loopkit.set_customer_birthday(
        '00000000-0000-0000-0000-00000000000a', '+6590000001',
        extract(month from (now() at time zone 'Asia/Singapore'))::smallint,
        extract(day from (now() at time zone 'Asia/Singapore'))::smallint) $$,
-  'anon can self-enter a birthday for their own phone at this vendor');
+  'internal birthday implementation records the fixture customer date');
 
 reset role;
 select is(
@@ -527,7 +530,8 @@ select is(
 -- Scoping: an unknown phone at this vendor is a safe no-op, not an error,
 -- and creates no row — set_customer_birthday only ever UPDATEs an existing
 -- customers row, per its own migration comment.
-set local role anon;
+reset role;
+-- Historical implementation fixture; capability permissions are checked separately.
 select lives_ok(
   $$ select loopkit.set_customer_birthday(
        '00000000-0000-0000-0000-00000000000a', '+6590009999', 6::smallint, 15::smallint) $$,

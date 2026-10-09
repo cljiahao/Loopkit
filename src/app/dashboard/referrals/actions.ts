@@ -45,7 +45,14 @@ export async function createReferralHostAction(
     };
   }
 
-  const label = labelSchema.parse(formData.get("label")) ?? null;
+  const parsedLabel = labelSchema.safeParse(formData.get("label"));
+  if (!parsedLabel.success) {
+    return {
+      status: "error",
+      message: "Use a label of 60 characters or fewer.",
+    };
+  }
+  const label = parsedLabel.data ?? null;
 
   const supabase = await createServerClient();
   const { data, error } = await supabase

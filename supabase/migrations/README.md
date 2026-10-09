@@ -37,7 +37,7 @@ exception.
 - `0025_loopkit_remove_streak_type.sql` — removes the Streak Club program type entirely, replaced by Flame Club (a Stamp visual variant); no live rows existed, so this is a full removal rather than the usual additive-only convention
 - `0026_loopkit_points_per_visit.sql` — Points Club: `points_per_visit` config field (default 1) instead of Stamp's implicit +1; widens the `stamps_required` range to 100,000
 - `0027_loopkit_reward_vouchers.sql` — `reward_vouchers` table (per-reward `active`/`redeemed`/`expired` ledger row, RLS via `owns_program`) and `programs.reward_expiry_days`; `grant_reward_voucher`/`redeem_oldest_voucher`/`expire_stale_vouchers` SECURITY DEFINER functions, and `create_program`/`update_program` gain a trailing `p_reward_expiry_days` parameter
-- `0029_feedback.sql` — `loopkit.feedback` table: vendor NPS + optional message, RLS self-insert only; superseded as the write path by 0030/`merqo.vendor_feedback` (`src/app/actions/feedback.ts` no longer inserts here), kept as the historical source the 0030 backfill reads from
+- `0029_feedback.sql` — `loopkit.feedback` table: vendor NPS + optional message, historical RLS self-insert policy; client INSERT revoked by0059. Superseded as the write path by 0030/`merqo.vendor_feedback` (`src/app/actions/feedback.ts` no longer inserts here), kept as the historical source the 0030 backfill reads from
 - `0030_vendor_feedback_backfill.sql` — one-time, guarded copy of existing `loopkit.feedback` rows into the shared cross-kit `merqo.vendor_feedback` table (merqo migration 0011); no-ops if `merqo.vendor_feedback` doesn't exist yet (e.g. loopkit-only local `supabase start`), same guard pattern as qkit's `0054_vendor_profile_backfill.sql`
 - `0031_loopkit_vendor_join_avatar.sql` — appends `vendor_avatar_url` (read from `auth.users.raw_user_meta_data`) to `vendor_join`'s return columns, so the public `/c` page can render a vendor's chosen stamp-mark photo
 - `0032_loopkit_provision_default_program.sql` — `provision_default_program(p_vendor_id)`: service-role-only SECURITY DEFINER function (never granted to `authenticated`) that seeds a default "Starter" stamp program for a push-provisioned vendor, since `create_program` is keyed on the calling session's `auth.uid()` and can't run on a vendor's behalf; advisory-lock-guarded against a double-provision race, idempotent on `loopkit.programs` (a null return means the vendor already had a program). Backs `POST /api/merqo/vendor-provision`.
@@ -61,3 +61,12 @@ exception.
 ## Parent
 
 [supabase](../README.md)
+
+- `0054_points_and_voucher_locks.sql` — serializes catalog/offset balance checks and debits with card locks, and voucher status checks with voucher locks. Rejects malformed catalog costs and offset rates before writes. Customer authorization is subsequently hardened by0055/0056; this historical migration does not change that flow.
+
+- `0058_audit_truncate_privilege.sql` — revokes service-role TRUNCATE on the admin audit trail, preserving SELECT/INSERT and owner maintenance.
+- `0059_retire_local_feedback_writes.sql` — retires authenticated INSERT on legacy local feedback; retains historical rows and service maintenance access. Current submissions use the shared Merqo RPC.
+
+- `0060_qualified_rpc_columns.sql` — qualifies column references that overlap RPC output parameters in referral joins and points offsets, preserving signatures, execution grants and row locks. Existing pgTAP tests verify both runtime paths.
+
+Prepared audit migrations require database validation and rollout review before deployment.

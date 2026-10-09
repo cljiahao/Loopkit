@@ -1,15 +1,8 @@
 # contract
 
-## Purpose
-
-Cross-repo contract test: guards that loopkit's metrics payload satisfies
-merqo's schema, since the two repos can't import each other's types at
-runtime.
-
-## Contents
-
-- `merqo-metrics.contract.test.ts` — hand-copies merqo's `metricsPayloadSchema` (from `../merqo/src/lib/metrics-schema.ts`) and asserts `computeLoopkitMetrics`'s output parses against it, so a schema drift fails here instead of in production
-
-## Parent
+`merqo-metrics.contract.test.ts` checks computed metrics against a local
+snapshot of merqo's payload schema. The snapshot must be synchronized when
+the consumer schema changes; a consumer-only change does not automatically
+fail this test.
 
 [test](../README.md)

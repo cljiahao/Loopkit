@@ -30,6 +30,10 @@ function builder(data: unknown, error: unknown = null) {
     select: vi.fn(() => b),
     eq: vi.fn(() => b),
     order: vi.fn(() => b),
+    range: vi.fn(async (start: number, end: number) => ({
+      data: Array.isArray(data) ? data.slice(start, end + 1) : data,
+      error,
+    })),
     limit: vi.fn(() => b),
     in: vi.fn(() => b),
     maybeSingle: () => Promise.resolve({ data, error }),

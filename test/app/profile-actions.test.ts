@@ -10,10 +10,18 @@ vi.mock("@/lib/vendor", async (importActual) => {
   return { ...actual, saveStallName: saveStallNameMock };
 });
 
+const { patchMock } = vi.hoisted(() => ({ patchMock: vi.fn() }));
+vi.mock("@/lib/merqo-vendor-profile", () => ({
+  patchVendorProfile: patchMock,
+  getOrCreateVendorProfile: vi.fn(),
+}));
 const updateUserMock = vi.fn(async () => ({ error: null }));
 vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({
-    auth: { updateUser: updateUserMock },
+    auth: {
+      updateUser: updateUserMock,
+      getUser: async () => ({ data: { user: { id: "vendor-1" } } }),
+    },
   })),
 }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -48,5 +56,32 @@ describe("updatePasswordAction", () => {
     const res = await updatePasswordAction("short");
     expect(res.error).toBeDefined();
     expect(updateUserMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("social URL protocol boundary", () => {
+  it.each([
+    "javascript:alert(1)",
+    "data:text/html,test",
+    "file:///tmp/profile",
+  ])("rejects %s before database access", async (website) => {
+    const { updateSocialLinksAction } =
+      await import("@/app/dashboard/profile/actions");
+    const result = await updateSocialLinksAction({ website });
+    expect(result.error).toBeDefined();
+    expect(updateUserMock).not.toHaveBeenCalled();
+    expect(patchMock).not.toHaveBeenCalled();
+  });
+});
+
+it("saves social links without reading or rewriting the stall name", async () => {
+  patchMock.mockResolvedValue({});
+  const { updateSocialLinksAction } =
+    await import("@/app/dashboard/profile/actions");
+  expect(
+    await updateSocialLinksAction({ website: "https://example.com" }),
+  ).toEqual({});
+  expect(patchMock).toHaveBeenCalledWith(expect.anything(), "vendor-1", {
+    socialLinks: { website: "https://example.com" },
   });
 });

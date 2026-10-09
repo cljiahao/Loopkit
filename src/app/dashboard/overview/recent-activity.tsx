@@ -12,13 +12,7 @@ function mark(row: VendorActivityRow) {
   return { Icon: Stamp, cls: "bg-primary/10 text-primary" };
 }
 
-export function RecentActivity({
-  rows,
-  programIdByName = {},
-}: {
-  rows: VendorActivityRow[];
-  programIdByName?: Record<string, string>;
-}) {
+export function RecentActivity({ rows }: { rows: VendorActivityRow[] }) {
   const shown = rows.slice(0, 6);
 
   return (
@@ -41,7 +35,7 @@ export function RecentActivity({
         <ul className="flex flex-col gap-2">
           {shown.map((row) => {
             const { Icon, cls } = mark(row);
-            const programId = programIdByName[row.programName];
+            const programId = row.programId;
             return (
               <li
                 key={row.id}
