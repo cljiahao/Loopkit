@@ -73,3 +73,9 @@ SQL remains unapplied/unrun while Docker's Linux engine is unavailable. No phone
 ## Final reviewed checkpoint (2026-10-09)
 
 The final reviewed suite passed 1,453 tests in 210 suites. Coverage is 85.77% statements, 82.71% branches, 82.14% functions and 86.82% lines. All four exceed the enforced 80% threshold. Full lint, typecheck and isolated secret-free webpack build passed. This supersedes earlier pending application check statements. Vitest now bounds workers to two for reproducible local and hook runs. The approved guard baseline uses the staged Git blob's normalized LF hash, matching the existing verifier contract. Database migrations, pgTAP and concurrency isolation tests remain unrun and unapplied. This work is being submitted as a draft PR with rollout validation outstanding.
+
+## Published database CI validation (2026-10-09)
+
+[Disposable CI](https://github.com/merqo-io/Loopkit/actions/runs/37931807968/job/113824097480) at source head `d873e73` applied 93 migrations (34 pinned Merqo prerequisites and 59 Loopkit migrations) and passed all 284 PostgreSQL assertions in 14 suites. The initial real database run exposed output-parameter naming conflicts in referral joins and points offsets; forward migration `0060` qualifies those references while preserving signatures, execution grants and locks. Existing assertions were retained. This supersedes earlier local SQL-unrun statements, without establishing production application or multi-session concurrency isolation.
+
+The app now pins shared UI to audited commit `989d934c1cc8d957ff383934debf8ef083b6b6a4`. Frozen installation, 30 focused consumer tests and the normal 1,453-test push gate pass; the current production dependency audit reports zero advisories. Recovery rollout and authenticated cross-service validation remain pending, so the PR stays draft.

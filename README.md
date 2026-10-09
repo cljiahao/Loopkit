@@ -479,8 +479,8 @@ what can be committed/merged but contain no application logic themselves.
 
 ## October 2026 audit status
 
-Prepared migration `0048` restricts internal reward writes, validates Qkit earn claims, and creates vouchers for earned stamp thresholds while preserving birthday bonuses. It is not applied; see [the audit evidence](docs/loopkit-audit-2026-10-08.md) for the passing source coverage gate and outstanding database validation.
+Prepared migration `0048` restricts internal reward writes, validates Qkit earn claims, and creates vouchers for earned stamp thresholds while preserving birthday bonuses. It is not applied to production; see [the audit evidence](docs/loopkit-audit-2026-10-08.md) for source coverage and disposable database CI validation.
 
 Prepared migration `0049` adds atomic referral state comparison and recoverable pending-credit retries. See the audit evidence above; database execution remains outstanding.
 
-Prepared migrations `0050`–`0060` also address atomic program replacement, plant and stamp redemption, visit concurrency, retired RPC privileges, points/voucher locking, saved-card authorization for customer actions and Qkit claims, audit-table privileges, and historical feedback writes. Database validation and rollout remain outstanding; passing application tests do not establish that these migrations have been applied.
+Prepared migrations `0050`–`0060` also address atomic program replacement, plant and stamp redemption, visit concurrency, retired RPC privileges, points/voucher locking, saved-card authorization for customer actions and Qkit claims, audit-table privileges, and historical feedback writes. Disposable CI applied the complete prerequisite migration chain and passed all 284 PostgreSQL assertions in 14 suites. Production rollout and separate multi-session isolation tests remain outstanding; CI does not establish production application.
