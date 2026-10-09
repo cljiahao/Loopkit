@@ -54,3 +54,21 @@ describe("PointsCatalogPicker", () => {
     });
   });
 });
+
+it("allows retry after a rejected reward request", async () => {
+  selectMock.mockRejectedValueOnce(Error("offline"));
+  const user = userEvent.setup();
+  const onSelected = vi.fn();
+  render(
+    <PointsCatalogPicker
+      programId="p1"
+      phone="+6591234567"
+      items={items}
+      onSelected={onSelected}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: /free drink/i }));
+  await user.click(screen.getByRole("button", { name: "Redeem" }));
+  expect(await screen.findByRole("button", { name: "Redeem" })).toBeEnabled();
+  expect(onSelected).not.toHaveBeenCalled();
+});

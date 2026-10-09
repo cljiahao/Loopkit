@@ -108,51 +108,39 @@ describe("computeMechanicBreakdown", () => {
   });
 });
 
+function pagedQuery(data: unknown[], error: { message: string } | null = null) {
+  const builder = {
+    select: () => builder,
+    in: () => builder,
+    order: () => builder,
+    range: async (start: number, end: number) => ({
+      data: data.slice(start, end + 1),
+      error,
+    }),
+  };
+  return builder;
+}
 describe("getVendorMechanicBreakdown", () => {
-  it("returns [] without querying when there are no program ids", async () => {
+  it("returns [] without querying when no program ids", async () => {
+    mocks.from.mockClear();
     expect(await getVendorMechanicBreakdown([])).toEqual([]);
     expect(mocks.from).not.toHaveBeenCalled();
   });
-
-  it("fetches programs/cards/events and delegates to computeMechanicBreakdown", async () => {
-    mocks.from.mockImplementation((table: string) => {
-      if (table === "programs") {
-        return {
-          select: () => ({
-            in: async () => ({
-              data: [{ id: "p1", type: "plant" }],
-              error: null,
-            }),
-          }),
-        };
-      }
-      if (table === "cards") {
-        return {
-          select: () => ({
-            in: async () => ({
-              data: [{ id: "c1", program_id: "p1" }],
-              error: null,
-            }),
-          }),
-        };
-      }
-      if (table === "stamp_events") {
-        return {
-          select: () => ({
-            in: async () => ({
-              data: [
-                { card_id: "c1", kind: "visit", created_at: "2026-01-01" },
-              ],
-              error: null,
-            }),
-          }),
-        };
-      }
-      throw new Error(`unexpected table ${table}`);
-    });
-
-    const result = await getVendorMechanicBreakdown(["p1"]);
-    expect(result).toEqual([
+  it("fetches complete programs/cards/events", async () => {
+    mocks.from.mockImplementation((table: string) =>
+      pagedQuery(
+        (
+          {
+            programs: [{ id: "p1", type: "plant" }],
+            cards: [{ id: "c1", program_id: "p1" }],
+            stamp_events: [
+              { card_id: "c1", kind: "visit", created_at: "2026-01-01" },
+            ],
+          } as Record<string, unknown[]>
+        )[table] ?? [],
+      ),
+    );
+    expect(await getVendorMechanicBreakdown(["p1"])).toEqual([
       {
         mechanic: "Growth",
         enrolled: 1,
@@ -162,83 +150,27 @@ describe("getVendorMechanicBreakdown", () => {
       },
     ]);
   });
-
-  it("skips the stamp_events query when there are no cards", async () => {
+  it("skips events when no cards exist", async () => {
     mocks.from.mockImplementation((table: string) => {
-      if (table === "programs") {
-        return {
-          select: () => ({
-            in: async () => ({ data: [], error: null }),
-          }),
-        };
+      if (table === "stamp_events") {
+        throw Error("unexpected event query");
       }
-      if (table === "cards") {
-        return {
-          select: () => ({
-            in: async () => ({ data: [], error: null }),
-          }),
-        };
-      }
-      throw new Error(`unexpected table ${table}`);
+      return pagedQuery([]);
     });
-
     expect(await getVendorMechanicBreakdown(["p1"])).toEqual([]);
   });
-
-  it("throws a descriptive error when the programs query fails", async () => {
-    mocks.from.mockReturnValue({
-      select: () => ({
-        in: async () => ({ data: null, error: { message: "boom" } }),
-      }),
-    });
-    await expect(getVendorMechanicBreakdown(["p1"])).rejects.toThrow(
-      /getVendorMechanicBreakdown: boom/,
-    );
-  });
-
-  it("throws a descriptive error when the cards query fails", async () => {
-    mocks.from.mockImplementation((table: string) => {
-      if (table === "programs") {
-        return {
-          select: () => ({ in: async () => ({ data: [], error: null }) }),
-        };
-      }
-      return {
-        select: () => ({
-          in: async () => ({ data: null, error: { message: "cards down" } }),
-        }),
-      };
-    });
-    await expect(getVendorMechanicBreakdown(["p1"])).rejects.toThrow(
-      /getVendorMechanicBreakdown: cards down/,
-    );
-  });
-
-  it("throws a descriptive error when the stamp_events query fails", async () => {
-    mocks.from.mockImplementation((table: string) => {
-      if (table === "programs") {
-        return {
-          select: () => ({ in: async () => ({ data: [], error: null }) }),
-        };
-      }
-      if (table === "cards") {
-        return {
-          select: () => ({
-            in: async () => ({
-              data: [{ id: "c1", program_id: "p1" }],
-              error: null,
-            }),
-          }),
-        };
-      }
-      return {
-        select: () => ({
-          in: async () => ({ data: null, error: { message: "events down" } }),
-        }),
-      };
-    });
-    await expect(getVendorMechanicBreakdown(["p1"])).rejects.toThrow(
-      /getVendorMechanicBreakdown: events down/,
-    );
-  });
+  it.each(["programs", "cards", "stamp_events"])(
+    "propagates %s read failure",
+    async (failing) => {
+      mocks.from.mockImplementation((table: string) =>
+        pagedQuery(
+          table === "cards" ? [{ id: "c1", program_id: "p1" }] : [],
+          table === failing ? { message: failing + " offline" } : null,
+        ),
+      );
+      await expect(getVendorMechanicBreakdown(["p1"])).rejects.toThrow(
+        "getVendorMechanicBreakdown: " + failing + " offline",
+      );
+    },
+  );
 });

@@ -13,8 +13,19 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import { GET } from "@/app/api/merqo/vendor-status/route";
 
-function selectResult(rows: { vendor_id: string }[]) {
-  return { select: () => Promise.resolve({ data: rows, error: null }) };
+function selectResult(
+  rows: { vendor_id: string }[],
+  error: { message: string } | null = null,
+) {
+  const builder = {
+    select: () => builder,
+    eq: () => builder,
+    limit: async (size: number) => ({
+      data: error ? null : rows.slice(0, size),
+      error,
+    }),
+  };
+  return builder;
 }
 
 function user(id: string, email: string) {
@@ -116,10 +127,7 @@ describe("GET /api/merqo/vendor-status", () => {
       data: { users: [user("v1", "vendor@x.com")] },
       error: null,
     });
-    fromMock.mockReturnValue({
-      select: () =>
-        Promise.resolve({ data: null, error: { message: "db down" } }),
-    });
+    fromMock.mockReturnValue(selectResult([], { message: "db down" }));
     const res = await GET(req("vendor@x.com", "Bearer test-secret"));
     expect(res.status).toBe(503);
   });

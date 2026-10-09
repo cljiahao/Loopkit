@@ -1,3 +1,4 @@
+import { readAllRows, readRowsForIds } from "@/lib/read-all-rows";
 import { createServerClient } from "@/lib/supabase/server";
 import { listPrograms, type Program } from "@/lib/program";
 
@@ -111,7 +112,10 @@ export async function listVendorCustomers(
   const term = q?.trim();
   if (term) customersQuery = customersQuery.ilike("phone", `%${term}%`);
 
-  const { data: customersData, error: customersError } = await customersQuery;
+  const { data: customersData, error: customersError } = await readAllRows(
+    (start, end) =>
+      customersQuery.order("phone", { ascending: true }).range(start, end),
+  );
   if (customersError)
     throw new Error(`listVendorCustomers: ${customersError.message}`);
 
@@ -119,10 +123,16 @@ export async function listVendorCustomers(
     return aggregateCustomers(customersData ?? [], [], programsById);
   }
 
-  const { data: cardsData, error: cardsError } = await supabase
-    .from("cards")
-    .select("phone,program_id,stamp_count,reward_count,updated_at")
-    .in("program_id", programIds);
+  const { data: cardsData, error: cardsError } = await readRowsForIds(
+    programIds,
+    (batch, start, end) =>
+      supabase
+        .from("cards")
+        .select("phone,program_id,stamp_count,reward_count,updated_at")
+        .in("program_id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+  );
   if (cardsError) throw new Error(`listVendorCustomers: ${cardsError.message}`);
 
   return aggregateCustomers(customersData ?? [], cardsData ?? [], programsById);
@@ -166,11 +176,17 @@ export async function getCustomerDetail(
 
   let cards: CustomerCardRow[] = [];
   if (programIds.length > 0) {
-    const { data: cardsData, error: cardsError } = await supabase
-      .from("cards")
-      .select("program_id,stamp_count,reward_count,updated_at")
-      .eq("phone", phone)
-      .in("program_id", programIds);
+    const { data: cardsData, error: cardsError } = await readRowsForIds(
+      programIds,
+      (batch, start, end) =>
+        supabase
+          .from("cards")
+          .select("program_id,stamp_count,reward_count,updated_at")
+          .eq("phone", phone)
+          .in("program_id", batch)
+          .order("id", { ascending: true })
+          .range(start, end),
+    );
     if (cardsError) throw new Error(`getCustomerDetail: ${cardsError.message}`);
     cards = (cardsData ?? [])
       .map((card) => {

@@ -1,3 +1,4 @@
+import { readAllRows, readRowsForIds } from "@/lib/read-all-rows";
 import { createServiceClient } from "@/lib/supabase/server";
 import { listAllUsers } from "@/lib/list-all-users";
 import type { CardRow } from "@/lib/cards";
@@ -72,7 +73,8 @@ export type ProgramDetail = {
 async function emailByUserId(
   supabase: ServiceClient,
 ): Promise<Map<string, string | null>> {
-  const { data } = await listAllUsers(supabase);
+  const { data, error } = await listAllUsers(supabase);
+  if (error) throw new Error(`emailByUserId: ${error.message}`);
   return new Map((data?.users ?? []).map((u) => [u.id, u.email ?? null]));
 }
 
@@ -84,9 +86,27 @@ async function emailByUserId(
 export async function listProgramsOverview(): Promise<ProgramOverviewRow[]> {
   const supabase = await createServiceClient();
   const [programsRes, cardsRes, eventsRes] = await Promise.all([
-    supabase.from("programs").select("id, name, active, vendor_id, created_at"),
-    supabase.from("cards").select("id, program_id, reward_count"),
-    supabase.from("stamp_events").select("card_id, kind, created_at"),
+    readAllRows((start, end) =>
+      supabase
+        .from("programs")
+        .select("id, name, active, vendor_id, created_at")
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
+    readAllRows((start, end) =>
+      supabase
+        .from("cards")
+        .select("id, program_id, reward_count")
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
+    readAllRows((start, end) =>
+      supabase
+        .from("stamp_events")
+        .select("card_id, kind, created_at")
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
   ]);
   for (const r of [programsRes, cardsRes, eventsRes]) {
     if (r.error) throw new Error(`listProgramsOverview: ${r.error.message}`);
@@ -137,8 +157,20 @@ export async function listProgramsOverview(): Promise<ProgramOverviewRow[]> {
 export async function listVendors(): Promise<VendorRow[]> {
   const supabase = await createServiceClient();
   const [programsRes, proRes] = await Promise.all([
-    supabase.from("programs").select("vendor_id"),
-    supabase.from("vendor_pro").select("vendor_id"),
+    readAllRows((start, end) =>
+      supabase
+        .from("programs")
+        .select("vendor_id")
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
+    readAllRows((start, end) =>
+      supabase
+        .from("vendor_pro")
+        .select("vendor_id")
+        .order("vendor_id", { ascending: true })
+        .range(start, end),
+    ),
   ]);
   for (const r of [programsRes, proRes]) {
     if (r.error) throw new Error(`listVendors: ${r.error.message}`);
@@ -171,11 +203,15 @@ export async function listPendingUpgradeRequests(): Promise<
   PendingUpgradeRequest[]
 > {
   const supabase = await createServiceClient();
-  const { data, error } = await supabase
-    .from("upgrade_requests")
-    .select("id, vendor_id, created_at")
-    .eq("status", "pending")
-    .order("created_at", { ascending: true });
+  const { data, error } = await readAllRows((start, end) =>
+    supabase
+      .from("upgrade_requests")
+      .select("id, vendor_id, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(start, end),
+  );
   if (error) throw new Error(`listPendingUpgradeRequests: ${error.message}`);
 
   const emails = await emailByUserId(supabase);
@@ -191,9 +227,27 @@ export async function listPendingUpgradeRequests(): Promise<
 export async function platformTotals(): Promise<PlatformTotals> {
   const supabase = await createServiceClient();
   const [programsRes, cardsRes, eventsRes] = await Promise.all([
-    supabase.from("programs").select("id, active"),
-    supabase.from("cards").select("id, reward_count"),
-    supabase.from("stamp_events").select("kind"),
+    readAllRows((start, end) =>
+      supabase
+        .from("programs")
+        .select("id, active")
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
+    readAllRows((start, end) =>
+      supabase
+        .from("cards")
+        .select("id, reward_count")
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
+    readAllRows((start, end) =>
+      supabase
+        .from("stamp_events")
+        .select("kind")
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
   ]);
   for (const r of [programsRes, cardsRes, eventsRes]) {
     if (r.error) throw new Error(`platformTotals: ${r.error.message}`);
@@ -225,10 +279,14 @@ export async function recentActivity(limit = 15): Promise<ActivityRow[]> {
   const phoneByCardId = new Map<string, string>();
   const programIdByCardId = new Map<string, string>();
   if (cardIds.length) {
-    const { data: cards } = await supabase
-      .from("cards")
-      .select("id, phone, program_id")
-      .in("id", cardIds);
+    const { data: cards } = await readRowsForIds(cardIds, (batch, start, end) =>
+      supabase
+        .from("cards")
+        .select("id, phone, program_id")
+        .in("id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+    );
     for (const c of cards ?? []) {
       phoneByCardId.set(c.id, c.phone);
       programIdByCardId.set(c.id, c.program_id);
@@ -237,10 +295,16 @@ export async function recentActivity(limit = 15): Promise<ActivityRow[]> {
   const programIds = [...new Set([...programIdByCardId.values()])];
   const nameByProgramId = new Map<string, string>();
   if (programIds.length) {
-    const { data: programs } = await supabase
-      .from("programs")
-      .select("id, name")
-      .in("id", programIds);
+    const { data: programs } = await readRowsForIds(
+      programIds,
+      (batch, start, end) =>
+        supabase
+          .from("programs")
+          .select("id, name")
+          .in("id", batch)
+          .order("id", { ascending: true })
+          .range(start, end),
+    );
     for (const p of programs ?? []) nameByProgramId.set(p.id, p.name);
   }
 
@@ -269,24 +333,38 @@ export async function getProgramDetail(
   if (error) throw new Error(`getProgramDetail: ${error.message}`);
   if (!program) return null;
 
-  const { data: cardsData } = await supabase
-    .from("cards")
-    .select("id, phone, stamp_count, reward_count, state, updated_at")
-    .eq("program_id", programId)
-    .order("updated_at", { ascending: false });
+  const { data: cardsData, error: cardsError } = await readAllRows(
+    (start, end) =>
+      supabase
+        .from("cards")
+        .select("id, phone, stamp_count, reward_count, state, updated_at")
+        .eq("program_id", programId)
+        .order("updated_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(start, end),
+  );
+  if (cardsError) throw new Error(cardsError.message);
   const cards = cardsData ?? [];
   const phoneByCardId = new Map(cards.map((c) => [c.id, c.phone]));
   const cardIds = cards.map((c) => c.id);
 
   // All of one program's events (validation scale is small) so the detail page
   // can both count totals and show the most recent slice.
-  const { data: eventsData } = cardIds.length
-    ? await supabase
+  const { data: eventsData, error: eventsError } = await readRowsForIds(
+    cardIds,
+    (batch, start, end) =>
+      supabase
         .from("stamp_events")
         .select("id, kind, created_at, card_id")
-        .in("card_id", cardIds)
-        .order("created_at", { ascending: false })
-    : { data: [] };
+        .in("card_id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+  );
+  if (eventsError) throw new Error(eventsError.message);
+  eventsData?.sort(
+    (a, b) =>
+      b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id),
+  );
 
   const emails = await emailByUserId(supabase);
 

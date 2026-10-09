@@ -2,17 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { notifyCustomerByPhone, notifyVendor } from "./merqo-customer-notify";
 
 describe("notifyCustomerByPhone", () => {
-  const originalBaseUrl = process.env.MERQO_BASE_URL;
-  const originalSecret = process.env.MERQO_CUSTOMER_SECRET;
-
   beforeEach(() => {
-    process.env.MERQO_BASE_URL = "https://merqo.example";
-    process.env.MERQO_CUSTOMER_SECRET = "test-customer-secret";
+    vi.stubEnv("MERQO_BASE_URL", "https://merqo.example");
+    vi.stubEnv("MERQO_CUSTOMER_SECRET", "test-customer-secret");
   });
 
   afterEach(() => {
-    process.env.MERQO_BASE_URL = originalBaseUrl;
-    process.env.MERQO_CUSTOMER_SECRET = originalSecret;
+    vi.unstubAllEnvs();
+
     vi.unstubAllGlobals();
   });
 
@@ -92,7 +89,7 @@ describe("notifyCustomerByPhone", () => {
   });
 
   it("no-ops without throwing when MERQO_BASE_URL is unset", async () => {
-    delete process.env.MERQO_BASE_URL;
+    vi.stubEnv("MERQO_BASE_URL", undefined);
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
@@ -103,7 +100,7 @@ describe("notifyCustomerByPhone", () => {
   });
 
   it("no-ops without throwing when MERQO_CUSTOMER_SECRET is unset", async () => {
-    delete process.env.MERQO_CUSTOMER_SECRET;
+    vi.stubEnv("MERQO_CUSTOMER_SECRET", undefined);
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
@@ -115,17 +112,14 @@ describe("notifyCustomerByPhone", () => {
 });
 
 describe("notifyVendor", () => {
-  const originalBaseUrl = process.env.MERQO_BASE_URL;
-  const originalSecret = process.env.MERQO_CUSTOMER_SECRET;
-
   beforeEach(() => {
-    process.env.MERQO_BASE_URL = "https://merqo.example";
-    process.env.MERQO_CUSTOMER_SECRET = "test-customer-secret";
+    vi.stubEnv("MERQO_BASE_URL", "https://merqo.example");
+    vi.stubEnv("MERQO_CUSTOMER_SECRET", "test-customer-secret");
   });
 
   afterEach(() => {
-    process.env.MERQO_BASE_URL = originalBaseUrl;
-    process.env.MERQO_CUSTOMER_SECRET = originalSecret;
+    vi.unstubAllEnvs();
+
     vi.unstubAllGlobals();
   });
 
@@ -198,7 +192,7 @@ describe("notifyVendor", () => {
   });
 
   it("no-ops without throwing when MERQO_BASE_URL is unset", async () => {
-    delete process.env.MERQO_BASE_URL;
+    vi.stubEnv("MERQO_BASE_URL", undefined);
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
@@ -207,7 +201,7 @@ describe("notifyVendor", () => {
   });
 
   it("no-ops without throwing when MERQO_CUSTOMER_SECRET is unset", async () => {
-    delete process.env.MERQO_CUSTOMER_SECRET;
+    vi.stubEnv("MERQO_CUSTOMER_SECRET", undefined);
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 

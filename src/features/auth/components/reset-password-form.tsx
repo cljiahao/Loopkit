@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Wordmark } from "@/components/landing/wordmark";
@@ -12,6 +13,12 @@ import { ElevatedCard } from "@merqo/ui";
 // Reached from the password-reset email → /auth/callback establishes a recovery
 // session and forwards here. We update the password on that session, then land
 // the user in their dashboard.
+const resetSchema = z
+  .object({ password: z.string().min(8).max(72), confirm: z.string() })
+  .refine((value) => value.password === value.confirm, {
+    message: "Passwords do not match.",
+  });
+
 export function ResetPasswordForm() {
   const router = useRouter();
   const [password, setPassword] = useState("");
@@ -22,20 +29,32 @@ export function ResetPasswordForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (password !== confirm) {
-      setError("Passwords do not match.");
+    const parsed = resetSchema.safeParse({ password, confirm });
+    if (!parsed.success) {
+      setError(
+        password !== confirm
+          ? "Passwords do not match."
+          : "Use between 8 and 72 characters.",
+      );
       return;
     }
     setBusy(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password });
-    setBusy(false);
-    if (error) {
-      setError(error.message);
-      return;
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({
+        password: parsed.data.password,
+      });
+      if (error) {
+        setError(error.message);
+        return;
+      }
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setError("Could not update your password. Try again.");
+    } finally {
+      setBusy(false);
     }
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (

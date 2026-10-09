@@ -1,10 +1,5 @@
 import { Section as SharedSection, ElevatedCard } from "@merqo/ui";
 
-// Delegates header rendering (icon badge, eyebrow, title, description) to
-// @merqo/ui's Section, keeping ElevatedCard — loopkit's own polished-card
-// visual, deliberately not qkit's Ticket theme — as the local shell via the
-// wrapper render-prop. Public shape is unchanged: every existing caller
-// (profile-form.tsx, setup-form.tsx) needs zero changes.
 export function Section({
   icon,
   eyebrow,

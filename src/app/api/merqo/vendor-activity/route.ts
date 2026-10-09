@@ -1,3 +1,4 @@
+import { readAllRows, readRowsForIds } from "@/lib/read-all-rows";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@/lib/supabase/server";
@@ -42,8 +43,22 @@ export async function GET(request: Request) {
   }
 
   const [programsRes, proRes] = await Promise.all([
-    supabase.from("programs").select("id").eq("vendor_id", user.id),
-    supabase.from("vendor_pro").select("vendor_id").eq("vendor_id", user.id),
+    readAllRows((start, end) =>
+      supabase
+        .from("programs")
+        .select("id")
+        .eq("vendor_id", user.id)
+        .order("id", { ascending: true })
+        .range(start, end),
+    ),
+    readAllRows((start, end) =>
+      supabase
+        .from("vendor_pro")
+        .select("vendor_id")
+        .eq("vendor_id", user.id)
+        .order("vendor_id", { ascending: true })
+        .range(start, end),
+    ),
   ]);
   if (programsRes.error || proRes.error) {
     console.error(
@@ -71,10 +86,14 @@ export async function GET(request: Request) {
   }[] = [];
 
   if (programIds.length > 0) {
-    const cardsRes = await supabase
-      .from("cards")
-      .select("id")
-      .in("program_id", programIds);
+    const cardsRes = await readRowsForIds(programIds, (batch, start, end) =>
+      supabase
+        .from("cards")
+        .select("id")
+        .in("program_id", batch)
+        .order("id", { ascending: true })
+        .range(start, end),
+    );
     if (cardsRes.error) {
       console.error(
         "merqo vendor-activity: read failed",
@@ -89,10 +108,14 @@ export async function GET(request: Request) {
     const cardIds = cards.map((c) => c.id);
 
     if (cardIds.length > 0) {
-      const eventsRes = await supabase
-        .from("stamp_events")
-        .select("card_id, kind, created_at, payload")
-        .in("card_id", cardIds);
+      const eventsRes = await readRowsForIds(cardIds, (batch, start, end) =>
+        supabase
+          .from("stamp_events")
+          .select("card_id, kind, created_at, payload")
+          .in("card_id", batch)
+          .order("id", { ascending: true })
+          .range(start, end),
+      );
       if (eventsRes.error) {
         console.error(
           "merqo vendor-activity: read failed",

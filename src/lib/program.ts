@@ -1,3 +1,4 @@
+import { readAllRows } from "@/lib/read-all-rows";
 import { z } from "zod";
 import { requireVendor } from "@/features/auth";
 import { createServerClient } from "@/lib/supabase/server";
@@ -198,6 +199,23 @@ export const saveProgramSchema = z
     }),
   ])
   .superRefine((data, ctx) => {
+    if (data.type === "stamp" && data.variant === "points") {
+      if (data.redemption_mode === "catalog" && !data.catalog)
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["catalog"],
+          message: "Add rewards to the points catalog.",
+        });
+      if (
+        data.redemption_mode === "offset" &&
+        (!data.offset_rate_points || !data.offset_rate_dollars)
+      )
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["offset_rate_points"],
+          message: "Enter the points and dollar conversion rate.",
+        });
+    }
     if (
       data.type === "stamp" &&
       data.variant !== "points" &&
@@ -355,10 +373,14 @@ export function buildProgramFields(data: SaveProgramInput): {
 // scopes the select to auth.uid(), so no vendor_id filter is needed here.
 export async function listPrograms(): Promise<Program[]> {
   const supabase = await createServerClient();
-  const { data, error } = await supabase
-    .from("programs")
-    .select(PROGRAM_COLUMNS)
-    .order("created_at", { ascending: true });
+  const { data, error } = await readAllRows((start, end) =>
+    supabase
+      .from("programs")
+      .select(PROGRAM_COLUMNS)
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .range(start, end),
+  );
   if (error) throw new Error(`listPrograms: ${error.message}`);
   return data ?? [];
 }

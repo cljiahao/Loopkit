@@ -51,9 +51,10 @@ yarn-error.log*
 # per-developer skill-usage telemetry, not shared state
 .claude/skill-usage.log
 
-# env files (can opt-in for committing if needed)
-.env
-.env.local
+# Local environment files; only blank templates belong in source control.
+.env*
+!.env.example
+!.env.default
 
 # vercel
 .vercel

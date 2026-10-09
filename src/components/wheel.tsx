@@ -3,31 +3,9 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
-// Real constant-angular-deceleration ("friction") kinematics, computed and
-// driven per-frame via requestAnimationFrame — deliberately NOT a CSS
-// transition/animation at all. A CSS easing curve is a fixed shape chosen
-// upfront; it can't be told "you're currently moving at exactly this
-// velocity, now decelerate smoothly from THERE to a dead stop on this
-// target," which is exactly the problem at the boundary between "target
-// still unknown" and "target now known" — a curve chosen without knowing
-// the actual handoff velocity either restarts slow (reads as choppy/
-// discontinuous) or restarts fast (reads as "constant, then suddenly so
-// fast," which is what this was). Computing position analytically each
-// frame from real physics lets stage 2 continue the EXACT velocity stage 1
-// had reached, instead of two disconnected curves stitched together.
-//
-// Physics: for constant deceleration a from initial velocity v0, distance
-// covered over time t is d(t) = v0*t - 0.5*a*t², and velocity is
-// v(t) = v0 - a*t. Stage 1 uses fixed v0/a for the whole masked window
-// (a real decelerating spin from the very first frame, not a flat
-// constant speed). At the instant the target becomes known, stage 2 reads
-// the exact v1 = v(elapsed) stage 1 had reached, then solves fresh for an
-// a2 that brings the wheel to a dead stop (v=0) exactly on the target
-// angle: given v1 and a chosen total distance (segment's exact landing
-// angle + a couple of extra full turns), t2 = 2*distance/v1 and
-// a2 = v1/t2 — the unique constant deceleration that covers that distance
-// and reaches zero velocity at the same instant.
-// Matches the parent's REVEAL_MS masking window.
+// Continue angular velocity across the reveal handoff; solve deceleration
+// from d = v*t - 0.5*a*t² so the wheel stops on the chosen segment.
+// Keep this duration aligned with the preview masking window.
 const STAGE1_DURATION_MS = 1400;
 // Angular velocity (deg/s) at the instant the spin starts.
 const STAGE1_V0 = 1400;
@@ -130,6 +108,8 @@ export function Wheel({
     function cancel() {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
       frameRef.current = null;
+      wasSpinning.current = false;
+      wasLanded.current = false;
     }
 
     if (reducedMotion) {
@@ -148,9 +128,9 @@ export function Wheel({
     }
 
     if (spinning && landedIndex < 0 && !wasSpinning.current) {
+      cancel();
       wasSpinning.current = true;
       wasLanded.current = false;
-      cancel();
       // Clear any previous spin's result immediately — a new spin means
       // the old badge shouldn't linger while the wheel spins again.
       setResult(null);
@@ -175,9 +155,9 @@ export function Wheel({
     }
 
     if (landedIndex >= 0 && !wasLanded.current) {
+      cancel();
       wasLanded.current = true;
       wasSpinning.current = false;
-      cancel();
 
       const elapsedS = stage1.current
         ? Math.min(

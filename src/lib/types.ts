@@ -550,6 +550,21 @@ export interface Database {
         Args: { p_card: string };
         Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
       };
+      redeem_plant: {
+        Args: { p_program: string; p_phone: string };
+        Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
+      };
+      record_visit_checked: {
+        Args: {
+          p_program: string;
+          p_phone: string;
+          p_state: Json;
+          p_kind: string;
+          p_payload: Json;
+          p_expected_updated_at: string | null;
+        };
+        Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
+      };
       record_visit: {
         Args: {
           p_program: string;
@@ -572,6 +587,23 @@ export interface Database {
           p_carry_over_stamps?: boolean;
           p_active?: boolean;
           p_head_start_percent?: number;
+          p_reward_expiry_days?: number | null;
+        };
+        Returns: string;
+      };
+      replace_program: {
+        Args: {
+          p_replacing: string;
+          p_type: string;
+          p_name: string;
+          p_stamps_required: number;
+          p_reward_text: string;
+          p_config: Json;
+          p_expiry_days?: number | null;
+          p_head_start?: boolean;
+          p_carry_over_stamps?: boolean;
+          p_head_start_percent?: number;
+          p_reward_expiry_days?: number | null;
         };
         Returns: string;
       };
@@ -672,6 +704,20 @@ export interface Database {
           referral_credit: Json | null;
         }[];
       };
+      referral_credit_snapshot: {
+        Args: { p_referral_host_id: string; p_guest_phone: string };
+        Returns: Json;
+      };
+      apply_referral_credit_checked: {
+        Args: {
+          p_referral_host_id: string;
+          p_guest_phone: string;
+          p_expected: Json;
+          p_state: Json;
+          p_payload: Json;
+        };
+        Returns: boolean;
+      };
       apply_referral_credit: {
         Args: {
           p_referral_host_id: string;
@@ -690,6 +736,48 @@ export interface Database {
           phone: string;
         }[];
       };
+      customer_join: {
+        Args: {
+          p_vendor: string;
+          p_phone: string;
+          p_token?: string | null;
+          p_referral_code?: string | null;
+        };
+        Returns: Json;
+      };
+      customer_select_points_reward: {
+        Args: {
+          p_vendor: string;
+          p_program: string;
+          p_phone: string;
+          p_token: string;
+          p_item_id: string;
+        };
+        Returns: Database["loopkit"]["Tables"]["reward_vouchers"]["Row"];
+      };
+      customer_set_birthday: {
+        Args: {
+          p_vendor: string;
+          p_phone: string;
+          p_token: string;
+          p_month: number;
+          p_day: number;
+        };
+        Returns: void;
+      };
+      customer_reset_expired_card: {
+        Args: {
+          p_vendor: string;
+          p_program: string;
+          p_phone: string;
+          p_token: string;
+        };
+        Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
+      };
+      recover_customer_card: {
+        Args: { p_program: string; p_phone: string };
+        Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
+      };
       regenerate_card: {
         Args: { p_program: string; p_phone: string };
         Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
@@ -701,6 +789,19 @@ export interface Database {
       is_pro: {
         Args: { p_uid: string };
         Returns: boolean;
+      };
+      qkit_earn_vendor: {
+        Args: { p_order_id: string };
+        Returns: string | null;
+      };
+      customer_qkit_earn_claim: {
+        Args: {
+          p_order_id: string;
+          p_phone: string;
+          p_name: string | null;
+          p_token?: string | null;
+        };
+        Returns: Json;
       };
       qkit_earn_lookup: {
         Args: { p_order_id: string; p_phone: string };
@@ -717,6 +818,7 @@ export interface Database {
           card_reward_count: number;
         }[];
       };
+      // Compatibility arguments remain in the RPC; SQL derives stamps and state.
       qkit_earn_commit: {
         Args: {
           p_order_id: string;
@@ -727,9 +829,23 @@ export interface Database {
         };
         Returns: Database["loopkit"]["Tables"]["cards"]["Row"];
       };
+      _expire_stale_vouchers_unchecked: {
+        Args: { p_card: string };
+        Returns: number;
+      };
       expire_stale_vouchers: {
         Args: { p_card: string };
         Returns: number;
+      };
+      _grant_reward_voucher_unchecked: {
+        Args: {
+          p_card: string;
+          p_reward_text: string;
+          p_expiry_days: number | null;
+          p_count?: number;
+          p_immediate?: boolean;
+        };
+        Returns: void;
       };
       grant_reward_voucher: {
         Args: {

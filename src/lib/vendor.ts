@@ -3,7 +3,7 @@ import { requireVendor } from "@/features/auth";
 import { createServerClient } from "@/lib/supabase/server";
 import {
   getOrCreateVendorProfile,
-  upsertVendorProfile,
+  patchVendorProfile,
 } from "@/lib/merqo-vendor-profile";
 
 export const stallNameSchema = z.object({
@@ -67,13 +67,9 @@ export async function saveStallName(name: string): Promise<{ error?: string }> {
 
   const supabase = await createServerClient();
   try {
-    const current = await getOrCreateVendorProfile(supabase, user.id, null);
-    await upsertVendorProfile(
-      supabase,
-      user.id,
-      parsed.data.name,
-      current.social_links,
-    );
+    await patchVendorProfile(supabase, user.id, {
+      stallName: parsed.data.name,
+    });
   } catch {
     return { error: "Couldn't save your stall name. Try again." };
   }

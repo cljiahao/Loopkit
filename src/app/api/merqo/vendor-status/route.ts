@@ -24,24 +24,32 @@ export async function GET(request: Request) {
 
   const supabase = await createServiceClient();
 
-  const [usersRes, programsRes, proRes] = await Promise.all([
-    listAllUsers(supabase),
-    supabase.from("programs").select("vendor_id"),
-    supabase.from("vendor_pro").select("vendor_id"),
-  ]);
-
-  if (usersRes.error || programsRes.error || proRes.error) {
-    console.error(
-      "merqo vendor-status: read failed",
-      usersRes.error?.message ??
-        programsRes.error?.message ??
-        proRes.error?.message,
-    );
+  const usersRes = await listAllUsers(supabase);
+  if (usersRes.error)
     return NextResponse.json(
       { error: "Upstream unavailable" },
       { status: 503 },
     );
-  }
+  const key = parsed.data.email.toLowerCase();
+  const user = usersRes.data?.users.find((u) => u.email?.toLowerCase() === key);
+  if (!user) return NextResponse.json({ active: false, plan: null });
+  const [programsRes, proRes] = await Promise.all([
+    supabase
+      .from("programs")
+      .select("vendor_id")
+      .eq("vendor_id", user.id)
+      .limit(1),
+    supabase
+      .from("vendor_pro")
+      .select("vendor_id")
+      .eq("vendor_id", user.id)
+      .limit(1),
+  ]);
+  if (programsRes.error || proRes.error)
+    return NextResponse.json(
+      { error: "Upstream unavailable" },
+      { status: 503 },
+    );
 
   const status = resolveVendorStatus(
     parsed.data.email,

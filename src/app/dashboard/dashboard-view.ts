@@ -155,6 +155,7 @@ export type CostView = {
   expiredUnclaimed: number;
   pendingReturnSoon: number;
   perProgram: {
+    id: string;
     name: string;
     rewardText: string;
     unitCents: number | null;
@@ -211,6 +212,7 @@ export function buildCostView(
       programsMissingCost += 1;
     }
     return {
+      id: p.id,
       name: p.name,
       rewardText: p.rewardText,
       unitCents: p.rewardCostCents,

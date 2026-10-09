@@ -147,8 +147,8 @@ fallback whenever a 2D context isn't available) and a vendor choice of 3
 cover materials — gold foil, sealing wax, or a ticket stub — picked at
 `/setup` (`src/components/README.md`, `src/lib/README.md`). Stamp Card
 programs likewise get a vendor choice of 5 stamp skins (classic dots, wax
-seal, ink stamp, punch hole, charm) and an accent color, free for every
-vendor with no Pro gate — none of loopkit's 3 researched competitors gate
+seal, ink stamp, punch hole, charm) and an accent color. These originally shipped free for every
+vendor with no Pro gate; the current Pro requirements are described below. None of loopkit's 3 researched competitors gate
 either a mechanic's card type or customization this granular
 (`src/components/README.md`, `CHANGELOG.md`). A vendor-dashboard redesign is
 underway (`docs/superpowers/specs/2026-09-08-vendor-dashboard-redesign-design.md`):
@@ -215,7 +215,7 @@ also shows a "By mechanic" breakdown (`src/lib/stats.ts`'s
 `getVendorMechanicBreakdown`) — which of Stamp/Growth/Chance Card is
 actually driving redemption, shown only when a vendor runs 2+ mechanics.
 Stamp programs can also opt into a birthday bonus (migration `0041`,
-`loopkit.set_customer_birthday` + a lazy check-on-next-visit trigger on
+`loopkit.customer_set_birthday`, requiring saved card proof, plus a lazy check-on-next-visit trigger on
 `stamp_events`) — see `src/features/card-check/README.md`.
 
 `@merqo/ui` bumped to v0.32.0 (2026-09-22), for currency. It adds
@@ -299,7 +299,7 @@ goes over HTTP (the merqo metrics API), except four deliberate exceptions,
 all same-Postgres-instance `SECURITY DEFINER` RPCs, never a raw
 cross-schema query: a vendor's stall name and social links live in the
 shared `merqo.vendor_profile` table (`get_or_create_vendor_profile`/
-`upsert_vendor_profile`, see `src/lib/merqo-vendor-profile.ts`); vendor NPS
+`patch_vendor_profile`, see `src/lib/merqo-vendor-profile.ts`); vendor NPS
 feedback (the dashboard's "Share feedback" sheet) is submitted straight
 into the shared `merqo.vendor_feedback` table (`submit_vendor_feedback`, see
 `src/lib/merqo-vendor-feedback.ts`) instead of a local table — loopkit's own
@@ -371,7 +371,7 @@ Separately, a Pro vendor can let customers earn a stamp from a completed
 qkit order (`src/app/dashboard/qkit-earn-settings.tsx`) — this is a pull-model
 claim link, not push automation: qkit shows an "Earn a stamp" link on the
 customer's order page, which sends them to loopkit's own `/earn?order=...`
-page to enter their phone number and claim it (`src/app/earn/`), rather than
+page to enter their phone number and claim it (`src/app/earn/`). Existing customers must also supply their saved card token, directly or through the HttpOnly proof cookie; the shop assists with lost-card recovery. This is a claim flow rather than
 the stamp being awarded automatically the moment the qkit order completes.
 
 Host/couple-facing referral mechanic for event-cart vendors (migration
@@ -383,33 +383,27 @@ sixth engine `type` — `loopkit.referral_hosts` (`vendor_id`, `program_id`,
 `host_phone`, `label`, a unique `referral_code`, `guest_count`) names one of
 the vendor's own active programs plus a host phone, and the vendor shares
 the resulting `/c?v=<vendorId>&ref=<code>` link. `checkStatusAction`
-(`src/features/card-check/api/actions.ts`) calls `vendor_join_referred`
-instead of plain `vendor_join` whenever a `ref` is present (falling back to
-`vendor_join`, unchanged, otherwise) — both now share their enrollment/read
-logic via `vendor_join_enroll`/`vendor_join_cards`. `vendor_join_referred`
-scopes the referral-code lookup to the calling `p_vendor`, so a code minted
-by one vendor can never credit anything at another; a guest referring
-themselves (`guest phone == host phone`) is a no-op; and `loopkit.
-referral_credits` (unique on `(referral_host_id, guest_phone)`) ensures a
-host is credited only the first time each distinct guest phone joins via
-that link. Stamp-type programs are credited inline (mirroring `add_stamp`'s
-own body, minus its vendor-session gate — this path is anonymous/public);
-every other type needs the TypeScript engine's `applyVisit` to compute the
-next state, so `vendor_join_referred` only _reserves_ the credit and
-`checkStatusAction` finishes it via `apply_referral_credit`, the same
-read-compute-persist shape `recordVisitAction` uses for a vendor-triggered
-visit. VIP tiers, birthday rewards, and wallet passes are separate,
-out-of-scope roadmap items.
+(`src/features/card-check/api/actions.ts`) calls the service-only `customer_join`
+RPC with the vendor, normalized phone, saved card proof and optional referral
+code. Existing customers must prove possession of a card before receiving card
+or voucher tokens; fresh enrollment saves an HttpOnly proof cookie. A referral
+code is scoped to its vendor, self-referrals do not credit the host, and the
+unique `(referral_host_id, guest_phone)` ledger prevents duplicate guest credit.
+Stamp credits commit in SQL. For other types, `completeReferralCredit` reads a
+snapshot and calls `apply_referral_credit_checked` with bounded retries so a
+concurrent visit cannot overwrite newer state. Pending credits can be retried
+on a later join. Birthday rewards are supported; VIP tiers and wallet passes
+remain separate roadmap items.
 
 Points Club becomes a real accumulate-then-spend reward shop (migration
 `0043_loopkit_points_reward_shop.sql`, `docs/superpowers/plans/2026-09-04-points-club-reward-shop.md`),
 in a vendor-chosen redemption mode per program: **catalog** mode lets a
 vendor define fixed-point reward items; once a customer has enough points,
-`selectPointsRewardAction` calls `select_points_reward`, which spends the
+`selectPointsRewardAction` calls `customer_select_points_reward` with saved card proof, which spends the
 points and mints a `reward_vouchers` row carrying its own `voucher_token`
 (mirroring `cards.card_token`) — the customer's card view shows it as a
 pending voucher (`checkStatusAction`'s `activeVouchers`, sourced from
-`vendor_join`'s new `active_vouchers` column) until a vendor scans it on
+`customer_join`'s validated cards payload) until a vendor scans it on
 the new `/dashboard/redeem-voucher` screen, which calls `voucher_by_token`/
 `redeem_voucher_by_token`. **Offset** mode skips the voucher step entirely:
 a vendor spends a customer's points as a dollar discount right at the
@@ -480,3 +474,11 @@ structure one-to-one for unit/integration coverage; `e2e/` drives the app
 as a browser would, independent of that structure. `.claude/` and
 `.github/` are the enforcement layer around all of the above — they gate
 what can be committed/merged but contain no application logic themselves.
+
+## October 2026 audit status
+
+Prepared migration `0048` restricts internal reward writes, validates Qkit earn claims, and creates vouchers for earned stamp thresholds while preserving birthday bonuses. It is not applied; see [the audit evidence](docs/loopkit-audit-2026-10-08.md) for the passing source coverage gate and outstanding database validation.
+
+Prepared migration `0049` adds atomic referral state comparison and recoverable pending-credit retries. See the audit evidence above; database execution remains outstanding.
+
+Prepared migrations `0050`–`0059` also address atomic program replacement, plant and stamp redemption, visit concurrency, retired RPC privileges, points/voucher locking, saved-card authorization for customer actions and Qkit claims, audit-table privileges, and historical feedback writes. Database validation and rollout remain outstanding; passing application tests do not establish that these migrations have been applied.

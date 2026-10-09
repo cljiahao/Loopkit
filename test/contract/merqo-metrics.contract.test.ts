@@ -2,10 +2,8 @@ import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { computeLoopkitMetrics } from "@/lib/metrics";
 
-// Copied verbatim from ../merqo/src/lib/metrics-schema.ts. Do NOT import
-// across repos at runtime — keep this file's schema hand-synced with merqo's
-// so a drift between the two shows up here as a failing test, not a broken
-// /team page in production.
+// Consumer schema snapshot; synchronize with merqo/src/lib/metrics-schema.ts.
+// Consumer-only changes are not detected until this snapshot is updated.
 const metricsPayloadSchema = z.object({
   product: z.string(),
   generated_at: z.string(),

@@ -19,6 +19,7 @@ describe("mapActivityRow", () => {
     expect(row).toEqual({
       id: "e1",
       phone: "+6591234567",
+      programId: "p1",
       programName: "Coffee Stamps",
       kind: "stamp",
       isReward: false,

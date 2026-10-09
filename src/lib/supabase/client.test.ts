@@ -14,7 +14,9 @@ describe("createClient — shared-session cookie domain", () => {
   });
 
   it("scopes the auth cookie to .merqo.io when NEXT_PUBLIC_AUTH_COOKIE_DOMAIN is set", () => {
-    mockCreateBrowserClient.mockReturnValue({} as any);
+    mockCreateBrowserClient.mockReturnValue(
+      {} as ReturnType<typeof createBrowserClient>,
+    );
     process.env.NEXT_PUBLIC_AUTH_COOKIE_DOMAIN = ".merqo.io";
     createClient();
     const options = mockCreateBrowserClient.mock.calls[0]?.[2];
@@ -22,7 +24,9 @@ describe("createClient — shared-session cookie domain", () => {
   });
 
   it("omits cookieOptions.domain when NEXT_PUBLIC_AUTH_COOKIE_DOMAIN is unset (dev/preview)", () => {
-    mockCreateBrowserClient.mockReturnValue({} as any);
+    mockCreateBrowserClient.mockReturnValue(
+      {} as ReturnType<typeof createBrowserClient>,
+    );
     createClient();
     const options = mockCreateBrowserClient.mock.calls[0]?.[2];
     expect(options?.cookieOptions).toBeUndefined();

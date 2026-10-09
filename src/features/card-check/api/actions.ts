@@ -1,12 +1,19 @@
 "use server";
 
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
+import { z } from "zod";
+import {
+  readCustomerProof,
+  saveCustomerProof,
+  customerTokenSchema,
+  vendorIdSchema,
+} from "@/lib/customer-proof";
 import { normalizePhone } from "@/lib/phone";
-import { applyVisit, getProgress } from "@/lib/engine";
+import { getProgress } from "@/lib/engine";
 import { qrSvg } from "@merqo/ui";
 import { isCardExpired } from "@/lib/expiry";
 import type { ActionResult } from "@/lib/action-result";
-import type { Json } from "@/lib/types";
+import { completeReferralCredit } from "./referral-credit";
 import type { CardStatus, StatusState } from "../types";
 
 type VendorJoinRow = {
@@ -26,100 +33,42 @@ type VendorJoinRow = {
   replaced_by_stamp_count: number | null;
   vendor_avatar_url: string | null;
   active_vouchers: unknown;
-  // Only ever set by vendor_join_referred, not plain vendor_join — see
-  // ReferralCredit below.
-  referral_credit?: unknown;
 };
 
-// Mirrors the jsonb blob loopkit.vendor_join_referred builds
-// (supabase/migrations/0040) when a referral link resolves to a non-stamp
-// program: it can't compute the next engine state itself (that's this
-// module's job, via applyVisit), so it reserves the credit and hands back
-// everything needed to finish it.
 type ReferralCredit = {
   pending: true;
   referralHostId: string;
   guestPhone: string;
-  programId: string;
-  programType: string;
-  programConfig: unknown;
-  stampsRequired: number;
-  rewardText: string;
-  hostPhone: string;
-  state: unknown;
-  stampCount: number;
-  rewardCount: number;
 };
 
 function isPendingReferralCredit(value: unknown): value is ReferralCredit {
   return (
     typeof value === "object" &&
     value !== null &&
-    (value as { pending?: unknown }).pending === true
+    (value as { pending?: unknown }).pending === true &&
+    z
+      .string()
+      .uuid()
+      .safeParse((value as { referralHostId?: unknown }).referralHostId)
+      .success &&
+    z
+      .string()
+      .regex(/^\+65[3689]\d{7}$/)
+      .safeParse((value as { guestPhone?: unknown }).guestPhone).success
   );
 }
 
-// Finishes a non-stamp-type referral credit vendor_join_referred reserved:
-// computes the next state with the same TypeScript engine
-// src/app/dashboard/actions.ts's recordVisitAction uses for a
-// vendor-triggered visit, then persists it via apply_referral_credit
-// (loopkit.record_visit's shape, minus the vendor-session gate that path
-// doesn't have here). Never allowed to affect checkStatusAction's own
-// result — the guest's own join already succeeded by the time this runs,
-// so a failure here is logged and swallowed, same as this app's other
-// fire-and-forget side effects (e.g. redeemAction's Telegram alerts).
-async function creditReferralHost(
-  supabase: Awaited<ReturnType<typeof createServerClient>>,
-  credit: ReferralCredit,
-): Promise<void> {
+// Referral delivery is best effort after the guest enrollment commits.
+async function creditReferralHost(credit: ReferralCredit): Promise<void> {
   try {
-    const programLike = {
-      type: credit.programType,
-      config: credit.programConfig,
-      stamps_required: credit.stampsRequired,
-      reward_text: credit.rewardText,
-    };
-    const cardLike = {
-      state: credit.state,
-      stamp_count: credit.stampCount,
-      reward_count: credit.rewardCount,
-    };
-    const event = { kind: "visit" as const, payload: { roll: Math.random() } };
-    const { state, rewardUnlocked } = applyVisit(
-      programLike,
-      cardLike,
-      event,
-      new Date(),
-    );
-
-    const { error } = await supabase.rpc("apply_referral_credit", {
-      p_referral_host_id: credit.referralHostId,
-      p_guest_phone: credit.guestPhone,
-      p_state: state as Json,
-      p_kind: "visit",
-      p_payload: { won: rewardUnlocked, roll: event.payload.roll },
-    });
-    if (error) {
-      console.error("apply_referral_credit failed", error.message);
-    }
-  } catch (err) {
-    console.error("creditReferralHost failed", err);
+    await completeReferralCredit(credit.referralHostId, credit.guestPhone);
+  } catch {
+    console.error("creditReferralHost failed");
   }
 }
 
-// Public card-check action — no auth. The vendor shares /c?v=<vendorId> (or
-// a per-host /c?v=<vendorId>&ref=<code> referral link — see
-// src/app/dashboard/referrals/); the phone the customer types in is the
-// only other input. vendor_join / vendor_join_referred (both SECURITY
-// DEFINER) are the sole read/write path: they enroll the phone into every
-// active program it doesn't already have a card for, then return every
-// card the phone holds at this vendor. The engine computes progress per
-// card, so this stays type-agnostic across program types. A `ref` present
-// but not resolving to a real referral_hosts row (unknown code, or one
-// minted by a different vendor) is not an error — it behaves exactly like
-// the plain vendor_join path, per loopkit.vendor_join_referred's own
-// cross-vendor isolation guarantee.
-export async function checkStatusAction(
+// Existing customers must prove possession before the database returns credentials.
+async function checkStatusActionImpl(
   _prev: StatusState,
   formData: FormData,
 ): Promise<StatusState> {
@@ -132,36 +81,84 @@ export async function checkStatusAction(
   }
 
   const vendorId = String(formData.get("vendor") ?? "");
-  if (!vendorId) {
+  if (!vendorIdSchema.safeParse(vendorId).success) {
     return { status: "error", message: "Missing shop." };
   }
   const referralCode = String(formData.get("ref") ?? "").trim();
 
-  const supabase = await createServerClient();
-
-  const { data, error } = referralCode
-    ? await supabase.rpc("vendor_join_referred", {
-        p_vendor: vendorId,
-        p_phone: normalized.phone,
-        p_referral_code: referralCode,
-      })
-    : await supabase.rpc("vendor_join", {
-        p_vendor: vendorId,
-        p_phone: normalized.phone,
-      });
-  if (error) {
-    console.error("vendor_join failed", error);
-    return { status: "error", message: "Something went wrong." };
+  if (referralCode.length > 100)
+    return { status: "error", message: "Invalid referral link." };
+  const submittedProof = String(formData.get("card_code") ?? "").trim();
+  if (
+    submittedProof &&
+    !customerTokenSchema.safeParse(submittedProof).success
+  ) {
+    return {
+      status: "error",
+      message:
+        "Enter the saved code from your card, or ask the shop to recover it.",
+    };
   }
-
-  const rows = (data ?? []) as VendorJoinRow[];
+  const proof = submittedProof || (await readCustomerProof(vendorId));
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase.rpc("customer_join", {
+    p_vendor: vendorId,
+    p_phone: normalized.phone,
+    p_token: proof,
+    p_referral_code: referralCode || null,
+  });
+  if (error)
+    return {
+      status: "error",
+      message: "Use your saved card code or ask the shop to recover your card.",
+    };
+  const parsedPayload = z
+    .object({
+      cards: z.array(
+        z.object({
+          program_id: z.string().uuid(),
+          name: z.string(),
+          type: z.string(),
+          config: z.unknown(),
+          state: z.unknown(),
+          stamp_count: z.number(),
+          card_token: customerTokenSchema,
+          reward_text: z.string(),
+          stamps_required: z.number(),
+          expiry_days: z.number().nullable(),
+          cycle_started_at: z.string().nullable(),
+          active: z.boolean(),
+          replaced_by_name: z.string().nullable(),
+          replaced_by_stamp_count: z.number().nullable(),
+          vendor_avatar_url: z.string().nullable(),
+          active_vouchers: z
+            .array(
+              z.object({
+                id: z.string().uuid(),
+                voucher_token: customerTokenSchema,
+                reward_text: z.string(),
+                expires_at: z.string().nullable(),
+              }),
+            )
+            .optional()
+            .default([]),
+        }),
+      ),
+      referral_credit: z.unknown().optional(),
+    })
+    .safeParse(data);
+  if (!parsedPayload.success)
+    return { status: "error", message: "Could not read your card. Try again." };
+  const payload = parsedPayload.data;
+  const rows = payload.cards as VendorJoinRow[];
   if (rows.length === 0) {
     return { status: "none", message: "We couldn't find any rewards here." };
   }
 
-  const pendingCredit = rows[0]?.referral_credit;
+  await saveCustomerProof(vendorId, rows[0]!.card_token);
+  const pendingCredit = payload?.referral_credit;
   if (isPendingReferralCredit(pendingCredit)) {
-    await creditReferralHost(supabase, pendingCredit);
+    await creditReferralHost(pendingCredit);
   }
 
   const cards: CardStatus[] = await Promise.all(
@@ -202,6 +199,7 @@ export async function checkStatusAction(
 
       return {
         programId: row.program_id,
+        cardCode: row.card_token,
         name: row.name,
         label: progress.label,
         view: progress.view,
@@ -228,12 +226,8 @@ export async function checkStatusAction(
   };
 }
 
-// Customer self-service card regeneration — for a lost QR or an expired card.
-// Same trust model as enroll_card/checkStatusAction: identity is the phone
-// number typed into /c, no separate customer auth exists in this app.
-// Unchanged by the vendor-level join redesign — still acts on one program's
-// card at a time, invoked per-card from the check-form's card list.
-export async function regenerateCardAction(
+// A proved customer may start a fresh cycle only after expiry.
+async function regenerateCardActionImpl(
   formData: FormData,
 ): Promise<ActionResult<{ phone: string }>> {
   const normalized = normalizePhone(String(formData.get("phone") ?? ""));
@@ -241,32 +235,38 @@ export async function regenerateCardAction(
     return { success: false, error: "Enter a valid Singapore phone number." };
   }
   const programId = String(formData.get("program") ?? "");
-  if (!programId) {
+  if (!z.string().uuid().safeParse(programId).success) {
     return { success: false, error: "Missing program." };
   }
 
-  const supabase = await createServerClient();
-  const { data: card, error } = await supabase.rpc("regenerate_card", {
-    p_program: programId,
-    p_phone: normalized.phone,
-  });
+  const supabase = await createServiceClient();
+  const vendorId = String(formData.get("vendor") ?? "");
+  if (!vendorIdSchema.safeParse(vendorId).success)
+    return { success: false, error: "Missing shop." };
+  const proof = await readCustomerProof(vendorId);
+  if (!proof)
+    return {
+      success: false,
+      error: "Use your saved card code or ask the shop to recover your card.",
+    };
+  const { data: card, error } = await supabase.rpc(
+    "customer_reset_expired_card",
+    {
+      p_vendor: vendorId,
+      p_token: proof,
+      p_program: programId,
+      p_phone: normalized.phone,
+    },
+  );
   if (error || !card) {
-    console.error("regenerate_card failed", error);
     return { success: false, error: "Something went wrong." };
   }
 
+  await saveCustomerProof(vendorId, card.card_token);
   return { success: true, phone: normalized.phone };
 }
 
-// Customer self-entry for the birthday-bonus feature — optional, never
-// required. Same anonymous, phone-scoped trust model as checkStatusAction/
-// regenerateCardAction above: identity is the phone already shown on this
-// page, no separate customer auth exists. loopkit.set_customer_birthday
-// only ever UPDATEs an existing loopkit.customers row for the exact
-// (vendor, phone) pair it's called with (migration 0041) — a phone with no
-// row yet (shouldn't happen here, since this only renders after a
-// successful checkStatusAction) is a silent no-op, not an error.
-export async function setCustomerBirthdayAction(
+async function setCustomerBirthdayActionImpl(
   formData: FormData,
 ): Promise<ActionResult> {
   const normalized = normalizePhone(String(formData.get("phone") ?? ""));
@@ -274,7 +274,7 @@ export async function setCustomerBirthdayAction(
     return { success: false, error: "Enter a valid Singapore phone number." };
   }
   const vendorId = String(formData.get("vendor") ?? "");
-  if (!vendorId) {
+  if (!vendorIdSchema.safeParse(vendorId).success) {
     return { success: false, error: "Missing shop." };
   }
   const month = Number(formData.get("month"));
@@ -286,27 +286,28 @@ export async function setCustomerBirthdayAction(
     return { success: false, error: "Pick a day." };
   }
 
-  const supabase = await createServerClient();
-  const { error } = await supabase.rpc("set_customer_birthday", {
+  const supabase = await createServiceClient();
+  const proof = await readCustomerProof(vendorId);
+  if (!proof)
+    return {
+      success: false,
+      error: "Use your saved card code or ask the shop to recover your card.",
+    };
+  const { error } = await supabase.rpc("customer_set_birthday", {
+    p_token: proof,
     p_vendor: vendorId,
     p_phone: normalized.phone,
-    p_birth_month: month,
-    p_birth_day: day,
+    p_month: month,
+    p_day: day,
   });
   if (error) {
-    console.error("set_customer_birthday failed", error.message);
     return { success: false, error: "Something went wrong." };
   }
 
   return { success: true };
 }
 
-// Customer self-service catalog pick — same anonymous, phone-scoped trust
-// model as regenerateCardAction/setCustomerBirthdayAction. The RPC
-// re-derives cost/label from the program's own config server-side (see
-// migration 0043) — nothing here is trusted from the client beyond which
-// item id was tapped.
-export async function selectPointsRewardAction(
+async function selectPointsRewardActionImpl(
   formData: FormData,
 ): Promise<
   ActionResult<{ id: string; phone: string; rewardText: string; qr: string }>
@@ -316,22 +317,35 @@ export async function selectPointsRewardAction(
     return { success: false, error: "Enter a valid Singapore phone number." };
   }
   const programId = String(formData.get("program") ?? "");
-  if (!programId) {
+  if (!z.string().uuid().safeParse(programId).success) {
     return { success: false, error: "Missing program." };
   }
   const itemId = String(formData.get("item_id") ?? "");
-  if (!itemId) {
+  if (!z.string().min(1).max(100).safeParse(itemId).success) {
     return { success: false, error: "Missing reward." };
   }
 
-  const supabase = await createServerClient();
-  const { data: voucher, error } = await supabase.rpc("select_points_reward", {
-    p_program: programId,
-    p_phone: normalized.phone,
-    p_item_id: itemId,
-  });
+  const supabase = await createServiceClient();
+  const vendorId = String(formData.get("vendor") ?? "");
+  if (!vendorIdSchema.safeParse(vendorId).success)
+    return { success: false, error: "Missing shop." };
+  const proof = await readCustomerProof(vendorId);
+  if (!proof)
+    return {
+      success: false,
+      error: "Use your saved card code or ask the shop to recover your card.",
+    };
+  const { data: voucher, error } = await supabase.rpc(
+    "customer_select_points_reward",
+    {
+      p_vendor: vendorId,
+      p_token: proof,
+      p_program: programId,
+      p_phone: normalized.phone,
+      p_item_id: itemId,
+    },
+  );
   if (error || !voucher) {
-    console.error("select_points_reward failed", error);
     const message =
       error?.message === "insufficient_points"
         ? "Not enough points for that reward yet."
@@ -347,4 +361,50 @@ export async function selectPointsRewardAction(
     rewardText: voucher.reward_text,
     qr,
   };
+}
+
+export async function checkStatusAction(
+  prev: StatusState,
+  formData: FormData,
+): Promise<StatusState> {
+  try {
+    return await checkStatusActionImpl(prev, formData);
+  } catch {
+    return { status: "error", message: "Could not read your card. Try again." };
+  }
+}
+export async function regenerateCardAction(
+  formData: FormData,
+): Promise<ActionResult<{ phone: string }>> {
+  try {
+    return await regenerateCardActionImpl(formData);
+  } catch {
+    return { success: false, error: "Could not start a new card. Try again." };
+  }
+}
+export async function setCustomerBirthdayAction(
+  formData: FormData,
+): Promise<ActionResult> {
+  try {
+    return await setCustomerBirthdayActionImpl(formData);
+  } catch {
+    return {
+      success: false,
+      error: "Could not save your birthday. Try again.",
+    };
+  }
+}
+export async function selectPointsRewardAction(
+  formData: FormData,
+): Promise<
+  ActionResult<{ id: string; phone: string; rewardText: string; qr: string }>
+> {
+  try {
+    return await selectPointsRewardActionImpl(formData);
+  } catch {
+    return {
+      success: false,
+      error: "Could not redeem your reward. Try again.",
+    };
+  }
 }

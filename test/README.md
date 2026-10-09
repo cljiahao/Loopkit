@@ -23,8 +23,8 @@ components under `src/app/`, `lib/` tests `src/lib/` (with `lib/engine/`
 mirroring `src/lib/engine/`), `components/` tests `src/components/`.
 `db/` tests are independent of the others — they regex-check
 `supabase/migrations/` SQL text rather than importing any TypeScript.
-`contract/` guards the one cross-repo boundary (loopkit's metrics payload
-vs. merqo's schema). `setup.ts` is loaded by every test file per
+`contract/` checks metrics against a local snapshot of merqo's schema; the
+snapshot requires synchronization when the consumer changes. `setup.ts` is loaded by every test file per
 `vitest.config.ts`.
 
 ## Parent

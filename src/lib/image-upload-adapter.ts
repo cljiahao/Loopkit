@@ -43,13 +43,17 @@ const AVATAR_BUCKETS = [
 export async function removeReplacedAvatar(
   url: string | null | undefined,
 ): Promise<void> {
-  for (const bucket of AVATAR_BUCKETS) {
-    const path = storagePathFromPublicUrl(url, bucket);
-    if (!path) continue;
-    await createClient()
-      .storage.from(bucket)
-      .remove([path])
-      .catch(() => undefined);
-    return;
+  try {
+    for (const bucket of AVATAR_BUCKETS) {
+      const path = storagePathFromPublicUrl(url, bucket);
+      if (!path) continue;
+      await createClient()
+        .storage.from(bucket)
+        .remove([path])
+        .catch(() => undefined);
+      return;
+    }
+  } catch {
+    // Cleanup cannot change the result of the profile save.
   }
 }

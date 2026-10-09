@@ -1,3 +1,4 @@
+import { readAllRows, readRowsForIds } from "@/lib/read-all-rows";
 import { createServerClient } from "@/lib/supabase/server";
 import { listPrograms } from "@/lib/program";
 import { isWonVisit } from "@/lib/metrics";
@@ -5,6 +6,7 @@ import { isWonVisit } from "@/lib/metrics";
 export type VendorActivityRow = {
   id: string;
   phone: string;
+  programId: string;
   programName: string;
   kind: string;
   isReward: boolean;
@@ -50,6 +52,7 @@ export function mapActivityRow(
   return {
     id: event.id,
     phone: card.phone,
+    programId: card.program_id,
     programName: programNameById[card.program_id] ?? "—",
     kind: event.kind,
     isReward,
@@ -86,7 +89,25 @@ export type ListActivityResult = {
 export async function listActivity(
   options: ListActivityOptions,
 ): Promise<ListActivityResult> {
-  const { programIds, type, dateFrom, dateTo, phone, limit, offset } = options;
+  const { programIds, dateFrom, dateTo, phone, limit, offset } = options;
+  if (
+    !Number.isSafeInteger(limit) ||
+    limit < 1 ||
+    limit > 100 ||
+    !Number.isSafeInteger(offset) ||
+    offset < 0 ||
+    offset > 250000
+  )
+    throw new Error("Invalid activity page");
+  for (const date of [dateFrom, dateTo]) {
+    if (
+      date &&
+      (!/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+        !Number.isFinite(Date.parse(date + "T00:00:00Z")) ||
+        new Date(date + "T00:00:00Z").toISOString().slice(0, 10) !== date)
+    )
+      throw new Error("Invalid activity date");
+  }
   if (programIds.length === 0) return { rows: [], hasMore: false };
 
   const supabase = await createServerClient();
@@ -95,12 +116,17 @@ export async function listActivity(
     programs.map((p) => [p.id, p.name]),
   );
 
-  let cardsQuery = supabase
-    .from("cards")
-    .select("id,phone,program_id")
-    .in("program_id", programIds);
-  if (phone) cardsQuery = cardsQuery.eq("phone", phone);
-  const { data: cardsData, error: cardsError } = await cardsQuery;
+  const { data: cardsData, error: cardsError } = await readRowsForIds(
+    programIds,
+    (batch, start, end) => {
+      let query = supabase
+        .from("cards")
+        .select("id,phone,program_id")
+        .in("program_id", batch);
+      if (phone) query = query.eq("phone", phone);
+      return query.order("id", { ascending: true }).range(start, end);
+    },
+  );
   if (cardsError) throw new Error(`listActivity: ${cardsError.message}`);
 
   const cards = cardsData ?? [];
@@ -108,34 +134,21 @@ export async function listActivity(
   const cardIds = cards.map((c) => c.id);
   if (cardIds.length === 0) return { rows: [], hasMore: false };
 
-  let query = supabase
-    .from("stamp_events")
-    .select("id,card_id,kind,payload,created_at")
-    .in("card_id", cardIds);
-
-  // payload.won is always an explicit boolean on every 'visit' row (never
-  // null/absent — written by recordVisitAction), so these payload-path
-  // equality filters never hit SQL's NULL-comparison trap.
-  if (type === "stamps") {
-    query = query.or("kind.eq.stamp,and(kind.eq.visit,payload->>won.eq.false)");
-  } else if (type === "rewards") {
-    query = query.or("kind.eq.redeem,and(kind.eq.visit,payload->>won.eq.true)");
+  const take = offset + limit + 1;
+  const events: ActivityEvent[] = [];
+  for (let i = 0; i < cardIds.length; i += 100) {
+    const batch = cardIds.slice(i, i + 100);
+    const result = await readActivityBatch(supabase, batch, options, take);
+    if (result.error) throw new Error(`listActivity: ${result.error.message}`);
+    events.push(...(result.data ?? []));
   }
-  if (dateFrom) {
-    query = query.gte("created_at", `${dateFrom}T00:00:00`);
-  }
-  if (dateTo) {
-    query = query.lte("created_at", `${dateTo}T23:59:59`);
-  }
-
-  const { data: eventsData, error: eventsError } = await query
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit);
-  if (eventsError) throw new Error(`listActivity: ${eventsError.message}`);
-
-  const events = eventsData ?? [];
-  const hasMore = events.length > limit;
-  const pageEvents = events.slice(0, limit);
+  events.sort(
+    (a, b) =>
+      b.created_at.localeCompare(a.created_at) || b.id.localeCompare(a.id),
+  );
+  const page = events.slice(offset, offset + limit + 1);
+  const hasMore = page.length > limit;
+  const pageEvents = page.slice(0, limit);
 
   const rows = pageEvents
     .map((event) =>
@@ -144,4 +157,41 @@ export async function listActivity(
     .filter((row): row is VendorActivityRow => row !== null);
 
   return { rows, hasMore };
+}
+
+async function readActivityBatch(
+  supabase: Awaited<ReturnType<typeof createServerClient>>,
+  batch: string[],
+  options: ListActivityOptions,
+  take: number,
+) {
+  const { type, dateFrom, dateTo } = options;
+  return readAllRows((start, end) => {
+    if (start >= take) return Promise.resolve({ data: [], error: null });
+    let query = supabase
+      .from("stamp_events")
+      .select("id,card_id,kind,payload,created_at")
+      .in("card_id", batch);
+    if (type === "stamps")
+      query = query.or(
+        "kind.eq.stamp,and(kind.eq.visit,payload->>won.eq.false)",
+      );
+    else if (type === "rewards")
+      query = query.or(
+        "kind.eq.redeem,and(kind.eq.visit,payload->>won.eq.true)",
+      );
+    if (dateFrom) query = query.gte("created_at", dateFrom + "T00:00:00+08:00");
+    if (dateTo) {
+      const next = new Date(dateTo + "T00:00:00Z");
+      next.setUTCDate(next.getUTCDate() + 1);
+      query = query.lt(
+        "created_at",
+        next.toISOString().slice(0, 10) + "T00:00:00+08:00",
+      );
+    }
+    return query
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(start, Math.min(end, take - 1));
+  });
 }

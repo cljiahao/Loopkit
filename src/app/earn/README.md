@@ -1,18 +1,13 @@
 # earn
 
-## Purpose
+Customer-facing stamp claims reached through a completed qkit order link.
 
-Customer-facing "earn a stamp" claim flow reached via a per-order link (qkit
-integration).
+- `actions.ts` validates the order UUID, phone, name and optional saved token. It resolves the order's vendor through a service-only RPC, then invokes `customer_qkit_earn_claim`. Existing cards and retries require a current card token scoped to that vendor and phone. A first enrollment returns only a freshly inserted credential; database conflicts require recovery. The action saves proof in the HttpOnly vendor cookie and returns only progress to the form.
+- `actions.test.ts` covers enrollment, saved and manual proof, denied recovery, malformed responses, transport failures and cookie failures.
+- `earn-form.tsx` renders phone, optional name and optional saved card token inputs. Lost cards use vendor-assisted recovery. Successful claims show stamp progress and reward copy.
+- `earn-form.dom.test.tsx` covers rendering, submission, progress and visible errors.
+- `page.tsx` reads the order search parameter and renders the form or missing-reference copy.
 
-## Contents
-
-- `actions.test.ts` — vitest unit tests for `claimEarnAction`: invalid phone, missing/unknown order, stamp commit, already-claimed short-circuit, and non-stamp-program rejection
-- `actions.ts` — `claimEarnAction`: `"use server"` action that looks up an order via the `qkit_earn_lookup` RPC, increments/caps the stamp count, and commits via `qkit_earn_commit` (stamp-type programs only, MVP scope); no per-IP rate limiting (removed — never provisioned in production, was a fail-open no-op)
-- `earn-form.dom.test.tsx` — jsdom tests for `EarnForm`: renders labeled phone/name inputs and the hidden order id, shows the vendor name (or a generic fallback), submits to `claimEarnAction` and renders the stamp count on success, shows a `role="alert"` message on error
-- `earn-form.tsx` — `EarnForm` client component: `@merqo/ui`'s `ElevatedCard`-wrapped phone/name form (shadcn `Input`/`Label`/`Button`, matching `/c`'s `CheckForm` pattern) using `useActionState` + `claimEarnAction`, shows the stamp count and reward text on success
-- `page.tsx` — `EarnPage` server component: reads the `order` search param, renders `EarnForm` or a "missing order reference" message
-
-## Parent
+Migration `0056` closes direct access to the legacy phone-only lookup and commit functions. The guarded SQL wrapper preserves persisted stamp limits and idempotency. Database authorization and conflict regressions are in `supabase/tests/earn-customer-capability.test.sql`; these require a disposable local database.
 
 [app](../README.md)

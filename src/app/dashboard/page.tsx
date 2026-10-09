@@ -92,9 +92,6 @@ export default async function DashboardPage() {
     ),
   });
 
-  const programIdByName = Object.fromEntries(
-    programs.map((p) => [p.name, p.id]),
-  );
   const twoZone = programs.length >= 2;
   const heading = vendorName
     ? `${model.greeting}, ${vendorName}`
@@ -149,7 +146,7 @@ export default async function DashboardPage() {
         deltaVsLastWeek={model.trend.deltaVsLastWeek}
       />
       <WorthALook items={model.worthALook} />
-      <RecentActivity rows={activity.rows} programIdByName={programIdByName} />
+      <RecentActivity rows={activity.rows} />
     </div>
   );
 

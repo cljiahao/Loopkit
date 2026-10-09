@@ -5,7 +5,10 @@
 Vitest "schema drift" guards: each file regex-checks one `supabase/migrations/`
 file's raw SQL text for the columns/constraints/functions it's expected to
 define. A cheap guard against silently editing a migration's intent, not a
-substitute for running the migration against real Postgres.
+substitute for running the migration against real Postgres. These are historical
+migration snapshots: later migrations can replace functions and revoke earlier
+grants. In particular, migration `0055` supersedes the old phone-only customer
+RPC access; current authorization requires final-schema pgTAP tests.
 
 ## Contents
 

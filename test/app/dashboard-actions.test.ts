@@ -56,6 +56,7 @@ import {
   lookupAction,
   redeemAction,
   redeemPlantAction,
+  recordVisitAction,
   applyPointsOffsetAction,
   resolveTokenAction,
   redeemVoucherAction,
@@ -267,7 +268,14 @@ describe("redeemPlantAction returns fresh progress", () => {
       },
       error: null,
     });
-    rpcMock.mockResolvedValue({ data: null, error: null });
+    rpcMock.mockResolvedValue({
+      data: {
+        state: { growth: 0, last_visit_at: null, blooms: 1, bloomed: false },
+        stamp_count: 0,
+        reward_count: 0,
+      },
+      error: null,
+    });
 
     const res = await redeemPlantAction(
       form({ program_id: "p2", phone: "91234567" }),
@@ -287,6 +295,49 @@ describe("redeemPlantAction returns fresh progress", () => {
       });
       expect(res.progress.rewardReady).toBe(false);
     }
+  });
+  it("rejects a different mechanic before writing", async () => {
+    getProgramByIdMock.mockResolvedValue({
+      id: "p2",
+      type: "stamp",
+      active: true,
+    });
+    expect(
+      (await redeemPlantAction(form({ program_id: "p2", phone: "91234567" })))
+        .success,
+    ).toBe(false);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+  it("returns the authoritative readiness failure", async () => {
+    getProgramByIdMock.mockResolvedValue({
+      id: "p2",
+      type: "plant",
+      active: true,
+    });
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { message: "reward not ready" },
+    });
+    expect(
+      (await redeemPlantAction(form({ program_id: "p2", phone: "91234567" })))
+        .success,
+    ).toBe(false);
+    expect(rpcMock).toHaveBeenCalledExactlyOnceWith("redeem_plant", {
+      p_program: "p2",
+      p_phone: "+6591234567",
+    });
+  });
+  it("rejects an empty database result", async () => {
+    getProgramByIdMock.mockResolvedValue({
+      id: "p2",
+      type: "plant",
+      active: true,
+    });
+    rpcMock.mockResolvedValue({ data: null, error: null });
+    expect(
+      (await redeemPlantAction(form({ program_id: "p2", phone: "91234567" })))
+        .success,
+    ).toBe(false);
   });
 });
 
@@ -537,6 +588,12 @@ describe("resolveTokenAction falls back to a voucher lookup", () => {
     });
   });
 
+  it("rejects an empty token without calling an RPC", async () => {
+    const res = await resolveTokenAction(form({ token: "" }));
+    expect(res.success).toBe(false);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+
   it("errors when neither a card nor a voucher matches", async () => {
     rpcMock.mockResolvedValue({ data: [], error: null });
     const res = await resolveTokenAction(form({ token: "nope" }));
@@ -584,5 +641,72 @@ describe("redeemVoucherAction", () => {
       success: false,
       error: "This reward has expired.",
     });
+  });
+});
+
+describe("recordVisitAction snapshot safety", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    requireVendorMock.mockResolvedValue({ user: { id: "v1" } });
+    getProgramByIdMock.mockResolvedValue({
+      id: "p2",
+      type: "plant",
+      active: true,
+      config: buildPlantConfig(8, "Coffee"),
+      reward_text: "Coffee",
+      expiry_days: null,
+    });
+    maybeSingleMock.mockResolvedValue({ data: null, error: null });
+    rpcMock.mockResolvedValue({ data: null, error: null });
+  });
+  it("passes a missing-card snapshot for first visits", async () => {
+    expect(
+      (await recordVisitAction(form({ program_id: "p2", phone: "91234567" })))
+        .success,
+    ).toBe(true);
+    expect(rpcMock).toHaveBeenCalledWith(
+      "record_visit_checked",
+      expect.objectContaining({ p_expected_updated_at: null, p_kind: "visit" }),
+    );
+  });
+  it("passes the exact read revision", async () => {
+    maybeSingleMock.mockResolvedValue({
+      data: {
+        state: { growth: 1, last_visit_at: null, blooms: 0 },
+        updated_at: "2026-01-01T00:00:00Z",
+        stamp_count: 0,
+        reward_count: 0,
+      },
+      error: null,
+    });
+    await recordVisitAction(form({ program_id: "p2", phone: "91234567" }));
+    expect(rpcMock).toHaveBeenCalledWith(
+      "record_visit_checked",
+      expect.objectContaining({
+        p_expected_updated_at: "2026-01-01T00:00:00Z",
+      }),
+    );
+  });
+  it("does not write when the initial read fails", async () => {
+    maybeSingleMock.mockResolvedValue({
+      data: null,
+      error: { message: "offline" },
+    });
+    expect(
+      (await recordVisitAction(form({ program_id: "p2", phone: "91234567" })))
+        .success,
+    ).toBe(false);
+    expect(rpcMock).not.toHaveBeenCalled();
+  });
+  it("returns a retry prompt for concurrent changes", async () => {
+    rpcMock.mockResolvedValue({
+      data: null,
+      error: { message: "card changed", code: "40001" },
+    });
+    const result = await recordVisitAction(
+      form({ program_id: "p2", phone: "91234567" }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error).toMatch(/changed/);
   });
 });

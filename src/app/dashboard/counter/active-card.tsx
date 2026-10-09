@@ -143,16 +143,16 @@ export function ActiveCard(props: ActiveCardProps) {
             size="sm"
             className="rounded-xl text-muted-foreground"
           >
-            Regenerate card
+            Recover card access
           </Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Regenerate this card?</AlertDialogTitle>
+            <AlertDialogTitle>Recover card access?</AlertDialogTitle>
             <AlertDialogDescription>
-              Issues {result.phone} a fresh QR code and resets their progress to
-              zero, for a lost code or an expired card. Their lifetime reward
-              count is kept.
+              Verify the customer for {result.phone} before continuing. This
+              replaces their saved card code and keeps their progress. The
+              previous code will stop working.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -166,7 +166,7 @@ export function ActiveCard(props: ActiveCardProps) {
                 props.onConfirmRegenerate();
               }}
             >
-              {props.pending ? "Regenerating…" : "Regenerate"}
+              {props.pending ? "Recovering…" : "Recover access"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -21,6 +21,19 @@ import {
   getVendorOverviewInputs,
 } from "@/lib/stats";
 
+function pagedQuery(data: unknown[], error: { message: string } | null = null) {
+  const builder = {
+    select: () => builder,
+    in: () => builder,
+    order: () => builder,
+    range: async (start: number, end: number) => ({
+      data: data.slice(start, end + 1),
+      error,
+    }),
+  };
+  return builder;
+}
+
 const DAY = 24 * 60 * 60 * 1000;
 const now = Date.UTC(2026, 6, 10, 4, 0, 0); // 2026-07-10 12:00 SGT
 const iso = (daysAgo: number) => new Date(now - daysAgo * DAY).toISOString();
@@ -474,31 +487,15 @@ describe("getVendorOverviewInputs", () => {
   });
 
   it("classifies the fetched events and passes cards through", async () => {
-    const cardsBuilder = {
-      select: vi.fn(() => cardsBuilder),
-      in: vi.fn(() =>
-        Promise.resolve({
-          data: [
-            { id: "c1", program_id: "p1", stamp_count: 3, created_at: iso(1) },
-          ],
-          error: null,
-        }),
-      ),
-    };
-    const eventsBuilder = {
-      select: vi.fn(() => eventsBuilder),
-      in: vi.fn(() =>
-        Promise.resolve({
-          data: [
-            { card_id: "c1", kind: "stamp", created_at: iso(1) },
-            { card_id: "c1", kind: "redeem", created_at: iso(1) },
-          ],
-          error: null,
-        }),
-      ),
-    };
     fromMock.mockImplementation((table: string) =>
-      table === "cards" ? cardsBuilder : eventsBuilder,
+      pagedQuery(
+        table === "cards"
+          ? [{ id: "c1", program_id: "p1", stamp_count: 3, created_at: iso(1) }]
+          : [
+              { card_id: "c1", kind: "stamp", created_at: iso(1) },
+              { card_id: "c1", kind: "redeem", created_at: iso(1) },
+            ],
+      ),
     );
 
     const result = await getVendorOverviewInputs(["p1"]);

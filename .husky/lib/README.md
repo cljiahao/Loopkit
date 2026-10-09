@@ -39,9 +39,9 @@ Invoked only by the same-named wrapper one level up in `.husky/`
 (`pre-commit.sh`/`pre-push.sh` from `pre-commit`/`pre-push`;
 `commit-msg-check.sh` from `commit-msg`), except `readme-coupling.sh` and
 `comment-hygiene.sh`, which `pre-commit.sh` calls directly as its last two
-steps. `.claude/verify-harness.sh` treats every file in this folder as
-part of the integrity-checked enforcement layer recorded in
-`.claude/harness.json`.
+steps. `.claude/verify-harness.sh` checks committed HEAD blobs for the paths
+listed in `.claude/harness.json`; it does not certify every file here
+or uncommitted script changes.
 
 ## Parent
 

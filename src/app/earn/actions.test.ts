@@ -1,133 +1,155 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-
-const { rpcMock } = vi.hoisted(() => ({ rpcMock: vi.fn() }));
-vi.mock("@/lib/supabase/server", () => ({
-  createServerClient: vi.fn(async () => ({ rpc: rpcMock })),
+const { rpc, readProof, saveProof } = vi.hoisted(() => ({
+  rpc: vi.fn(),
+  readProof: vi.fn(),
+  saveProof: vi.fn(),
 }));
-
+vi.mock("@/lib/supabase/server", () => ({
+  createServiceClient: vi.fn(async () => ({ rpc })),
+}));
+vi.mock("@/lib/customer-proof", async () => {
+  const { z } = await import("zod");
+  return {
+    customerTokenSchema: z.string().regex(/^[a-f0-9]{32}$/),
+    readCustomerProof: readProof,
+    saveCustomerProof: saveProof,
+  };
+});
 import { claimEarnAction } from "./actions";
-
-function fd(entries: Record<string, string>) {
-  const f = new FormData();
-  for (const [k, v] of Object.entries(entries)) f.set(k, v);
-  return f;
+const order = "00560000-0000-0000-0000-000000000100";
+const vendor = "00560000-0000-0000-0000-000000000001";
+const token = "a".repeat(32);
+function form(overrides: Record<string, string | undefined> = {}) {
+  const data = new FormData();
+  for (const [key, value] of Object.entries({
+    order,
+    phone: "91234567",
+    name: "Tan",
+    ...overrides,
+  }))
+    if (value !== undefined) data.set(key, value);
+  return data;
 }
-
-describe("claimEarnAction", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("rejects an invalid phone", async () => {
-    const result = await claimEarnAction(
-      { status: "idle" },
-      fd({ order: "o1", phone: "123", name: "" }),
-    );
-    expect(result.status).toBe("error");
+const result = {
+  vendor_id: vendor,
+  card_token: token,
+  stamp_count: 4,
+  stamps_required: 10,
+  reward_text: "Free coffee",
+};
+beforeEach(() => {
+  vi.resetAllMocks();
+  readProof.mockResolvedValue(null);
+  saveProof.mockResolvedValue(undefined);
+});
+describe("claimEarnAction capability boundary", () => {
+  it.each([
+    { order: "bad" },
+    { phone: "123" },
+    { name: "x".repeat(101) },
+    { token: "bad" },
+  ])("rejects invalid input before DB", async (input) => {
+    expect(
+      (await claimEarnAction({ status: "idle" }, form(input))).status,
+    ).toBe("error");
+    expect(rpc).not.toHaveBeenCalled();
   });
-
-  it("rejects when the order lookup finds nothing", async () => {
-    rpcMock.mockResolvedValueOnce({ data: [], error: null });
-    const result = await claimEarnAction(
-      { status: "idle" },
-      fd({ order: "o1", phone: "91234567", name: "Tan" }),
+  it("rejects unknown orders before reading a cookie", async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: null });
+    expect((await claimEarnAction({ status: "idle" }, form())).status).toBe(
+      "error",
     );
-    expect(result.status).toBe("error");
-    expect(rpcMock).toHaveBeenCalledWith(
-      "qkit_earn_lookup",
-      expect.objectContaining({ p_order_id: "o1" }),
+    expect(readProof).not.toHaveBeenCalled();
+  });
+  it("allows a new enrollment and stores only its returned proof in the cookie", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: vendor, error: null })
+      .mockResolvedValueOnce({ data: result, error: null });
+    const state = await claimEarnAction({ status: "idle" }, form());
+    expect(state).toEqual({
+      status: "success",
+      stampCount: 4,
+      stampsRequired: 10,
+      rewardText: "Free coffee",
+    });
+    expect(rpc).toHaveBeenLastCalledWith("customer_qkit_earn_claim", {
+      p_order_id: order,
+      p_phone: "+6591234567",
+      p_name: "Tan",
+      p_token: null,
+    });
+    expect(saveProof).toHaveBeenCalledWith(vendor, token);
+    expect(JSON.stringify(state)).not.toContain(token);
+  });
+  it("uses vendor-scoped saved proof for an existing card", async () => {
+    readProof.mockResolvedValue(token);
+    rpc
+      .mockResolvedValueOnce({ data: vendor, error: null })
+      .mockResolvedValueOnce({ data: result, error: null });
+    expect((await claimEarnAction({ status: "idle" }, form())).status).toBe(
+      "success",
+    );
+    expect(readProof).toHaveBeenCalledWith(vendor);
+    expect(rpc).toHaveBeenLastCalledWith(
+      "customer_qkit_earn_claim",
+      expect.objectContaining({ p_token: token }),
     );
   });
-
-  it("commits for a stamp-type program and returns the new count", async () => {
-    rpcMock
+  it("accepts manually recovered proof without trusting a browser-supplied vendor", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: vendor, error: null })
+      .mockResolvedValueOnce({ data: result, error: null });
+    expect(
+      (await claimEarnAction({ status: "idle" }, form({ token }))).status,
+    ).toBe("success");
+    expect(readProof).not.toHaveBeenCalled();
+  });
+  it("maps unauthorized existing or replay claims to recovery without exposing DB details", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: vendor, error: null })
       .mockResolvedValueOnce({
-        data: [
-          {
-            vendor_id: "v1",
-            program_id: "p1",
-            program_type: "stamp",
-            program_config: {},
-            stamps_required: 10,
-            reward_text: "Free coffee",
-            already_claimed: false,
-            card_state: {},
-            card_stamp_count: 3,
-            card_reward_count: 0,
-          },
-        ],
-        error: null,
-      })
-      .mockResolvedValueOnce({
-        data: { id: "c1", stamp_count: 4, state: {} },
-        error: null,
+        data: null,
+        error: { message: "victim phone and token details" },
       });
-
-    const result = await claimEarnAction(
-      { status: "idle" },
-      fd({ order: "o1", phone: "91234567", name: "Tan" }),
+    const state = await claimEarnAction({ status: "idle" }, form());
+    expect(state.status).toBe("error");
+    expect(state.message).toContain("recover your card");
+    expect(JSON.stringify(state)).not.toContain("victim");
+    expect(saveProof).not.toHaveBeenCalled();
+  });
+  it.each([
+    { ...result, vendor_id: "00560000-0000-0000-0000-000000000002" },
+    { ...result, card_token: "bad" },
+    { ...result, stamp_count: -1 },
+    null,
+  ])("fails closed on unexpected response", async (data) => {
+    rpc
+      .mockResolvedValueOnce({ data: vendor, error: null })
+      .mockResolvedValueOnce({ data, error: null });
+    expect((await claimEarnAction({ status: "idle" }, form())).status).toBe(
+      "error",
     );
-
-    expect(result.status).toBe("success");
-    expect(result.stampCount).toBe(4);
-    expect(rpcMock).toHaveBeenLastCalledWith(
-      "qkit_earn_commit",
-      expect.objectContaining({ p_order_id: "o1", p_stamp_count: 4 }),
+    expect(saveProof).not.toHaveBeenCalled();
+  });
+  it("allows retry after a transport rejection", async () => {
+    rpc.mockRejectedValueOnce(new Error("transport"));
+    expect((await claimEarnAction({ status: "idle" }, form())).status).toBe(
+      "error",
+    );
+    rpc
+      .mockResolvedValueOnce({ data: vendor, error: null })
+      .mockResolvedValueOnce({ data: result, error: null });
+    expect((await claimEarnAction({ status: "idle" }, form())).status).toBe(
+      "success",
     );
   });
-
-  it("shows already-claimed without re-committing", async () => {
-    rpcMock.mockResolvedValueOnce({
-      data: [
-        {
-          vendor_id: "v1",
-          program_id: "p1",
-          program_type: "stamp",
-          program_config: {},
-          stamps_required: 10,
-          reward_text: "Free coffee",
-          already_claimed: true,
-          card_state: {},
-          card_stamp_count: 4,
-          card_reward_count: 0,
-        },
-      ],
-      error: null,
-    });
-
-    const result = await claimEarnAction(
-      { status: "idle" },
-      fd({ order: "o1", phone: "91234567", name: "Tan" }),
+  it("reports cookie-save rejection without disclosing the capability", async () => {
+    rpc
+      .mockResolvedValueOnce({ data: vendor, error: null })
+      .mockResolvedValueOnce({ data: result, error: null });
+    saveProof.mockRejectedValueOnce(new Error("cookie unavailable"));
+    expect((await claimEarnAction({ status: "idle" }, form())).status).toBe(
+      "error",
     );
-
-    expect(result.status).toBe("success");
-    expect(result.stampCount).toBe(4);
-    expect(rpcMock).toHaveBeenCalledTimes(1);
-  });
-
-  it("rejects a non-stamp program (out of MVP scope)", async () => {
-    rpcMock.mockResolvedValueOnce({
-      data: [
-        {
-          vendor_id: "v1",
-          program_id: "p1",
-          program_type: "plant",
-          program_config: {},
-          stamps_required: 10,
-          reward_text: "Free coffee",
-          already_claimed: false,
-          card_state: {},
-          card_stamp_count: 0,
-          card_reward_count: 0,
-        },
-      ],
-      error: null,
-    });
-
-    const result = await claimEarnAction(
-      { status: "idle" },
-      fd({ order: "o1", phone: "91234567", name: "Tan" }),
-    );
-
-    expect(result.status).toBe("error");
-    expect(rpcMock).toHaveBeenCalledTimes(1);
   });
 });

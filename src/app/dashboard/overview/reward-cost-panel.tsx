@@ -56,7 +56,7 @@ export function RewardCostPanel({
         <div className="mt-2 flex flex-col gap-2">
           {cost.perProgram.map((p) => (
             <div
-              key={p.name}
+              key={p.id}
               className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-3 text-xs"
             >
               <span className="min-w-0 truncate">

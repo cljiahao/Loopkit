@@ -19,11 +19,6 @@ type GetOrCreateVendorProfileArgs = {
   p_vendor_id: string;
   p_default_stall_name: string | null;
 };
-type UpsertVendorProfileArgs = {
-  p_vendor_id: string;
-  p_stall_name: string;
-  p_social_links: Record<string, string>;
-};
 
 /**
  * Callers pass in a client already scoped to their own (loopkit) Database
@@ -54,27 +49,30 @@ export async function getOrCreateVendorProfile<
   });
 }
 
-/**
- * Update the vendor's shared merqo.vendor_profile row (stall name +
- * social links). Mirrors qkit's implementation exactly — same RPC,
- * same generic Db/SchemaName pattern as getOrCreateVendorProfile above.
- */
-export async function upsertVendorProfile<
+/** Omitted fields retain their authoritative database value. */
+export async function patchVendorProfile<
   Db,
   SchemaName extends string & Exclude<keyof Db, "__InternalSupabase">,
 >(
   supabase: SupabaseClient<Db, SchemaName>,
   vendorId: string,
-  stallName: string,
-  socialLinks: Record<string, string>,
+  patch: { stallName?: string; socialLinks?: Record<string, string> },
 ): Promise<VendorProfile> {
-  return callMerqoRpc<UpsertVendorProfileArgs, VendorProfile, Db, SchemaName>(
-    supabase,
-    "upsert_vendor_profile",
+  const args = {
+    p_vendor_id: vendorId,
+    p_stall_name: patch.stallName ?? null,
+    p_social_links: patch.socialLinks ?? null,
+  };
+  const data = await callMerqoRpc<
     {
-      p_vendor_id: vendorId,
-      p_stall_name: stallName,
-      p_social_links: socialLinks,
+      p_vendor_id: string;
+      p_stall_name: string | null;
+      p_social_links: Record<string, string> | null;
     },
-  );
+    VendorProfile,
+    Db,
+    SchemaName
+  >(supabase, "patch_vendor_profile", args);
+  if (!data) throw new Error("patch_vendor_profile failed: empty response");
+  return data;
 }

@@ -19,15 +19,9 @@ vi.mock("@/lib/program", async (importActual) => {
   };
 });
 
-const updateCalls: Array<{ table: string; values: unknown; eqId: string }> = [];
-const fromMock = vi.fn((table: string) => ({
-  update: (values: unknown) => ({
-    eq: async (_col: string, id: string) => {
-      updateCalls.push({ table, values, eqId: id });
-      return { error: null as { message: string } | null };
-    },
-  }),
-}));
+const fromMock = vi.fn(() => {
+  throw new Error("Replacement must not issue separate table writes");
+});
 vi.mock("@/lib/supabase/server", () => ({
   createServerClient: vi.fn(async () => ({ from: fromMock, rpc: rpcMock })),
 }));
@@ -59,7 +53,6 @@ const stampFields = {
 describe("changeTypeAction", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    updateCalls.length = 0;
     getProgramByIdMock.mockResolvedValue({ id: "old-id", type: "wheel" });
     isProMock.mockResolvedValue(false);
     rpcMock.mockResolvedValue({ data: "new-id", error: null });
@@ -75,51 +68,31 @@ describe("changeTypeAction", () => {
     expect(rpcMock).not.toHaveBeenCalled();
   });
 
-  it("deactivates the old program, then creates the new one, then links them, in order", async () => {
+  it("replaces through one atomic RPC without separate writes", async () => {
     await expect(changeTypeAction({}, form(stampFields))).rejects.toThrow(
       "REDIRECT:/dashboard?p=new-id",
     );
-
-    expect(updateCalls[0]).toMatchObject({
-      values: { active: false },
-      eqId: "old-id",
-    });
-    expect(rpcMock).toHaveBeenCalledWith(
-      "create_program",
-      expect.objectContaining({ p_type: "stamp", p_name: "New coffee card" }),
-    );
-    expect(updateCalls[1]).toMatchObject({
-      values: { replaced_by: "new-id" },
-      eqId: "old-id",
-    });
-  });
-
-  it("leaves the old program deactivated and returns an error if create_program fails, without linking", async () => {
-    rpcMock.mockResolvedValue({ data: null, error: { message: "boom" } });
-
-    const res = await changeTypeAction({}, form(stampFields));
-
-    expect(res.error).toBeTruthy();
-    expect(updateCalls).toHaveLength(1);
-    expect(updateCalls[0]).toMatchObject({ values: { active: false } });
-  });
-
-  it("still redirects successfully even if the final link update fails", async () => {
-    fromMock.mockImplementation((table: string) => ({
-      update: (values: unknown) => ({
-        eq: async (_col: string, id: string) => {
-          updateCalls.push({ table, values, eqId: id });
-          if ("replaced_by" in (values as object)) {
-            return { error: { message: "link failed" } };
-          }
-          return { error: null };
-        },
+    expect(fromMock).not.toHaveBeenCalled();
+    expect(rpcMock).toHaveBeenCalledExactlyOnceWith(
+      "replace_program",
+      expect.objectContaining({
+        p_replacing: "old-id",
+        p_type: "stamp",
+        p_name: "New coffee card",
       }),
-    }));
-
-    await expect(changeTypeAction({}, form(stampFields))).rejects.toThrow(
-      "REDIRECT:/dashboard?p=new-id",
     );
+  });
+
+  it("returns an error without separate writes when replacement fails", async () => {
+    rpcMock.mockResolvedValue({ data: null, error: { message: "boom" } });
+    expect((await changeTypeAction({}, form(stampFields))).error).toBeTruthy();
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects a missing replacement result", async () => {
+    rpcMock.mockResolvedValue({ data: null, error: null });
+    expect((await changeTypeAction({}, form(stampFields))).error).toBeTruthy();
+    expect(fromMock).not.toHaveBeenCalled();
   });
 
   it("rejects invalid config input without any writes", async () => {
@@ -138,7 +111,7 @@ describe("changeTypeAction", () => {
     ).rejects.toThrow("REDIRECT:/dashboard?p=new-id");
 
     expect(rpcMock).toHaveBeenCalledWith(
-      "create_program",
+      "replace_program",
       expect.objectContaining({ p_carry_over_stamps: true }),
     );
   });
@@ -151,7 +124,7 @@ describe("changeTypeAction", () => {
     ).rejects.toThrow("REDIRECT:/dashboard?p=new-id");
 
     expect(rpcMock).toHaveBeenCalledWith(
-      "create_program",
+      "replace_program",
       expect.objectContaining({ p_carry_over_stamps: false }),
     );
   });
@@ -164,7 +137,7 @@ describe("changeTypeAction", () => {
     );
 
     expect(rpcMock).toHaveBeenCalledWith(
-      "create_program",
+      "replace_program",
       expect.objectContaining({ p_carry_over_stamps: false }),
     );
   });
@@ -175,7 +148,7 @@ describe("changeTypeAction", () => {
     ).rejects.toThrow("REDIRECT:/dashboard?p=new-id");
 
     expect(rpcMock).toHaveBeenCalledWith(
-      "create_program",
+      "replace_program",
       expect.objectContaining({ p_reward_expiry_days: 30 }),
     );
   });
@@ -198,7 +171,7 @@ describe("changeTypeAction", () => {
     ).rejects.toThrow("REDIRECT:/dashboard?p=new-id");
 
     expect(rpcMock).toHaveBeenCalledWith(
-      "create_program",
+      "replace_program",
       expect.objectContaining({ p_reward_expiry_days: null }),
     );
   });
@@ -249,7 +222,7 @@ describe("changeTypeAction", () => {
     ).rejects.toThrow("REDIRECT:/dashboard?p=new-id");
 
     expect(rpcMock).toHaveBeenCalledWith(
-      "create_program",
+      "replace_program",
       expect.objectContaining({ p_type: "lucky" }),
     );
   });

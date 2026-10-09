@@ -33,14 +33,15 @@ function clientWith(opts: {
 }
 
 beforeEach(() => {
-  process.env.MERQO_BASE_URL = "https://merqo.example.com";
-  process.env.MERQO_CUSTOMER_SECRET = "test-secret";
+  vi.stubEnv("MERQO_BASE_URL", "https://merqo.example.com");
+  vi.stubEnv("MERQO_CUSTOMER_SECRET", "test-secret");
   vi.mocked(createServiceClient).mockReset();
   redirectMock.mockReset();
   global.fetch = originalFetch;
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   global.fetch = originalFetch;
 });
 
@@ -144,7 +145,7 @@ describe("checkLegalAcceptance", () => {
   });
 
   it("fails closed (returns false) when MERQO_CUSTOMER_SECRET is unset", async () => {
-    delete process.env.MERQO_CUSTOMER_SECRET;
+    vi.stubEnv("MERQO_CUSTOMER_SECRET", undefined);
     const { client } = clientWith({ cached: null });
     vi.mocked(createServiceClient).mockResolvedValue(client as never);
     const fetchSpy = vi.fn();

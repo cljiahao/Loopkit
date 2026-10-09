@@ -11,6 +11,7 @@ export type CardStatus = {
   rewardReady: boolean;
   reward_text: string;
   qr: string;
+  cardCode?: string;
   expired: boolean;
   active: boolean;
   replacedByName: string | null;

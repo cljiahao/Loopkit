@@ -34,21 +34,19 @@ import {
 export function ProgramCardStatus({
   card,
   phone,
+  vendorId = "",
   vendorAvatarUrl = null,
 }: {
   card: CardStatus;
   phone: string;
+  vendorId?: string;
   vendorAvatarUrl?: string | null;
 }) {
   const [regenOpen, setRegenOpen] = useState(false);
   const [regenerating, startRegenerate] = useTransition();
   const view = card.view;
 
-  // Auto-opens once per retired card the first time this customer loads
-  // /c after a vendor migrates its type. "Seen" persists in localStorage,
-  // same no-server-round-trip trust model as regenerateCardAction's local
-  // UX elsewhere on this page — there's no customer auth to key a
-  // server-side "dismissed" flag off of.
+  // Retired-card notices are dismissible on this device.
   const [noticeOpen, setNoticeOpen] = useState(false);
 
   const [freshVouchers, setFreshVouchers] = useState<
@@ -58,7 +56,13 @@ export function ProgramCardStatus({
   useEffect(() => {
     if (card.active || !card.replacedByName) return;
     const key = `loopkit:seen-replaced:${card.programId}`;
-    if (!localStorage.getItem(key)) {
+    let dismissed = false;
+    try {
+      dismissed = localStorage.getItem(key) !== null;
+    } catch {
+      // Storage is optional for the notice.
+    }
+    if (!dismissed) {
       // Reading localStorage (an external, non-reactive source) on mount to
       // seed one-time dialog state — not derivable from props/state, so
       // this isn't the render-time-derivation case the rule guards against.
@@ -72,7 +76,11 @@ export function ProgramCardStatus({
   }, [card.programId]);
 
   function dismissNotice() {
-    localStorage.setItem(`loopkit:seen-replaced:${card.programId}`, "1");
+    try {
+      localStorage.setItem(`loopkit:seen-replaced:${card.programId}`, "1");
+    } catch {
+      // Dismissing the notice also works when storage is unavailable.
+    }
     setNoticeOpen(false);
   }
 
@@ -142,6 +150,7 @@ export function ProgramCardStatus({
             <div className="flex w-full flex-col items-center gap-3">
               <PointsBar filled={view.filled} total={view.total} />
               <PointsCatalogPicker
+                vendorId={vendorId}
                 programId={card.programId}
                 phone={phone}
                 items={(view.catalog ?? []).filter((item) => item.affordable)}
@@ -172,7 +181,11 @@ export function ProgramCardStatus({
       const fd = new FormData();
       fd.set("program", card.programId);
       fd.set("phone", phone);
-      const res = await regenerateCardAction(fd);
+      fd.set("vendor", vendorId);
+      const res = await regenerateCardAction(fd).catch(() => ({
+        success: false as const,
+        error: "Could not start a new card. Try again.",
+      }));
       if (!res.success) {
         toast.error(res.error);
         return;
@@ -216,6 +229,11 @@ export function ProgramCardStatus({
           <p className="text-xs text-muted-foreground">Show this to the shop</p>
         </div>
       )}
+      {card.cardCode && (
+        <p className="break-all text-xs text-muted-foreground">
+          Save your card code: <code>{card.cardCode}</code>
+        </p>
+      )}
       {(card.activeVouchers.length > 0 || freshVouchers.length > 0) && (
         <div className="w-full space-y-2 border-t pt-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -235,42 +253,44 @@ export function ProgramCardStatus({
           ))}
         </div>
       )}
-      <AlertDialog open={regenOpen} onOpenChange={setRegenOpen}>
-        <AlertDialogTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="rounded-xl text-xs text-muted-foreground"
-          >
-            {card.expired ? "Get a new card" : "Lost your code? Get a new one"}
-          </Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Get a new card?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This issues a fresh QR code and resets your progress to zero. Any
-              reward you&apos;ve already earned should be redeemed at the shop
-              first.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={regenerating}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={regenerating}
-              onClick={(e) => {
-                e.preventDefault();
-                confirmRegenerate();
-              }}
+      {card.expired && (
+        <AlertDialog open={regenOpen} onOpenChange={setRegenOpen}>
+          <AlertDialogTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="rounded-xl text-xs text-muted-foreground"
             >
-              {regenerating ? "Issuing…" : "Get a new card"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {card.expired ? "Get a new card" : "Start a new cycle"}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Get a new card?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This starts a fresh expired cycle and resets its progress to
+                zero. Any reward you&apos;ve already earned should be redeemed
+                at the shop first.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={regenerating}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={regenerating}
+                onClick={(e) => {
+                  e.preventDefault();
+                  confirmRegenerate();
+                }}
+              >
+                {regenerating ? "Issuing…" : "Get a new card"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
       {card.replacedByName && (
         <AlertDialog
           open={noticeOpen}

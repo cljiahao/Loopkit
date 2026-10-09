@@ -35,21 +35,4 @@ describe("ScanButton", () => {
     expect(target.className).toContain("border-dashed");
     expect(screen.getByText("Camera opens when you tap")).toBeInTheDocument();
   });
-
-  it("passes a voucher-kind result straight through to onResolved", async () => {
-    const { resolveTokenAction } = await import("@/app/dashboard/actions");
-    vi.mocked(resolveTokenAction).mockResolvedValue({
-      success: true,
-      kind: "voucher",
-      phone: "+6591234567",
-      voucherToken: "tok123",
-      rewardText: "Free drink",
-    });
-    const onResolved = vi.fn();
-    render(<ScanButton onResolved={onResolved} />);
-    // This test only asserts the type/shape compiles and the mock resolves —
-    // the actual camera decode path is exercised by scan-and-route's tests
-    // via a mocked ScanButton, matching this file's existing scope.
-    expect(resolveTokenAction).toBeDefined();
-  });
 });

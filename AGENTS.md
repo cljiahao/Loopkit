@@ -1,4 +1,4 @@
-<!-- templateCentral: nextjs@5.11.0 (Supabase variant — shared project, schema per kit) -->
+<!-- templateCentral: nextjs@5.15.0 (Supabase variant — shared project, schema per kit) -->
 
 # AGENTS.md — loopkit
 
@@ -54,7 +54,7 @@ src/lib/types.ts        — DB types (mirror of supabase/migrations)
 src/lib/utils.ts        — cn() + shared formatting helpers
 src/components/         — wheel, scratch-card, flame-layers, cup, points-bar, stamp-dots, etc.
 src/components/ui/      — shadcn primitives (CLI-managed, do not hand-edit)
-supabase/migrations/    — SQL schema + RLS (26 migrations)
+supabase/migrations/    — SQL schema + RLS (ordered chain through 0059)
 ```
 
 Domain code (schema, programs/cards/stamps, auth pages, admin) is implemented,
@@ -105,18 +105,14 @@ better-auth / Drizzle and will break RLS + realtime.
 
 ## AI Harness
 
-PreToolUse: blocks secrets and CI pipeline files only (exit 2): `.env*`
-(except `.env.example`), CI/CD definitions (`.github/workflows/`,
-`.github/actions/`), cert files (`.pem`/`.key`/`.p12`/`.pfx`/`.secret`),
-`credentials.json`/`.netrc`/`.secrets`; a second Bash guard blocks
-`--no-verify`, hook-layer bypasses (`HUSKY=0`, `HUSKY_SKIP_HOOKS`, `git -c
-core.hooksPath=…`), and force-pushes to `main`. Skills, specs, and all app
-code are unrestricted. SessionStart (startup/resume/clear/compact):
-re-injects AGENTS.md routing context + `docs/CONSTITUTION.md` +
-universal invariants so they survive compaction (PostCompact is
-observability-only and cannot inject).
-UserPromptSubmit: pattern-checks incoming prompts for injection phrases and
-inline credentials; exit 2 blocks the prompt.
+PreToolUse(Read|Edit|Write): normalize Windows and relative paths; hard-block
+secret-file reads and writes (environment files except the blank templates,
+secret directories and certificate/credential files). Governance and CI/CD
+writes require human approval; their reads are allowed. Ordinary application
+code, skills and specifications remain unrestricted. The Bash guard continues
+to block hook bypasses, protected-branch force pushes and destructive guard edits.
+UserPromptSubmit: credential-shaped input is blocked; injection-phrase matches
+produce advisory context so quoted security research can proceed.
 PostToolUse: incremental type-check (`pnpm exec tsc --noEmit
 --incremental`) after every Edit/Write. Feedback-only.
 Stop hook: runs full test suite (`pnpm test --run`); exit 2 feeds failures
@@ -133,7 +129,7 @@ Windows Smart App Control blocks unconditionally — see
 CI (GitHub Actions): hard gate on changed-line coverage (`diff-cover`
 ≥80%), lockfile-in-sync (`--frozen-lockfile`), a changelog-touched check, a
 readme-freshness check, harness integrity, and (via `security.yml`) a
-full-history gitleaks scan + `pnpm audit`.
+redacted gitleaks scan of the current commit range + `pnpm audit`.
 Project skills: `.claude/skills/` | Manifest: `.claude/harness.json`
 
 ## Skills Security

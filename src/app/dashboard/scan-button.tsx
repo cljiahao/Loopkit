@@ -37,32 +37,39 @@ export function ScanButton({
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
+    let handled = false;
     let stop: (() => void) | undefined;
     (async () => {
       try {
         const { BrowserQRCodeReader } = await import("@zxing/browser");
+        if (cancelled) return;
         const reader = new BrowserQRCodeReader();
         const controls = await reader.decodeFromVideoDevice(
           undefined,
           videoRef.current ?? undefined,
-          async (result) => {
-            if (!result || cancelled) return;
-            cancelled = true;
-            controls.stop();
-            const fd = new FormData();
-            fd.set("token", result.getText());
-            const res = await resolveTokenAction(fd);
-            if (res.success) {
-              onResolved(res);
-              setOpen(false);
-            } else {
-              toast.error(res.error);
-              setOpen(false);
+          async (result, _error, callbackControls) => {
+            if (!result || cancelled || handled) return;
+            handled = true;
+            callbackControls.stop();
+            try {
+              const fd = new FormData();
+              fd.set("token", result.getText());
+              const res = await resolveTokenAction(fd);
+              if (cancelled) return;
+              if (res.success) onResolved(res);
+              else toast.error(res.error);
+            } catch {
+              if (!cancelled)
+                toast.error("Couldn't read that code. Try again.");
+            } finally {
+              if (!cancelled) setOpen(false);
             }
           },
         );
         stop = () => controls.stop();
+        if (cancelled || handled) stop();
       } catch {
+        if (cancelled) return;
         toast.error("Couldn't open the camera. Check permissions.");
         setOpen(false);
       }

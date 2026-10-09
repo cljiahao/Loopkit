@@ -5,7 +5,7 @@
 The git-hook layer (husky v9 — no native binary, so nothing for Windows
 Smart App Control to block, unlike lefthook's unsigned `lefthook.exe`).
 `pnpm install`'s `prepare` script runs `husky`, which points
-`core.hooksPath` at this directory.
+`core.hooksPath` at the generated `.husky/_` dispatcher, which invokes the hooks in this directory.
 
 ## Contents
 
@@ -16,7 +16,7 @@ Smart App Control to block, unlike lefthook's unsigned `lefthook.exe`).
   that's explicitly invoked with `bash`, not in the file git/husky execute
   directly — hence the wrapper indirection for all three hooks.
 - `lib/pre-commit.sh` — runs format/lint (`prettier`+`eslint --fix` on
-  staged `.ts/.tsx/.js/.mjs/.cjs`, xargs'd with `-d '\n'` so filenames with
+  staged `.ts/.tsx/.js/.mjs/.cjs`, null-delimited via `tr '\n' '\0' | xargs -0` so filenames with
   spaces/quotes survive), `tsc --noEmit`, a frozen-lockfile install check
   when `package.json` is staged, a gitleaks secret-scan on staged files (if
   gitleaks is installed), then the README-coupling nudge and the
@@ -46,9 +46,9 @@ message-file path straight through as `$1`, a plain argv element; this is
 why the Windows-path-with-space argv-rejoin wrapper the old `.lefthook/`
 layer needed is gone, not ported. `lib/pre-push.sh` separately runs
 `.claude/verify-harness.sh` and the full `pnpm run check && pnpm test`
-gate. `.claude/verify-harness.sh` treats every file in this folder as part
-of the integrity-checked enforcement layer recorded in
-`.claude/harness.json`. `lib/comment-hygiene.sh` reads the same
+gate. `.claude/verify-harness.sh` checks committed HEAD blobs for the paths
+listed in `.claude/harness.json`; it does not certify every file in this folder
+or uncommitted hook changes. `lib/comment-hygiene.sh` reads the same
 `.claude/comment-hygiene-patterns.txt` pattern file as
 `.claude/hooks/post-edit-comment-check.sh` (the live edit-time nudge) and
 the CI `comment-hygiene` job (`.github/workflows/ci.yml`, the PR-time hard

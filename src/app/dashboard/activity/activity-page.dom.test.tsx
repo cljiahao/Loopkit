@@ -31,6 +31,7 @@ const activity: VendorActivityRow[] = [
   {
     id: "e1",
     phone: "+6591234567",
+    programId: "p1",
     programName: "Coffee Stamps",
     kind: "stamp",
     isReward: false,
@@ -70,6 +71,7 @@ describe("ActivityTable", () => {
     const adjustRow: VendorActivityRow = {
       id: "e9",
       phone: "+6591234567",
+      programId: "p1",
       programName: "Coffee Stamps",
       kind: "adjust",
       isReward: false,

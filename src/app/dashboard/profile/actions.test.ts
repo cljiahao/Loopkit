@@ -3,12 +3,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const {
   getUserMock,
   getOrCreateVendorProfileMock,
-  upsertVendorProfileMock,
+  patchVendorProfileMock,
   revalidatePathMock,
 } = vi.hoisted(() => ({
   getUserMock: vi.fn(),
   getOrCreateVendorProfileMock: vi.fn(),
-  upsertVendorProfileMock: vi.fn(),
+  patchVendorProfileMock: vi.fn(),
   revalidatePathMock: vi.fn(),
 }));
 
@@ -19,7 +19,7 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("@/lib/merqo-vendor-profile", () => ({
   getOrCreateVendorProfile: getOrCreateVendorProfileMock,
-  upsertVendorProfile: upsertVendorProfileMock,
+  patchVendorProfile: patchVendorProfileMock,
 }));
 vi.mock("next/cache", () => ({ revalidatePath: revalidatePathMock }));
 vi.mock("@/lib/vendor", () => ({ saveStallName: vi.fn() }));
@@ -46,25 +46,27 @@ describe("updateSocialLinksAction", () => {
     });
 
     expect(res.error).toBeUndefined();
-    expect(upsertVendorProfileMock).toHaveBeenCalledWith(
+    expect(getOrCreateVendorProfileMock).not.toHaveBeenCalled();
+    expect(patchVendorProfileMock).toHaveBeenCalledWith(
       expect.anything(),
       "v1",
-      "Kopi Corner",
       {
-        website: "https://kopicorner.com",
-        instagram: "https://instagram.com/kopicorner",
+        socialLinks: {
+          website: "https://kopicorner.com",
+          instagram: "https://instagram.com/kopicorner",
+        },
       },
     );
     expect(revalidatePathMock).toHaveBeenCalledWith("/dashboard/profile");
   });
 
-  it("rejects an invalid URL without calling upsertVendorProfile", async () => {
+  it("rejects an invalid URL without calling patchVendorProfile", async () => {
     const res = await updateSocialLinksAction({ website: "not-a-url" });
 
     expect(res.error).toBe(
       "Enter a valid URL, e.g. https://instagram.com/yourstall",
     );
-    expect(upsertVendorProfileMock).not.toHaveBeenCalled();
+    expect(patchVendorProfileMock).not.toHaveBeenCalled();
   });
 
   it("returns an error when not signed in", async () => {
@@ -73,11 +75,11 @@ describe("updateSocialLinksAction", () => {
     const res = await updateSocialLinksAction({});
 
     expect(res.error).toBe("Not signed in");
-    expect(upsertVendorProfileMock).not.toHaveBeenCalled();
+    expect(patchVendorProfileMock).not.toHaveBeenCalled();
   });
 
-  it("returns an error and does not revalidate when upsertVendorProfile fails", async () => {
-    upsertVendorProfileMock.mockRejectedValueOnce(new Error("db down"));
+  it("returns an error and does not revalidate when patchVendorProfile fails", async () => {
+    patchVendorProfileMock.mockRejectedValueOnce(new Error("db down"));
 
     const res = await updateSocialLinksAction({
       website: "https://kopicorner.com",

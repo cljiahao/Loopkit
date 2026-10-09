@@ -1,26 +1,10 @@
 # card-check
 
-## Purpose
-
-Tests for `src/features/card-check/`'s non-DOM server actions — Supabase
-client and `@merqo/ui`'s `qrSvg` mocked via `vi.mock`/`vi.hoisted`.
-
-## Contents
-
-- `actions.test.ts` — `checkStatusAction`: rejects an invalid phone or a
-  missing vendor without calling the RPC, calls `vendor_join` with the
-  normalized phone, returns one card per row (using `stamp_count`, not the
-  state blob) including `vendor_join`'s `active_vouchers` as each card's
-  `activeVouchers`, handles multiple programs at once, marks a card inactive
-  without dropping it when its program is no longer active, surfaces a
-  retired card's replacement name and carried-over stamp count, reports
-  `expired` once a card's expiry window has elapsed, reports `"none"` when
-  `vendor_join` returns no rows, and surfaces an error without throwing
-  when the RPC fails; `regenerateCardAction`: rejects an invalid phone or
-  missing program id without calling the RPC, reports an error when the
-  RPC fails or returns no card, and calls `regenerate_card` with the
-  normalized phone on success
-
-## Parent
+Customer action regressions now live beside the implementation in
+[`src/features/card-check/api/actions.test.ts`](../../../src/features/card-check/api/actions.test.ts).
+The suite covers saved customer proof, the capability-aware `customer_join`
+RPC, fresh enrollment, generic recovery failures, card projections and
+regeneration. The former duplicate `test/features/card-check/actions.test.ts`
+was consolidated into that suite.
 
 [features](../README.md)

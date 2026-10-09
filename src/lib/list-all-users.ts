@@ -33,7 +33,11 @@ export async function listAllUsers(
     users.push(
       ...data.users.map((u) => ({ id: u.id, email: u.email ?? null })),
     );
-    if (data.users.length < LIST_USERS_PAGE_SIZE) break;
+    if (data.users.length < LIST_USERS_PAGE_SIZE)
+      return { data: { users }, error: null };
   }
-  return { data: { users }, error: null };
+  return {
+    data: null,
+    error: { message: "Auth directory pagination limit exceeded" },
+  };
 }

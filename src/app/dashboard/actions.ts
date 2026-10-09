@@ -1,13 +1,13 @@
 "use server";
 
+import { qrSvg } from "@merqo/ui";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireVendor } from "@/features/auth";
 import { getProgramById, isPro } from "@/lib/program";
 import { normalizePhone } from "@/lib/phone";
 import { rewardReady } from "@/lib/loyalty";
-import { applyVisit, getProgress, resolvePlantState } from "@/lib/engine";
-import { plantStrategy, type PlantConfig } from "@/lib/engine/plant";
+import { applyVisit, getProgress } from "@/lib/engine";
 import { isCardExpired } from "@/lib/expiry";
 import { createServerClient } from "@/lib/supabase/server";
 import {
@@ -163,13 +163,18 @@ export async function recordVisitAction(
   }
 
   const supabase = await createServerClient();
-  const { data: existing } = await supabase
+  const { data: existing, error: readError } = await supabase
     .from("cards")
-    .select("id,phone,stamp_count,reward_count,state,cycle_started_at")
+    .select(
+      "id,phone,stamp_count,reward_count,state,cycle_started_at,updated_at",
+    )
     .eq("program_id", program.id)
     .eq("phone", normalized.phone)
     .maybeSingle();
 
+  if (readError) {
+    return { success: false, error: "Couldn't read this card. Try again." };
+  }
   const now = new Date();
   if (
     existing &&
@@ -185,7 +190,8 @@ export async function recordVisitAction(
   const event = { kind: "visit" as const, payload: { roll: Math.random() } };
   const { state, rewardUnlocked } = applyVisit(program, card, event, now);
 
-  const { error } = await supabase.rpc("record_visit", {
+  const { error } = await supabase.rpc("record_visit_checked", {
+    p_expected_updated_at: existing?.updated_at ?? null,
     p_program: program.id,
     p_phone: normalized.phone,
     p_state: state as Json,
@@ -193,6 +199,12 @@ export async function recordVisitAction(
     p_payload: { won: rewardUnlocked, roll: event.payload.roll },
   });
   if (error) {
+    if (error.code === "40001") {
+      return {
+        success: false,
+        error: "This card changed. Refresh and try again.",
+      };
+    }
     console.error("record_visit failed", error.message);
     return { success: false, error: "Something went wrong. Try again." };
   }
@@ -215,11 +227,7 @@ export async function recordVisitAction(
   };
 }
 
-// Redeem a bloomed Sprout: the pure strategy carries over any excess growth
-// past the bloom threshold (instead of resetting to a seed) and counts the
-// bloom; record_visit persists the carried-over state and logs a 'redeem'
-// event so metrics and recent activity see the reward. Reuses the generic
-// write path — no card id needed, just the phone.
+// The database checks readiness and resets the locked card atomically.
 export async function redeemPlantAction(
   formData: FormData,
 ): Promise<ActionResult<{ phone: string; progress: Progress }>> {
@@ -231,55 +239,30 @@ export async function redeemPlantAction(
     return { success: false, error: "Enter a valid Singapore phone number." };
   }
 
-  const supabase = await createServerClient();
-  const { data: existing } = await supabase
-    .from("cards")
-    .select("state")
-    .eq("program_id", program.id)
-    .eq("phone", normalized.phone)
-    .maybeSingle();
-  if (!existing) {
-    return { success: false, error: "No card yet for that number." };
+  if (program.type !== "plant") {
+    return { success: false, error: "This card is not a plant." };
   }
-
-  const config = program.config as PlantConfig;
-  const state = resolvePlantState({
-    state: existing.state,
-    stamp_count: 0,
-    reward_count: 0,
-  });
-  const reset = plantStrategy.redeem(state, config);
-
-  const { error } = await supabase.rpc("record_visit", {
+  const supabase = await createServerClient();
+  const { data: card, error } = await supabase.rpc("redeem_plant", {
     p_program: program.id,
     p_phone: normalized.phone,
-    p_state: reset as unknown as Json,
-    p_kind: "redeem",
-    p_payload: { reward: program.reward_text },
   });
-  if (error) {
-    console.error("record_visit redeem failed", error.message);
-    return { success: false, error: "Something went wrong. Try again." };
+  if (error || !card) {
+    return {
+      success: false,
+      error: "This reward is not ready or the card has expired.",
+    };
   }
-
-  const progress = getProgress(
-    program,
-    { state: reset, stamp_count: 0, reward_count: 0 },
-    new Date(),
-  );
+  const progress = getProgress(program, card, new Date());
 
   revalidatePath("/dashboard");
   return { success: true, phone: normalized.phone, progress };
 }
 
-// Regenerate a customer's card: reissues the card_token (invalidates the old
-// QR) and resets progress + the expiry clock — for a lost QR or a fresh start
-// after expiry. Vendor-triggered counterpart to the customer self-service
-// action in src/app/c/actions.ts; both call the same public regenerate_card
-// RPC (phone-validated, no separate customer auth exists in this app).
+// Owning-vendor recovery rotates credentials while preserving earned progress.
 export async function regenerateCardAction(
   formData: FormData,
-): Promise<ActionResult<{ phone: string }>> {
+): Promise<ActionResult<{ phone: string; cardToken: string; qr: string }>> {
   await requireVendor();
   const program = await programFromForm(formData);
   if (!program) return { success: false, error: "Set up your card first." };
@@ -289,17 +272,21 @@ export async function regenerateCardAction(
   }
 
   const supabase = await createServerClient();
-  const { data: card, error } = await supabase.rpc("regenerate_card", {
+  const { data: card, error } = await supabase.rpc("recover_customer_card", {
     p_program: program.id,
     p_phone: normalized.phone,
   });
   if (error || !card) {
-    console.error("regenerate_card failed", error);
     return { success: false, error: "Something went wrong. Try again." };
   }
 
   revalidatePath("/dashboard");
-  return { success: true, phone: normalized.phone };
+  return {
+    success: true,
+    phone: normalized.phone,
+    cardToken: card.card_token,
+    qr: await qrSvg(card.card_token),
+  };
 }
 
 // Resolve a scanned card_token to its phone via the owner-gated card_by_token
