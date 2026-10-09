@@ -18,7 +18,7 @@ shared Merqo Supabase project.
   merqo/qkit/paykit/stockkit's own `config.toml`. `[auth.external.google]`
   is enabled, reading `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID`/`_SECRET`
   from the environment for local `supabase start` (see `.env.example`).
-- `migrations/` — SQL schema and RLS policies
+- `migrations/` — SQL schema and RLS policies. `0060` qualifies RPC column references that overlap with output parameters; it preserves function contracts, locking and execution grants. Existing pgTAP referral and points tests exercise these runtime paths.
 - `seed/` — manually-run seed data
 - `tests/` — pgTAP RLS test suite (vendors, upgrade_requests, feedback, vendor_notify_settings, referral_hosts, vendor_join_referred/apply_referral_credit); run via `supabase test db`
 
