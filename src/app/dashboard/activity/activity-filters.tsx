@@ -1,3 +1,4 @@
+import { FormCard } from "@/components/form-card";
 import {
   Select,
   SelectContent,
@@ -34,12 +35,10 @@ export function ActivityFilters({
   const clearHref = currentP ? `${basePath}?p=${currentP}` : basePath;
 
   return (
-    // Matches ElevatedCard's classes directly — a <form> needs action/method,
-    // which ElevatedCard's as="div"|"section"|"li" prop type doesn't support.
-    <form
+    <FormCard
       action={basePath}
       method="get"
-      className="flex flex-wrap items-end gap-3 rounded-[20px] border bg-card p-4 shadow-[0_1px_0_0_var(--color-border),0_12px_28px_-20px_rgba(0,0,0,0.35)]"
+      className="flex flex-wrap items-end gap-3 p-4"
     >
       {currentP && <input type="hidden" name="p" value={currentP} />}
       {programs.length > 1 && (
@@ -122,6 +121,6 @@ export function ActivityFilters({
           Clear filters
         </a>
       )}
-    </form>
+    </FormCard>
   );
 }

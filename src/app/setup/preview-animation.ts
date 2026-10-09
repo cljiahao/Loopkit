@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  prefersReducedMotion,
+  REDUCED_MOTION_QUERY,
+} from "@/lib/reduced-motion";
+
 import { useEffect, useMemo, useState } from "react";
 import { applyVisit, getProgress, type CardLike } from "@/lib/engine";
 import type { EngineEvent, Progress } from "@/lib/engine/types";
@@ -14,21 +19,7 @@ const TICK_MS = 2000;
 const CELEBRATE_MS = 2000;
 const REVEAL_MS = 1400;
 
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-// Drives the real applyVisit()/getProgress() engine functions on a timer, so
-// the /setup preview simulates a customer actually visiting every 2 seconds
-// instead of showing one static snapshot. Every tick is a genuine visit
-// event through the same engine src/app/c's real customer page uses — the
-// animation can never show a transition a real card couldn't actually
-// produce. Wheel/scratch ticks hold the rolled result back for REVEAL_MS
-// (masking landedId to null via `revealing`) so the /setup preview can play
-// a spin/scratch anticipation animation before the win/lose signal commits
-// — there's no equivalent delay on the real customer card, since that roll
-// already happened server-side at scan time; this delay is presentation-only.
+// Simulate visits with the real engine; chance results wait for the reveal animation.
 export function usePreviewAnimation(input: PreviewInput): {
   progress: Progress;
   celebrating: boolean;
@@ -88,7 +79,7 @@ export function usePreviewAnimation(input: PreviewInput): {
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return;
-    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mql = window.matchMedia(REDUCED_MOTION_QUERY);
     const onChange = () => setReducedMotion(mql.matches);
     mql.addEventListener("change", onChange);
     return () => mql.removeEventListener("change", onChange);

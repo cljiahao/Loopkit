@@ -1,19 +1,13 @@
 "use client";
+import { ProgressVisual } from "@/components/progress-visual";
 
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { regenerateCardAction } from "../api/actions";
 import type { CardStatus } from "../types";
-import { resolveStampMark } from "@/lib/stamp-mark";
-import { Plant } from "@/components/plant";
-import { Cup } from "@/components/cup";
-import { Wheel } from "@/components/wheel";
-import { ScratchCard } from "@/components/scratch-card";
-import { FlameLayers } from "@/components/flame-layers";
-import { StampDots } from "@/components/stamp-dots";
-import { PointsBar } from "@/components/points-bar";
+
 import { PointsCatalogPicker } from "./points-catalog-picker";
-import { LuckyBox } from "@/components/lucky-box";
+
 import { CardShell } from "@/components/card-shell";
 import { Button } from "@/components/ui/button";
 import {
@@ -85,95 +79,33 @@ export function ProgramCardStatus({
   }
 
   function renderView() {
-    if (view?.kind === "plant") {
-      return (
-        <div className="flex flex-col items-center gap-2">
-          {view.variant === "cup" ? (
-            <Cup
-              stage={view.stage}
-              totalStages={view.totalStages}
-              wilting={view.wilting}
-            />
-          ) : (
-            <Plant
-              stage={view.stage}
-              totalStages={view.totalStages}
-              wilting={view.wilting}
-              seed={`${phone}:${card.programId}`}
-            />
-          )}
-        </div>
-      );
-    }
-    if (view?.kind === "flame") {
-      return (
-        <div className="flex flex-col items-center gap-2">
-          <FlameLayers stage={view.stage} />
-        </div>
-      );
-    }
-    if (view?.kind === "chance") {
-      return (
-        <div className="flex flex-col items-center gap-2">
-          {view.variant === "wheel" ? (
-            <Wheel segments={view.segments} landedId={view.landedId} />
-          ) : (
-            <ScratchCard
-              revealed={view.landedId !== null}
-              label={
-                view.segments.find((s) => s.id === view.landedId)?.label ?? ""
-              }
-              reward={
-                view.segments.find((s) => s.id === view.landedId)?.reward ??
-                false
-              }
-              coverStyle={view.coverStyle}
-            />
-          )}
-        </div>
-      );
-    }
-    if (view?.kind === "lucky") {
-      return (
-        <div className="flex flex-col items-center gap-2">
-          <LuckyBox
-            visitsSinceWin={view.visitsSinceWin}
-            pityCeiling={view.pityCeiling}
-          />
-        </div>
-      );
-    }
+    if (!view) return null;
+    const visual = (
+      <ProgressVisual
+        view={view}
+        vendorAvatarUrl={vendorAvatarUrl}
+        plantSeed={`${phone}:${card.programId}`}
+      />
+    );
     if (view?.kind === "dots") {
-      if (view.variant === "points") {
-        if (view.redemptionMode === "catalog") {
-          return (
-            <div className="flex w-full flex-col items-center gap-3">
-              <PointsBar filled={view.filled} total={view.total} />
-              <PointsCatalogPicker
-                vendorId={vendorId}
-                programId={card.programId}
-                phone={phone}
-                items={(view.catalog ?? []).filter((item) => item.affordable)}
-                onSelected={(voucher) =>
-                  setFreshVouchers((prev) => [...prev, voucher])
-                }
-              />
-            </div>
-          );
-        }
-        return <PointsBar filled={view.filled} total={view.total} />;
-      }
-      return (
-        <StampDots
-          filled={view.filled}
-          total={view.total}
-          mark={resolveStampMark(view, vendorAvatarUrl)}
-          style={view.style}
-          color={view.color}
-        />
-      );
+      if (view.variant === "points" && view.redemptionMode === "catalog")
+        return (
+          <div className="flex w-full flex-col items-center gap-3">
+            {visual}
+            <PointsCatalogPicker
+              vendorId={vendorId}
+              programId={card.programId}
+              phone={phone}
+              items={(view.catalog ?? []).filter((item) => item.affordable)}
+              onSelected={(voucher) =>
+                setFreshVouchers((prev) => [...prev, voucher])
+              }
+            />
+          </div>
+        );
+      return visual;
     }
-    return null;
+    return <div className="flex flex-col items-center gap-2">{visual}</div>;
   }
 
   function confirmRegenerate() {

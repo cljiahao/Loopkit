@@ -1,4 +1,4 @@
-const MS_PER_DAY = 86_400_000;
+import { MS_PER_DAY } from "@/lib/time";
 
 // Pure: whether a card's current cycle has expired. No expiry configured
 // (null/undefined expiry_days) means the card never expires.

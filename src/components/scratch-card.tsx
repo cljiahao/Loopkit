@@ -1,5 +1,7 @@
 "use client";
 
+import { prefersReducedMotion } from "@/lib/reduced-motion";
+
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import type { ScratchCoverStyle } from "@/lib/engine/chance";
@@ -23,11 +25,6 @@ const CANVAS_H = 112;
 const BRUSH_RADIUS = 13;
 // Real scratch cards don't need full coverage to feel "revealed."
 const SETTLE_FRACTION = 0.55;
-
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 // SVG strokes provide a reveal fallback when a canvas context is unavailable.
 // Their staggered irregular paths mimic overlapping scratch marks.

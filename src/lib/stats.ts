@@ -3,7 +3,7 @@ import { cache } from "react";
 import { createServerClient } from "@/lib/supabase/server";
 import { sgtDateKey } from "@/lib/format";
 import { isWonVisit } from "@/lib/metrics";
-import { MS_PER_DAY } from "@/lib/utils";
+import { MS_PER_DAY } from "@/lib/time";
 
 export type ProgramStats = {
   enrolled: number;

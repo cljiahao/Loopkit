@@ -1,3 +1,4 @@
+import { AdminPageHeader } from "@/app/admin/admin-page-header";
 import type { AuditLogEntry } from "@merqo/ui";
 import { requireAdmin } from "@/lib/admin";
 import { listAdminAudit, type AdminAuditRow } from "@/lib/admin-data";
@@ -49,12 +50,7 @@ export default async function AdminActivityPage() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-5 py-8">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Internal
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight">Activity</h1>
-      </div>
+      <AdminPageHeader title="Activity" />
 
       <AdminActivityLog entries={rows.map(toEntry)} />
     </main>

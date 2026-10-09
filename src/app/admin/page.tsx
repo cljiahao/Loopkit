@@ -1,3 +1,4 @@
+import { AdminPageHeader } from "@/app/admin/admin-page-header";
 import { Gift, Stamp } from "lucide-react";
 import { requireAdmin } from "@/lib/admin";
 import { platformTotals, recentActivity } from "@/lib/admin-data";
@@ -20,12 +21,7 @@ export default async function AdminOverviewPage() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-5 py-8">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Internal
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
-      </div>
+      <AdminPageHeader title="Overview" />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Stat label="Programs" value={totals.programs} />

@@ -1,5 +1,7 @@
 "use client";
 
+import { prefersReducedMotion } from "@/lib/reduced-motion";
+
 import { useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -18,11 +20,6 @@ const STAGE2_EXTRA_TURNS = 1;
 const MIN_HANDOFF_VELOCITY = 60;
 // How long the win/lose overlay stays up once the wheel settles.
 const RESULT_VISIBLE_MS = 1500;
-
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 function targetAngleMod(landedIndex: number, anglePerSegment: number): number {
   const raw = 360 - (landedIndex * anglePerSegment + anglePerSegment / 2);

@@ -330,4 +330,26 @@ describe("usePreviewAnimation", () => {
     expect(result.current.lastChanceResult).toBeNull();
     rollSpy.mockRestore();
   });
+  it("responds to preference changes and removes the listener", () => {
+    let onChange: (() => void) | undefined;
+    const media = {
+      matches: false,
+      addEventListener: vi.fn((_event: string, listener: () => void) => {
+        onChange = listener;
+      }),
+      removeEventListener: vi.fn(),
+    };
+    window.matchMedia = vi.fn().mockReturnValue(media);
+    const { result, unmount } = renderHook(() =>
+      usePreviewAnimation({ ...base, type: "wheel" }),
+    );
+    act(() => {
+      media.matches = true;
+      onChange?.();
+      vi.advanceTimersByTime(10000);
+    });
+    expect(result.current.revealing).toBe(false);
+    unmount();
+    expect(media.removeEventListener).toHaveBeenCalledWith("change", onChange);
+  });
 });

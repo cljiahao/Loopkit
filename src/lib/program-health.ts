@@ -1,4 +1,4 @@
-import { MS_PER_DAY } from "@/lib/utils";
+import { MS_PER_DAY } from "@/lib/time";
 
 export type ProgramHealth = "new" | "quiet" | "active";
 

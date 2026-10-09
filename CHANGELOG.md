@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Split setup mechanic fields and Counter state into feature-local modules; reuse progress visuals, reduced-motion snapshots, settings form chrome, visit bars and customer search controls while preserving loyalty and recovery contracts.
+- Reuse shared StatTile typography slots and local admin headers; document component ownership and pin the tested shared UI package.
+
 - Pin shared UI to audited commit `989d934c1cc8d957ff383934debf8ef083b6b6a4` with matching build permissions.
 - Qualify referral and points-offset RPC columns in forward migration `0060`, fixing output-parameter naming conflicts exposed by database CI without changing grants or locking.
 

@@ -1,7 +1,7 @@
 "use client";
+import { FormCard } from "@/components/form-card";
 
-import { useAsyncAction } from "@/hooks/use-async-action";
-import { toast } from "sonner";
+import { useSaveSettings } from "@/hooks/use-save-settings";
 import { saveQkitEarnConfigAction } from "./actions";
 import {
   Select,
@@ -27,7 +27,7 @@ export function QkitEarnSettings({
   current: { programId: string; enabled: boolean } | null;
   isPro: boolean;
 }) {
-  const { pending, run } = useAsyncAction();
+  const { pending, save } = useSaveSettings(saveQkitEarnConfigAction);
 
   if (!isPro) {
     return (
@@ -42,26 +42,7 @@ export function QkitEarnSettings({
   }
 
   return (
-    // Matches ElevatedCard's classes directly — a <form> needs the action
-    // prop, which ElevatedCard's as="div"|"section"|"li" prop type doesn't
-    // support (same rationale as activity-filters.tsx).
-    <form
-      className="space-y-3 rounded-[20px] border bg-card p-4 shadow-[0_1px_0_0_var(--color-border),0_12px_28px_-20px_rgba(0,0,0,0.35)]"
-      action={(fd) => {
-        void run(async () => {
-          try {
-            const result = await saveQkitEarnConfigAction(fd);
-            if (!result.success) {
-              toast.error(result.error);
-              return;
-            }
-            toast.success("Settings saved");
-          } catch {
-            toast.error("Could not save settings. Try again.");
-          }
-        });
-      }}
-    >
+    <FormCard className="space-y-3 p-4" action={save}>
       <div className="flex items-center gap-2">
         <Switch
           id="qkit-earn-enabled"
@@ -92,6 +73,6 @@ export function QkitEarnSettings({
       >
         Save
       </Button>
-    </form>
+    </FormCard>
   );
 }

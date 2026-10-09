@@ -1,3 +1,4 @@
+import { CustomerSearchToolbar } from "./customer-search-toolbar";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireVendor } from "@/features/auth";
@@ -16,12 +17,9 @@ import {
 } from "@/lib/customer-segments";
 import { formatSgtDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
 
 import { ElevatedCard } from "@merqo/ui";
-import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
+
 import { VendorCustomerList } from "./vendor-customer-list";
 import { CustomerControls } from "./customer-controls";
 import { OverviewCohortList } from "./overview-cohort";
@@ -89,38 +87,7 @@ export default async function CustomersPage({
             Everyone who has a card at your shop, across every program.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="w-full sm:w-auto">
-            <ProgramSwitcher
-              programs={programs}
-              currentId=""
-              basePath="/dashboard/customers"
-            />
-          </div>
-          <form
-            className="flex w-full min-w-0 flex-1 items-center gap-3 sm:w-auto"
-            action="/dashboard/customers"
-          >
-            <Label htmlFor="customers-search-vendor" className="sr-only">
-              Search by phone
-            </Label>
-            <Input
-              id="customers-search-vendor"
-              type="search"
-              name="q"
-              defaultValue={q ?? ""}
-              placeholder="Search by phone"
-              className="h-11 min-w-0 rounded-xl"
-            />
-            <Button
-              type="submit"
-              variant="outline"
-              className="h-11 shrink-0 rounded-xl px-6"
-            >
-              Search
-            </Button>
-          </form>
-        </div>
+        <CustomerSearchToolbar programs={programs} currentId="" query={q} />
         <div className="flex flex-wrap items-center gap-2">
           {CUSTOMER_SEGMENTS.map((value) => (
             <Link
@@ -161,39 +128,11 @@ export default async function CustomersPage({
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="w-full sm:w-auto">
-          <ProgramSwitcher
-            programs={programs}
-            currentId={program.id}
-            basePath="/dashboard/customers"
-          />
-        </div>
-        <form
-          className="flex w-full min-w-0 flex-1 items-center gap-3 sm:w-auto"
-          action="/dashboard/customers"
-        >
-          <input type="hidden" name="p" value={program.id} />
-          <Label htmlFor="customers-search-program" className="sr-only">
-            Search by phone
-          </Label>
-          <Input
-            id="customers-search-program"
-            type="search"
-            name="q"
-            defaultValue={q ?? ""}
-            placeholder="Search by phone"
-            className="h-11 min-w-0 rounded-xl"
-          />
-          <Button
-            type="submit"
-            variant="outline"
-            className="h-11 shrink-0 rounded-xl px-6"
-          >
-            Search
-          </Button>
-        </form>
-      </div>
+      <CustomerSearchToolbar
+        programs={programs}
+        currentId={program.id}
+        query={q}
+      />
 
       {cards.length === 0 ? (
         <ElevatedCard className="p-6">

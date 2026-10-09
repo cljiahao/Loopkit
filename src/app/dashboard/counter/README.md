@@ -33,6 +33,10 @@ The back nav here renders `@merqo/ui`'s `BackButton` with no
 boundary (the interactive `BackButton` is a Client Component), which Next rejects
 at render. `BackButton` falls back to a plain `<a>`.
 
+## Controller ownership
+
+`use-serve-customer.ts` owns lookup, scan routing, visit/redeem/undo state and recovered capability delivery. The `../serve-customer.tsx` component composes counter panels. Per-mechanic handlers retain separate result mapping and stamp undo behavior; the shared visit helper reports failed mutations without clearing customer input.
+
 ## Parent
 
 [dashboard](../README.md)
