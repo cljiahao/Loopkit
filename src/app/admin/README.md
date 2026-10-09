@@ -29,6 +29,10 @@ badges, and `actions.ts` for the Server Actions their client components call
 `VendorProToggle` in `vendors/`). `activity/` reads the audit trail those same
 actions write via `recordAudit`.
 
+## Reuse and ownership
+
+`admin-page-header.tsx` supplies the common title and description chrome across admin list pages. `stat.tsx` wraps shared `StatTile` inside `ElevatedCard`, retaining admin spacing, typography and number/string values.
+
 ## Parent
 
 [app](../README.md)

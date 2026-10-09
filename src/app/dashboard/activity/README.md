@@ -19,6 +19,10 @@ cannot be passed from a Server Component into `@merqo/ui` (whose interactive com
 that takes plain rows as props — same pattern as
 `src/app/admin/vendors/vendors-table.tsx`.
 
+## Reuse and ownership
+
+`activity-filters.tsx` uses the local `FormCard` for card chrome and retains its native GET fields and filtering behavior.
+
 ## Parent
 
 [dashboard](../README.md)

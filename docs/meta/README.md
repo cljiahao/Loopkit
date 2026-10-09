@@ -15,6 +15,10 @@ implementation history live in `docs/superpowers/`.
 The current security audit is `../loopkit-audit-2026-10-08.md`. Prepared database
 fixes still require local validation and an approved deployment rollout.
 
+## Reuse and ownership
+
+[Component reuse specification](2026-10-10-component-reuse-spec.md) records the feature ownership, preserved contracts and validation scope of the setup/Counter cleanup.
+
 ## Parent
 
 [docs](../README.md)

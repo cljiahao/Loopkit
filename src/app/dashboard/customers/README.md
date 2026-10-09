@@ -13,6 +13,10 @@ Vendor-facing customer list at `/dashboard/customers` — a searchable directory
 - `page.tsx` — exports the default `CustomersPage` server component and imports `VendorCustomerList` from `vendor-customer-list.tsx`; requires a vendor, redirects to the single program when there's exactly one, and renders `ProgramSwitcher` beside the phone search form below the page header. The vendor-wide branch (no `?p=`) then reads `?seg=` / `?sort=` (validated by `parseSegment` / `parseSort`), renders the four segment chips (all / reward ready / new this week / not seen 30d+) as `<Link>`s with counts from `segmentCounts` plus `CustomerControls`, and passes the `filterBySegment` + `sortCustomers` result to `VendorCustomerList`. Each row shows an avatar, a mini progress hint (a Ready badge when `rewardReady`, else "n to go" from `bestGap`), and a Serve `<Link>` to `/dashboard/counter?p=<recentProgramId>&phone=<phone>`. The program-scoped `?p=` branch is unchanged: a per-program card list (`listCards`). Both branches' root element is a plain `<div className="space-y-8">`; the enclosing `../layout.tsx` `<main>` owns the shared `max-w-7xl` width and padding. Every customer name/phone in both branches links to `[phone]/page.tsx`. Uses `@merqo/ui`'s `ElevatedCard`.
 - `[phone]/` — one customer's detail view: every card they hold across the vendor's own programs, a per-program manual stamp-adjustment tool, and their full activity history. See its own README.
 
+## Reuse and ownership
+
+`customer-search-toolbar.tsx` composes program selection and an accessible native GET search form for vendor, program and Overview-cohort views. Each caller retains its own queries and list models; search carries `q`, selected `p` and optional `cohort`.
+
 ## Parent
 
 [dashboard](../README.md)

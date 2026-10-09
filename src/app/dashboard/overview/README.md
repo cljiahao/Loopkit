@@ -24,6 +24,10 @@ composes them.
 - `your-programs.tsx` — `YourPrograms({ programs })`: renders nothing below 2 programs; otherwise a row per program (colour seed dot, name, `"{n}% come back"` or `"not enough data"`, an Edit `Link` to `/setup?id=<id>`, a Serve `Link` to `/dashboard/counter?p=<id>`) plus an "Add another program" link to `/setup`
 - `your-programs.dom.test.tsx` — jsdom: one program renders nothing, two render an Edit + Serve link each, a null return rate shows the fallback copy
 
+## Reuse and ownership
+
+`visits-trend.tsx` retains responsive 7/14-day selection and week-over-week captions; the shared `../visits-bars.tsx` renders normalized bars, prior-week tones and first/last dates.
+
 ## Parent
 
 [dashboard](../README.md)

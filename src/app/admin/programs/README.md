@@ -23,6 +23,10 @@ cannot be passed from a Server Component into `@merqo/ui` (whose interactive com
 that takes plain rows as props — same pattern as
 `src/app/admin/vendors/vendors-table.tsx`.
 
+## Reuse and ownership
+
+The list page uses `../admin-page-header.tsx`. Program queries, health badges and detail views remain local.
+
 ## Parent
 
 [admin](../README.md)
