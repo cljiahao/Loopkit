@@ -24,7 +24,7 @@
       "path": ".claude/skills/skill-audit/SKILL.md"
     },
     ".claude/hooks/protect-files.sh": {
-      "origin_hash": "dde995a2d3fbaa97f5212643cf2a0047356d6c25e526c6494104c244399f4ddc",
+      "origin_hash": "6cdf909952f50b5e653520d87f9ddc4571ada0ddf737ba9a1809794fdea1409f",
       "path": ".claude/hooks/protect-files.sh"
     },
     ".claude/hooks/block-no-verify.sh": {
