@@ -1,4 +1,5 @@
 "use client";
+import { FormCard } from "@/components/form-card";
 
 import { useActionState, useState } from "react";
 import { createReferralHostAction } from "./actions";
@@ -42,10 +43,7 @@ export function ReferralsPanel({
 
   return (
     <div className="space-y-6">
-      <form
-        action={formAction}
-        className="space-y-3 rounded-[20px] border bg-card p-4 shadow-[0_1px_0_0_var(--color-border),0_12px_28px_-20px_rgba(0,0,0,0.35)]"
-      >
+      <FormCard action={formAction} className="space-y-3 p-4">
         <div className="space-y-2">
           <Label htmlFor="referral-program" className="text-sm">
             Program
@@ -99,7 +97,7 @@ export function ReferralsPanel({
         >
           {pending ? "Creating…" : "Create referral link"}
         </Button>
-      </form>
+      </FormCard>
 
       {hosts.length === 0 ? (
         <ElevatedCard className="p-6">

@@ -10,6 +10,10 @@ Vendor stats page at `/dashboard/stats` — enrollment, retention, and visit met
 - `stats-page.dom.test.tsx` — jsdom tests for `StatsPage`: renders vendor-wide stat tiles (including "Expired unclaimed (30d)") and the visits chart with no program selected, renders program-scoped tiles when `?p=` is set, shows the empty state at zero enrolled customers, and shows/hides the "By mechanic" card based on how many mechanics `getVendorMechanicBreakdown` returns.
 - `visits-chart.tsx` — `VisitsChart({ data })`: the 30-day visits bar chart, extracted so both of `page.tsx`'s branches (all programs / single program) share one implementation instead of ~110 duplicated lines; renders a `border-t border-border` baseline under the bars and `text-[10px]` first/last date labels (via `formatShortDate`) beneath it, since the per-bar `title` tooltip alone is invisible on touch — the primary device per PRODUCT.md.
 
+## Reuse and ownership
+
+`visits-chart.tsx` delegates the 30-day visual to `../visits-bars.tsx`, retaining raw date titles and local axis spacing.
+
 ## Parent
 
 [dashboard](../README.md)

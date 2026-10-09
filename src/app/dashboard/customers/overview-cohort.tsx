@@ -1,3 +1,4 @@
+import { CustomerSearchToolbar } from "./customer-search-toolbar";
 import Link from "next/link";
 import { ElevatedCard } from "@merqo/ui";
 import { listCards } from "@/lib/cards";
@@ -7,9 +8,6 @@ import {
   type OverviewCohort,
 } from "@/lib/overview-cohorts";
 import type { Program } from "@/lib/program";
-import { ProgramSwitcher } from "@/app/dashboard/program-switcher";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 const titles: Record<OverviewCohort, string> = {
   "gone-quiet": "Regulars gone quiet",
@@ -62,25 +60,12 @@ export async function OverviewCohortList({
           {matches.length} matching cards across the selected programs.
         </p>
       </div>
-      <ProgramSwitcher
+      <CustomerSearchToolbar
         programs={programs}
         currentId={p ?? ""}
-        basePath="/dashboard/customers"
+        query={q}
+        cohort={cohort}
       />
-      <form action="/dashboard/customers" className="flex gap-3">
-        <input type="hidden" name="cohort" value={cohort} />
-        {p && <input type="hidden" name="p" value={p} />}
-        <Input
-          type="search"
-          name="q"
-          defaultValue={q ?? ""}
-          placeholder="Search by phone"
-          aria-label="Search by phone"
-        />
-        <Button type="submit" variant="outline">
-          Search
-        </Button>
-      </form>
       {matches.length === 0 ? (
         <p className="text-sm text-muted-foreground">No matching cards.</p>
       ) : (

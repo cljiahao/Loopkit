@@ -1,3 +1,4 @@
+import { AdminPageHeader } from "@/app/admin/admin-page-header";
 import { ElevatedCard } from "@merqo/ui";
 import { requireAdmin } from "@/lib/admin";
 import { listProgramsOverview } from "@/lib/admin-data";
@@ -20,12 +21,7 @@ export default async function AdminProgramsPage() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-8 px-5 py-8">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          Internal
-        </p>
-        <h1 className="text-3xl font-bold tracking-tight">Programs</h1>
-      </div>
+      <AdminPageHeader title="Programs" />
 
       {rows.length === 0 ? (
         <p className="rounded-2xl border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">

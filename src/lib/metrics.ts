@@ -1,4 +1,4 @@
-import { MS_PER_DAY } from "@/lib/utils";
+import { MS_PER_DAY } from "@/lib/time";
 
 // Mirrors merqo's `metricsPayloadSchema` (../merqo/src/lib/metrics-schema.ts).
 // Defined locally rather than imported — cross-repo runtime imports aren't

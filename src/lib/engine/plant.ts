@@ -1,3 +1,4 @@
+import { MS_PER_DAY } from "@/lib/time";
 import type { Strategy } from "@/lib/engine/types";
 import { countThresholdCrossings } from "@/lib/engine/threshold";
 
@@ -17,8 +18,6 @@ export type PlantState = {
   blooms: number;
   bloomed?: boolean;
 };
-
-const MS_PER_DAY = 86_400_000;
 
 function decayedGrowth(
   state: PlantState,

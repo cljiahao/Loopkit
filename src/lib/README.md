@@ -116,6 +116,10 @@ page + action to validate the `next` redirect target.
 
 `image-upload-adapter.ts` also exports `removeReplacedAvatar(url)`, a best-effort delete of an avatar image that is no longer referenced. `ImageUploader` writes every upload under a fresh random name, so without it each avatar change left the previous image in storage forever. It checks every public avatar bucket (`booth-images`, `vendor-images`, `vendor-avatars`), because all five Merqo apps share one signed-in user and so one `avatar_url`, which may have been set from any of them. It uses `@merqo/ui`'s `storagePathFromPublicUrl`, so an OAuth provider picture (a Google profile photo) is never treated as ours to delete, and it never throws. Each bucket's owner-folder DELETE policy still bounds what a vendor can remove.
 
+## Reuse and ownership
+
+`reduced-motion.ts` reads a client-safe preference snapshot; preview animation owns its live subscription. `time.ts` owns hour/day constants so domain reporting and expiry helpers do not depend on UI class utilities; `utils.ts` re-exports the constants for compatibility.
+
 ## Parent
 
 [src](../README.md)

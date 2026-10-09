@@ -82,6 +82,10 @@ The back nav here renders `@merqo/ui`'s `BackButton` with no
 boundary (this shared interactive component has a client boundary), which Next rejects
 at render. `BackButton` falls back to a plain `<a>`.
 
+## Reuse and ownership
+
+`referrals-panel.tsx` uses `FormCard` for its native creation form; referral actions and input names remain local.
+
 ## Parent
 
 [dashboard](../README.md)

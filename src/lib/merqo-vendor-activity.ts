@@ -1,4 +1,4 @@
-import { MS_PER_DAY } from "@/lib/utils";
+import { MS_PER_DAY } from "@/lib/time";
 import { classifyActivity } from "@/lib/stats";
 
 export type VendorActivityMetric = { label: string; value: string };

@@ -1,5 +1,7 @@
 "use client";
 
+import { prefersReducedMotion } from "@/lib/reduced-motion";
+
 import {
   useCallback,
   useRef,
@@ -9,11 +11,6 @@ import {
 import { cn } from "@/lib/utils";
 
 const MAX_TILT_DEG = 6;
-
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
 
 /** Pointer-driven card tilt is disabled for reduced motion. */
 export function CardShell({

@@ -17,6 +17,10 @@ plant/cup, wheel/scratch), dispatched by program `type`.
 - `threshold.ts` — `countThresholdCrossings`: pure count of how many multiples of a required count were crossed between two counter values (points/growth-per-visit can jump by more than 1, so more than one reward threshold can be crossed in a single visit)
 - `types.ts` — shared `EngineEvent`, `ProgressView` (discriminated union: dots/flame/plant/chance/lucky), `Progress`, and the `Strategy<C, S>` interface every strategy file implements. The "chance" variant carries an optional `coverStyle?: "foil" | "wax" | "ticket"`, scratch-only (see `chance.ts`'s `ScratchCoverStyle`), ignored when `variant === "wheel"`. The "dots" variant carries an optional `style?: "dots" | "seal" | "ink" | "punch" | "charm"` and `color?: string` (see `stamp.ts`'s `StampVisualStyle`), plus `redemptionMode?: "catalog" | "offset"`, `catalog?`, `offsetRate?`, and `offsetValue?` — points-only, undefined unless `redemption_mode` is set (see `stamp.ts`'s `PointsRedemptionMode`/`PointsCatalogItem`/`PointsOffsetRate`)
 
+## Reuse and ownership
+
+Plant timing imports its day constant from `../time.ts`; mechanic rules, transitions and reward authorization remain in the existing engine and server boundaries.
+
 ## Parent
 
 [lib](../README.md)

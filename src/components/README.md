@@ -59,6 +59,10 @@ dashboard/customer card views based on the program's `type`/`variant`;
 `ProgramCardStatus`) render one of these inside, giving all of them the same
 tilt treatment regardless of which visual they host.
 
+## Reuse and ownership
+
+`progress-visual.tsx` delegates the existing discriminated progress views to loyalty visuals; callers supply avatar/plant seed and preview reveal callbacks. Catalog actions and animation timing stay in callers. `form-card.tsx` provides existing card chrome around a native form, preserving GET/action semantics.
+
 ## Parent
 
 [src](../README.md)

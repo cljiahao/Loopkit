@@ -8,3 +8,7 @@
 Component tests verify rendering, form payloads, retry states and the expired-cycle reset boundary. Capability cookie and direct SQL authorization regressions live in src/lib/customer-proof.test.ts and supabase/tests/customer-capability.test.sql.
 
 [Parent](../README.md)
+
+## Reuse and ownership
+
+`program-card-status.tsx` delegates pure progress rendering to `components/progress-visual.tsx`. It retains customer plant seeding, catalog redemption, voucher state and recovery/regeneration actions.

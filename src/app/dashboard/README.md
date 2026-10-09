@@ -54,6 +54,10 @@ Vendor console root: the Overview (a daily briefing: regulars and cadence, self-
 "Theme · System" entry, matching `@merqo/ui` v0.19.0's collapsed theme
 submenu.
 
+## Reuse and ownership
+
+`visits-bars.tsx` supplies pure bars and calendar axes to Overview and Stats; each view retains its own window and captions. `serve-customer.tsx` composes Counter panels around `counter/use-serve-customer.ts`. Customer-notify and qkit-earn settings share `hooks/use-save-settings.ts` and `components/form-card.tsx` while keeping their distinct defaults and entitlement rules.
+
 ## Parent
 
 [app](../README.md)
