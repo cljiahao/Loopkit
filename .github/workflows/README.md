@@ -24,3 +24,5 @@ gets caught before merge.
 [.github](../README.md)
 
 The unit suite runs once with coverage. Vitest enforces at least 80% statements, branches, functions and lines over production source; any existing changed-line coverage gate remains in place.
+
+The disposable database job stages the actual Merqo migration chain from immutable revision a6f53cf4221a9e3f99feca0e3d675e755f6908bb before Loopkit's chain. This provides the shared event schema required by earn authorization. Only runner-local migration filenames are sequenced; migration contents and authorization policies are unchanged. Update the pinned dependency deliberately when Merqo schema contracts change. No linked or production database is used.

@@ -176,10 +176,30 @@ jobs:
       - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
         with:
           version: 2.109.0
-      # `supabase start` boots the local stack and applies every migration in
-      # supabase/migrations — so a malformed migration fails here. `test db` then
-      # runs the pgTAP suite (supabase/tests/rls.test.sql), which carries its own
-      # inline fixtures, so no seed or API keys are needed.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          repository: merqo-io/Merqo
+          ref: a6f53cf4221a9e3f99feca0e3d675e755f6908bb
+          path: .ci-merqo
+          persist-credentials: false
+      - name: Stage shared Merqo and Loopkit schema migrations
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f .ci-merqo/supabase/migrations/0031_metric_emitter_service_only.sql
+          mv supabase/migrations supabase/loopkit-migrations
+          mkdir supabase/migrations
+          sequence=0
+          for owner in merqo loopkit; do
+            source_dir=.ci-merqo/supabase/migrations
+            [ "$owner" != loopkit ] || source_dir=supabase/loopkit-migrations
+            for source in "$source_dir"/*.sql; do
+              test -f "$source"
+              sequence=$((sequence + 1))
+              destination=$(printf 'supabase/migrations/%06d_%s_%s' "$sequence" "$owner" "$(basename "$source")")
+              cp "$source" "$destination"
+            done
+          done
       - run: supabase start
       - run: supabase test db
       - if: always()
