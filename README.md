@@ -441,7 +441,7 @@ by every kit's own `/about` page), linked from the landing `Nav`/`Footer`.
 ## Docs
 
 - Deploy runbook: `docs/DEPLOY.md`
-- Source: `github.com/merqo-io/loopkit`; `@merqo/ui` installs from `github:merqo-io/merqo-ui`
+- Source: `github.com/merqo-io/loopkit`; `@merqo/ui` installs from `github:merqo-io/merqo-ui`, pinned to the commit tagged `v0.32.1`
 - Plans/specs: `docs/superpowers/`
 - Release history: `CHANGELOG.md`
 - Dependency security overrides (force-patched transitive CVEs, each

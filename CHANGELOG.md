@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Pin `@merqo/ui` to commit `cb9dd39ab56d6bc2030d30edb7474ee8ebf60820` (tag `v0.32.1`) with matching build permission. From this revision, `Section` title tooltips and default-mode `InfoTooltip`s open on a tap as well as on hover and keyboard focus. Nothing changes for vendors here: every info icon already opens on a tap.
 - Split setup mechanic fields and Counter state into feature-local modules; reuse progress visuals, reduced-motion snapshots, settings form chrome, visit bars and customer search controls while preserving loyalty and recovery contracts.
 - Reuse shared StatTile typography slots and local admin headers; document component ownership and pin the tested shared UI package.
 
